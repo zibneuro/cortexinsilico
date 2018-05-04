@@ -1,0 +1,10 @@
+{
+    "DATA_ROOT": "../../data/RBCF10/realization-entireRBCF10_2018-04-19/export",
+    "OUTPUT_DIR": "",
+    "PRE_NEURON_REGIONS": [ ],
+    "PRE_NEURON_CELLTYPES": ["L34"],
+    "PRE_NEURON_IDS": [ ],
+    "POST_NEURON_REGIONS": [ ],
+    "POST_NEURON_CELLTYPES": ["L5st"],
+    "POST_NEURON_IDS": [ ]
+}

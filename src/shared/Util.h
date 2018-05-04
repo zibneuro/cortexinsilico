@@ -1,0 +1,63 @@
+#ifndef UTIL_H
+#define UTIL_H
+
+#include <QList>
+#include <QString>
+#include "CIS3DNetworkProps.h"
+#include "CIS3DNeurons.h"
+#include "Typedefs.h"
+
+class QJsonObject;
+class QJsonArray;
+class NetworkProps;
+
+/**
+    A set of utility functions.
+*/
+namespace Util {
+
+    /**
+        Checks whether two neurons overlap based on their bounding box.
+        @param n1 Properties of first neurons.
+        @param n2 Properties of second neurons.
+        @returns True if the neurons overlap.
+    */
+    bool overlap(const NeuronProps& n1, const NeuronProps& n2);
+
+    /**
+        Determines the unique neurons accounting for axon redundancy.
+        @param preNeuronList The IDs of presynaptic neurons.
+        @param networkProps The model data of the network.
+        @returns The IDs of unique presynaptic neurons.
+    */
+    QList<int> getUniquePreNeurons(const QList<int>& preNeuronsList,
+                                   const NetworkProps& networkProps);
+
+    /**
+        Creates a mapping (cellType,region) -> (neuron ids).
+        @param propsMap The neuron properties.
+        @returns A mapping (hash) with (cellType, region) as hash-key.
+    */
+    IdsPerCellTypeRegion sortByCellTypeRegion(const PropsMap& propsMap);
+
+    /**
+        Creates a mapping (cellType,region) -> (neuron ids) for the
+        specified subset of neurons.
+        @param neuronIds A subset of neuron IDs.
+        @param networkProps The model data of the network.
+        @returns A mapping (hash) with (cellType, region) as hash-key.
+    */
+    IdsPerCellTypeRegion sortByCellTypeRegionIDs(const IdList& neuronIds, const NetworkProps& networkProps);
+
+    /**
+        Creates a selection filter for neurons.
+        @param jsonArray The filter query as received from  the webframework.
+        @param network The model data of the network.
+        @returns A selection filter that can be applied to the (CIS3D)Neurons class.
+        @throws runtime_error if the selection filter is not valid.
+    */
+    SelectionFilter getSelectionFilterFromJson(const QJsonArray& jsonArray, const NetworkProps& network);
+
+}
+
+#endif // UTIL_H
