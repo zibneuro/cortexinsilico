@@ -1,0 +1,5 @@
+demo/release
+demo/debug
+demo/Makefile
+demo/Makefile.Release
+demo/Makefile.Debug
