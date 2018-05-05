@@ -30,7 +30,7 @@ void MyStatistic::doCalculate(const IdList& preNeurons, const IdList& postNeuron
         for (int post=0; post<ids.size(); ++post) {
             const int postId = ids[post];
 
-            // Iterate over presynaptic neurons (exploting axon redundancy)
+            // Iterate over presynaptic neurons (exploiting axon redundancy)
             for (int pre=0; pre<preNeurons.size(); ++pre) {
                 const int preId = preNeurons[pre];
                 const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
