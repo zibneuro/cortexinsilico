@@ -25,13 +25,13 @@ protected:
     /**
         Performs the actual computation based on the specified neurons.
         @param preNeurons The presynaptic neurons.
-        @param postNeurons: The postsynaptic neurons.
+        @param postNeurons The postsynaptic neurons.
     */
     void doCalculate(const IdList& preNeurons, const IdList& postNeurons) override;
 
     /**
         Adds the result values to a JSON object
-        @param obj: JSON object to which the values are appended
+        @param obj JSON object to which the values are appended
     */
     void doCreateJson(QJsonObject& obj) const override;
 
