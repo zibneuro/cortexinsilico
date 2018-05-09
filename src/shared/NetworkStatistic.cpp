@@ -26,6 +26,13 @@ QJsonObject NetworkStatistic::createJson(const QString& key, const qint64 fileSi
 }
 
 
+QJsonObject NetworkStatistic::createJson(){
+    QJsonObject obj;
+    doCreateJson(obj);
+    return obj;
+}
+
+
 QString NetworkStatistic::createCSVFile(const QString& key,
                       const QString& presynSelectionText,
                       const QString& postsynSelectionText,

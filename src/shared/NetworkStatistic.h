@@ -54,6 +54,13 @@ public:
     QJsonObject createJson(const QString& key, const qint64 fileSizeBytes);
 
     /**
+        Creates a JSON object representing the statistic. To be called from
+        the webframework.
+        @return The JSON object.
+    */
+    QJsonObject createJson();
+
+    /**
         Creates a csv-file of the statistic.
         @param key The S3 key under which the csv-file is stored.
         @param presynSelectionText Textual description of presynaptic filter.

@@ -69,7 +69,7 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
 
         neurons.insert(props.id, props);
 
-        if (i % 1000 == 0) {
+        if (i % 1000 == 0 && i > 0) {
             qDebug() << "    Read properties for" << i << "neurons";
         }
     }

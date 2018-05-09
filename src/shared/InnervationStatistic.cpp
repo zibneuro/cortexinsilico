@@ -51,7 +51,7 @@ void InnervationStatistic::doCalculate(const IdList& preNeurons, const IdList& p
 
         const IdList& ids = it.value();
         SparseVectorSet* vectorSet = SparseVectorSet::load(innervationFile);
-        qDebug() << "Loading" << innervationFile;
+        qDebug() << "[*] Loading" << innervationFile;
         for (int post=0; post<ids.size(); ++post) {
             const int postId = ids[post];
 
