@@ -197,7 +197,7 @@ namespace CIS3D {
         @param dataRootDir The base data directory.
         @return The overall PST density directory.
     */
-    QDir    getPSTAllDir(const QDir& dataRootDir);
+    QDir getPSTAllDir(const QDir& dataRootDir);
 
     /**
         Determines the path of the overall PST density file for the specified

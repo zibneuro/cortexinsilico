@@ -45,9 +45,10 @@ namespace UtilIO {
         that meet the filter definition.
         @param spec The spec file with the filter definition.
         @param networkProps the model data of the network.
+        @param normalized Whether the PST density of each neuron is normalized by the overall PST density.
         @returns The postsynaptic neurons.
     */
-    PropsMap getPostSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps);
+    PropsMap getPostSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps, bool normalized = true);
 
     /**
         Determines the neuron ID from the specfied presynaptic data file name.

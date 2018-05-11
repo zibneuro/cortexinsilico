@@ -27,7 +27,7 @@ QJsonObject UtilIO::parseSpecFile(const QString& fileName){
 }
 
 
-PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps) {
+PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps, bool normalized) {
     const QJsonArray regions   = spec["POST_NEURON_REGIONS"].toArray();
     const QJsonArray cellTypes = spec["POST_NEURON_CELLTYPES"].toArray();
     const QJsonArray neuronIds = spec["POST_NEURON_IDS"].toArray();
@@ -55,13 +55,23 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
         const QString ctName = networkProps.cellTypes.getName(props.cellTypeId);
         const QString regionName = networkProps.regions.getName(props.regionId);
 
-        const QString excFilePath = CIS3D::getNormalizedPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::EXCITATORY);
+        QString excFilePath;
+        if(normalized){
+            excFilePath = CIS3D::getNormalizedPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::EXCITATORY);
+        } else {
+            excFilePath = CIS3D::getPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::EXCITATORY);
+        }
         props.pstExc = SparseField::load(excFilePath);
         if (!props.pstExc) {
             throw std::runtime_error(qPrintable(QString("No excitatory PST file for neuron %1.").arg(props.id)));
         }
 
-        const QString inhFilePath = CIS3D::getNormalizedPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::INHIBITORY);
+        QString inhFilePath;
+        if(normalized) {
+            inhFilePath = CIS3D::getNormalizedPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::INHIBITORY);
+        } else {
+            inhFilePath = CIS3D::getPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::INHIBITORY);
+        }
         props.pstInh = SparseField::load(inhFilePath);
         if (!props.pstInh) {
             throw std::runtime_error(qPrintable(QString("No inhibitory PST file for neuron %1.").arg(props.id)));
