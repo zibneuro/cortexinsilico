@@ -21,6 +21,12 @@ def compileCppAndRunUnitTests(src_dir, build_dir):
     check_call(["qmake", compareData_pro_file], cwd=compareData_build_dir)
     check_call(["make", "all"], cwd=compareData_build_dir)
 
+    networkSimulator_pro_file = os.path.join(src_dir, "networkSimulator/networkSimulator.pro")
+    networkSimulator_build_dir = os.path.join(build_dir, "networkSimulator")
+    os.makedirs(networkSimulator_build_dir, exist_ok=True)
+    check_call(["qmake", networkSimulator_pro_file], cwd=networkSimulator_build_dir)
+    check_call(["make", "all"], cwd=networkSimulator_build_dir)
+
     computeStatistic_pro_file = os.path.join(src_dir, "computeStatistic/computeStatistic.pro")
     computeStatistic_build_dir = os.path.join(build_dir, "computeStatistic")
     os.makedirs(computeStatistic_build_dir, exist_ok=True)

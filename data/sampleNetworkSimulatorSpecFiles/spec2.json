@@ -1,0 +1,32 @@
+{
+    "DATA_ROOT": "data/modelData/",
+    "OUTPUT_DIR": "data/connectome/",
+    "PRE_NEURON_REGIONS": [],
+    "PRE_NEURON_CELLTYPES": ["L4py","L4sp","L4ss"],
+    "PRE_NEURON_IDS": [ ],
+    "POST_NEURON_REGIONS": [],
+    "POST_NEURON_CELLTYPES": ["L5st","L5tt"],
+    "POST_NEURON_IDS": [],
+    "CONNECTOME_NAME": "L4 exc. and L5 exc.",
+    "CONNECTIVITY_RULE_NAME": "generalized Peters rule",
+    "CONNECTIVITY_RULE_PARAMETERS": [0,1,1,-1],
+    "STATISTIC_DEFINTIONS" : [{
+            "STATISTIC_TYPE" : "connectionProbability",
+            "STATISTIC_NAME" : "overall connection probability",
+            "PRE_NEURON_REGIONS" : [],
+            "PRE_NEURON_CELLTYPES": [],
+            "PRE_NEURON_IDS": [ ],
+            "POST_NEURON_REGIONS": [],
+            "POST_NEURON_CELLTYPES": [],
+            "POST_NEURON_IDS": []
+    },{
+            "STATISTIC_TYPE" : "innervation",
+            "STATISTIC_NAME" : "overall innervation",
+            "PRE_NEURON_REGIONS" : [],
+            "PRE_NEURON_CELLTYPES": [],
+            "PRE_NEURON_IDS": [],
+            "POST_NEURON_REGIONS": [],
+            "POST_NEURON_CELLTYPES": [],
+            "POST_NEURON_IDS": []
+    }]
+}

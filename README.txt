@@ -1,25 +1,48 @@
-To compile all sources:
+I) How to compile all sources
+=============================
 
+1) From the cortexinsilico directory, run:
 python3 install/CompileCppAndRunTests.py
 
 
-To compute a custom statistic:
+II) How use the network simulator (to find connectivity rules)
+==============================================================
 
-0) View template class src/computeStatistic/MyStatistic.h to get started with your own implementation.
+1) Download the down-sampled model data from the ZIB website:
 
-1) Edit src/computeStatistic/mySpecFile.json
+https://visual.zib.de/2018/IXDtH2G8/latest/
+
+2) Extract the contents of the *.tar.gz file into a new folder "modelData":
+
+cortexinsilico/data/modelData/
+
+3) View and/or edit the src/networkSimulator/findRules.py script to integrate
+existing Bayesian inference algorithms to sample the theta-parameter space.
+
+4) View and/or edit the data/sampleNetworkSimulatorSpecFiles/spec.json to set
+model-data filters (on which neurons to incorporate) and to define summary statistics.
+
+5) From the cortexinsilico directory, run:
+python3 src/networkSimulator/findRules.py data/sampleNetworkSimulatorSpecFiles/spec.json build/networkSimulator/release/networkSimulator
+
+[6) View the generated summaryStatistics.json file in /data/connectome/]
+
+
+III) How implement and run custom statistics (extending the library)
+====================================================================
+
+1) View class src/computeStatistic/MyStatistic.h as template for your own implementation.
+
+2) Edit src/computeStatistic/mySpecFile.json to set the desired neuron filters.
 
 - DATA_ROOT: points to the directory containing the innervation matrix (multiple files) and meta information about the network
 - OUTPUT_DIR: ignore
 - PRE_NEURON_REGIONS, PRE_NEURON_CELLTYPES, PRE_NEURON_IDS: filter definition (additive) for the presynaptic neurons that are part of the statistic
 - POST_NEURON_REGIONS, POST_NEURON_CELLTYPES, POST_NEURON_IDS: filter definition (additive) for the postsynaptic neurons that are part of the statistic
 
-The celltype and region identifiers are specified in the meta information files that are part of the raw data.
+The celltype and region identifiers are specified in the meta information files
+(CellType.csv, Regions.csv) that are part of the raw data.
 
-2) Run the script:
+3) Run the command:
 
 ./build/computeStatistic/relase/computeStatistic <path_specFile>
-
-
-
-

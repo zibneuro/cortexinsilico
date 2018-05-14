@@ -1,2 +1,4 @@
 build/
-data/
+data/modelData
+data/sampleNetworkSimulatorSpecFiles/generatedSpecFile.json
+data/connectome
