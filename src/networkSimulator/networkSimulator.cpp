@@ -21,6 +21,7 @@
 #include "Util.h"
 #include "UtilIO.h"
 #include "InnervationStatistic.h"
+#include "Histogram.h"
 
 
 SparseField* loadPSTAll(QString dataRoot, CIS3D::NeuronType functionalType){
@@ -35,12 +36,13 @@ SparseField* loadPSTAll(QString dataRoot, CIS3D::NeuronType functionalType){
 
 void computeInnervationPost(const QList<int>& preNeurons,
                             const PropsMap& postNeurons,
+                            /*const PropsMap& postNeuronsNormalized,*/
                             const NetworkProps& networkProps,
                             const QString& dataRoot,
                             const QString& outputDir,
                             const QVector<float>& theta)
 {
-
+    Histogram histo;
     SparseField* pstAllExc = loadPSTAll(dataRoot, CIS3D::EXCITATORY);
     SparseField* pstAllInh = loadPSTAll(dataRoot, CIS3D::INHIBITORY);
 
@@ -48,9 +50,17 @@ void computeInnervationPost(const QList<int>& preNeurons,
 
     const IdsPerCellTypeRegion sortedByPost = Util::sortByCellTypeRegion(postNeurons);
     const QVector<CellTypeRegion> ctrs = sortedByPost.keys().toVector();
+
     qDebug() << "[*] Completed sorting by celltype-region";
 
-    const QList<int> uniquePreNeuronsList = Util::getUniquePreNeurons(preNeurons, networkProps);
+    QSet<int> mappedIds;
+    for (int i=0; i<preNeurons.size(); ++i) {
+        const int preId = preNeurons[i];
+        const int mappedId = networkProps.axonRedundancyMap.getNeuronIdToUse(preId);
+        mappedIds.insert(mappedId);
+    }
+    QList<int> uniquePreNeuronsList = mappedIds.toList();
+
     PropsMap uniquePreNeurons;
 
     qDebug() << "[*] Start reading properties for" << uniquePreNeuronsList.size() << "unique presynaptic neurons";
@@ -88,15 +98,17 @@ void computeInnervationPost(const QList<int>& preNeurons,
         for (QList<int>::ConstIterator postIt=postNeuronsList.constBegin(); postIt!=postNeuronsList.constEnd(); ++postIt) {
             const int postNeuronId = *postIt;
             const NeuronProps& postProps = postNeurons.value(postNeuronId);
+            //const NeuronProps& postPropsNormalized = postNeuronsNormalized.value(postNeuronId);
             vectorSet.addVector(postNeuronId);
 
             for (int pre=0; pre<uniquePreNeuronsList.size(); ++pre) {
                 const int preNeuronId = uniquePreNeuronsList[pre];
                 const NeuronProps& preProps = uniquePreNeurons.value(preNeuronId);
-
                 if (Util::overlap(preProps, postProps)) {
                     float innervation;
+                    //float innervationNormalized;
                     if (networkProps.cellTypes.isExcitatory(preProps.cellTypeId)) {
+                        //const SparseField innervationFieldNormalized = multiply(*(preProps.boutons), *(postPropsNormalized.pstExc));
                         const SparseField innervationField = multiplyGenPeter(*(preProps.boutons),
                                                                             *(postProps.pstExc),
                                                                             *pstAllExc,
@@ -105,19 +117,25 @@ void computeInnervationPost(const QList<int>& preNeurons,
                                                                             theta[2],
                                                                             theta[3]);
                         innervation = innervationField.getFieldSum();
+                        //innervationNormalized = innervationFieldNormalized.getFieldSum();
+                        histo.addValue(innervation);
+                        //if(innervation - innervationNormalized > 0.000001){
+                        //    qDebug() << innervation - innervationNormalized;
+                        //}
                     }
                     else {
+                        qDebug() << "inhibitory";
                         const SparseField innervationField = multiplyGenPeter(*(preProps.boutons),
                                                                             *(postProps.pstInh),
-                                                                            *pstAllExc,
+                                                                            *pstAllInh,
                                                                             theta[0],
                                                                             theta[1],
                                                                             theta[2],
                                                                             theta[3]);
                         innervation = innervationField.getFieldSum();
                     }
-
                     if (innervation > 0.0f) {
+                        //qDebug() << preNeuronId << " " << postNeuronId << " " << innervation;
                         vectorSet.setValue(postNeuronId, preNeuronId, innervation);
                     }
                 }
@@ -148,6 +166,8 @@ void computeInnervationPost(const QList<int>& preNeurons,
 
     delete pstAllExc;
     delete pstAllInh;
+
+    //qDebug() << histo.getNumberOfValues() << " " << histo.getNumberOfZeros() << " " << histo.getAverage();
 }
 
 
@@ -280,6 +300,8 @@ void computeStatistics(QJsonObject& spec, const IdList preRef, const IdList post
         const QString statisticType = definition["STATISTIC_TYPE"].toString();
         if(statReport.keys().contains(statisticType)){
             copyJson(definition, statReport, statisticType, "RESULT");
+            definition.insert("PRE_NEURON_NUMBER", preNeuronsIntersected.size());
+            definition.insert("POST_NEURON_NUMBER", postNeuronsIntersected.size());
             if(!definition.keys().contains("STATUS")){
                 definition.insert("STATUS","OK");
             }
@@ -334,10 +356,11 @@ int main(int argc, char ** argv)
     QList<int> preNeurons = UtilIO::getPreSynapticNeurons(spec, networkProps);
     qDebug() << "[*] Computing postsynaptic selection";
     PropsMap postNeurons = UtilIO::getPostSynapticNeurons(spec, networkProps, false);
+    //PropsMap postNeuronsNormalized = UtilIO::getPostSynapticNeurons(spec, networkProps, true);
 
     qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
 
-    computeInnervationPost(preNeurons, postNeurons, networkProps, dataRoot, connectomeDir, extractRuleParameters(spec));
+    computeInnervationPost(preNeurons, postNeurons, /*postNeuronsNormalized,*/ networkProps, dataRoot, connectomeDir, extractRuleParameters(spec));
 
     qDebug() << "[*] Computing summary statistics";
 
