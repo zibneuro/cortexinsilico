@@ -12,9 +12,9 @@ II) How use the network simulator (to find connectivity rules)
 
 https://visual.zib.de/2018/IXDtH2G8/latest/
 
-2) Extract the contents of the *.tar.gz file into a new folder "modelData":
+2) Extract modelData_entireRBCF10_2018-04-19.tar.gz into:
 
-cortexinsilico/data/modelData/
+data/
 
 3) View and/or edit the src/networkSimulator/findRules.py script to integrate
 existing Bayesian inference algorithms to sample the theta-parameter space.

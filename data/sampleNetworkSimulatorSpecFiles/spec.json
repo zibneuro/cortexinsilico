@@ -1,6 +1,6 @@
 {
-    "DATA_ROOT": "./data/realization_entireRBC_2015-10-07/",
-    "OUTPUT_DIR": "./data/connectome",
+    "DATA_ROOT": "data/modelData_entireRBCF10_2018-04-19/",
+    "OUTPUT_DIR": "data/connectome/",
     "PRE_NEURON_REGIONS": ["C2"],
     "PRE_NEURON_CELLTYPES": ["L4py","L4sp","L4ss"],
     "PRE_NEURON_IDS": [ ],
