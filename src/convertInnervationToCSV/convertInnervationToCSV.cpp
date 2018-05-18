@@ -1,10 +1,20 @@
+/*
+    This tool creates a csv files from the innervation matrix that is strored
+    as multiple files in the sparse vector format. Usage:
+
+    ./convertInnervationToCSV  <data-dir> <output-dir> [<tar-output-dir>]
+
+    <data_dir> The directory containing the innervation matrix files.
+    <data_dir> The directory to which the csv-files are written.
+    <data-output-dir> The directoy to which the compressed csv-files are written.
+*/
+
 #include <QtCore>
 #include <QDebug>
 #include <QProcess>
 
 #include "CIS3DSparseVectorSet.h"
 #include "CIS3DNetworkProps.h"
-
 
 
 void printErrorAndExit(const std::runtime_error& e) {
@@ -14,11 +24,9 @@ void printErrorAndExit(const std::runtime_error& e) {
 }
 
 
-
 void printUsage() {
     qDebug() << "Usage: ./convertInnervationToCSV  <data-dir> <output-dir> [<tar-output-dir>]";
 }
-
 
 
 int main(int argc, char *argv[])

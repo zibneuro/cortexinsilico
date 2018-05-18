@@ -1,3 +1,16 @@
+/*
+    This tool computes the innervation matrix. Usage:
+
+    ./computeStatistic INNERVATION <spec_file>
+
+    <spec_file> Specification file that contains the data directory path
+                and filter definitions that determine which segments of
+                the innervation matrix are computed.
+
+    Note: Currently, only innervation values are computed, not explicit
+    synapse locations.
+*/
+
 #include <QtCore>
 #include <QDebug>
 #include <QScopedPointer>
@@ -36,7 +49,8 @@ void printUsage() {
     qDebug() << "Usage: ./computeSynapses INNERVATION <specfile>";
 }
 
-
+// Performs the actual computation by iterating over the pre- and postsynaptic
+// neurons.
 void computeInnervationPost(const QList<int>& preNeurons,
                             const PropsMap& postNeurons,
                             const NetworkProps& networkProps,
@@ -55,6 +69,8 @@ void computeInnervationPost(const QList<int>& preNeurons,
     const QList<int> uniquePreNeuronsList = Util::getUniquePreNeurons(preNeurons, networkProps);
     PropsMap uniquePreNeurons;
 
+    // Map presynpatic neuron IDs taking advantage of the duplicated axon
+    // morphologies.
     qDebug() << "[*] Start reading properties for" << uniquePreNeuronsList.size() << "unique presynaptic neurons";
     for (int i=0; i<uniquePreNeuronsList.size(); ++i) {
         NeuronProps props;
@@ -115,7 +131,6 @@ void computeInnervationPost(const QList<int>& preNeurons,
                 }
             }
         }
-
 
         const QString cellTypeName = networkProps.cellTypes.getName(cellTypeRegion.first);
         const QString regionName = networkProps.regions.getName(cellTypeRegion.second);
@@ -185,7 +200,6 @@ int main(int argc, char *argv[])
         if (props.pstExc) delete props.pstExc;
         if (props.pstInh) delete props.pstInh;
     }
-
 
     return 0;
 }

@@ -4,12 +4,23 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+/**
+    Checks whether two neurons overlap based on their bounding box.
+    @param n1 Properties of first neurons.
+    @param n2 Properties of second neurons.
+    @returns True if the neurons overlap.
+*/
 bool Util::overlap(const NeuronProps& n1, const NeuronProps& n2) {
     const bool intersect = n1.boundingBox.intersects(n2.boundingBox);
     return intersect;
 }
 
-
+/**
+    Determines the unique neurons accounting for axon redundancy.
+    @param preNeuronList The IDs of presynaptic neurons.
+    @param networkProps The model data of the network.
+    @returns The IDs of unique presynaptic neurons.
+*/
 QList<int> Util::getUniquePreNeurons(const QList<int>& preNeuronsList,
                                const NetworkProps& networkProps)
 {
@@ -27,7 +38,11 @@ QList<int> Util::getUniquePreNeurons(const QList<int>& preNeuronsList,
     return unique;
 }
 
-
+/**
+    Creates a mapping (cellType,region) -> (neuron ids).
+    @param propsMap The neuron properties.
+    @returns A mapping (hash) with (cellType, region) as hash-key.
+*/
 IdsPerCellTypeRegion Util::sortByCellTypeRegion(const PropsMap& propsMap) {
 
     IdsPerCellTypeRegion  sorted;
@@ -52,6 +67,13 @@ IdsPerCellTypeRegion Util::sortByCellTypeRegion(const PropsMap& propsMap) {
     return sorted;
 }
 
+/**
+    Creates a mapping (cellType,region) -> (neuron ids) for the
+    specified subset of neurons.
+    @param neuronIds A subset of neuron IDs.
+    @param networkProps The model data of the network.
+    @returns A mapping (hash) with (cellType, region) as hash-key.
+*/
 IdsPerCellTypeRegion Util::sortByCellTypeRegionIDs(const IdList& neuronIds, const NetworkProps& networkProps){
 
     IdsPerCellTypeRegion  sorted;
@@ -112,7 +134,13 @@ QList<int> filterListRemoving(const QList<int>& elementsToRemove, const QList<in
     return result;
 }
 
-
+/**
+    Creates a selection filter for neurons.
+    @param jsonArray The filter query as received from  the webframework.
+    @param network The model data of the network.
+    @returns A selection filter that can be applied to the (CIS3D)Neurons class.
+    @throws runtime_error if the selection filter is not valid.
+*/
 SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray, const NetworkProps& network) {
     SelectionFilter filter;
 

@@ -5,6 +5,9 @@
 #include "CIS3DNetworkProps.h"
 #include "Typedefs.h"
 
+/*
+    The explicit location of a synapse.
+*/
 struct Synapse {
     unsigned long id;
     unsigned int preNeuronId, postNeuronId;
@@ -15,9 +18,20 @@ struct Synapse {
     float approxDistanceToSomaPost;
 };
 
+/*
+    Computes the explicit locations of synapses between pre- and postsynaptic
+    neurons.
+*/
 class SynapseLocation {
 
-public:
+public:    
+    /**
+        Performs the actual calculation of synapse locations.
+        @preNeurons The presynaptic neurons.
+        @postNeurons The postsynaptic neurons.
+        @networkProps The model data.
+        @outputDir The directoy to which the synapse properties are written.
+    */
     static void computeSynapses(const PropsMap& preNeurons,
                          const PropsMap& postNeurons,
                          const NetworkProps& networkProps,

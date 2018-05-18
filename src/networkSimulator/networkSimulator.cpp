@@ -1,3 +1,16 @@
+/*
+    This tool computes the innervation matrix based on the generalized dense
+    Peters' rule (parametrized by theta). Also extracts summary statistics.
+    Usage:
+
+    ./networkSimulator <specFile>
+
+    <specFile>   The specification file containing;
+                    - The model data directoy
+                    - The connectivity rule parameters (theta)
+                    - The definition of the summary statistics
+*/
+
 #include <QtCore>
 #include <QDebug>
 #include <QScopedPointer>
@@ -23,7 +36,7 @@
 #include "InnervationStatistic.h"
 #include "Histogram.h"
 
-
+// Loads the postsynaptic target density field
 SparseField* loadPSTAll(QString dataRoot, CIS3D::NeuronType functionalType){
     const QString pstAllFile = CIS3D::getPSTAllFullPath(dataRoot, functionalType);
     SparseField* pstAll = SparseField::load(pstAllFile);
@@ -33,7 +46,8 @@ SparseField* loadPSTAll(QString dataRoot, CIS3D::NeuronType functionalType){
     return pstAll;
 }
 
-
+// Computes the innervation matrix by interating over the pre- and postsynaptic
+// neurons and applying the connectivity rule parameters (theta).
 void computeInnervationPost(const QList<int>& preNeurons,
                             const PropsMap& postNeurons,
                             /*const PropsMap& postNeuronsNormalized,*/
@@ -170,24 +184,23 @@ void computeInnervationPost(const QList<int>& preNeurons,
     //qDebug() << histo.getNumberOfValues() << " " << histo.getNumberOfZeros() << " " << histo.getAverage();
 }
 
-
+// Checks that the specifcation file has the right format.
 bool specConsistent(const QJsonObject spec){
-
     const QString dataRoot = spec["DATA_ROOT"].toString();
     if(!QDir(dataRoot).exists()){
         qDebug() << "specFile DATA_ROOT not found: " << dataRoot;
         return false;
     }
-
     return true;
 }
-
+\
 
 void printUsage() {
-    qDebug() << "Usage: ./computeConnectome <specFile>";
+    qDebug() << "Usage: ./networkSimulator <specFile>";
 }
 
-
+// Copies the model data meta files to the output dir, which contains the
+// computed innervation matrix.
 void copyToOutputDir(const QString dataRoot,
                         const QString outputDir,
                         const QString filename){
@@ -197,7 +210,8 @@ void copyToOutputDir(const QString dataRoot,
     QFile::copy(source,target);
 }
 
-
+// Initializes the output directory to which the innervation matrix and the
+// summary statistics are written.
 void initConectomeDir(const QJsonObject spec){
     const QString dataRoot = spec["DATA_ROOT"].toString();
     const QString outputDir = spec["OUTPUT_DIR"].toString();
@@ -218,7 +232,7 @@ void initConectomeDir(const QJsonObject spec){
     copyToOutputDir(dataRoot, outputDir, "Regions.csv");
 }
 
-
+// Writes the summary statistics into a JSON file.
 void writeSummary(const QJsonObject spec){
     QJsonValue generationParameters = spec["GENERATION_PARAMETERS"];
     const QString outputDir = generationParameters.toObject()["OUTPUT_DIR"].toString();
@@ -236,20 +250,21 @@ void writeSummary(const QJsonObject spec){
     file.close();
 }
 
-
 void insertJson(QJsonObject& target, const QJsonObject toInsert, const QString propertyName){
+    // Appends a JSON object as property to an existing JSON object.
     QJsonValue insertValue(toInsert);
     target.insert(propertyName, insertValue);
 }
 
-
+// Appends a JSON object as property to an existing JSON object, setting a
+// specific property name.
 void copyJson(QJsonObject& target, const QJsonObject toInsert,
     const QString propertyName, const QString targetPropertyName){
     QJsonValue insertValue(toInsert[propertyName]);
     target.insert(targetPropertyName, insertValue);
 }
 
-
+// Determines the intersection of two neuron ID lists.
 IdList intersectIds(IdList stat, IdList ref){
     IdList intersected;
     for(int i=0; i<stat.size(); i++){
@@ -260,7 +275,7 @@ IdList intersectIds(IdList stat, IdList ref){
     return intersected;
 }
 
-
+// Computes the specified summary statistics.
 void computeStatistics(QJsonObject& spec, const IdList preRef, const IdList postRef) {
     QJsonObject summaryStatistics;
     QJsonArray statisticDefinitions = spec["STATISTIC_DEFINTIONS"].toArray();
@@ -314,7 +329,7 @@ void computeStatistics(QJsonObject& spec, const IdList preRef, const IdList post
     writeSummary(summaryStatistics);
 }
 
-
+// Extracts the theta-parameters from the specification file.
 QVector<float> extractRuleParameters(const QJsonObject spec){
     QVector<float> theta;
     QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
@@ -334,20 +349,19 @@ int main(int argc, char ** argv)
     }
 
     const QString specFile = argv[1];
-
     qDebug() << specFile;
-
     const QJsonObject spec = UtilIO::parseSpecFile(specFile);
 
     if(!specConsistent(spec)){
         return 1;
     }
 
+    // Initialize output directory.
     initConectomeDir(spec);
 
+    // Load model data.
     const QString dataRoot = spec["DATA_ROOT"].toString();
     const QString connectomeDir = spec["OUTPUT_DIR"].toString();
-
     NetworkProps networkProps;
     networkProps.setDataRoot(dataRoot);
     networkProps.loadFilesForSynapseComputation();
@@ -359,9 +373,7 @@ int main(int argc, char ** argv)
     //PropsMap postNeuronsNormalized = UtilIO::getPostSynapticNeurons(spec, networkProps, true);
 
     qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
-
     computeInnervationPost(preNeurons, postNeurons, /*postNeuronsNormalized,*/ networkProps, dataRoot, connectomeDir, extractRuleParameters(spec));
-
     qDebug() << "[*] Computing summary statistics";
 
     QJsonObject summaryStatistics(spec);

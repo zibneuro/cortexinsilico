@@ -1,3 +1,17 @@
+/*
+    This tool registers a new neuron into the existing model.
+    application. Usage:
+
+    ./inputmapper <hocfile> <celltype> <datadir> <outputdir>"
+
+    <hocfile>   The morphology of the neuron to register.
+    <celltype>  The cell type of the neuron to register.
+    <datadir>   The directory containing the model data.
+    <outputdir> The output directort to which the csv-result of the registration
+                is written.
+*/
+
+
 #include <QtCore>
 #include <QDebug>
 #include <random>

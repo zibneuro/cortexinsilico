@@ -5,18 +5,29 @@
 #include <QStringList>
 #include <QDebug>
 
-
+/**
+    Constructor.
+*/
 BoundingBoxes::BoundingBoxes()
 {
 }
 
-
+/**
+    Constructor.
+    Loads the data from the specified csv-file.
+    @param csvFile The data file.
+*/
 BoundingBoxes::BoundingBoxes(const QString &csvFile)
 {
     loadCSV(csvFile);
 }
 
-
+/**
+    Retrieves the bounding box of the axonal tree.
+    @param id ID of the neuron.
+    @return The Bounding Box.
+    @throws runtime_error if the the neuron ID is not found.
+*/
 BoundingBox BoundingBoxes::getAxonBox(const int id) const {
     if (mBoxMap.contains(id)) {
         return mBoxMap.value(id).axonBox;
@@ -25,7 +36,12 @@ BoundingBox BoundingBoxes::getAxonBox(const int id) const {
     throw std::runtime_error(qPrintable(msg));
 }
 
-
+/**
+    Retrieves the bounding box of the dendritic tree.
+    @param id ID of the neuron.
+    @return The Bounding Box.
+    @throws runtime_error if the the neuron ID is not found.
+*/
 BoundingBox BoundingBoxes::getDendriteBox(const int id) const {
     if (mBoxMap.contains(id)) {
         return mBoxMap.value(id).dendBox;
@@ -34,7 +50,11 @@ BoundingBox BoundingBoxes::getDendriteBox(const int id) const {
     throw std::runtime_error(qPrintable(msg));
 }
 
-
+/**
+    Adds a NeuronBox to the collection.
+    @param box The NeuronBox.
+    @throws runtime_error if the the neuron ID already exists.
+*/
 void BoundingBoxes::addNeuronBox(const NeuronBox& box)
 {
     const int id = box.id;
@@ -44,7 +64,11 @@ void BoundingBoxes::addNeuronBox(const NeuronBox& box)
     mBoxMap.insert(id, box);
 }
 
-
+/**
+    Saves the collection to the specified csv-file.
+    @fileName The csv-file.
+    @throws runtime_error in case of failure.
+*/
 void BoundingBoxes::saveCSV(const QString &fileName) const
 {
     QFile file(fileName);
@@ -97,7 +121,11 @@ void BoundingBoxes::saveCSV(const QString &fileName) const
     }
 }
 
-
+/**
+    Loads the collection from the specified csv-file.
+    @fileName The csv-file.
+    @throws runtime_error in case of failure.
+*/
 void BoundingBoxes::loadCSV(const QString &fileName)
 {
     QFile file(fileName);
@@ -164,46 +192,75 @@ void BoundingBoxes::loadCSV(const QString &fileName)
 }
 
 
-
+/**
+    Constructor.
+    Lower and upper corner initialized with zero.
+*/
 BoundingBox::BoundingBox() :
     mMin( 1.0f),
     mMax(-1.0f)
 {
 }
 
-
+/**
+    Constructor.
+    @param minCorner Lower corner.
+    @param maxCorner Upper corner.
+*/
 BoundingBox::BoundingBox(const Vec3f &minCorner, const Vec3f &maxCorner) :
     mMin(minCorner),
     mMax(maxCorner)
 {
 }
 
-
+/**
+    Retrieve lower corner.
+    @return The lower corner.
+*/
 Vec3f BoundingBox::getMin() const {
     return mMin;
 }
 
-
+/**
+    Retrieve upper corner.
+    @return The upper corner.
+*/
 Vec3f BoundingBox::getMax() const {
     return mMax;
 }
 
-
+/**
+    Sets the lower corner.
+    @param The lower corner.
+*/
 void BoundingBox::setMin(const Vec3f &minCorner) {
     mMin = minCorner;
 }
 
-
+/**
+    Sets the upper corner.
+    @param The upper corner.
+*/
 void BoundingBox::setMax(const Vec3f &maxCorner) {
     mMax = maxCorner;
 }
 
-
+/**
+    Checks whether the bounding box covers a positive range in at least
+    one dimension. That is, if the upper corner is larger than the lower
+    corner in at least one dimension.
+    @return true if bounding box covers a positive range.
+*/
 bool BoundingBox::isEmpty() const {
     return (mMax.getX()<mMin.getX()) || (mMax.getY()<mMin.getY()) || (mMax.getZ()<mMin.getZ());
 }
 
-
+/**
+    Checks whether the specified bounding box intersects with this
+    bounding box.
+    @param other The other bounding box.
+    @return true if bounding box intersects.
+*/
 bool BoundingBox::intersects(const BoundingBox &other) const {
 
     if (isEmpty() || other.isEmpty()) {
@@ -217,7 +274,9 @@ bool BoundingBox::intersects(const BoundingBox &other) const {
          && (mMax.getZ() > other.mMin.getZ()));  // zmax1 > zmin2
 }
 
-
+/**
+    Prints the parameters of the bounding box to stdout.
+*/
 void BoundingBox::print() const {
     if (isEmpty()) {
         QTextStream(stdout) << "Box is empty.\n";
@@ -228,4 +287,3 @@ void BoundingBox::print() const {
         QTextStream(stdout) << "Z: " << mMin.getZ() << " - " << mMax.getZ() << "\n";
     }
 }
-

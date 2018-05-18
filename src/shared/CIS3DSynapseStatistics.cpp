@@ -1,5 +1,8 @@
 #include "CIS3DSynapseStatistics.h"
 
+/**
+    Constructor.
+*/
 SynapseStatistics::SynapseStatistics() :
     mTotalNumberOfSynapses(0)
 {
@@ -16,7 +19,12 @@ SynapseStatistics::SynapseStatistics() :
     mNumberOfSynapses.insert(CIS3D::SOMA,   0);
 }
 
-
+/**
+    Adds synapse to the collection. The synapse is associated with one
+    of the following structures: Soma, Basal, Apical.
+    @param syn The sample synapse to add.
+    @throws runtime_error if the associated structure is invalid.
+*/
 void SynapseStatistics::addSynapse(const CIS3D::Synapse& syn) {
 
    if ((syn.structure != CIS3D::SOMA) &&
@@ -37,40 +45,62 @@ void SynapseStatistics::addSynapse(const CIS3D::Synapse& syn) {
 
 }
 
-
+/**
+    Returns the number of sample synapses.
+    @return The number of samples.
+*/
 unsigned int SynapseStatistics::getNumberOfSynapses() const
 {
     return mTotalNumberOfSynapses;
 }
 
-
+/**
+    Returns the number of sample synapses for the specified struture.
+    @param structure The associated structure.
+    @return The number of samples.
+*/
 unsigned int SynapseStatistics::getNumberOfSynapses(CIS3D::Structure structure) const
 {
     return mNumberOfSynapses.value(structure);
 }
 
-
+/**
+    Returns standard statistics about the distance to soma for all
+    synapses.
+    @return The distance to soma statistics.
+*/
 const Statistics SynapseStatistics::getDistanceToSomaStatistics() const
 {
     return mAllDistStats;
 }
 
-
+/**
+    Returns standard statistics about the distance to soma for all
+    synapses with the specified structure.
+    @param The associated structure.
+    @return The distance to soma statistics.
+*/
 const Statistics SynapseStatistics::getDistanceToSomaStatistics(CIS3D::Structure structure) const
 {
     return mDistStats.value(structure);
 }
 
-
+/**
+    Returns the number of connected presynaptic neurons for all synapses.
+    @return The number of connected neurons.
+*/
 int SynapseStatistics::getNumberOfConnectedNeurons() const
 {
     return mAllPreNeuronIds.size();
 }
 
-
+/**
+    Returns the number of connected presynaptic neurons for all synapses
+    with the specified structure.
+    @param The associated structure.
+    @return The number of connected neurons.
+*/
 int SynapseStatistics::getNumberOfConnectedNeurons(CIS3D::Structure structure) const
 {
     return mPreNeuronIds.value(structure).size();
 }
-
-

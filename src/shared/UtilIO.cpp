@@ -9,7 +9,13 @@
 #include <QDebug>
 #include <QRegularExpression>
 
-
+/**
+    Reads specification file which can contain filter definitions
+    for pre- and postsynaptic neurons.
+    @param fileName Path to spec file (in JSON format).
+    @returns A JSON object with the specifications.
+    @throws runtime_error if file cannot be loaded or parsed.
+*/
 QJsonObject UtilIO::parseSpecFile(const QString& fileName){
     QFile jsonFile(fileName);
     if (!jsonFile.open(QIODevice::ReadOnly)) {
@@ -26,7 +32,14 @@ QJsonObject UtilIO::parseSpecFile(const QString& fileName){
     return doc.object();
 }
 
-
+/**
+    Retrieves postsynaptic neurons and their properties (e.g., bounding box)
+    that meet the filter definition.
+    @param spec The spec file with the filter definition.
+    @param networkProps the model data of the network.
+    @param normalized Whether the PST density of each neuron is normalized by the overall PST density.
+    @returns The postsynaptic neurons.
+*/
 PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps, bool normalized) {
     const QJsonArray regions   = spec["POST_NEURON_REGIONS"].toArray();
     const QJsonArray cellTypes = spec["POST_NEURON_CELLTYPES"].toArray();
@@ -88,7 +101,13 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
     return neurons;
 }
 
-
+/**
+    Determines ids of postsynaptic neurons meeting the filter definition
+    @param spec The spec file with the filter definition.
+    @param networkProps The model data of the network.
+    @returns A list of postsynaptic neuron IDs.
+    @throws runtime_error if data cannot be loaded.
+*/
 QList<int> UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec, const NetworkProps& networkProps){
 
     const QJsonArray regions   = spec["POST_NEURON_REGIONS"].toArray();
@@ -140,7 +159,13 @@ QList<int> UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec, const Netwo
     return selectedNeuronIds;
 }
 
-
+/**
+    Determines IDs of presynaptic neurons meeting the filter definition.
+    @param spec The spec file with the filter definition.
+    @param networkProps The model data of the network.
+    @returns A list of presynaptic neuron IDs.
+    @throws runtime_error if data cannot be loaded.
+*/
 QList<int> UtilIO::getPreSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps) {
     const QJsonArray regions   = spec["PRE_NEURON_REGIONS"].toArray();
     const QJsonArray cellTypes = spec["PRE_NEURON_CELLTYPES"].toArray();
@@ -205,17 +230,32 @@ int getNeuronIdFromFile(const QString& pattern, const QString& fileName, const i
     throw std::runtime_error(errorStr.toStdString());
 }
 
-
+/**
+    Determines the neuron ID from the specfied presynaptic data file name.
+    @param fileName A Boutons_*.dat file name.
+    @returns The presynaptic neuron ID.
+    @throws runtime_error if ID cannot be extracted from file name.
+*/
 int UtilIO::getPreNeuronIdFromFile(const QString& fileName) {
     return  getNeuronIdFromFile("Boutons_(\\d+).dat", fileName, 1);
 }
 
-
+/**
+    Determines the neuron ID from the specfied postsynaptic data file name.
+    @param fileName A PST_inhibitoryPre_*.dat OR PST_excitatoryPre_*.dat file name.
+    @returns The postsynaptic neuron ID.
+    @throws runtime_error if ID cannot be extracted from file name.
+*/
 int UtilIO::getPostNeuronIdFromFile(const QString& fileName) {
     return  getNeuronIdFromFile("NormalizedPST_(excitatory|inhibitory)Pre_(\\d+).dat", fileName, 2);
 }
 
-
+/**
+    Determines whether the specfied file mame represents excitatory
+    or inhibitory postsynaptic data.
+    @param file A PST_inhibitoryPre_*.dat OR PST_excitatoryPre_*.dat file name.
+    @returns True if the file represents excitatory neurons.
+*/
 bool UtilIO::isExcitatoryFileName(const QString& fileName) {
     return fileName.contains("excitatory");
 }

@@ -9,7 +9,11 @@ MyStatistic::MyStatistic(const NetworkProps& networkProps) :
     NetworkStatistic(networkProps){
 }
 
-
+/**
+    Performs the actual computation based on the specified neurons.
+    @param preNeurons The presynaptic neurons.
+    @param postNeurons The postsynaptic neurons.
+*/
 void MyStatistic::doCalculate(const IdList& preNeurons, const IdList& postNeurons){
 
     // Iterate over regions with postsynaptic neurons that meet the filter criteria
@@ -52,17 +56,29 @@ void MyStatistic::doCalculate(const IdList& preNeurons, const IdList& postNeuron
     // reportComplete();
 }
 
-
+/**
+    Adds the result values to a JSON object
+    @param obj JSON object to which the values are appended
+*/
 void MyStatistic::doCreateJson(QJsonObject& /*obj*/) const {
     // Implement when integrating the statistic into the webframework
     // refer to shared/InnervationStatistic.cpp as reference
 }
 
+/**
+    Writes the result values to file stream (CSV).
+    @param out The file stream to which the values are written.
+    @param sep The separator between parameter name and value.
+*/
 void MyStatistic::doCreateCSV(QTextStream& /*out*/, const QChar /*sep*/) const {
     // Implement when integrating the statistic into the webframework
     // refer to shared/InnervationStatistic.cpp as reference
 }
 
+/**
+    Returns internal result, for testing purposes.
+    @return The statistic.
+*/
 Statistics MyStatistic::getResult() const{
     return mStandardStatistic;
 }

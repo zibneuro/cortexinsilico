@@ -6,7 +6,12 @@
 #include <QTextStream>
 #include <QDebug>
 
-
+/**
+    Constructor.
+    @param networkProps The model data of the network.
+    @param innervation BinSize Bin size of the innervation histogram.
+    @param conProbBinSize Bin size of the connectionProbability histogram.
+*/
 InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
     const float innervationBinSize, const float connProbBinSize) :
     NetworkStatistic(networkProps)
@@ -18,7 +23,11 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
     numPreNeuronsUnique = 0;
 }
 
-
+/**
+    Performs the actual computation based on the specified neurons.
+    @param preNeurons The presynaptic neurons.
+    @param postNeurons: The postsynaptic neurons.
+*/
 void InnervationStatistic::doCalculate(const IdList& preNeurons, const IdList& postNeurons) {
 
     QHash<int, float> preNeuronInnervationSum;
@@ -118,7 +127,11 @@ void InnervationStatistic::doCalculate(const IdList& preNeurons, const IdList& p
     reportComplete();
 }
 
-
+/**
+    Writes the result values to file stream (CSV).
+    @param out The file stream to which the values are written.
+    @param sep The separator between parameter name and value.
+*/
 void InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
 {
     out << "Number of presynaptic neurons:"        << sep << numPreNeurons << "\n";
@@ -215,7 +228,10 @@ void InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
     out << "\n";
 }
 
-
+/**
+    Adds the result values to a JSON object
+    @param obj: JSON object to which the values are appended
+*/
 void InnervationStatistic::doCreateJson(QJsonObject& obj) const {
 
     QJsonObject innervationHistogram = innervationHisto.createJson();

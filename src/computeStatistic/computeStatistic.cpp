@@ -1,3 +1,13 @@
+/*
+    This tool can be used compute statistics offline, outside of the web
+    application. Usage:
+
+    ./computeStatistic <spec_file>
+
+    <spec_file> Specification file that contains the data directory path
+                and filter definitions.
+*/
+
 #include "UtilIO.h"
 #include "MyStatistic.h"
 #include "CIS3DNetworkProps.h"
@@ -9,6 +19,7 @@
 #include <QString>
 #include <QDebug>
 #include <QJsonObject>
+
 
 void printUsage() {
     qDebug() << "Usage: ./computeStatistic <spec_file>";

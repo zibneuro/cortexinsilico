@@ -8,7 +8,9 @@
 #include <QStringList>
 #include <QDebug>
 
-
+/**
+    Constructor. Initializes default model of rat vS1.
+*/
 Regions::Regions()
 {
     mPropsMap.insert( 0, RegionProperties( 0, "Brain",           -1));
@@ -125,7 +127,11 @@ Regions::Regions()
     mPropsMap.insert(109, RegionProperties(109, "S1_Septum_F4",    5));
 }
 
-
+/**
+    Returns the name of the specified brain region.
+    @param id The ID of the region.
+    @throws runtime_error if ID is not found.
+*/
 QString Regions::getName(const int id) const
 {
     if (!mPropsMap.contains(id)) {
@@ -135,7 +141,11 @@ QString Regions::getName(const int id) const
     return mPropsMap.value(id).name;
 }
 
-
+/**
+    Returns the ID of the specified brain region.
+    @param name The name of the region.
+    @throws runtime_error if name is not found.
+*/
 int Regions::getId(const QString &name) const
 {
     for (PropsMap::ConstIterator it = mPropsMap.begin(); it != mPropsMap.end(); ++it) {
@@ -148,12 +158,21 @@ int Regions::getId(const QString &name) const
     throw std::runtime_error(qPrintable(msg));
 }
 
-
+/**
+    Returns the IDs of all brain regions.
+    @param id The IDs.
+*/
 QList<int> Regions::getAllRegionIds() const {
     return mPropsMap.keys();
 }
 
-
+/**
+    Determines whether the specified region is contained in the specified
+    subregion.
+    @param id The ID of the region to check.
+    @param subtreeRoot The ID of the subregion.
+    @return True if the region is contained in the subregion.
+*/
 bool Regions::isInSubtree(const int regionId, const int subtreeRoot) const {
     PropsMap::ConstIterator it = mPropsMap.find(regionId);
     if (it == mPropsMap.end()) {
@@ -171,11 +190,15 @@ bool Regions::isInSubtree(const int regionId, const int subtreeRoot) const {
     }
 }
 
-
+/**
+    Saves the region to file.
+    @param fileName The name of the file.
+    @throws runtime_error if saving the file fails.
+*/
 void Regions::saveCSV(const QString &fileName) const
 {
     QFile file(fileName);
-    
+
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         const QString msg = QString("Error saving regions file. Could not open file %1").arg(fileName);
         throw std::runtime_error(qPrintable(msg));
@@ -183,16 +206,20 @@ void Regions::saveCSV(const QString &fileName) const
 
     QTextStream out(&file);
     const QChar sep = ',';
-    
+
     out << "ID" << sep << "Name" << sep << "ParentId" << "\n";
-    
+
     for (PropsMap::ConstIterator it = mPropsMap.begin(); it != mPropsMap.end(); ++it) {
         const RegionProperties& props = it.value();
         out << props.id << sep << props.name << sep << props.parentId << "\n";
     }
 }
 
-
+/**
+    Loads the region from file.
+    @param fileName The name of the file.
+    @throws runtime_error if loading or parsing the file fails.
+*/
 void Regions::loadCSV(const QString &fileName)
 {
 

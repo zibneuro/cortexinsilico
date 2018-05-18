@@ -3,7 +3,13 @@
 #include <QTextStream>
 #include <QDebug>
 
-
+/**
+    Returns the postynaptic target length density.
+    @param postCtName The cell type of the postsynaptic neuron.
+    @param strcuture The structural feature of the postsynaptic neuron.
+    @param preSynType The neuron type of the presynaptic neuron.
+    @return The length density.
+*/
 float PSTDensities::getLengthDensity(const QString &postCtName,
                                      const CIS3D::Structure structure,
                                      const CIS3D::NeuronType preSynType) const
@@ -16,7 +22,13 @@ float PSTDensities::getLengthDensity(const QString &postCtName,
     return mDensityMap.value(postCtName).value(key).lengthDensity;
 }
 
-
+/**
+    Returns the postynaptic target area density.
+    @param postCtName The cell type of the postsynaptic neuron.
+    @param structure The structural feature of the postsynaptic neuron.
+    @param preSynType The neuron type of the presynaptic neuron.
+    @return The area density.
+*/
 float PSTDensities::getAreaDensity(const QString &postCtName,
                                    const CIS3D::Structure structure,
                                    const CIS3D::NeuronType preSynType) const
@@ -30,7 +42,13 @@ float PSTDensities::getAreaDensity(const QString &postCtName,
 }
 
 
-
+/**
+     Sets the postynaptic target length density.
+     @param postCtName The cell type of the postsynaptic neuron.
+     @param structure The structural feature of the postsynaptic neuron.
+     @param preSynType The neuron type of the presynaptic neuron.
+     @param density The length density.
+*/
 void PSTDensities::setLengthDensity(const QString &postCtName,
                                     const CIS3D::Structure structure,
                                     const CIS3D::NeuronType preSynType,
@@ -44,7 +62,13 @@ void PSTDensities::setLengthDensity(const QString &postCtName,
     mDensityMap[postCtName][key].lengthDensity = density;
 }
 
-
+/**
+    Sets the postynaptic target area density.
+    @param postCtName The cell type of the postsynaptic neuron.
+    @param structure The structural feature of the postsynaptic neuron.
+    @param preSynType The neuron type of the presynaptic neuron.
+    @param density The area density.
+*/
 void PSTDensities::setAreaDensity(const QString &postCtName,
                                   const CIS3D::Structure structure,
                                   const CIS3D::NeuronType preSynType,
@@ -58,7 +82,11 @@ void PSTDensities::setAreaDensity(const QString &postCtName,
     mDensityMap[postCtName][key].areaDensity = density;
 }
 
-
+/**
+    Saves the postsynaptic target densities to file.
+    @param fileName Name of the file.
+    @throws runtime_error if saving file fails.
+*/
 void PSTDensities::saveCSV(const QString &fileName) const
 {
     QFile file(fileName);
@@ -97,7 +125,11 @@ void PSTDensities::saveCSV(const QString &fileName) const
     }
 }
 
-
+/**
+    Loads the postsynaptic target densities from file.
+    @param fileName Name of the file.
+    @throws runtime_error if loading or parsing the file fails.
+*/
 void PSTDensities::loadCSV(const QString &fileName)
 {
     QFile file(fileName);

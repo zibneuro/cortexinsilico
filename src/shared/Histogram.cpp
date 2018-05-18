@@ -1,6 +1,10 @@
 #include "Histogram.h"
 #include <QJsonArray>
 
+/**
+    Constructor.
+    Default bin size set to 1.0.
+*/
 Histogram::Histogram()
     : mBinSize(1.0)
     , mNumValues(0)
@@ -12,6 +16,9 @@ Histogram::Histogram()
 {
 }
 
+/** Constructor.
+    @param binSize Width of bins.
+*/
 Histogram::Histogram(const double binSize)
     : mBinSize(binSize)
     , mNumValues(0)
@@ -23,7 +30,10 @@ Histogram::Histogram(const double binSize)
 {
 }
 
-
+/**
+    Adds a sampe value to the histogram.
+    @param v The sample value.
+*/
 void Histogram::addValue(const double v)
 {
     if (v < 0.0) {
@@ -55,37 +65,61 @@ void Histogram::addValue(const double v)
     }
 }
 
-
+/**
+    Retrieves the number of bins covering all current samples.
+    @returns Number of bins.
+*/
 int Histogram::getNumberOfBins() const {
     return mBins.size();
 }
 
-
+/**
+    Retrieves number of samples in specified bin.
+    @param binNum Id of the bin.
+    @returns Number of samples in the bin.
+*/
 long long int Histogram::getBinValue(const int binNum) const {
     return mBins.at(binNum);
 }
 
-
+/**
+    Retrieves lower end of value range for the specified bin.
+    @param binNum Id of the bin.
+    @returns Lower end of value range.
+*/
 double Histogram::getBinStart(const int binNum) const {
     return binNum * mBinSize;
 }
 
-
+/**
+    Retrieves upper end of value range for the specified bin.
+    @param binNum Id of the bin.
+    @returns Upper end of value range.
+*/
 double Histogram::getBinEnd(const int binNum) const {
     return (binNum+1) * mBinSize;
 }
 
-
+/**
+    Retrieves total number of samples.
+    @returns Number of samples.
+*/
 long long int Histogram::getNumberOfValues() const {
     return mNumValues;
 }
 
-
+/**
+    Retrieves number of samples with value zero.
+    @returns Number of samples.
+*/
 long long Histogram::getNumberOfZeros() const {
     return mNumZeros;
 }
 
-
+/**
+    Determines average value of samples.
+    @returns Average value.
+*/
 double Histogram::getAverage() const {
     if (mNumValues > 0) {
         return mTotalValue/mNumValues;
@@ -95,7 +129,10 @@ double Histogram::getAverage() const {
     }
 }
 
-
+/**
+    Determines variance of samples.
+    @returns Variance.
+*/
 double Histogram::getVariance() const {
     if (mNumValues > 0) {
         const double v = mTotalValue/double(mNumValues);
@@ -107,22 +144,33 @@ double Histogram::getVariance() const {
     }
 }
 
-
+/**
+    Determines standard deviation of samples.
+    @returns Standard deviation.
+*/
 double Histogram::getStandardDeviation() const {
     return sqrt(getVariance());
 }
 
-
+/**
+    Retrieves minimum sample value.
+    @returns Minimum value.
+*/
 double Histogram::getMinValue() const {
     return mMinValue;
 }
-
-
+/**
+    Retrieves highest sample value.
+    @returns Maximum value.
+*/
 double Histogram::getMaxValue() const {
     return mMaxValue;
 }
 
-
+/**
+    Creates a json representation of the histogram.
+    @returns Histogram as json object.
+*/
 QJsonObject Histogram::createJson() const {
     QJsonArray histArr = QJsonArray();
     for (int b=0; b<getNumberOfBins(); ++b) {

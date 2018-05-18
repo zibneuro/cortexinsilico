@@ -1,6 +1,18 @@
+/*
+    This tool is used for testing purposes to compare innveration values.
+    Usage:
+
+    ./compareData <sparseVectorSet_ref> <sparseVectorSet_cmp> <epsilon>"
+
+    <sparseVectorSet_ref> InnervationPost directory with the reference values.
+    <sparseVectorSet_cmp> InnervationPost directory with the values to be
+        compared against the reference values.
+    <epsilon> Maximum permissible deviation.
+*/
+
 #include <QDebug>
-#include <QList>
 #include <QSet>
+#include <QList>
 #include <QString>
 #include "CIS3DSparseVectorSet.h"
 
@@ -9,7 +21,7 @@ void printUsage() {
     qDebug() << "Usage: ./compareData <sparseVectorSet_ref> <sparseVectorSet_cmp> <epsilon>";
 }
 
-
+// Checks whether two lists of neuron IDs have the same entries.
 bool sameEntries(const QList<int> a, const QList<int> b){
     QSet<int> aSet = QSet<int>::fromList(a);
     const QSet<int> bSet = QSet<int>::fromList(b);
@@ -17,7 +29,7 @@ bool sameEntries(const QList<int> a, const QList<int> b){
     return (a.count() == b.count()) && (aSet.count() == a.count());
 }
 
-
+// Checks whether the deviation between a and b is below eps.
 bool areIdentical(const float a, const float b, const float eps){\
     return std::fabs(a-b) < eps;
 }
@@ -69,7 +81,6 @@ int main(int argc, char* argv[])
                 return 1;
             }
         }
-
     }
 
     qDebug() << "identical";

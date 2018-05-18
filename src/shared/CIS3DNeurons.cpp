@@ -6,18 +6,27 @@
 #include <QTextStream>
 #include <QBitArray>
 
-
+/**
+    Constructor.
+*/
 Neurons::Neurons()
 {
 }
 
-
+/**
+    Constructor.
+    @param csvFile The neuron file to load.
+    @throws runtime_error if file could not be loaded or parsed.
+*/
 Neurons::Neurons(const QString &csvFile)
 {
     loadCSV(csvFile);
 }
 
-
+/**
+    Adds another neuron to the collection.
+    @param neuronProps The neuron to add.
+*/
 void Neurons::addNeuron(const NeuronProperties &neuronProps)
 {
     const int id = neuronProps.id;
@@ -27,13 +36,22 @@ void Neurons::addNeuron(const NeuronProperties &neuronProps)
     mPropsMap.insert(id, neuronProps);
 }
 
-
+/**
+    Checks if the neuron with the specified ID exists.
+    @param id The neuron ID.
+    @return True if the neuron exists.
+*/
 bool Neurons::exists(const int id) const
 {
     return mPropsMap.contains(id);
 }
 
-
+/**
+    Determines the cell type of the specified neuron.
+    @param id The neuron ID.
+    @return The ID of the cell type.
+    @throws runtime_error if neuron ID does not exist.
+*/
 int Neurons::getCellTypeId(const int id) const {
     if (mPropsMap.contains(id)) {
         return mPropsMap.value(id).cellTypeId;
@@ -42,7 +60,12 @@ int Neurons::getCellTypeId(const int id) const {
     throw std::runtime_error(qPrintable(msg));
 }
 
-
+/**
+    Determines the region of the specified neuron.
+    @param id The neuron ID.
+    @return The ID of the region.
+    @throws runtime_error if neuron ID does not exist.
+*/
 int Neurons::getRegionId(const int id) const {
     const PropsMap::const_iterator it = mPropsMap.constFind(id);
     if (it == mPropsMap.constEnd()) {
@@ -52,7 +75,12 @@ int Neurons::getRegionId(const int id) const {
     return it->regionId;
 }
 
-
+/**
+    Determines the soma position of the specified neuron.
+    @param id The neuron ID.
+    @return The soma position.
+    @throws runtime_error if neuron ID does not exist.
+*/
 Vec3f Neurons::getSomaPosition(const int id) const {
     if (mPropsMap.contains(id)) {
         const NeuronProperties& props = mPropsMap.value(id);
@@ -62,7 +90,12 @@ Vec3f Neurons::getSomaPosition(const int id) const {
     throw std::runtime_error(qPrintable(msg));
 }
 
-
+/**
+    Determines the synaptic side of the specified neuron.
+    @param id The neuron ID.
+    @return The synaptic side (presy./postsy./both).
+    @throws runtime_error if neuron ID does not exist.
+*/
 CIS3D::SynapticSide Neurons::getSynapticSide(const int id) const
 {
     const PropsMap::const_iterator it = mPropsMap.constFind(id);
@@ -73,7 +106,13 @@ CIS3D::SynapticSide Neurons::getSynapticSide(const int id) const
     return it->synapticSide;
 }
 
-
+/**
+    Returns the IDs of all neurons with the specified properties.
+    @includedCellTypeIds The desired cell types.
+    @includedRegionIds The desired regions.
+    @synapticSide The desired synaptic side.
+    @return The neuron IDs.
+*/
 QList<int> Neurons::getFilteredNeuronIds(const QList<int> &includedCellTypeIds,
                                          const QList<int> &includedRegionIds,
                                          const CIS3D::SynapticSide synapticSide) const
@@ -127,7 +166,11 @@ QList<int> Neurons::getFilteredNeuronIds(const QList<int> &includedCellTypeIds,
     return result;
 }
 
-
+/**
+    Returns the IDs of all neurons meeting the filter condition.
+    @filter The selection filter.
+    @return The neuron IDs.
+*/
 QList<int> Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const {
     const bool allCellTypesIncluded = (filter.cellTypeIds.size() == 0);
     const bool allRegionsIncluded = (filter.regionIds.size() == 0);
@@ -207,7 +250,11 @@ QList<int> Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const {
 
 }
 
-
+/**
+    Saves the neurons to file.
+    @param fileName The file name.
+    @throws runtime_error if file could not saved.
+*/
 void Neurons::saveCSV(const QString &fileName) const
 {
     QFile file(fileName);
@@ -244,7 +291,11 @@ void Neurons::saveCSV(const QString &fileName) const
     }
 }
 
-
+/**
+    Loads the neurons from file.
+    @param fileName The name of the neuron file.
+    @throws runtime_error if file could not be loaded or parsed.
+*/
 void Neurons::loadCSV(const QString &fileName)
 {
     QFile file(fileName);
@@ -309,5 +360,3 @@ void Neurons::loadCSV(const QString &fileName)
     }
     QTextStream(stdout) << "[*] Completed reading " <<  mPropsMap.size() << " neurons.\n";
 }
-
-

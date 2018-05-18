@@ -1,12 +1,22 @@
 #include "CIS3DNetworkProps.h"
 
-
+/**
+    Sets the root directory in which all the model data is located.
+    @param dataRoot The directory path.
+*/
 void NetworkProps::setDataRoot(const QString& dataRoot) {
     this->dataRoot = dataRoot;
     dataRootDir = QDir(dataRoot);
 }
 
-
+/**
+    Loads the data required for computing the innervation.
+    - CellTypes
+    - Neurons
+    - BoundingBoxes
+    - Regions
+    - AxonRedundancyMap
+*/
 void NetworkProps::loadFilesForSynapseComputation()
 {
     const QString cellTypesFile = CIS3D::getCellTypesFileName(dataRootDir);
@@ -25,7 +35,14 @@ void NetworkProps::loadFilesForSynapseComputation()
     axonRedundancyMap.loadBinary(redundancyFile);
 }
 
-
+/**
+    Loads the data required for computing a summary statistic about the
+    network.
+    - CellTypes
+    - Neurons
+    - Regions
+    - AxonRedundancyMap
+*/
 void NetworkProps::loadFilesForQuery()
 {
     const QString cellTypesFile = CIS3D::getCellTypesFileName(dataRootDir);
@@ -41,7 +58,16 @@ void NetworkProps::loadFilesForQuery()
     axonRedundancyMap.loadBinary(redundancyFile);
 }
 
-
+/**
+    Loads the data required for registering another neuron into an existing
+    network.
+    - CellTypes
+    - Neurons
+    - BoundingBoxes
+    - Regions
+    - AxonRedundancyMap
+    - PSTDensity
+*/
 void NetworkProps::loadFilesForInputMapping()
 {
     const QString cellTypesFile = CIS3D::getCellTypesFileName(dataRootDir);

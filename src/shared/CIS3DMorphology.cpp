@@ -59,12 +59,18 @@ Section::Section(const QString& n) :
 }
 
 
-
+/**
+    Constructor.
+*/
 Morphology::Morphology()
 {
 }
 
-
+/**
+    Constructor.
+    @param hocFile The file to parse.
+    @throws runtime_error if file could not be parsed.
+*/
 Morphology::Morphology(const QString &hocFile)
 {
     parseHoc(hocFile);
@@ -285,7 +291,11 @@ void assignDistanceToSectionsConnectedTo(const QString& parentName, SectionMap& 
     }
 }
 
-
+/**
+    Parses a hoc-file.
+    @param hocFile The file to parse.
+    @throws runtime_error if file could not be parsed.
+*/
 void Morphology::parseHoc(const QString &hocFile)
 {
     QFile hoc(hocFile);
@@ -544,7 +554,12 @@ SegmentList splitSegmentByGrid(const MorphologyPoint& p0,
     return result;
 }
 
-
+/**
+    Determines segments by intersecting the morphological features with the
+    voxel grid.
+    @param The voxel grid.
+    @return The segments.
+*/
 SegmentList Morphology::getGridSegments(const SparseField &grid) const
 {
     SegmentList segments;
@@ -565,7 +580,11 @@ SegmentList Morphology::getGridSegments(const SparseField &grid) const
     return segments;
 }
 
-
+/**
+    Determines bounding box containing all morphological features of the
+    neuron.
+    @return The bounding box.
+*/
 BoundingBox Morphology::getBoundingBox() const
 {
     Vec3f minPt, maxPt;
@@ -588,11 +607,21 @@ BoundingBox Morphology::getBoundingBox() const
     return BoundingBox(minPt, maxPt);
 }
 
-
+/**
+    Determines the number of different sections that are part of the
+    morphology.
+    @return The number of sections.
+*/
 int Morphology::getNumberOfSections() const {
     return mSections.size();
 }
 
+/**
+    Determines name of the specified section.
+    @param sectionID The id of the section.
+    @return The name of the section.
+    @throws runtime_error if section ID is unknown.
+*/
 QString Morphology::getSectionName(const int sectionID) const
 {
     for (SectionMap::ConstIterator it=mSections.constBegin(); it!=mSections.constEnd(); ++it) {
@@ -605,7 +634,12 @@ QString Morphology::getSectionName(const int sectionID) const
     throw std::runtime_error(qPrintable(msg));
 }
 
-
+/**
+    Retrieves the structure associated with the specified section.
+    @param sectionID The ID of the section.
+    @return The structure.
+    @throws runtime_error if section ID is unknown.
+*/
 CIS3D::Structure Morphology::getSectionStructure(const int sectionID) const
 {
     for (SectionMap::ConstIterator it=mSections.constBegin(); it!=mSections.constEnd(); ++it) {
