@@ -3,6 +3,7 @@
 #include "CIS3DAxonRedundancyMap.h"
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QSet>
 
 /**
     Checks whether two neurons overlap based on their bounding box.
@@ -24,18 +25,14 @@ bool Util::overlap(const NeuronProps& n1, const NeuronProps& n2) {
 QList<int> Util::getUniquePreNeurons(const QList<int>& preNeuronsList,
                                const NetworkProps& networkProps)
 {
+    QSet<int> unique;
     const AxonRedundancyMap& axonMap = networkProps.axonRedundancyMap;
-    QList<int> unique;
-
     for (int i=0; i<preNeuronsList.size(); ++i) {
         const int preId = preNeuronsList[i];
         const int mappedId = axonMap.getNeuronIdToUse(preId);
-        if (preId == mappedId) {
-            unique.append(preId);
-        }
+        unique.insert(mappedId);
     }
-
-    return unique;
+    return unique.toList();
 }
 
 /**
