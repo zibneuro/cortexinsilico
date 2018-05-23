@@ -8,9 +8,15 @@ python3 install/CompileCppAndRunTests.py
 II) How use the network simulator (to find connectivity rules)
 ==============================================================
 
-1) Download the down-sampled model data from the ZIB website:
+1) Download the sampled model data from the ZIB website:
 
 https://visual.zib.de/2018/IXDtH2G8/latest/
+
+Factor 10 downsampled model:
+realization-entireRBCF10_2018-04-19/modelData_entireRBCF10_2018-04-19.tar.gz
+
+Entire model:
+realization-entireRBC_2015-10-07/modelData_entireRBC_2015-10-07.tar.gz
 
 2) Extract modelData_entireRBCF10_2018-04-19.tar.gz into:
 
