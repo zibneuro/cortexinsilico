@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QSet>
 
+
 /**
     Checks whether two neurons overlap based on their bounding box.
     @param n1 Properties of first neurons.
@@ -326,4 +327,64 @@ SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray, co
     }
 
     return filter;
+}
+
+
+QJsonArray mergeJsonArrays(QList<QJsonArray> arrays, bool emptyMeansAll){
+    QSet<QString> filterValues;
+    QJsonArray merged;
+    bool atLeastOneEmpty = false;
+
+    for(int i=0; i<arrays.size(); i++){
+        QJsonArray array = arrays[i];
+        if(array.size() == 0){
+            atLeastOneEmpty = true;
+        } else {
+            for(int j=0; j<array.size(); j++){
+                filterValues.insert(array[j].toString());
+            }
+        }
+    }
+
+    if(!(emptyMeansAll && atLeastOneEmpty)){
+        QSetIterator<QString> i(filterValues);
+            while (i.hasNext()){
+                merged.push_back(i.next());
+            }
+    }
+    return merged;
+}
+
+
+QList<QJsonArray> retrieveStatisticFilters(const QJsonObject& spec, const QString filterField){
+    QList<QJsonArray> list;
+    QJsonArray statisticDefinitions = spec["STATISTIC_DEFINTIONS"].toArray();
+    for(int i=0; i<statisticDefinitions.size(); i++){
+        QJsonObject definition = statisticDefinitions[i].toObject();
+        list.push_back(definition[filterField].toArray());
+    }
+    return list;
+}
+
+
+void addGenerationField(QJsonObject& spec, const QString field, const bool emptyMeansAll){
+    QList<QJsonArray> arrays = retrieveStatisticFilters(spec, field);
+    QJsonArray mergedArray = mergeJsonArrays(arrays, emptyMeansAll);
+    spec[field] = mergedArray;
+}
+
+/**
+    Determines and sets the neuron filter for the generation of the connectome
+    based on the filters defined in the various statistics (the generation filter
+    is the union of all statistic filters).
+    @param spec The JSON specification object with the statistic definitions.
+        The fields of the generation filter are appended.
+*/
+void Util::addGenerationFilter(QJsonObject& spec){
+    addGenerationField(spec, "PRE_NEURON_REGIONS", true);
+    addGenerationField(spec, "PRE_NEURON_CELLTYPES", true);
+    addGenerationField(spec, "PRE_NEURON_IDS", false);
+    addGenerationField(spec, "POST_NEURON_REGIONS", true);
+    addGenerationField(spec, "POST_NEURON_CELLTYPES", true);
+    addGenerationField(spec, "POST_NEURON_IDS", false);
 }

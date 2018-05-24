@@ -58,6 +58,10 @@ namespace Util {
     */
     SelectionFilter getSelectionFilterFromJson(const QJsonArray& jsonArray, const NetworkProps& network);
 
+    /**
+
+    */
+    void addGenerationFilter(QJsonObject& spec);
 }
 
 #endif // UTIL_H

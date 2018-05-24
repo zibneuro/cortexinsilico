@@ -187,15 +187,19 @@ void computeInnervationPost(const QList<int>& preNeurons,
 }
 
 // Checks that the specifcation file has the right format.
-bool specConsistent(const QJsonObject spec){
+// Determines the generation neuron filter from the Statistics
+// filters.
+bool initSpec(QJsonObject& spec){
     const QString dataRoot = spec["DATA_ROOT"].toString();
     if(!QDir(dataRoot).exists()){
         qDebug() << "specFile DATA_ROOT not found: " << dataRoot;
         return false;
     }
+    Util::addGenerationFilter(spec);
+
     return true;
 }
-\
+
 
 void printUsage() {
     qDebug() << "Usage: ./networkSimulator <specFile>";
@@ -350,10 +354,9 @@ int main(int argc, char ** argv)
     }
 
     const QString specFile = argv[1];
-    qDebug() << specFile;
-    const QJsonObject spec = UtilIO::parseSpecFile(specFile);
+    QJsonObject spec = UtilIO::parseSpecFile(specFile);
 
-    if(!specConsistent(spec)){
+    if(!initSpec(spec)){
         return 1;
     }
 

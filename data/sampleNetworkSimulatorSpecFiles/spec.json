@@ -1,12 +1,6 @@
 {
     "DATA_ROOT": "data/modelData_entireRBCF10_2018-04-19/",
     "OUTPUT_DIR": "data/connectome/",
-    "PRE_NEURON_REGIONS": ["C2"],
-    "PRE_NEURON_CELLTYPES": ["L4py","L4sp","L4ss"],
-    "PRE_NEURON_IDS": [ ],
-    "POST_NEURON_REGIONS": ["C2"],
-    "POST_NEURON_CELLTYPES": ["L5st","L5tt"],
-    "POST_NEURON_IDS": [ ],
     "CONNECTOME_NAME": "L4 exc. to L5 exc. in C2",
     "CONNECTIVITY_RULE_NAME": "generalized Peters rule",
     "CONNECTIVITY_RULE_PARAMETERS": [0,1,1,-1],

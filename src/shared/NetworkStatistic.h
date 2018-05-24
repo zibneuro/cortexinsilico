@@ -156,6 +156,10 @@ protected:
     */
     long long mConnectionsDone;
 
+    /**
+        A filename-based cache for SparseVectorSets (containing innervation
+        matrix entries) that have already been loaded.
+    */
     SparseVectorCache mCache;
 };
 

@@ -109,7 +109,7 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
     @throws runtime_error if data cannot be loaded.
 */
 QList<int> UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec, const NetworkProps& networkProps){
-
+    
     const QJsonArray regions   = spec["POST_NEURON_REGIONS"].toArray();
     const QJsonArray cellTypes = spec["POST_NEURON_CELLTYPES"].toArray();
     const QJsonArray neuronIds = spec["POST_NEURON_IDS"].toArray();
