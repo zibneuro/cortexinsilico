@@ -4,6 +4,8 @@
 #include "NetworkStatistic.h"
 #include "Histogram.h"
 
+class SparseVectorCache;
+
 /**
     Represents the standard innervation statistic (as initially available
     in CortexInSilico).
@@ -19,6 +21,18 @@ public:
         @param conProbBinSize Bin size of the connectionProbability histogram.
     */
     InnervationStatistic(const NetworkProps& networkProps,
+        const float innervationBinSize = 0.1f,
+        const float connProbBinSize = 0.05f);
+
+    /**
+        Constructor.
+        @param networkProps The model data of the network.
+        @param innervation BinSize Bin size of the innervation histogram.
+        @param conProbBinSize Bin size of the connectionProbability histogram.
+        @param cache Cache of preloaded innervation values.
+    */
+    InnervationStatistic(const NetworkProps& networkProps,
+        const SparseVectorCache& cache,
         const float innervationBinSize = 0.1f,
         const float connProbBinSize = 0.05f);
 

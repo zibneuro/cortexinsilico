@@ -35,6 +35,7 @@ SOURCES += \
     ../shared/CIS3DPSTDensities.cpp \
     ../shared/CIS3DRegions.cpp \
     ../shared/CIS3DSparseVectorSet.cpp \
+    ../shared/SparseVectorCache.cpp \
     ../shared/CIS3DSparseField.cpp \
     ../shared/CIS3DStatistics.cpp \
     ../shared/CIS3DVec3.cpp \
@@ -55,6 +56,7 @@ HEADERS += \
     ../shared/CIS3DPSTDensities.h \
     ../shared/CIS3DRegions.h \
     ../shared/CIS3DSparseVectorSet.h \
+    ../shared/SparseVectorCache.h \
     ../shared/CIS3DSparseField.h \
     ../shared/CIS3DStatistics.h \
     ../shared/CIS3DVec3.h \

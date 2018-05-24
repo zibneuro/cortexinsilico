@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QHash>
+#include <QDebug>
+
 
 /**
     Internal data representation:
@@ -110,6 +112,4 @@ public:
 private:
     VectorHash mVectors;
     static const float DEFAULT_VALUE;
-
-
 };

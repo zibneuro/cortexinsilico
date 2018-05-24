@@ -24,6 +24,25 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
 }
 
 /**
+    Constructor.
+    @param networkProps The model data of the network.
+    @param innervation BinSize Bin size of the innervation histogram.
+    @param conProbBinSize Bin size of the connectionProbability histogram.
+    @param cache Cache of preloaded innervation values.
+*/
+InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
+    const SparseVectorCache& cache,
+    const float innervationBinSize,
+    const float connProbBinSize) : NetworkStatistic(networkProps, cache)
+{
+    innervationHisto = Histogram(innervationBinSize);
+    connProbHisto = Histogram(connProbBinSize);
+    numPreNeurons = 0;
+    numPostNeurons = 0;
+    numPreNeuronsUnique = 0;
+}
+
+/**
     Performs the actual computation based on the specified neurons.
     @param preNeurons The presynaptic neurons.
     @param postNeurons: The postsynaptic neurons.
@@ -59,8 +78,17 @@ void InnervationStatistic::doCalculate(const IdList& preNeurons, const IdList& p
         const QString innervationFile = CIS3D::getInnervationPostFileName(mNetwork.dataRoot, regionName, cellTypeName);
 
         const IdList& ids = it.value();
-        SparseVectorSet* vectorSet = SparseVectorSet::load(innervationFile);
-        qDebug() << "[*] Loading" << innervationFile;
+        SparseVectorSet* vectorSet;
+        bool fromCache;
+        if(mCache.contains(innervationFile)){
+            vectorSet = mCache.get(innervationFile);
+            fromCache = true;
+        } else {
+            vectorSet = SparseVectorSet::load(innervationFile);
+            fromCache = false;
+            qDebug() << "[*] Loading" << innervationFile;
+        }
+
         for (int post=0; post<ids.size(); ++post) {
             const int postId = ids[post];
 
@@ -122,7 +150,9 @@ void InnervationStatistic::doCalculate(const IdList& preNeurons, const IdList& p
         mConnectionsDone += (long long)(ids.size()) * (long long)(preNeurons.size());
         reportUpdate();
 
-        delete vectorSet;
+        if(!fromCache){
+            delete vectorSet;
+        }
     }
     reportComplete();
 }

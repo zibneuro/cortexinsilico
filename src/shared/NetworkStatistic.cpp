@@ -8,8 +8,20 @@
 NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, QObject* parent)
     : QObject(parent), mNetwork(networkProps)
     {
+        mCache = SparseVectorCache();
     };
 
+/**
+    Constructor.
+    @param networkProps The model data of the network.
+    @param cache Cache of preloaded innervation values.
+    @param parent The Qt parent object. Empty by default.
+*/
+NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps,
+    const SparseVectorCache& cache, QObject* parent)
+    : QObject(parent), mNetwork(networkProps), mCache(cache)
+    {
+    };
 
 /**
     Destructor.

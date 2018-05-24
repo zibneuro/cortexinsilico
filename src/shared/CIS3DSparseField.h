@@ -6,6 +6,31 @@
 #include <QMap>
 #include <QVector>
 
+/**
+    A generic helper class that implements an operator
+    acting on the values of the sparse field.
+*/
+class SparseFieldOperator {
+public:
+    /**
+        Calculates the new value for the specified sparse field value.
+        @param value The existing sparse field value.
+        @return The new value.
+    */
+    float calculate(const float value){
+        return doCalculate(value);
+    };
+
+protected:
+    /**
+        Performs the actual compuation of the new value
+        from the existing value.
+        @param value The existing sparse field value.
+        @return The new value.
+    */
+    virtual float doCalculate(const float value) const = 0;
+};
+
 class QDataStream;
 
 /**
@@ -206,6 +231,12 @@ public:
     SparseField multiply(const float& factor) const;
 
     /**
+        Applies an generic operator function on all values of the sparse field.
+        @param fieldOperator The operator function.
+    */
+    void applyOperator(SparseFieldOperator& fieldOperator);
+
+    /**
         Returns the grid location for the specified point.
         @param p The point in real world coordinates.
         @return The location in the grid.
@@ -262,7 +293,6 @@ public:
                                 const float theta2,
                                 const float theta3,
                                 const float theta4);
-
 
     /**
         Divides the grid values of the first SparseField by the grid values of

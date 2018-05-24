@@ -35,6 +35,7 @@
 #include "UtilIO.h"
 #include "InnervationStatistic.h"
 #include "Histogram.h"
+#include "SparseVectorCache.h"
 
 // Loads the postsynaptic target density field
 SparseField* loadPSTAll(QString dataRoot, CIS3D::NeuronType functionalType){
@@ -50,7 +51,7 @@ SparseField* loadPSTAll(QString dataRoot, CIS3D::NeuronType functionalType){
 // neurons and applying the connectivity rule parameters (theta).
 void computeInnervationPost(const QList<int>& preNeurons,
                             const PropsMap& postNeurons,
-                            /*const PropsMap& postNeuronsNormalized,*/
+                            SparseVectorCache& cache,
                             const NetworkProps& networkProps,
                             const QString& dataRoot,
                             const QString& outputDir,
@@ -107,13 +108,13 @@ void computeInnervationPost(const QList<int>& preNeurons,
     for (int i=0; i<ctrs.size(); ++i) {
         const CellTypeRegion cellTypeRegion = ctrs[i];
         QList<int> postNeuronsList = sortedByPost.value(cellTypeRegion);
-        SparseVectorSet vectorSet;
+        SparseVectorSet* vectorSet = new SparseVectorSet();
 
         for (QList<int>::ConstIterator postIt=postNeuronsList.constBegin(); postIt!=postNeuronsList.constEnd(); ++postIt) {
             const int postNeuronId = *postIt;
             const NeuronProps& postProps = postNeurons.value(postNeuronId);
             //const NeuronProps& postPropsNormalized = postNeuronsNormalized.value(postNeuronId);
-            vectorSet.addVector(postNeuronId);
+            vectorSet->addVector(postNeuronId);
 
             for (int pre=0; pre<uniquePreNeuronsList.size(); ++pre) {
                 const int preNeuronId = uniquePreNeuronsList[pre];
@@ -150,7 +151,7 @@ void computeInnervationPost(const QList<int>& preNeurons,
                     }
                     if (innervation > 0.0f) {
                         //qDebug() << preNeuronId << " " << postNeuronId << " " << innervation;
-                        vectorSet.setValue(postNeuronId, preNeuronId, innervation);
+                        vectorSet->setValue(postNeuronId, preNeuronId, innervation);
                     }
                 }
             }
@@ -163,7 +164,8 @@ void computeInnervationPost(const QList<int>& preNeurons,
 
         numCtrsDone += 1;
 
-        if (SparseVectorSet::save(&vectorSet, fn)) {
+        cache.add(fn,vectorSet);
+        if (SparseVectorSet::save(vectorSet, fn)) {
             qDebug() << "[*] CellType-Region" << numCtrsDone << "/" << totalNumCtrs
                      << "\tSaved" << fn
                      << "\tNum postsyn neurons:" <<  postNeuronsList.size();
@@ -241,13 +243,13 @@ void writeSummary(const QJsonObject spec){
     QString jsonString = jsonDoc.toJson();
     QFile file(filePath);
 
-    qDebug() << "[*] Writing summary statistics to " << filePath;
-
     if(!file.open(QIODevice::WriteOnly)){
         throw std::runtime_error("Failed writing summary statistics.");
     }
     file.write(jsonString.toLocal8Bit());
     file.close();
+
+    qDebug() << "[*] Written summary statistics to " << filePath;
 }
 
 void insertJson(QJsonObject& target, const QJsonObject toInsert, const QString propertyName){
@@ -276,20 +278,19 @@ IdList intersectIds(IdList stat, IdList ref){
 }
 
 // Computes the specified summary statistics.
-void computeStatistics(QJsonObject& spec, const IdList preRef, const IdList postRef) {
+void computeStatistics(QJsonObject& spec, const IdList preRef, const IdList postRef,
+    const SparseVectorCache& cache, NetworkProps& networkProps) {
     QJsonObject summaryStatistics;
     QJsonArray statisticDefinitions = spec["STATISTIC_DEFINTIONS"].toArray();
     spec.remove("STATISTIC_DEFINTIONS");
     insertJson(summaryStatistics, spec, "GENERATION_PARAMETERS");
     QJsonArray results;
 
+    networkProps.setDataRoot(spec["OUTPUT_DIR"].toString());
+
     for(int i=0; i<statisticDefinitions.size(); i++){
         QJsonObject definition = statisticDefinitions[i].toObject();
         definition.insert("DATA_ROOT", spec["DATA_ROOT"].toString());
-
-        NetworkProps networkProps;
-        networkProps.setDataRoot(spec["OUTPUT_DIR"].toString());
-        networkProps.loadFilesForSynapseComputation();
 
         IdList preNeurons = UtilIO::getPreSynapticNeurons(definition, networkProps);
         IdList postNeurons = UtilIO::getPostSynapticNeuronIds(definition, networkProps);
@@ -307,7 +308,7 @@ void computeStatistics(QJsonObject& spec, const IdList preRef, const IdList post
             continue;
         }
 
-        InnervationStatistic statistic(networkProps);
+        InnervationStatistic statistic(networkProps, cache);
         statistic.calculate(preNeuronsIntersected, postNeuronsIntersected);
 
         QJsonObject statReport = statistic.createJson();
@@ -366,6 +367,8 @@ int main(int argc, char ** argv)
     networkProps.setDataRoot(dataRoot);
     networkProps.loadFilesForSynapseComputation();
 
+    SparseVectorCache cache;
+
     qDebug() << "[*] Computing presynaptic selection";
     QList<int> preNeurons = UtilIO::getPreSynapticNeurons(spec, networkProps);
     qDebug() << "[*] Computing postsynaptic selection";
@@ -373,13 +376,14 @@ int main(int argc, char ** argv)
     //PropsMap postNeuronsNormalized = UtilIO::getPostSynapticNeurons(spec, networkProps, true);
 
     qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
-    computeInnervationPost(preNeurons, postNeurons, /*postNeuronsNormalized,*/ networkProps, dataRoot, connectomeDir, extractRuleParameters(spec));
+    computeInnervationPost(preNeurons, postNeurons, cache, networkProps, dataRoot, connectomeDir, extractRuleParameters(spec));
     qDebug() << "[*] Computing summary statistics";
 
     QJsonObject summaryStatistics(spec);
-    computeStatistics(summaryStatistics, preNeurons, postNeurons.keys());
+    computeStatistics(summaryStatistics, preNeurons, postNeurons.keys(), cache, networkProps);
 
     // Clean up
+    cache.clear();
     for (PropsMap::Iterator postIt=postNeurons.begin(); postIt!=postNeurons.end(); ++postIt) {
         NeuronProps& props = postIt.value();
         if (props.pstExc) delete props.pstExc;

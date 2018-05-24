@@ -138,6 +138,16 @@ SparseField multiplyGenPeter(const SparseField& bouton,
 }
 
 /**
+    Applies an generic operator function on all values of the sparse field.
+    @param fieldOperator The operator function.
+*/
+void SparseField::applyOperator(SparseFieldOperator& fieldOperator){
+    for(int i=0; i<mField.size(); i++){
+        mField[i] = fieldOperator.calculate(mField[i]);
+    }
+}
+
+/**
   Creates a union grid of the specified SparseFields. If a location is defined
   in both SparseFields, the resulting location is assigned the sum from both
   SparseFields.

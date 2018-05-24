@@ -35,7 +35,8 @@ SOURCES += \
     ../shared/CIS3DSparseField.cpp \
     ../shared/CIS3DStatistics.cpp \
     ../shared/CIS3DSynapseStatistics.cpp \
-    ../shared/CIS3DVec3.cpp
+    ../shared/CIS3DVec3.cpp \
+    ../shared/SparseVectorCache.cpp
 
 HEADERS += \
     ../shared/CIS3DAxonRedundancyMap.h \
@@ -50,4 +51,5 @@ HEADERS += \
     ../shared/CIS3DSparseField.h \
     ../shared/CIS3DStatistics.h \
     ../shared/CIS3DSynapseStatistics.h \
-    ../shared/CIS3DVec3.h
+    ../shared/CIS3DVec3.h \
+    ../shared/SparseVectorCache.h \

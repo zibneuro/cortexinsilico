@@ -40,7 +40,8 @@ SOURCES += \
     ../shared/CIS3DStatistics.cpp \
     ../shared/NetworkStatistic.cpp \
     ../shared/Histogram.cpp \
-    ../shared/InnervationStatistic.cpp
+    ../shared/InnervationStatistic.cpp \
+    ../shared/SparseVectorCache.cpp
 
 
 HEADERS += \
@@ -61,4 +62,5 @@ HEADERS += \
     ../shared/CIS3DStatistics.h \
     ../shared/NetworkStatistic.h \
     ../shared/Histogram.h \
-    ../shared/InnervationStatistic.h
+    ../shared/InnervationStatistic.h \
+    ../shared/SparseVectorCache.h

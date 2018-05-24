@@ -43,6 +43,7 @@ SOURCES += \
     ../shared/Histogram.cpp \
     ../shared/InnervationStatistic.cpp \
     ../shared/Util.cpp \
+    ../shared/SparseVectorCache.cpp \
     EvaluationQueryHandler.cpp \
     SelectionQueryHandler.cpp \
     NetworkDataUploadHandler.cpp \
@@ -65,6 +66,7 @@ HEADERS += \
     ../shared/InnervationStatistic.h \
     ../shared/Typedefs.h \
     ../shared/Util.h \
+    ../shared/SparseVectorCache.h \
     EvaluationQueryHandler.h \
     SelectionQueryHandler.h \
     NetworkDataUploadHandler.h \

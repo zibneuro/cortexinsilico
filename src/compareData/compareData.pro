@@ -36,6 +36,7 @@ SOURCES += \
     ../shared/CIS3DRegions.cpp \
     ../shared/CIS3DSparseField.cpp \
     ../shared/CIS3DSparseVectorSet.cpp \
+    ../shared/SparseVectorCache.cpp \
     ../shared/CIS3DVec3.cpp \
 
 HEADERS += \
@@ -49,4 +50,5 @@ HEADERS += \
     ../shared/CIS3DRegions.h \
     ../shared/CIS3DSparseField.h \
     ../shared/CIS3DSparseVectorSet.h \
+    ../shared/SparseVectorCache.h \
     ../shared/CIS3DVec3.h \

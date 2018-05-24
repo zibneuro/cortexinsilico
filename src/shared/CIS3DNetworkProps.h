@@ -19,8 +19,9 @@ public:
     /**
         Sets the root directory in which all the model data is located.
         @param dataRoot The directory path.
+        @param resetCache Whether to reset internal flag that data has been loaded.
     */
-    void setDataRoot(const QString& dataRoot);
+    void setDataRoot(const QString& dataRoot, const bool resetCache=true);
 
     /**
         Loads the data required for computing the innervation.
@@ -94,6 +95,9 @@ public:
         The postsynaptic target density values based on cell type.
     */
     PSTDensities densities;
+
+private:
+    bool mFilesForComputationLoaded;
 };
 
 

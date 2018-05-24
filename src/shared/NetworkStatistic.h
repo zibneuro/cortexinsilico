@@ -8,6 +8,8 @@
 #include <QTextStream>
 #include "CIS3DStatistics.h"
 #include "CIS3DNetworkProps.h"
+#include "CIS3DSparseVectorSet.h"
+#include "SparseVectorCache.h"
 #include "Histogram.h"
 #include "Typedefs.h"
 
@@ -29,6 +31,15 @@ public:
         @param parent The Qt parent object. Empty by default.
     */
     NetworkStatistic(const NetworkProps& networkProps, QObject* parent=0);
+
+    /**
+        Constructor.
+        @param networkProps The model data of the network.
+        @param cache Cache of preloaded innervation values.
+        @param parent The Qt parent object. Empty by default.
+    */
+    NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache,
+        QObject* parent=0);
 
     /**
         Destructor.
@@ -144,6 +155,8 @@ protected:
         analysed to this point.
     */
     long long mConnectionsDone;
+
+    SparseVectorCache mCache;
 };
 
 #endif // NETWORKSTATISTIC_H
