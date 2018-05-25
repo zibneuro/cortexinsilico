@@ -59,7 +59,11 @@ namespace Util {
     SelectionFilter getSelectionFilterFromJson(const QJsonArray& jsonArray, const NetworkProps& network);
 
     /**
-
+        Determines and sets the neuron filter for the generation of the connectome
+        based on the filters defined in the various statistics (the generation filter
+        is the union of all statistic filters).
+        @param spec The JSON specification object with the statistic definitions.
+            The fields of the generation filter are appended.
     */
     void addGenerationFilter(QJsonObject& spec);
 }
