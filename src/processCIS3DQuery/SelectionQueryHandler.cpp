@@ -183,14 +183,6 @@ void SelectionQueryHandler::process(const QString& selectionQueryId,
     mLoginUrl = baseUrl + loginEndPoint;
     mLogoutUrl = baseUrl + logoutEndPoint;
 
-    mDataRoot = config["WORKER_PRIMARY_DATA_DIR"].toString();
-    if (mDataRoot.isEmpty()) {
-        throw std::runtime_error("SelectionQueryHandler: No WORKER_PRIMARY_DATA_DIR provided");
-    }
-
-    mNetwork.setDataRoot(mDataRoot);
-    mNetwork.loadFilesForQuery();
-
     mAuthInfo = QueryHelpers::login(mLoginUrl,
                                     mConfig["WORKER_USERNAME"].toString(),
                                     mConfig["WORKER_PASSWORD"].toString(),
@@ -221,6 +213,12 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
             QString selectionString = jsonResponse.object().value("data").toString();
             qDebug() << "    Starting computation:" << mQueryId << selectionString;
+
+            const QString datasetShortName = jsonResponse.object().value("network").toString();
+            mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
+            qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
+            mNetwork.setDataRoot(mDataRoot);
+            mNetwork.loadFilesForQuery();
 
             QJsonDocument selectionDoc = QJsonDocument::fromJson(selectionString.toLocal8Bit());
             QJsonArray selectionArr = selectionDoc.array();
