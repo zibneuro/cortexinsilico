@@ -31,6 +31,13 @@ namespace QueryHelpers {
     int uploadToS3(const QString& key,
                    const QString& filename,
                    const QJsonObject& config);
+
+    QString getDatasetPath(const QString& datasetShortName,
+                           const QJsonObject& config);
+
+    QString getPrimaryDatasetRoot(const QJsonObject& config);
+
+    QJsonArray getDatasetsAsJson(const QJsonObject& config);
 }
 
 #endif // QUERYHELPERS_H

@@ -137,6 +137,7 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     const QString columnsEndPoint = mConfig["METEOR_COLUMNS_ENDPOINT"].toString();
     const QString regionsEndPoint = mConfig["METEOR_REGIONS_ENDPOINT"].toString();
     const QString laminarLocationsEndPoint = mConfig["METEOR_LAMINARLOCATIONS_ENDPOINT"].toString();
+    const QString networksEndPoint = mConfig["METEOR_NETWORKS_ENDPOINT"].toString();
 
     mLoginUrl  = baseUrl + loginEndPoint;
     mLogoutUrl = baseUrl + logoutEndPoint;
@@ -144,12 +145,9 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     const QString columnsUrl = baseUrl + columnsEndPoint;
     const QString regionsUrl = baseUrl + regionsEndPoint;
     const QString laminarLocationsUrl = baseUrl + laminarLocationsEndPoint;
+    const QString networksUrl = baseUrl + networksEndPoint;
 
-    mDataRoot = config["WORKER_PRIMARY_DATA_DIR"].toString();
-    if (mDataRoot.isEmpty()) {
-        throw std::runtime_error("NetworkDataUploadHandler: No WORKER_PRIMARY_DATA_DIR provided");
-    }
-
+    mDataRoot = QueryHelpers::getPrimaryDatasetRoot(config);
     mNetwork.setDataRoot(mDataRoot);
     mNetwork.loadFilesForQuery();
 
@@ -162,6 +160,7 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     mPendingRequestIds.append("Columns");
     mPendingRequestIds.append("Regions");
     mPendingRequestIds.append("LaminarLocations");
+    mPendingRequestIds.append("Networks");
 
     QNetworkRequest ctRequest;
     ctRequest.setUrl(cellTypesUrl);
@@ -203,11 +202,22 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     QJsonDocument locDoc(locData);
     QString locPostData(locDoc.toJson());
 
+    QNetworkRequest networksRequest;
+    networksRequest.setUrl(networksUrl);
+    networksRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
+    networksRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
+    networksRequest.setAttribute(QNetworkRequest::User, QVariant("Networks"));
+    networksRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QJsonArray networksData = QueryHelpers::getDatasetsAsJson(config);
+    QJsonDocument networksDoc(networksData);
+    QString networksPostData(networksDoc.toJson());
+
     connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
     mNetworkManager.put(ctRequest,  ctPostData.toLocal8Bit());
     mNetworkManager.put(colRequest, colPostData.toLocal8Bit());
     mNetworkManager.put(regRequest, regPostData.toLocal8Bit());
     mNetworkManager.put(locRequest, locPostData.toLocal8Bit());
+    mNetworkManager.put(networksRequest, networksPostData.toLocal8Bit());
 }
 
 
@@ -218,7 +228,8 @@ void NetworkDataUploadHandler::replyGetQueryFinished(QNetworkReply* reply) {
         if (requestId == "CellTypes" ||
             requestId == "Columns" ||
             requestId == "Regions" ||
-            requestId == "LaminarLocations")
+            requestId == "LaminarLocations" ||
+            requestId == "Networks")
         {
             qDebug() << "[*] Successful upload of" << requestId;
             reply->deleteLater();

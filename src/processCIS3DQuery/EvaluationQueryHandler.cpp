@@ -53,11 +53,6 @@ void EvaluationQueryHandler::process(const QString& evaluationQueryId,
     mLoginUrl = baseUrl + loginEndPoint;
     mLogoutUrl = baseUrl + logoutEndPoint;
 
-    mDataRoot = mConfig["WORKER_PRIMARY_DATA_DIR"].toString();
-    if (mDataRoot.isEmpty()) {
-        throw std::runtime_error("EvaluationQueryHandler: No WORKER_PRIMARY_DATA_DIR provided");
-    }
-
     mAuthInfo = QueryHelpers::login(mLoginUrl,
                                     mConfig["WORKER_USERNAME"].toString(),
                                     mConfig["WORKER_PASSWORD"].toString(),
@@ -160,14 +155,18 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
     else if (error == QNetworkReply::NoError) {
         qDebug() << "[*] Starting computation of innervation query";
 
-        mNetwork.setDataRoot(mDataRoot);
-        mNetwork.loadFilesForQuery();
-
         const QByteArray content = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
         QJsonObject jsonData = jsonResponse.object().value("data").toObject();
         mCurrentJsonData = jsonData;
         reply->deleteLater();
+
+        const QString datasetShortName = jsonData["network"].toString();
+        mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
+        qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
+        mNetwork.setDataRoot(mDataRoot);
+        mNetwork.loadFilesForQuery();
+
 
         QString preSelString = jsonData["presynapticSelectionFilter"].toString();
         QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
