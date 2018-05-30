@@ -6,6 +6,8 @@
 #include <QMap>
 #include <QVector>
 
+class SparseFieldCalculator;
+
 /**
     A generic helper class that implements an operator
     acting on the values of the sparse field.
@@ -106,6 +108,8 @@ enum IteratorState { ITERATOR_BEGIN, ITERATOR_END };
 class SparseField {
 
 public:
+
+    friend SparseFieldCalculator;
 
     /**
         Internal representation: Assign integer indices to all locations
@@ -271,28 +275,6 @@ public:
     */
     friend SparseField multiply(const SparseField& fs1,
                                 const SparseField& fs2);
-
-    /**
-        Computes the innervation field according to the generalized dense
-        Peters' rule.
-        @param bouton The bouton density of one neuron.
-        @param pst The post synaptic target density of one neuron.
-        @param pstAll The post synaptic target density of all neurons.
-        @param theta1 First rule parameter.
-        @param theta2 Second rule parameter.
-        @param theta3 Third rule parameter.
-        @param theta4 Fourth rule parameter.
-        @return The innervation density between both neurons.
-        @throws runtime_error if the spacing differs or if the shift between
-            the fields is not an integer multiple of the voxel spacing.
-    */
-    friend SparseField multiplyGenPeter(const SparseField& bouton,
-                                const SparseField& pst,
-                                const SparseField& pstAll,
-                                const float theta1,
-                                const float theta2,
-                                const float theta3,
-                                const float theta4);
 
     /**
         Divides the grid values of the first SparseField by the grid values of

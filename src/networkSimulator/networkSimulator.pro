@@ -41,6 +41,7 @@ SOURCES += \
     ../shared/NetworkStatistic.cpp \
     ../shared/Histogram.cpp \
     ../shared/InnervationStatistic.cpp \
+    ../shared/SparseFieldCalculator.cpp \
     ../shared/SparseVectorCache.cpp
 
 
@@ -63,4 +64,5 @@ HEADERS += \
     ../shared/NetworkStatistic.h \
     ../shared/Histogram.h \
     ../shared/InnervationStatistic.h \
+    ../shared/SparseFieldCalculator.h \
     ../shared/SparseVectorCache.h

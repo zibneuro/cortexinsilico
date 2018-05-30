@@ -36,6 +36,7 @@
 #include "InnervationStatistic.h"
 #include "Histogram.h"
 #include "SparseVectorCache.h"
+#include "SparseFieldCalculator.h"
 
 // Loads the postsynaptic target density field
 SparseField* loadPSTAll(QString dataRoot, CIS3D::NeuronType functionalType){
@@ -58,6 +59,7 @@ void computeInnervationPost(const QList<int>& preNeurons,
                             const QVector<float>& theta)
 {
     Histogram histo;
+    SparseFieldCalculator calculator;
     SparseField* pstAllExc = loadPSTAll(dataRoot, CIS3D::EXCITATORY);
     SparseField* pstAllInh = loadPSTAll(dataRoot, CIS3D::INHIBITORY);
 
@@ -124,7 +126,7 @@ void computeInnervationPost(const QList<int>& preNeurons,
                     //float innervationNormalized;
                     if (networkProps.cellTypes.isExcitatory(preProps.cellTypeId)) {
                         //const SparseField innervationFieldNormalized = multiply(*(preProps.boutons), *(postPropsNormalized.pstExc));
-                        const SparseField innervationField = multiplyGenPeter(*(preProps.boutons),
+                        const SparseField innervationField = calculator.calculatePetersRule(*(preProps.boutons),
                                                                             *(postProps.pstExc),
                                                                             *pstAllExc,
                                                                             theta[0],
@@ -140,7 +142,7 @@ void computeInnervationPost(const QList<int>& preNeurons,
                     }
                     else {
                         qDebug() << "inhibitory";
-                        const SparseField innervationField = multiplyGenPeter(*(preProps.boutons),
+                        const SparseField innervationField = calculator.calculatePetersRule(*(preProps.boutons),
                                                                             *(postProps.pstInh),
                                                                             *pstAllInh,
                                                                             theta[0],
