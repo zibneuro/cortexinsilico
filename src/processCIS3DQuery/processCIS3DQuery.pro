@@ -44,6 +44,7 @@ SOURCES += \
     ../shared/InnervationStatistic.cpp \
     ../shared/Util.cpp \
     ../shared/SparseVectorCache.cpp \
+    ../shared/NeuronSelection.cpp \
     EvaluationQueryHandler.cpp \
     SelectionQueryHandler.cpp \
     NetworkDataUploadHandler.cpp \
@@ -67,6 +68,7 @@ HEADERS += \
     ../shared/Typedefs.h \
     ../shared/Util.h \
     ../shared/SparseVectorCache.h \
+    ../shared/NeuronSelection.h \
     EvaluationQueryHandler.h \
     SelectionQueryHandler.h \
     NetworkDataUploadHandler.h \

@@ -32,12 +32,11 @@ NetworkStatistic::~NetworkStatistic() {
 /**
     Starts calculation with the specified neurons. To be called from the
     webframework.
-    @param preNeurons The IDs of the presynaptic neurons.
-    @param postNeurons The IDs of the psotsynaptic neurons.
+    @param selection The selected neurons.
 */
-void NetworkStatistic::calculate(const IdList& preNeurons, const IdList& postNeurons){
+void NetworkStatistic::calculate(const NeuronSelection& selection){
     mConnectionsDone = 0;
-    this->doCalculate(preNeurons, postNeurons);
+    this->doCalculate(selection);
 }
 
 /**

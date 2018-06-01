@@ -2,4 +2,5 @@ build/
 data/modelData
 data/sampleNetworkSimulatorSpecFiles/generatedSpecFile.json
 data/sampleNetworkSimulatorSpecFiles/specLocal.json
+src/computeStatistic/specLocal.json
 data/connectome

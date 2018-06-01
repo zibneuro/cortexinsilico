@@ -43,7 +43,9 @@ SOURCES += \
     ../shared/Histogram.cpp \
     ../shared/InnervationStatistic.cpp \
     ../shared/UtilIO.cpp \
-    ../shared/Util.cpp
+    ../shared/Util.cpp \
+    ../shared/NeuronSelection.cpp \
+    ../shared/TripletStatistic.cpp
 
 HEADERS += \
     MyStatistic.h \
@@ -66,3 +68,5 @@ HEADERS += \
     ../shared/Typedefs.h \
     ../shared/UtilIO.h \
     ../shared/Util.h \
+    ../shared/NeuronSelection.h \
+    ../shared/TripletStatistic.h

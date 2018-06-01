@@ -44,20 +44,19 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
 
 /**
     Performs the actual computation based on the specified neurons.
-    @param preNeurons The presynaptic neurons.
-    @param postNeurons: The postsynaptic neurons.
+    @param selection The selected neurons.
 */
-void InnervationStatistic::doCalculate(const IdList& preNeurons, const IdList& postNeurons) {
+void InnervationStatistic::doCalculate(const NeuronSelection& selection) {
 
     QHash<int, float> preNeuronInnervationSum;
     QHash<int, float> preNeuronConnProbSum;
     QHash<int, float> preNeuronInnervationSumUnique;
     QHash<int, float> preNeuronConnProbSumUnique;
 
-    this->numPreNeurons = preNeurons.size();
+    this->numPreNeurons = selection.Presynaptic().size();
     this->numPreNeuronsUnique = 0;
-    for (int pre=0; pre<preNeurons.size(); ++pre) {
-        const int preId = preNeurons[pre];
+    for (int pre=0; pre<selection.Presynaptic().size(); ++pre) {
+        const int preId = selection.Presynaptic()[pre];
         const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
         preNeuronInnervationSum.insert(preId, 0.0f);
         preNeuronConnProbSum.insert(preId, 0.0f);
@@ -69,7 +68,7 @@ void InnervationStatistic::doCalculate(const IdList& preNeurons, const IdList& p
         }
     }
 
-    const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(postNeurons, mNetwork);
+    const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(selection.Postsynaptic(), mNetwork);
 
     for (IdsPerCellTypeRegion::ConstIterator it = idsPerCellTypeRegion.constBegin(); it != idsPerCellTypeRegion.constEnd(); ++it) {
         const CellTypeRegion cellTypeRegion = it.key();
@@ -97,8 +96,8 @@ void InnervationStatistic::doCalculate(const IdList& preNeurons, const IdList& p
             float postNeuronInnervationSumUnique = 0.0f;
             float postNeuronConnProbSumUnique = 0.0f;
 
-            for (int pre=0; pre<preNeurons.size(); ++pre) {
-                const int preId = preNeurons[pre];
+            for (int pre=0; pre<selection.Presynaptic().size(); ++pre) {
+                const int preId = selection.Presynaptic()[pre];
                 const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
                 const float innervation = vectorSet->getValue(postId, mappedPreId);
                 const float connProb = float(1.0 - exp(-1.0 * innervation));
@@ -147,7 +146,7 @@ void InnervationStatistic::doCalculate(const IdList& preNeurons, const IdList& p
             this->divergenceUnique.addSample(it.value()/this->numPostNeurons);
         }
 
-        mConnectionsDone += (long long)(ids.size()) * (long long)(preNeurons.size());
+        mConnectionsDone += (long long)(ids.size()) * (long long)(selection.Presynaptic().size());
         reportUpdate();
 
         if(!fromCache){

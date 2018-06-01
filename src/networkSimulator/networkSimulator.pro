@@ -42,7 +42,8 @@ SOURCES += \
     ../shared/Histogram.cpp \
     ../shared/InnervationStatistic.cpp \
     ../shared/SparseFieldCalculator.cpp \
-    ../shared/SparseVectorCache.cpp
+    ../shared/SparseVectorCache.cpp \
+    ../shared/NeuronSelection.cpp
 
 
 HEADERS += \
@@ -65,4 +66,5 @@ HEADERS += \
     ../shared/Histogram.h \
     ../shared/InnervationStatistic.h \
     ../shared/SparseFieldCalculator.h \
-    ../shared/SparseVectorCache.h
+    ../shared/SparseVectorCache.h \
+    ../shared/NeuronSelection.h

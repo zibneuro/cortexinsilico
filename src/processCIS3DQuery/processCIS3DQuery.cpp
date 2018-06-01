@@ -4,7 +4,6 @@
 #include "SelectionQueryHandler.h"
 #include "NetworkDataUploadHandler.h"
 
-
 QJsonObject parseSpecFile(const QString& fileName) {
     QFile jsonFile(fileName);
     if (!jsonFile.open(QIODevice::ReadOnly)) {

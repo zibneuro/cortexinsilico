@@ -1,19 +1,19 @@
-#ifndef MYSTATISTIC_H
-#define MYSTATISTIC_H
+#ifndef TRIPLETSTATISTIC_H
+#define TRIPLETSTATISTIC_H
 
 #include "NetworkStatistic.h"
 
 /**
-    Example class for a customly defined statistc
+    Computes the probability distribution of triplet motifs.
 */
-class MyStatistic : public NetworkStatistic
+class TripletStatistic : public NetworkStatistic
 {
 public:
     /**
         Constructor.
         @param networkProps The model data of the network.
     */
-    MyStatistic(const NetworkProps& networkProps);
+    TripletStatistic(const NetworkProps& networkProps);
 
     /**
         Returns internal result, for testing purposes.
@@ -45,4 +45,4 @@ private:
     Statistics mStandardStatistic;
 };
 
-#endif // MYSTATISTIC
+#endif // TRIPLETSTATISTIC

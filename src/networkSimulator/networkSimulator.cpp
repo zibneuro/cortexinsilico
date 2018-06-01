@@ -37,6 +37,7 @@
 #include "Histogram.h"
 #include "SparseVectorCache.h"
 #include "SparseFieldCalculator.h"
+#include "NeuronSelection.h"
 
 // Loads the postsynaptic target density field
 SparseField* loadPSTAll(QString dataRoot, CIS3D::NeuronType functionalType){
@@ -315,7 +316,8 @@ void computeStatistics(QJsonObject& spec, const IdList preRef, const IdList post
         }
 
         InnervationStatistic statistic(networkProps, cache);
-        statistic.calculate(preNeuronsIntersected, postNeuronsIntersected);
+        NeuronSelection selection(preNeuronsIntersected, postNeuronsIntersected);
+        statistic.calculate(selection);
 
         QJsonObject statReport = statistic.createJson();
         definition.remove("DATA_ROOT");

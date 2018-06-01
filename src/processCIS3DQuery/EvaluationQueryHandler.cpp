@@ -7,6 +7,7 @@
 #include "CIS3DConstantsHelpers.h"
 #include "CIS3DSparseVectorSet.h"
 #include "InnervationStatistic.h"
+#include "NeuronSelection.h"
 #include "Util.h"
 #include <QDir>
 #include <QCoreApplication>
@@ -189,7 +190,8 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         InnervationStatistic innervation(mNetwork);
         connect(&innervation, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
-        innervation.calculate(preNeurons, postNeurons);
+        NeuronSelection selection(preNeurons, postNeurons);
+        innervation.calculate(selection);
     }
     else {
         qDebug() << "[-] Error obtaining EvaluationQuery data:";

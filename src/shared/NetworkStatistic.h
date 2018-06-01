@@ -12,6 +12,7 @@
 #include "SparseVectorCache.h"
 #include "Histogram.h"
 #include "Typedefs.h"
+#include "NeuronSelection.h"
 
 
 /**
@@ -49,10 +50,9 @@ public:
     /**
         Starts calculation with the specified neurons. To be called from the
         webframework.
-        @param preNeurons The IDs of the presynaptic neurons.
-        @param postNeurons The IDs of the psotsynaptic neurons.
+        @param selection The selected neurons.
     */
-    void calculate(const IdList& preNeurons, const IdList& postNeurons);
+    void calculate(const NeuronSelection& selection);
 
     /**
         Creates a JSON object representing the statistic. To be called from
@@ -111,10 +111,9 @@ protected:
 
     /**
         Performs the actual computation based on the specified neurons.
-        @param preNeurons The presynaptic neurons.
-        @param postNeurons: The postsynaptic neurons.
+        @param selection The selected neurons.
     */
-    virtual void doCalculate(const IdList& preNeurons, const IdList& postNeurons) = 0;
+    virtual void doCalculate(const NeuronSelection& selection) = 0;
 
     /**
         Adds the result values to a JSON object

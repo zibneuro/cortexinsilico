@@ -1,11 +1,11 @@
-#include "MyStatistic.h"
+#include "TripletStatistic.h"
 #include "Util.h"
 #include "Typedefs.h"
 #include "CIS3DConstantsHelpers.h"
 #include "CIS3DSparseVectorSet.h"
 #include <QDebug>
 
-MyStatistic::MyStatistic(const NetworkProps& networkProps) :
+TripletStatistic::TripletStatistic(const NetworkProps& networkProps) :
     NetworkStatistic(networkProps){
 }
 
@@ -13,7 +13,7 @@ MyStatistic::MyStatistic(const NetworkProps& networkProps) :
     Performs the actual computation based on the specified neurons.
     @param selection The selected neurons.
 */
-void MyStatistic::doCalculate(const NeuronSelection& selection){
+void TripletStatistic::doCalculate(const NeuronSelection& selection){
 
     // Iterate over regions with postsynaptic neurons that meet the filter criteria
     const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(selection.Postsynaptic(), mNetwork);
@@ -59,7 +59,7 @@ void MyStatistic::doCalculate(const NeuronSelection& selection){
     Adds the result values to a JSON object
     @param obj JSON object to which the values are appended
 */
-void MyStatistic::doCreateJson(QJsonObject& /*obj*/) const {
+void TripletStatistic::doCreateJson(QJsonObject& /*obj*/) const {
     // Implement when integrating the statistic into the webframework
     // refer to shared/InnervationStatistic.cpp as reference
 }
@@ -69,7 +69,7 @@ void MyStatistic::doCreateJson(QJsonObject& /*obj*/) const {
     @param out The file stream to which the values are written.
     @param sep The separator between parameter name and value.
 */
-void MyStatistic::doCreateCSV(QTextStream& /*out*/, const QChar /*sep*/) const {
+void TripletStatistic::doCreateCSV(QTextStream& /*out*/, const QChar /*sep*/) const {
     // Implement when integrating the statistic into the webframework
     // refer to shared/InnervationStatistic.cpp as reference
 }
@@ -78,6 +78,6 @@ void MyStatistic::doCreateCSV(QTextStream& /*out*/, const QChar /*sep*/) const {
     Returns internal result, for testing purposes.
     @return The statistic.
 */
-Statistics MyStatistic::getResult() const{
+Statistics TripletStatistic::getResult() const{
     return mStandardStatistic;
 }

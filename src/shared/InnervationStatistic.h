@@ -39,10 +39,9 @@ public:
 protected:
     /**
         Performs the actual computation based on the specified neurons.
-        @param preNeurons The presynaptic neurons.
-        @param postNeurons: The postsynaptic neurons.
+        @param selection The selected neurons.
     */
-    void doCalculate(const IdList& preNeurons, const IdList& postNeurons) override;
+    void doCalculate(const NeuronSelection& selection) override;
 
     /**
         Adds the result values to a JSON object

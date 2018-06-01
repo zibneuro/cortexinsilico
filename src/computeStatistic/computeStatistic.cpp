@@ -16,6 +16,7 @@
 #include "CIS3DRegions.h"
 #include "CIS3DConstantsHelpers.h"
 #include "CIS3DSparseVectorSet.h"
+#include "TripletStatistic.h"
 #include <QString>
 #include <QDebug>
 #include <QJsonObject>
@@ -48,7 +49,8 @@ int main(int argc, char* argv[])
 
     // Calculate statistic
     MyStatistic myStatistic(networkProps);
-    myStatistic.calculate(preNeurons, postNeurons);
+    NeuronSelection selection(preNeurons, postNeurons);
+    myStatistic.calculate(selection);
 
     qDebug() << "Innervation mean: " << myStatistic.getResult().getMean();
 
