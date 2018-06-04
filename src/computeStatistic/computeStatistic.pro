@@ -45,6 +45,8 @@ SOURCES += \
     ../shared/UtilIO.cpp \
     ../shared/Util.cpp \
     ../shared/NeuronSelection.cpp \
+    ../shared/TripletMotif.cpp \
+    ../shared/MotifCombinations.cpp \
     ../shared/TripletStatistic.cpp
 
 HEADERS += \
@@ -69,4 +71,6 @@ HEADERS += \
     ../shared/UtilIO.h \
     ../shared/Util.h \
     ../shared/NeuronSelection.h \
+    ../shared/TripletMotif.h \
+    ../shared/MotifCombinations.h \
     ../shared/TripletStatistic.h
