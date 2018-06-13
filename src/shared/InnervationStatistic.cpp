@@ -68,6 +68,8 @@ void InnervationStatistic::doCalculate(const NeuronSelection& selection) {
         }
     }
 
+    this->mNumConnections = this->numPreNeurons * selection.Postsynaptic().size();
+
     const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(selection.Postsynaptic(), mNetwork);
 
     for (IdsPerCellTypeRegion::ConstIterator it = idsPerCellTypeRegion.constBegin(); it != idsPerCellTypeRegion.constEnd(); ++it) {
