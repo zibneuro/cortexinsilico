@@ -3,10 +3,7 @@
 This repository provides a collection of C++ tools to process anatomical models of the rat vibrissal cortex. 
 The models are created with software tools developed at caesar institute Bonn and Zuse Institute Berlin. 
 
-Many of the routines serve as backbone of the [cortexinsilico](https://cortexinsilico.zib.de) website, which enables users to perform online analysis of connectomes and is currently under development.
-Interested users may add additional statistics to the cortexinsilico website by extending this library (refer to sections below for detailed instructions).
-
-Secondly, the tool *network simulator* is used in an ongoing research project to identify structure-based synapse formation rules using statistical inference.
+The tool *network simulator* is used in an ongoing research project to identify structure-based synapse formation rules using statistical inference.
 For more detailed information about this DFG-funded project, refer to a [description](https://spp2041.de/85acc/) at the SPP 2041 Computational Connectomics website or [this](http://www.zib.de/projects/predicting-anatomically-realistic-cortical-connectomes-using-statistical-inference) project page at the ZIB website.
 
 ## How to compile all sources
