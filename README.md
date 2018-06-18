@@ -3,10 +3,10 @@
 This repository provides a collection of C++ tools to process anatomical models of the rat vibrissal cortex. 
 The models are created with software tools developed at caesar institute Bonn and Zuse Institute Berlin. 
 
-Many of the routines serve as backbone of the [cortexinsilico](cortexinsilico.zib.de) webesite, which enables users to perform online analysis of connectomes and is currently under development.
+Many of the routines serve as backbone of the [cortexinsilico](https://cortexinsilico.zib.de) website, which enables users to perform online analysis of connectomes and is currently under development.
 Interested users may add additional statistics to the cortexinsilico website by extending this library (refer sections below for detailed instructions).
 
-Secondly, the tool *network simulator* is used in an ongoing research project to identify strcuture-based synapse formation rules using statistical inference.
+Secondly, the tool *network simulator* is used in an ongoing research project to identify structure-based synapse formation rules using statistical inference.
 For more detailed information about this DFG-funded project, refer to a [description](https://spp2041.de/85acc/) at the SPP 2041 Computational Connectomics website or [this](http://www.zib.de/projects/predicting-anatomically-realistic-cortical-connectomes-using-statistical-inference) project page at the ZIB website.
 
 ### How to compile all sources
@@ -45,9 +45,7 @@ This *network simulator* tool provides two modes: SYNAPSE and SUBCUBE.
 
 Note that in order to extract subcubes from the model, you need to download the original model data from the ZIB website:
 
-1) Download the model data:
-
-[Model data download](https://visual.zib.de/2018/IXDtH2G8/latest/)
+1) [Download the model data](https://visual.zib.de/2018/IXDtH2G8/latest/)
 
 Factor 10 downsampled model:
 realization-entireRBCF10_2018-04-19/modelData_entireRBCF10_2018-04-19.tar.gz
@@ -63,7 +61,7 @@ realization-entireRBC_2015-10-07/modelData_entireRBC_2015-10-07.tar.gz
 
 ### How implement and run custom statistics 
 
-1) Download the model data as described abvove.
+1) Download the model data as described above.
 
 2) View class src/computeStatistic/MyStatistic.h as template for your own implementation.
 
