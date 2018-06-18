@@ -49,6 +49,8 @@ Note that in order to extract subcubes from the model, you need to download the 
 
 3) Set this folder as DATA_ROOT in the *voxelSpecFile*.
 
+4) Define the properties of the subvolume VOXEL_ORIGIN anf VOXEL_DIMENIONS within the *voxelSpecFile*. 
+
 5) Run the network simulator in the SUBCUBE mode.
 
 ## How to implement and run custom statistics 
