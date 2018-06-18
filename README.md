@@ -17,7 +17,7 @@ To compile all sources under linux, proceed as follows:
 ```
 python3 install/CompileCppAndRunTests.py
 ```
-## How use the network simulator
+## How to use the network simulator
 
 The *network simulator* tool provides two modes: SYNAPSE and SUBCUBE.
 
@@ -51,7 +51,7 @@ Note that in order to extract subcubes from the model, you need to download the 
 
 5) Run the network simulator in the SUBCUBE mode.
 
-## How implement and run custom statistics 
+## How to implement and run custom statistics 
 
 1) Download the model data as described above.
 
