@@ -45,9 +45,9 @@ Note that in order to extract subcubes from the model, you need to download the 
 
 1) [Download the model data](https://visual.zib.de/2018/IXDtH2G8/latest/)
 
-2) Extract modelData_entireRBCF10_2018-04-19.tar.gz into a desired folder.
+2) Extract modelData into a desired folder.
 
-3) Set this folder as DATA_ROOT in the *subcubeSpecFile*.
+3) Set this folder as DATA_ROOT in the *voxelSpecFile*.
 
 5) Run the network simulator in the SUBCUBE mode.
 
