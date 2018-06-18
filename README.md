@@ -38,9 +38,9 @@ Usage:
 ./networkSimulator SYNAPSE <synapseSpecFile>
 ./networkSimulator SUBCUBE <voxelSpecFile>
 ```
-- The <synapseSpecFile> contains the theta parameters for Peter's rule. If the
-<synapseSpecFile> is omitted, the default parameters [0,1,1,-1] are used.
-- The <voxelSpecFile> contains the model data directory and the origin and
+- The *synapseSpecFile* contains the theta parameters for Peter's rule. If the
+*synapseSpecFile* is omitted, the default parameters [0,1,1,-1] are used.
+- The *voxelSpecFile* contains the model data directory and the origin and
 size of the subcube to be extracted from the model data.
 
 
@@ -50,7 +50,7 @@ Note that in order to extract subcubes from the model, you need to download the 
 
 2) Extract modelData_entireRBCF10_2018-04-19.tar.gz into a desired folder.
 
-3) Set this folder as DATA_ROOT in the <subcubeSpecFile>.
+3) Set this folder as DATA_ROOT in the *subcubeSpecFile*.
 
 5) Run the network simulator in the SUBCUBE mode.
 
