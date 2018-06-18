@@ -17,27 +17,27 @@ To compile all sources under linux, proceed as follows:
 1) Navigate to the cortexinsilico directory
 
 2) Run: 
-
-    python3 install/CompileCppAndRunTests.py
-
+```
+python3 install/CompileCppAndRunTests.py
+```
 ## How use the network simulator
 
 The *network simulator* tool provides two modes: SYNAPSE and SUBCUBE.
 
 In the SYNAPSE mode, the tool computes synapse counts between neurons
 according to Peters' rule, which can be parametrized by theta. To do so,
-the tool requires neuron features that must be provided in file features.csv
+the tool requires neuron features that must be provided in the file *features.csv*
 (in the same directory).
 
 In the SUBCUBE mode, the tool creates a features.csv file by extracting a
 sucube from the complete model.
 
 Usage:
-
-    ./networkSimulator SYNAPSE
-    ./networkSimulator SYNAPSE <synapseSpecFile>
-    ./networkSimulator SUBCUBE <voxelSpecFile>
-
+```
+./networkSimulator SYNAPSE
+./networkSimulator SYNAPSE <synapseSpecFile>
+./networkSimulator SUBCUBE <voxelSpecFile>
+```
 - The <synapseSpecFile> contains the theta parameters for Peter's rule. If the
 <synapseSpecFile> is omitted, the default parameters [0,1,1,-1] are used.
 - The <voxelSpecFile> contains the model data directory and the origin and
@@ -71,5 +71,6 @@ The celltype and region identifiers are specified in the meta information files
 (CellType.csv, Regions.csv) that are part of the raw data.
 
 4) To test the computation of statistics locally, run the command: 
-
-    ./build/computeStatistic/relase/computeStatistic <path_specFile>
+```
+./build/computeStatistic/relase/computeStatistic <path_to_specFile>
+```
