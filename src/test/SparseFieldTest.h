@@ -1,16 +1,12 @@
 #include <QTest>
 
-
-class SparseFieldTest: public QObject
-{
-
+class SparseFieldTest : public QObject {
     Q_OBJECT
 
-private slots:
+   private slots:
     void returnsZeroForNonExistingPositionInExistingField();
     void multiplication();
     void sum();
     void multiplicationAndSumOfUnequalFieldDims();
     void testSaveLoadStream();
 };
-

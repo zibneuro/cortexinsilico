@@ -23,8 +23,7 @@ struct Synapse {
     neurons.
 */
 class SynapseLocation {
-
-public:    
+   public:
     /**
         Performs the actual calculation of synapse locations.
         @preNeurons The presynaptic neurons.
@@ -32,14 +31,12 @@ public:
         @networkProps The model data.
         @outputDir The directoy to which the synapse properties are written.
     */
-    static void computeSynapses(const PropsMap& preNeurons,
-                         const PropsMap& postNeurons,
-                         const NetworkProps& networkProps,
-                         const QString& outputDir);
+    static void computeSynapses(const PropsMap& preNeurons, const PropsMap& postNeurons,
+                                const NetworkProps& networkProps, const QString& outputDir);
 
-private:
+   private:
     static void printSynapse(const Synapse& syn);
     static int poisson(const double mean);
 };
 
-#endif // SYNAPSELOCATION_H
+#endif  // SYNAPSELOCATION_H

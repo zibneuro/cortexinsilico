@@ -6,9 +6,8 @@
 /**
     Example class for a customly defined statistc
 */
-class MyStatistic : public NetworkStatistic
-{
-public:
+class MyStatistic : public NetworkStatistic {
+   public:
     /**
         Constructor.
         @param networkProps The model data of the network.
@@ -21,7 +20,7 @@ public:
     */
     Statistics getResult() const;
 
-protected:
+   protected:
     /**
         Performs the actual computation based on the specified neurons.
         @param selection The selected neurons.
@@ -41,8 +40,8 @@ protected:
     */
     void doCreateCSV(QTextStream& out, const QChar sep) const override;
 
-private:
+   private:
     Statistics mStandardStatistic;
 };
 
-#endif // MYSTATISTIC
+#endif  // MYSTATISTIC

@@ -8,27 +8,22 @@
                 and filter definitions.
 */
 
-#include "UtilIO.h"
-#include "MyStatistic.h"
-#include "CIS3DNetworkProps.h"
-#include "CIS3DCellTypes.h"
-#include "CIS3DNeurons.h"
-#include "CIS3DRegions.h"
-#include "CIS3DConstantsHelpers.h"
-#include "CIS3DSparseVectorSet.h"
-#include "TripletStatistic.h"
-#include <QString>
 #include <QDebug>
 #include <QJsonObject>
+#include <QString>
+#include "CIS3DCellTypes.h"
+#include "CIS3DConstantsHelpers.h"
+#include "CIS3DNetworkProps.h"
+#include "CIS3DNeurons.h"
+#include "CIS3DRegions.h"
+#include "CIS3DSparseVectorSet.h"
+#include "MyStatistic.h"
+#include "TripletStatistic.h"
+#include "UtilIO.h"
 
+void printUsage() { qDebug() << "Usage: ./computeStatistic <spec_file>"; }
 
-void printUsage() {
-    qDebug() << "Usage: ./computeStatistic <spec_file>";
-}
-
-
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     if (argc != 2) {
         printUsage();
         return 1;

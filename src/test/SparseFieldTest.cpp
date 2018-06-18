@@ -1,19 +1,16 @@
 #include "SparseFieldTest.h"
-#include "CIS3DSparseField.h"
-#include <QTest>
-#include <QDebug>
-#include <stdexcept>
-#include <QScopedPointer>
-#include <QDataStream>
 #include <QBuffer>
-
-
+#include <QDataStream>
+#include <QDebug>
+#include <QScopedPointer>
+#include <QTest>
+#include <stdexcept>
+#include "CIS3DSparseField.h"
 
 void SparseFieldTest::returnsZeroForNonExistingPositionInExistingField() {
     SparseField field(Vec3i(1, 2, 3));
     QVERIFY(qFuzzyIsNull(field.getFieldValue(Vec3i(1, 1, 1))));
 }
-
 
 void SparseFieldTest::multiplication() {
     SparseField::Locations positions1;
@@ -53,7 +50,6 @@ void SparseFieldTest::multiplication() {
     QVERIFY(false == multiplied.hasFieldValue(Vec3i(1, 0, 0)));
 }
 
-
 void SparseFieldTest::sum() {
     SparseField::Locations positions;
     positions.push_back(Vec3i(0, 1, 0));
@@ -69,7 +65,6 @@ void SparseFieldTest::sum() {
 
     QCOMPARE(3.0f, sparseField.getFieldSum());
 }
-
 
 void SparseFieldTest::multiplicationAndSumOfUnequalFieldDims() {
     SparseField::Locations positions1;
@@ -90,7 +85,7 @@ void SparseFieldTest::multiplicationAndSumOfUnequalFieldDims() {
 
     const Vec3i dims1(2, 2, 1);
     const Vec3i dims2(3, 2, 1);
-    const Vec3f origin1(0.0f,  0.0f, 0.0f);
+    const Vec3f origin1(0.0f, 0.0f, 0.0f);
     const Vec3f origin2(1.0f, -1.0f, 0.0f);
     const Vec3f voxelSize(1.0f);
 
@@ -110,7 +105,7 @@ void SparseFieldTest::multiplicationAndSumOfUnequalFieldDims() {
     QVERIFY(false == multiplied.hasFieldValue(Vec3i(1, 1, 0)));
 
     const SparseField sum = sparseField1 + sparseField2;
-    QVERIFY(Vec3i(4,3,1) == sum.getDimensions());
+    QVERIFY(Vec3i(4, 3, 1) == sum.getDimensions());
     QVERIFY(sum.getOrigin().equals(Vec3f(origin1.getX(), origin2.getY(), origin1.getZ())));
     QVERIFY(sum.getVoxelSize().equals(voxelSize));
 
@@ -119,7 +114,6 @@ void SparseFieldTest::multiplicationAndSumOfUnequalFieldDims() {
     QCOMPARE(5.0f, sum.getFieldValue(Vec3i(1, 1, 0)));
     QCOMPARE(2.0f, sum.getFieldValue(Vec3i(1, 2, 0)));
 }
-
 
 void SparseFieldTest::testSaveLoadStream() {
     SparseField::Locations locations;

@@ -14,6 +14,7 @@
 #include <QSet>
 #include <QList>
 #include <QString>
+#include <math.h>
 #include "CIS3DSparseVectorSet.h"
 
 

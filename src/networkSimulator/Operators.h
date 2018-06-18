@@ -8,14 +8,14 @@
     with theta.
 */
 class LogThetaOperator : public SparseFieldOperator {
-public:
+   public:
     /**
         Constructor.
         @param theta The connectivity rule parameter.
     */
     LogThetaOperator(float theta);
 
-protected:
+   protected:
     /**
         Takes the logarithm of the field value and multilpies the result
         by theta. If the existing field value is smaller than mEPS, mNEGMAX is
@@ -25,25 +25,24 @@ protected:
     */
     float doCalculate(const float value) const override;
 
-private:
+   private:
     float mTheta;
     const float mEps = 0.000001;
     const float mNEGMAX = -10;
 };
 
-
 /**
     Adds theta to the field value, if the field value is not 0.
 */
 class AddThetaOperator : public SparseFieldOperator {
-public:
+   public:
     /**
         Constructor.
         @param theta The connectivity rule parameter.
     */
     AddThetaOperator(float theta);
 
-protected:
+   protected:
     /**
         Adds theta, if the existing field value is not smaller than mEPS.
         @param The existing field value.
@@ -51,23 +50,22 @@ protected:
     */
     float doCalculate(const float value) const override;
 
-private:
+   private:
     float mTheta;
     const float mEps = 0.000001;
 };
-
 
 /**
     Computes the exponent of the field value.
 */
 class ExponentiationOperator : public SparseFieldOperator {
-public:
+   public:
     /**
         Constructor.
     */
     ExponentiationOperator();
 
-protected:
+   protected:
     /**
         Exponentiates the field value. If the existing field value is smaller
         than mMinArgument, 0 is returned.
@@ -76,10 +74,9 @@ protected:
     */
     float doCalculate(const float value) const override;
 
-private:
+   private:
     float mTheta;
     const float mMinArgument = -10;
 };
 
-
-#endif // OPERATORS_H
+#endif  // OPERATORS_H

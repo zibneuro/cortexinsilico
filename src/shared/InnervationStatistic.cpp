@@ -5,6 +5,7 @@
 #include "CIS3DSparseVectorSet.h"
 #include <QTextStream>
 #include <QDebug>
+#include <math.h>
 
 /**
     Constructor.

@@ -2,16 +2,14 @@
 #include "SparseFieldTest.h"
 #include "SparseVectorSetTest.h"
 
+int main() {
+    SparseFieldTest sparseFieldTest;
+    QTest::qExec(&sparseFieldTest);
 
-int main()  {
+    printf("\n");
 
-  SparseFieldTest sparseFieldTest;
-  QTest::qExec(&sparseFieldTest);
+    SparseVectorSetTest sparseVectorSetTest;
+    QTest::qExec(&sparseVectorSetTest);
 
-  printf("\n");
-
-  SparseVectorSetTest sparseVectorSetTest;
-  QTest::qExec(&sparseVectorSetTest);
-
-  return 0;
+    return 0;
 }

@@ -1,22 +1,21 @@
 #include "SynapseLocation.h"
+#include <QDebug>
+#include <QVector>
 #include "CIS3DSparseField.h"
 #include "Util.h"
-#include <QVector>
-#include <QDebug>
 
-
-void SynapseLocation::computeSynapses(const PropsMap& preNeurons,
-                     const PropsMap& postNeurons,
-                     const NetworkProps& networkProps,
-                     const QString& /*outputDir*/)
-{
+void SynapseLocation::computeSynapses(const PropsMap& preNeurons, const PropsMap& postNeurons,
+                                      const NetworkProps& networkProps,
+                                      const QString& /*outputDir*/) {
     long numPairs = 0;
     const long totalNumPairs = preNeurons.size() * postNeurons.size();
 
-    for (PropsMap::ConstIterator postIt=postNeurons.begin(); postIt!=postNeurons.end(); ++postIt) {
+    for (PropsMap::ConstIterator postIt = postNeurons.begin(); postIt != postNeurons.end();
+         ++postIt) {
         const int postNeuronId = postIt.key();
         const NeuronProps& postProps = postIt.value();
-        for (PropsMap::ConstIterator preIt=preNeurons.begin(); preIt!=preNeurons.end(); ++preIt) {
+        for (PropsMap::ConstIterator preIt = preNeurons.begin(); preIt != preNeurons.end();
+             ++preIt) {
             const int preNeuronId = preIt.key();
             const NeuronProps& preProps = preIt.value();
 
@@ -27,8 +26,7 @@ void SynapseLocation::computeSynapses(const PropsMap& preNeurons,
             SparseField innervationField;
             if (networkProps.cellTypes.isExcitatory(preProps.cellTypeId)) {
                 innervationField = multiply(*(preProps.boutons), *(postProps.pstExc));
-            }
-            else {
+            } else {
                 innervationField = multiply(*(preProps.boutons), *(postProps.pstInh));
             }
 
@@ -41,7 +39,7 @@ void SynapseLocation::computeSynapses(const PropsMap& preNeurons,
 
             QVector<Synapse> synapses;
 
-            for (int i=0; i<locations.size(); ++i) {
+            for (int i = 0; i < locations.size(); ++i) {
                 const Vec3i& loc = locations[i];
                 const Vec3f origin = innervationField.getOrigin();
                 const Vec3f voxelSize = innervationField.getVoxelSize();
@@ -50,7 +48,7 @@ void SynapseLocation::computeSynapses(const PropsMap& preNeurons,
                 const float z = origin.getZ() + (float(loc.getZ()) + 0.5f) * voxelSize.getZ();
                 const float innervation = field[i];
                 const int numSynapses = poisson(innervation);
-                for (int s=0; s<numSynapses; ++s) {
+                for (int s = 0; s < numSynapses; ++s) {
                     Synapse syn;
                     syn.preNeuronId = preNeuronId;
                     syn.postNeuronId = postNeuronId;
@@ -63,22 +61,24 @@ void SynapseLocation::computeSynapses(const PropsMap& preNeurons,
             }
             ++numPairs;
             if (numPairs % 10000 == 0) {
-                qDebug() << "Processed neuron pairs:" << numPairs << "/" << totalNumPairs <<
-                            "(" << double(numPairs)*100./double(totalNumPairs) << "%)";
+                qDebug() << "Processed neuron pairs:" << numPairs << "/" << totalNumPairs << "("
+                         << double(numPairs) * 100. / double(totalNumPairs) << "%)";
             }
         }
     }
 }
 
-
 void SynapseLocation::printSynapse(const Synapse& syn) {
     const QString str = QString("PreID: %1.\tPostID: %2. (%3, %4, %5) SomaDist (%6, %7)\n")
-            .arg(syn.preNeuronId).arg(syn.postNeuronId)
-            .arg(syn.pos.getX()).arg(syn.pos.getY()).arg(syn.pos.getZ())
-            .arg(syn.approxDistanceToSomaPre).arg(syn.approxDistanceToSomaPost);
+                            .arg(syn.preNeuronId)
+                            .arg(syn.postNeuronId)
+                            .arg(syn.pos.getX())
+                            .arg(syn.pos.getY())
+                            .arg(syn.pos.getZ())
+                            .arg(syn.approxDistanceToSomaPre)
+                            .arg(syn.approxDistanceToSomaPost);
     qDebug() << str;
 }
-
 
 int SynapseLocation::poisson(const double mean) {
     std::random_device rd;

@@ -5,6 +5,7 @@
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
 #include <stdexcept>
+#include <math.h>
 
 
 CIS3D::Structure getStructureFromName(const QString& name) {

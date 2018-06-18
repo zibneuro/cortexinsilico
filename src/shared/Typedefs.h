@@ -87,4 +87,39 @@ typedef QHash<CellTypeRegion, QList<int> > IdsPerCellTypeRegion;
 */
 typedef QList<int> IdList;
 
+/**
+    The features associated with each neuron in each voxel.
+    Additionally: The overall postsynaptic target counts (referring to one voxel).
+*/
+struct Feature {
+    int voxelID;
+    int voxelX;
+    int voxelY;
+    int voxelZ;
+    int neuronID;
+    QString cellType;
+    QString region;
+    int synapticSide;
+    float pre;
+    float postExc;
+    float postAllExc;
+    float postInh;
+    float postAllInh;
+};
+
+/*
+    Voxel ID and location. Pre- and postsynaptic target counts.
+*/
+struct Voxel {
+    int voxelId;
+    int voxelX;
+    int voxelY;
+    int voxelZ;
+    float pre;
+    float postExc;
+    float postAllExc;
+    float postInh;
+    float postAllInh;
+};
+
 #endif // TYPEDEFS_H

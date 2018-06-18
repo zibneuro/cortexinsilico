@@ -1,5 +1,6 @@
 #include "Histogram.h"
 #include <QJsonArray>
+#include <math.h>
 
 /**
     Constructor.

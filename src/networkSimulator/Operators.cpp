@@ -4,9 +4,7 @@
     Constructor.
     @param theta The connectivity rule parameter.
 */
-LogThetaOperator::LogThetaOperator(const float theta):
-    mTheta(theta){
-}
+LogThetaOperator::LogThetaOperator(const float theta) : mTheta(theta) {}
 
 /**
     Takes the logarithm of the field value and multilpies the result
@@ -16,21 +14,18 @@ LogThetaOperator::LogThetaOperator(const float theta):
     @return The new field value.
 */
 float LogThetaOperator::doCalculate(const float value) const {
-    if(value >= mEps){
+    if (value >= mEps) {
         return mTheta * log(value);
     } else {
         return mNEGMAX;
     }
 }
 
-
 /**
     Constructor.
     @param theta The connectivity rule parameter.
 */
-AddThetaOperator::AddThetaOperator(const float theta):
-    mTheta(theta){
-}
+AddThetaOperator::AddThetaOperator(const float theta) : mTheta(theta) {}
 
 /**
     Adds theta, if the existing field value is not smaller than mEPS.
@@ -38,7 +33,7 @@ AddThetaOperator::AddThetaOperator(const float theta):
     @return The new field value.
 */
 float AddThetaOperator::doCalculate(const float value) const {
-    if(value >= mEps){
+    if (value >= mEps) {
         return value + mTheta;
     } else {
         return value;
@@ -48,8 +43,7 @@ float AddThetaOperator::doCalculate(const float value) const {
 /**
     Constructor.
 */
-ExponentiationOperator::ExponentiationOperator(){
-}
+ExponentiationOperator::ExponentiationOperator() {}
 
 /**
     Exponentiates the field value. If the existing field value is smaller
@@ -58,7 +52,7 @@ ExponentiationOperator::ExponentiationOperator(){
     @return The new field value.
 */
 float ExponentiationOperator::doCalculate(const float value) const {
-    if(value >= mMinArgument){
+    if (value >= mMinArgument) {
         return exp(value);
     } else {
         return 0;

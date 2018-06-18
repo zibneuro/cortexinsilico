@@ -1,14 +1,13 @@
 #include "SparseVectorSetTest.h"
-#include "CIS3DSparseVectorSet.h"
-#include <QTest>
-#include <QDebug>
-#include <stdexcept>
-#include <QScopedPointer>
-#include <QDataStream>
 #include <QBuffer>
+#include <QDataStream>
+#include <QDebug>
+#include <QScopedPointer>
+#include <QTest>
+#include <stdexcept>
+#include "CIS3DSparseVectorSet.h"
 
-
-//QTEST_APPLESS_MAIN(SparseVectorSetTest)
+// QTEST_APPLESS_MAIN(SparseVectorSetTest)
 
 void SparseVectorSetTest::testAddingVector() {
     SparseVectorSet vectorSet;
@@ -16,7 +15,6 @@ void SparseVectorSetTest::testAddingVector() {
     vectorSet.addVector(0);
     QVERIFY(2 == vectorSet.getNumberOfVectors());
 }
-
 
 void SparseVectorSetTest::testSettingVectorValues() {
     SparseVectorSet vectorSet;
@@ -33,7 +31,6 @@ void SparseVectorSetTest::testSettingVectorValues() {
     QVERIFY_EXCEPTION_THROWN(vectorSet.setValue(nonexisting, i, vi), std::runtime_error);
 }
 
-
 void SparseVectorSetTest::getValueOfNonExistingEntryInExistingVectorReturnsZero() {
     SparseVectorSet vectorSet;
     const int v = 34;
@@ -45,7 +42,6 @@ void SparseVectorSetTest::getValueOfNonExistingEntryInExistingVectorReturnsZero(
     QVERIFY(0.0 == vectorSet.getValue(v, nonexisting));
 }
 
-
 void SparseVectorSetTest::getValueOfNonExistingVectorIdThrows() {
     SparseVectorSet vectorSet;
     const int v = 34;
@@ -54,7 +50,6 @@ void SparseVectorSetTest::getValueOfNonExistingVectorIdThrows() {
     vectorSet.setValue(v, i, 80.0f);
     QVERIFY_EXCEPTION_THROWN(vectorSet.getValue(0, i), std::runtime_error);
 }
-
 
 void SparseVectorSetTest::testSaveLoadStream() {
     SparseVectorSet vectorSet;
@@ -87,7 +82,7 @@ void SparseVectorSetTest::testSaveLoadStream() {
     buffer.close();
 
     QCOMPARE(false, reread.isNull());
-    QCOMPARE(2,  reread->getNumberOfVectors());
+    QCOMPARE(2, reread->getNumberOfVectors());
     QCOMPARE(1, reread->getNumberOfEntries(v1));
     QCOMPARE(2, reread->getNumberOfEntries(v2));
 

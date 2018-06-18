@@ -1,6 +1,7 @@
 #include "SparseFieldCalculator.h"
 #include "CIS3DSparseField.h"
 #include "CIS3DVec3.h"
+#include "math.h"
 
 /**
     Computes the innervation field according to the generalized dense
