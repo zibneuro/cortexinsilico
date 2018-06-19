@@ -35,7 +35,11 @@ class SynapseDistributor {
         /*
             Synaptic innervation proportional to pre- and postsynaptic target counts.
         */
-        PetersDefault
+        PetersDefault,
+        /*
+            Generalized Peters' rule parametrized by theta_1 to theta_4.
+        */
+        GeneralizedPeters,
     };
     /*
         Constructor.
@@ -55,6 +59,19 @@ class SynapseDistributor {
     QList<Synapse> apply(Rule rule, QVector<float> parameters);
 
    private:
+    /*
+        Caculates the synaptic innervation value according to the
+        specified rule.
+
+        @param rule Selected rule.
+        @param parameters The rule parameters.
+        @param pre Presynaptic bouton count.
+        @param post Postsynaptic target count.
+        @param postAll Overall postsynaptic target count.
+        @return The mean innervation value.
+    */
+    float determineInnervationMean(Rule rule, QVector<float> parameters, float pre, float post,
+                                   float postAll);
 
     /*
         Initializes hash sets that provide access to the pre-

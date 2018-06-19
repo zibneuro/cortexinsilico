@@ -159,12 +159,20 @@ int main(int argc, char **argv) {
                 distributor.apply(SynapseDistributor::Rule::PetersDefault, parameters);
             SynapseWriter writer;            
             writer.write("synapses.csv", synapses);
-        } else if (argc == 3) {
-            qDebug() << "Not implemented yet.";
-            return 1;
+        } else if (argc == 3) {                        
+            FeatureReader reader;
+            QList<Feature> features = reader.load("features.csv");
+            SynapseDistributor distributor(features);
+            const QString specFile = argv[2];
+            QJsonObject spec = UtilIO::parseSpecFile(specFile);
+            QVector<float> parameters = extractRuleParameters(spec);
+            QList<Synapse> synapses =
+                distributor.apply(SynapseDistributor::Rule::GeneralizedPeters, parameters);
+            SynapseWriter writer;            
+            writer.write("synapses.csv", synapses);
         } else {
             printUsage();
-            return -1;
+            return 1;
         }
     } else if (mode == "SUBCUBE") {
         if (argc != 3) {
@@ -179,7 +187,6 @@ int main(int argc, char **argv) {
             networkProps.loadFilesForSynapseComputation();
             QVector<float> origin = extractOrigin(spec);
             QVector<int> dimensions = extractDimensions(spec);
-            qDebug() << origin << dimensions;
             FeatureExtractor extractor(networkProps);
             extractor.writeFeaturesToFile(origin, dimensions);
             return 0;

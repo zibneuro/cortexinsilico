@@ -17,6 +17,8 @@
 */
 void SynapseWriter::write(QString fileName, QList<Synapse> synapses) {
 
+    QTextStream(stdout) << "[*] Writing synapses to " << fileName << "\n";
+
     qSort(synapses.begin(), synapses.end(), lessThan);
 
     QFile csv(fileName);

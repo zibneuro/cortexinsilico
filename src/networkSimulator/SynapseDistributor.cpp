@@ -17,10 +17,12 @@ SynapseDistributor::SynapseDistributor(QList<Feature>& features) : mFeatures(fea
     @param parameters Rule parameters.
     @return A list of synapses.
 */
-QList<Synapse> SynapseDistributor::apply(Rule /*rule*/, QVector<float> /*parameters*/) {
+QList<Synapse> SynapseDistributor::apply(Rule rule, QVector<float> parameters) {
     QList<Synapse> synapses;
     std::random_device rd;
     std::mt19937 randomGenerator(rd());
+    const float maxInnervation = 1000000;
+    const int maxSynapseCount = 999999;
 
     QSetIterator<int> voxelIt(mVoxels);
     while (voxelIt.hasNext()) {
@@ -32,7 +34,6 @@ QList<Synapse> SynapseDistributor::apply(Rule /*rule*/, QVector<float> /*paramet
                 for (int j = 0; j < postFeatures.size(); j++) {
                     int preFeatureIdx = preFeatures[i];
                     int postFeatureIdx = postFeatures[j];
-
                     Feature preFeature = mFeatures[preFeatureIdx];
                     Feature postFeature = mFeatures[postFeatureIdx];
 
@@ -44,35 +45,81 @@ QList<Synapse> SynapseDistributor::apply(Rule /*rule*/, QVector<float> /*paramet
                     synapse.preNeuronId = preFeature.neuronID;
                     synapse.postNeuronId = postFeature.neuronID;
 
-                    if (synapse.preNeuronId != synapse.postNeuronId) {
-                        float pre = preFeature.pre;
-                        float post;
-                        float postAll;
-                        if (preFeature.functionalCellType == "exc") {
-                            post = postFeature.postExc;
-                            postAll = postFeature.postAllExc;
-                        } else {
-                            post = postFeature.postInh;
-                            postAll = postFeature.postAllInh;
-                        }
+                    if (synapse.preNeuronId == synapse.postNeuronId) {
+                        continue;
+                    }
 
-                        synapse.pre = pre;
-                        synapse.post = post;
-                        synapse.postAll = postAll;
-                        if (postAll != 0) {
-                            float innervationMean = pre * post / postAll;
+                    float pre = preFeature.pre;
+                    float post;
+                    float postAll;
+                    if (preFeature.functionalCellType == "exc") {
+                        post = postFeature.postExc;
+                        postAll = postFeature.postAllExc;
+                    } else {
+                        post = postFeature.postInh;
+                        postAll = postFeature.postAllInh;
+                    }
+
+                    synapse.pre = pre;
+                    synapse.post = post;
+                    synapse.postAll = postAll;
+
+                    float innervationMean =
+                        determineInnervationMean(rule, parameters, pre, post, postAll);                    
+                    if (innervationMean > 0) {
+                        if (innervationMean < maxInnervation) {
+                            // Draw sample from Poisson distribution
                             std::poisson_distribution<> distribution(innervationMean);
                             synapse.count = distribution(randomGenerator);
                         } else {
-                            synapse.count = 0;
+                            synapse.count = maxSynapseCount;
                         }
-                        synapses.append(synapse);
+                    } else {
+                        synapse.count = 0;
                     }
+
+                    synapses.append(synapse);
                 }
             }
         }
     }
     return synapses;
+}
+
+/*
+    Caculates the synaptic innervation value according to the
+    specified rule.
+
+    @param rule Selected rule.
+    @param parameters The rule parameters.
+    @param pre Presynaptic bouton count.
+    @param post Postsynaptic target count.
+    @param postAll Overall postsynaptic target count.
+    @return The mean innervation value.
+*/
+float SynapseDistributor::determineInnervationMean(Rule rule, QVector<float> parameters, float pre,
+                                                   float post, float postAll) {
+    if (rule == Rule::PetersDefault) {
+        if (postAll > 0) {
+            return pre * post / postAll;
+        } else {
+            return 0;
+        }
+    } else if (rule == Rule::GeneralizedPeters) {
+        float theta1 = parameters[0];
+        float theta2 = parameters[1];
+        float theta3 = parameters[2];
+        float theta4 = parameters[3];
+        const float eps = 0.000001;
+        if ((pre > eps) && (post > eps) && (postAll > eps)) {
+            return exp(theta1 + theta2 * log(pre) + theta3 * log(post) + theta4 * log(postAll));
+        } else {
+            return 0;
+        }
+    } else {
+        const QString msg = QString("Unknown connectivity rule.");
+        throw std::runtime_error(qPrintable(msg));
+    }
 }
 
 /*
