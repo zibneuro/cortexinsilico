@@ -35,7 +35,7 @@ Usage:
 ./networkSimulator SYNAPSE <synapseSpecFile>
 ./networkSimulator SUBCUBE <voxelSpecFile>
 ```
-- The *synapseSpecFile* contains the theta parameters for Peter's rule. If the
+- The *synapseSpecFile* contains the theta parameters for Peters' rule. If the
 *synapseSpecFile* is omitted, the default parameters [0,1,1,-1] are used.
 - The *voxelSpecFile* contains the model data directory and the origin and
 size of the subcube to be extracted from the model data.

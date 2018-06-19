@@ -175,6 +175,7 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
         int neuronId = neurons[i];
         int cellTypeId = mNetworkProps.neurons.getCellTypeId(neuronId);
         QString cellType = mNetworkProps.cellTypes.getName(cellTypeId);
+        QString functionalCellType = mNetworkProps.cellTypes.isExcitatory(cellTypeId) ? "exc" : "inh";
         int regionId = mNetworkProps.neurons.getRegionId(neuronId);
         QString region = mNetworkProps.regions.getName(regionId);
         int synapticSide = mNetworkProps.neurons.getSynapticSide(neuronId);
@@ -221,7 +222,8 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
             feature.voxelX = voxels[j].voxelX;
             feature.voxelY = voxels[j].voxelY;
             feature.voxelZ = voxels[j].voxelZ;
-            feature.cellType = cellType;
+            feature.morphologicalCellType = cellType;
+            feature.functionalCellType = functionalCellType;
             feature.region = region;
             feature.synapticSide = synapticSide;
             feature.pre = voxels[j].pre;
@@ -251,17 +253,18 @@ void FeatureExtractor::writeCSV(QList<Feature>& features) {
     }
     const QChar sep(',');
     QTextStream out(&csv);
-    out << "voxelID" << sep << "voxelX" << sep << "voxelY" << sep << "voxelZ" << sep << "neuronId"
-        << sep << "cellType" << sep << "region" << sep << "synapticSide" << sep << "pre" << sep
-        << "postExc" << sep << "postAllExc" << sep << "postInh" << sep << "postAllInh"
+    out << "voxelID" << sep << "voxelX" << sep << "voxelY" << sep << "voxelZ" << sep << "neuronID"
+        << sep << "morphologicalCellType" << sep << "functionalCellType" << sep << "region" << sep
+        << "synapticSide" << sep << "pre" << sep << "postExc" << sep << "postAllExc" << sep
+        << "postInh" << sep << "postAllInh"
         << "\n";
     for (int i = 0; i < features.size(); i++) {
         Feature feature = features[i];
         out << feature.voxelID << sep << feature.voxelX << sep << feature.voxelY << sep
-            << feature.voxelZ << sep << feature.neuronID << sep << feature.cellType << sep
-            << feature.region << sep << feature.synapticSide << sep << feature.pre << sep
-            << feature.postExc << sep << feature.postAllExc << sep << feature.postInh << sep
-            << feature.postAllInh << "\n";
+            << feature.voxelZ << sep << feature.neuronID << sep << feature.morphologicalCellType
+            << sep << feature.functionalCellType << sep << feature.region << sep
+            << feature.synapticSide << sep << feature.pre << sep << feature.postExc << sep
+            << feature.postAllExc << sep << feature.postInh << sep << feature.postAllInh << "\n";
     }
 }
 

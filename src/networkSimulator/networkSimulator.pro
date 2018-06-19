@@ -25,6 +25,9 @@ MOC_DIR = $$DESTDIR/.moc
 SOURCES += \
     networkSimulator.cpp \
     FeatureExtractor.cpp \
+    FeatureReader.cpp \
+    SynapseDistributor.cpp \
+    SynapseWriter.cpp \
     ../shared/CIS3DAxonRedundancyMap.cpp \
     ../shared/CIS3DBoundingBoxes.cpp \
     ../shared/CIS3DCellTypes.cpp \
@@ -49,6 +52,9 @@ SOURCES += \
 
 HEADERS += \
     FeatureExtractor.h \
+    FeatureReader.h \
+    SynapseDistributor.h \
+    SynapseWriter.h \
     ../shared/CIS3DAxonRedundancyMap.h \
     ../shared/CIS3DBoundingBoxes.h \
     ../shared/CIS3DCellTypes.h \

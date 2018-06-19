@@ -41,11 +41,14 @@
 #include "CIS3DSparseVectorSet.h"
 #include "CIS3DVec3.h"
 #include "FeatureExtractor.h"
+#include "FeatureReader.h"
 #include "Histogram.h"
 #include "InnervationStatistic.h"
 #include "NeuronSelection.h"
 #include "SparseFieldCalculator.h"
 #include "SparseVectorCache.h"
+#include "SynapseDistributor.h"
+#include "SynapseWriter.h"
 #include "Typedefs.h"
 #include "Util.h"
 #include "UtilIO.h"
@@ -147,8 +150,22 @@ int main(int argc, char **argv) {
     const QString mode = argv[1];
 
     if (mode == "SYNAPSE") {
-        qDebug() << "Not implemented yet.";
-        return 1;
+        if (argc == 2) {
+            FeatureReader reader;
+            QList<Feature> features = reader.load("features.csv");
+            SynapseDistributor distributor(features);
+            QVector<float> parameters;
+            QList<Synapse> synapses =
+                distributor.apply(SynapseDistributor::Rule::PetersDefault, parameters);
+            SynapseWriter writer;            
+            writer.write("synapses.csv", synapses);
+        } else if (argc == 3) {
+            qDebug() << "Not implemented yet.";
+            return 1;
+        } else {
+            printUsage();
+            return -1;
+        }
     } else if (mode == "SUBCUBE") {
         if (argc != 3) {
             printUsage();

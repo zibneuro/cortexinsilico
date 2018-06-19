@@ -97,8 +97,9 @@ struct Feature {
     int voxelY;
     int voxelZ;
     int neuronID;
-    QString cellType;
-    QString region;
+    QString morphologicalCellType;
+    QString functionalCellType;
+    QString region;    
     int synapticSide;
     float pre;
     float postExc;
@@ -120,6 +121,23 @@ struct Voxel {
     float postAllExc;
     float postInh;
     float postAllInh;
+};
+
+/*
+    Voxel ID and location, pre- and postsynaptic neuron IDs.
+    Additionally: pre - and postsynaptic target counts.
+*/
+struct Synapse {
+    int voxelId;
+    int voxelX;
+    int voxelY;
+    int voxelZ;
+    int preNeuronId;
+    int postNeuronId;
+    float pre;
+    float post;
+    float postAll;
+    float count;
 };
 
 #endif // TYPEDEFS_H
