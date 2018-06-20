@@ -22,21 +22,19 @@ python3 install/CompileCppAndRunTests.py
 The *network simulator* tool provides two modes: SYNAPSE and SUBCUBE.
 
 In the SYNAPSE mode, the tool computes synapse counts between neurons
-according to Peters' rule, which can be parametrized by theta. To do so,
+according to generalized Peters' rule, which is parametrized by theta. To do so,
 the tool requires neuron features that must be provided in the file *features.csv*
 (in the same directory).
 
-In the SUBCUBE mode, the tool creates a features.csv file by extracting a
+In the SUBCUBE mode, the tool creates a *features.csv* file by extracting a
 sucube from the complete model.
 
 Usage:
 ```
-./networkSimulator SYNAPSE
 ./networkSimulator SYNAPSE <synapseSpecFile>
 ./networkSimulator SUBCUBE <voxelSpecFile>
 ```
-- The *synapseSpecFile* contains the theta parameters for Peters' rule. If the
-*synapseSpecFile* is omitted, the default parameters [0,1,1,-1] are used.
+- The *synapseSpecFile* contains the theta parameters for Peters' rule. 
 - The *voxelSpecFile* contains the model data directory and the origin and
 size of the subcube to be extracted from the model data.
 

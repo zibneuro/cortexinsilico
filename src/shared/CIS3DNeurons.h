@@ -119,6 +119,13 @@ public:
     */
     QList<int> getFilteredNeuronIds(const SelectionFilter& filter) const;
 
+    /*
+        Returns the properties of the specfied neuron.
+        @param neuronId The ID of the neuron.
+        @return The neuron properties.
+    */
+    NeuronProperties getNeuronProps(int neuronId) const;
+
     /**
         Saves the neurons to file.
         @param fileName The file name.

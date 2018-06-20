@@ -2,7 +2,7 @@
     This tool provides two modes: SYNAPSE and SUBCUBE.
 
     In the SYNAPSE mode, the tool computes synapse counts between neurons
-    according to Peters' rule, which can be parametrized by theta. To do so,
+    according to generalized Peters' rule, which is parametrized by theta. To do so,
     the tool requires neuron features that must be provided in file features.csv
     (in the same directory).
 
@@ -11,12 +11,10 @@
 
     Usage:
 
-    ./networkSimulator SYNAPSE
     ./networkSimulator SYNAPSE <synapseSpecFile>
     ./networkSimulator SUBCUBE <voxelSpecFile>
 
-    The <synapseSpecFile> contains the theta parameters for Peter's rule. If the
-    <synapseSpecFile> is omitted, the default parameters [0,1,1,-1] are used.
+    The <synapseSpecFile> contains the theta parameters for Peter's rule.
 
     The <voxelSpecFile> contains the model data directory and the origin and
     size of the subcube to be extracted from the model data.
@@ -60,21 +58,19 @@ void printUsage() {
     qDebug() << "This tool provides two modes: SYNAPSES and SUBCUBE.";
     qDebug() << "";
     qDebug() << "In the SYNAPSES mode, the tool computes synapse counts between neurons";
-    qDebug() << "according to Peters' rule, which can be parametrized by theta. To do so,";
+    qDebug() << "according to generalized Peters' rule, which is parametrized by theta. To do so,";
     qDebug() << "the tool requires neuron features that must be provided in file features.csv";
-    qDebug() << "in the same directory).";
+    qDebug() << "(in the same directory).";
     qDebug() << "";
     qDebug() << "In the SUBCUBE mode, the tool creates a features.csv file by extracting a";
     qDebug() << "sucube from the complete model.";
     qDebug() << "";
     qDebug() << "Usage:";
     qDebug() << "";
-    qDebug() << "./networkSimulator SYNAPSE";
     qDebug() << "./networkSimulator SYNAPSE <synapseSpecFile>";
     qDebug() << "./networkSimulator SUBCUBE <voxelSpecFile>";
     qDebug() << "";
-    qDebug() << "The <synapseSpecFile> contains the theta parameters for Peter's rule. If the";
-    qDebug() << "<synapseSpecFile> is omitted, the default parameters [0,1,1,-1] are used.";
+    qDebug() << "The <synapseSpecFile> contains the theta parameters for Peter's rule.";
     qDebug() << "";
     qDebug() << "The <voxelSpecFile> contains the model data directory and the origin and";
     qDebug() << "size of the subcube to be extracted from the model data.";
@@ -135,6 +131,46 @@ QVector<int> extractDimensions(const QJsonObject spec) {
 }
 
 /*
+    Reads the CELLTYPES property from the specification file.
+
+    @param spec The specification file as json object.
+    @return The cell type names as set.
+    @throws runtime_error if the CELLTYPES property is not found.
+*/
+QSet<QString> extractCellTypes(const QJsonObject spec) {
+    if (spec["CELLTYPES"] == QJsonValue::Undefined) {
+        throw std::runtime_error("Key CELLTYPES not found in spec file.");
+    };
+    QSet<QString> cellTypes;    
+    QJsonArray parameters = spec["CELLTYPES"].toArray();
+    for(int i=0; i<parameters.size(); i++){
+        const QString cellType = parameters[i].toString();
+        cellTypes.insert(cellType);
+    }
+    return cellTypes;
+}
+
+/*
+    Reads the REGIONS property from the specification file.
+
+    @param spec The specification file as json object.
+    @return The region names as set.
+    @throws runtime_error if the REGIONS property is not found.
+*/
+QSet<QString> extractRegions(const QJsonObject spec) {
+    if (spec["REGIONS"] == QJsonValue::Undefined) {
+        throw std::runtime_error("Key REGIONS not found in spec file.");
+    };
+    QSet<QString> regions;    
+    QJsonArray parameters = spec["REGIONS"].toArray();
+    for(int i=0; i<parameters.size(); i++){
+        const QString region = parameters[i].toString();
+        regions.insert(region);
+    }
+    return regions;
+}
+
+/*
     Entry point for the console application.
 
     @param argc Number of arguments.
@@ -150,16 +186,10 @@ int main(int argc, char **argv) {
     const QString mode = argv[1];
 
     if (mode == "SYNAPSE") {
-        if (argc == 2) {
-            FeatureReader reader;
-            QList<Feature> features = reader.load("features.csv");
-            SynapseDistributor distributor(features);
-            QVector<float> parameters;
-            QList<Synapse> synapses =
-                distributor.apply(SynapseDistributor::Rule::PetersDefault, parameters);
-            SynapseWriter writer;            
-            writer.write("synapses.csv", synapses);
-        } else if (argc == 3) {                        
+        if (argc != 3) {
+            printUsage();
+            return 1;
+        } else {
             FeatureReader reader;
             QList<Feature> features = reader.load("features.csv");
             SynapseDistributor distributor(features);
@@ -168,11 +198,8 @@ int main(int argc, char **argv) {
             QVector<float> parameters = extractRuleParameters(spec);
             QList<Synapse> synapses =
                 distributor.apply(SynapseDistributor::Rule::GeneralizedPeters, parameters);
-            SynapseWriter writer;            
+            SynapseWriter writer;
             writer.write("synapses.csv", synapses);
-        } else {
-            printUsage();
-            return 1;
         }
     } else if (mode == "SUBCUBE") {
         if (argc != 3) {
@@ -187,8 +214,10 @@ int main(int argc, char **argv) {
             networkProps.loadFilesForSynapseComputation();
             QVector<float> origin = extractOrigin(spec);
             QVector<int> dimensions = extractDimensions(spec);
+            QSet<QString> cellTypes = extractCellTypes(spec);
+            QSet<QString> regions = extractRegions(spec);
             FeatureExtractor extractor(networkProps);
-            extractor.writeFeaturesToFile(origin, dimensions);
+            extractor.writeFeaturesToFile(origin, dimensions, cellTypes, regions);
             return 0;
         }
     } else {

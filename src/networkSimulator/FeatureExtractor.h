@@ -49,8 +49,11 @@ class FeatureExtractor {
 
         @param origin Origin of the subvolume (in spatial coordinates).
         @param dimensions Number of voxels in each direction from the origin.
+        @param cellTypes The cell types filter.
+        @param regions The regions filter.
     */
-    void writeFeaturesToFile(QVector<float> origin, QVector<int> dimensions);
+    void writeFeaturesToFile(QVector<float> origin, QVector<int> dimensions,
+                             QSet<QString> cellTypes, QSet<QString> regions);
 
    private:
     /*

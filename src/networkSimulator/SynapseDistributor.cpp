@@ -65,7 +65,7 @@ QList<Synapse> SynapseDistributor::apply(Rule rule, QVector<float> parameters) {
                     synapse.postAll = postAll;
 
                     float innervationMean =
-                        determineInnervationMean(rule, parameters, pre, post, postAll);                    
+                        determineInnervationMean(rule, parameters, pre, post, postAll);
                     if (innervationMean > 0) {
                         if (innervationMean < maxInnervation) {
                             // Draw sample from Poisson distribution
@@ -99,13 +99,7 @@ QList<Synapse> SynapseDistributor::apply(Rule rule, QVector<float> parameters) {
 */
 float SynapseDistributor::determineInnervationMean(Rule rule, QVector<float> parameters, float pre,
                                                    float post, float postAll) {
-    if (rule == Rule::PetersDefault) {
-        if (postAll > 0) {
-            return pre * post / postAll;
-        } else {
-            return 0;
-        }
-    } else if (rule == Rule::GeneralizedPeters) {
+    if (rule == Rule::GeneralizedPeters) {
         float theta1 = parameters[0];
         float theta2 = parameters[1];
         float theta3 = parameters[2];

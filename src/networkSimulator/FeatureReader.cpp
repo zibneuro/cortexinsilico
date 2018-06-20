@@ -31,10 +31,13 @@ QList<Feature> FeatureReader::load(const QString fileName) {
     }
 
     QStringList parts = line.split(sep);
-    if (parts.size() != 14 || parts[0] != "voxelID" || parts[1] != "voxelX" || parts[2] != "voxelY" ||
-        parts[3] != "voxelZ" || parts[4] != "neuronID" || parts[5] != "morphologicalCellType" ||
-        parts[6] != "functionalCellType" || parts[7] != "region" || parts[8] != "synapticSide" ||
-        parts[9] != "pre" || parts[10] != "postExc" || parts[11] != "postAllExc" || parts[12] != "postInh" ||
+    
+    if (parts.size() != 14 || parts[0] != "voxelID" || parts[1] != "voxelX" ||
+        parts[2] != "voxelY" || parts[3] != "voxelZ" || parts[4] != "neuronID" ||
+        
+        parts[5] != "morphologicalCellType" || parts[6] != "functionalCellType" ||
+        parts[7] != "region" || parts[8] != "synapticSide" || parts[9] != "pre" ||
+        parts[10] != "postExc" || parts[11] != "postAllExc" || parts[12] != "postInh" ||
         parts[13] != "postAllInh") {
         const QString msg =
             QString("Error reading features file %1. Invalid header columns.").arg(fileName);
@@ -68,7 +71,7 @@ QList<Feature> FeatureReader::load(const QString fileName) {
         feature.postExc = parts[10].toFloat();
         feature.postAllExc = parts[11].toFloat();
         feature.postInh = parts[12].toFloat();
-        feature.postAllInh = parts[13].toFloat();        
+        feature.postAllInh = parts[13].toFloat();
         features.append(feature);
 
         line = in.readLine();

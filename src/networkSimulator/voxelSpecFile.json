@@ -1,0 +1,7 @@
+{
+    "DATA_ROOT": "../../../data/realization_entireRBC_2015-10-07/",
+    "VOXEL_ORIGIN": [100,200,-200],
+    "VOXEL_DIMENSIONS": [10,10,10],
+    "CELLTYPES" : ["L4py"],
+    "REGIONS" : ["C3"]     
+}

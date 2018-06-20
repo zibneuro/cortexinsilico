@@ -13,11 +13,50 @@ FeatureExtractor::FeatureExtractor(NetworkProps& props) : mNetworkProps(props) {
 
     @param origin Origin of the subvolume (in spatial coordinates).
     @param dimensions Number of voxels in each direction from the origin.
+    @param cellTypes The cell types filter.
+    @param regions The region filter.
 */
-void FeatureExtractor::writeFeaturesToFile(QVector<float> origin, QVector<int> dimensions) {
+void FeatureExtractor::writeFeaturesToFile(QVector<float> origin, QVector<int> dimensions,
+                                           QSet<QString> cellTypes, QSet<QString> regions) {
     QList<int> neurons = getNeuronsWithinVolume(origin, dimensions);
+    QList<int> prunedNeurons;
+    QList<int> prunedNeurons2;
+
+    if (cellTypes.size() == 0) {
+        prunedNeurons.append(neurons);
+    } else {
+        for (int i = 0; i < neurons.size(); i++) {
+            int neuronId = neurons[i];
+            int cellTypeId = mNetworkProps.neurons.getCellTypeId(neuronId);
+            QString cellType = mNetworkProps.cellTypes.getName(cellTypeId);
+            if (cellTypes.contains(cellType)) {
+                prunedNeurons.append(neuronId);
+            }
+        }
+    }
+
+    if (regions.size() == 0) {
+        prunedNeurons2.append(prunedNeurons);
+    } else {
+        for (int i = 0; i < prunedNeurons.size(); i++) {
+            int neuronId = prunedNeurons[i];
+            int regionId = mNetworkProps.neurons.getRegionId(neuronId);
+            QString region = mNetworkProps.regions.getName(regionId);
+            if (regions.contains(region)) {
+                prunedNeurons2.append(neuronId);
+            }
+        }
+    }
+
+    Neurons extractedNeurons;
+    for(int i=0; i<prunedNeurons2.size(); i++){
+        int neuronId = prunedNeurons2[i];
+        extractedNeurons.addNeuron(mNetworkProps.neurons.getNeuronProps(neuronId));    
+    }
+    extractedNeurons.saveCSV("extractedNeurons.csv");
+
     qDebug() << "[*] Extracting features.";
-    QList<Feature> features = extractFeatures(neurons, origin, dimensions);
+    QList<Feature> features = extractFeatures(prunedNeurons2, origin, dimensions);
     qDebug() << "[*] Writing model data to file: features.csv.";
     qSort(features.begin(), features.end(), lessThan);
     writeCSV(features);
@@ -50,7 +89,7 @@ QList<int> FeatureExtractor::getNeuronsWithinVolume(QVector<float> origin,
         float x = somaPosition.getX();
         float y = somaPosition.getY();
         float z = somaPosition.getZ();
-        if (x >= xLow && y <= xHigh && y >= yLow && y <= yHigh && z >= zLow && z <= zHigh) {
+        if (x >= xLow && x <= xHigh && y >= yLow && y <= yHigh && z >= zLow && z <= zHigh) {
             neuronsWithinVolume.append(i);
         }
     }
@@ -175,7 +214,8 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
         int neuronId = neurons[i];
         int cellTypeId = mNetworkProps.neurons.getCellTypeId(neuronId);
         QString cellType = mNetworkProps.cellTypes.getName(cellTypeId);
-        QString functionalCellType = mNetworkProps.cellTypes.isExcitatory(cellTypeId) ? "exc" : "inh";
+        QString functionalCellType =
+            mNetworkProps.cellTypes.isExcitatory(cellTypeId) ? "exc" : "inh";
         int regionId = mNetworkProps.neurons.getRegionId(neuronId);
         QString region = mNetworkProps.regions.getName(regionId);
         int synapticSide = mNetworkProps.neurons.getSynapticSide(neuronId);

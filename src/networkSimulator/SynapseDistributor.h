@@ -31,11 +31,7 @@ class SynapseDistributor {
     /*
         The synapse formation rule to be applied.
     */
-    enum Rule {
-        /*
-            Synaptic innervation proportional to pre- and postsynaptic target counts.
-        */
-        PetersDefault,
+    enum Rule {    
         /*
             Generalized Peters' rule parametrized by theta_1 to theta_4.
         */
