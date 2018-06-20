@@ -24,19 +24,21 @@ void NetworkProps::setDataRoot(const QString& dataRoot, const bool resetCache) {
 void NetworkProps::loadFilesForSynapseComputation()
 {
     if(!mFilesForComputationLoaded){
-        const QString cellTypesFile = CIS3D::getCellTypesFileName(dataRootDir);
+        const QDir modelDataDir = CIS3D::getModelDataDir(dataRootDir);
+
+        const QString cellTypesFile = CIS3D::getCellTypesFileName(modelDataDir);
         cellTypes.loadCSV(cellTypesFile);
 
-        const QString neuronsFile = CIS3D::getNeuronsFileName(dataRootDir);
+        const QString neuronsFile = CIS3D::getNeuronsFileName(modelDataDir);
         neurons.loadCSV(neuronsFile);
 
-        const QString boxesFile = CIS3D::getBoundingBoxesFileName(dataRootDir);
+        const QString boxesFile = CIS3D::getBoundingBoxesFileName(modelDataDir);
         boundingBoxes.loadCSV(boxesFile);
 
-        const QString regionsFile = CIS3D::getRegionsFileName(dataRootDir);
+        const QString regionsFile = CIS3D::getRegionsFileName(modelDataDir);
         regions.loadCSV(regionsFile);
 
-        const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(dataRootDir);
+        const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(modelDataDir);
         axonRedundancyMap.loadBinary(redundancyFile);
 
         mFilesForComputationLoaded = true;
@@ -53,16 +55,18 @@ void NetworkProps::loadFilesForSynapseComputation()
 */
 void NetworkProps::loadFilesForQuery()
 {
-    const QString cellTypesFile = CIS3D::getCellTypesFileName(dataRootDir);
+    const QDir modelDataDir = CIS3D::getModelDataDir(dataRootDir);
+
+    const QString cellTypesFile = CIS3D::getCellTypesFileName(modelDataDir);
     cellTypes.loadCSV(cellTypesFile);
 
-    const QString neuronsFile = CIS3D::getNeuronsFileName(dataRootDir);
+    const QString neuronsFile = CIS3D::getNeuronsFileName(modelDataDir);
     neurons.loadCSV(neuronsFile);
 
-    const QString regionsFile = CIS3D::getRegionsFileName(dataRootDir);
+    const QString regionsFile = CIS3D::getRegionsFileName(modelDataDir);
     regions.loadCSV(regionsFile);
 
-    const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(dataRootDir);
+    const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(modelDataDir);
     axonRedundancyMap.loadBinary(redundancyFile);
 }
 
@@ -78,21 +82,23 @@ void NetworkProps::loadFilesForQuery()
 */
 void NetworkProps::loadFilesForInputMapping()
 {
-    const QString cellTypesFile = CIS3D::getCellTypesFileName(dataRootDir);
+   const QDir modelDataDir = CIS3D::getModelDataDir(dataRootDir);
+
+    const QString cellTypesFile = CIS3D::getCellTypesFileName(modelDataDir);
     cellTypes.loadCSV(cellTypesFile);
 
-    const QString neuronsFile = CIS3D::getNeuronsFileName(dataRootDir);
+    const QString neuronsFile = CIS3D::getNeuronsFileName(modelDataDir);
     neurons.loadCSV(neuronsFile);
 
-    const QString boxesFile = CIS3D::getBoundingBoxesFileName(dataRootDir);
+    const QString boxesFile = CIS3D::getBoundingBoxesFileName(modelDataDir);
     boundingBoxes.loadCSV(boxesFile);
 
-    const QString regionsFile = CIS3D::getRegionsFileName(dataRootDir);
+    const QString regionsFile = CIS3D::getRegionsFileName(modelDataDir);
     regions.loadCSV(regionsFile);
 
-    const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(dataRootDir);
+    const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(modelDataDir);
     axonRedundancyMap.loadBinary(redundancyFile);
 
-    const QString pstDensitiesFile = CIS3D::getPSTDensitiesFileName(dataRootDir);
+    const QString pstDensitiesFile = CIS3D::getPSTDensitiesFileName(modelDataDir);
     densities.loadCSV(pstDensitiesFile);
 }

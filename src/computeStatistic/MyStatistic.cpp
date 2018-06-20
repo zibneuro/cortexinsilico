@@ -21,9 +21,8 @@ void MyStatistic::doCalculate(const NeuronSelection& selection) {
         const CellTypeRegion cellTypeRegion = it.key();
         const QString cellTypeName = mNetwork.cellTypes.getName(cellTypeRegion.first);
         const QString regionName = mNetwork.regions.getName(cellTypeRegion.second);
-        QString dataRoot = mNetwork.dataRoot;
-        const QString innervationFile =
-            CIS3D::getInnervationPostFileName(dataRoot, regionName, cellTypeName);
+        const QDir innervationDir = CIS3D::getInnervationDataDir(mNetwork.dataRoot);
+        const QString innervationFile = CIS3D::getInnervationPostFileName(innervationDir, regionName, cellTypeName);
         const IdList& ids = it.value();
         SparseVectorSet* vectorSet = SparseVectorSet::load(innervationFile);
         qDebug() << "Loading" << innervationFile;

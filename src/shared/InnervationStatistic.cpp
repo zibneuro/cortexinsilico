@@ -77,7 +77,8 @@ void InnervationStatistic::doCalculate(const NeuronSelection& selection) {
         const CellTypeRegion cellTypeRegion = it.key();
         const QString cellTypeName = mNetwork.cellTypes.getName(cellTypeRegion.first);
         const QString regionName = mNetwork.regions.getName(cellTypeRegion.second);
-        const QString innervationFile = CIS3D::getInnervationPostFileName(mNetwork.dataRoot, regionName, cellTypeName);
+        const QDir innervationDir = CIS3D::getInnervationDataDir(mNetwork.dataRoot);
+        const QString innervationFile = CIS3D::getInnervationPostFileName(innervationDir, regionName, cellTypeName);
 
         const IdList& ids = it.value();
         SparseVectorSet* vectorSet;

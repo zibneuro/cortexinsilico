@@ -10,7 +10,17 @@
 /**
     A set of enums to specify structural features of the neurons.
     Provides a collection of utility functions to obtain standard file names.
+
+
+    The canonical directory structure is:
+
+    <dataRootDir>/<innervationDataDir>/<InnervationPostDataDir>/...
+                  <modelDataDir>/Boutons/...
+                                 PSTall/...
+                                 *.csv
+                                 ...
 */
+
 namespace CIS3D {
 
     /**
@@ -73,6 +83,30 @@ namespace CIS3D {
     typedef QPair<int, int>  CellTypeRegion;
 
     /**
+        Get the directory containing the model data, relative to the data root
+        @param dataRootDir The data root directory
+    */
+    QDir getModelDataDir(const QDir& dataRootDir);
+
+    /**
+        Get the directory containing the innervation data, relative to the data root
+        @param dataRootDir The data root directory
+    */
+    QDir getInnervationDataDir(const QDir& dataRootDir);
+
+    /**
+        Get the directory containing the innervationPost data, relative to the innervation data directory.
+        @param innervationDataDir The innervation directory
+    */
+    QDir getInnervationPostDataDir(const QDir& innervationDataDir);
+
+    /**
+        Get the directory containing the innervationPost data, relative to the data root
+        @param dataRootDir The data root directory
+    */
+    QDir getInnervationPostDataDirFromRoot(const QDir& dataRootDir);
+
+    /**
         Determines the name of the file with the bouton densities.
         @param neuronId The ID of the neuron.
         @return The file name.
@@ -81,29 +115,29 @@ namespace CIS3D {
 
     /**
         Determines the name of the directory with all bouton subdirs.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The bouton root directory.
     */
-    QDir    getBoutonsRootDir(const QDir& dataRootDir);
+    QDir    getBoutonsRootDir(const QDir& modelDataDir);
 
     /**
         Determines the directory with all bouton files for the
         specified cell type.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @param cellTypeName The cell type.
         @return The bouton directory.
     */
-    QDir    getBoutonsDir(const QDir& dataRootDir,
+    QDir    getBoutonsDir(const QDir& modelDataDir,
                           const QString& cellTypeName);
 
     /**
         Determines the bouton file for the specified neuron.
-        @param rootDir The base data directory.
+        @param modelDataDir The model data directory.
         @param cellTypeName The cell type.
         @param neuronId The neuron ID.
         @return The bouton file.
     */
-    QString getBoutonsFileFullPath(const QDir& rootDir,
+    QString getBoutonsFileFullPath(const QDir& modelDataDir,
                                    const QString& cellTypeName,
                                    const int neuronId);
 
@@ -127,66 +161,66 @@ namespace CIS3D {
 
     /**
         Determines directory with all PST subdirs.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The PST directory.
     */
-    QDir    getPSTRootDir(const QDir& dataRootDir);
+    QDir    getPSTRootDir(const QDir& modelDataDir);
 
     /**
         Determines the directory containing the normalized PST subdirs.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The normalized PST root directory.
     */
-    QDir    getNormalizedPSTRootDir(const QDir& dataRootDir);
+    QDir    getNormalizedPSTRootDir(const QDir& modelDataDir);
 
     /**
         Determines the directory containing the PST densities for
         the specified region and cell type.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @param regionName The name of the region.
         @param cellTypeName The name of the cell type.
         @return The PST directory.
     */
-    QDir    getPSTDir(const QDir& dataRootDir,
+    QDir    getPSTDir(const QDir& modelDataDir,
                       const QString& regionName,
                       const QString& cellTypeName);
 
     /**
         Determines the directory containing the normalized PST densities
         for the specified cells.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @param regionName The name of the region.
         @param cellTypeName The name of the cell type.
         @return The PST directory.
     */
-    QDir    getNormalizedPSTDir(const QDir& dataRootDir,
+    QDir    getNormalizedPSTDir(const QDir& modelDataDir,
                                 const QString& regionName,
                                 const QString& cellTypeName);
 
     /**
         Determines PST file path for the specified neuron.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @param regionName The name of the region.
         @param cellTypeName The name of the cell type.
         @param neuronId The neuron ID.
         @param presynapticNeuronType The neuron type.
         @return The PST file path.
     */
-    QString getPSTFileFullPath(const QDir& dataRootDir,
+    QString getPSTFileFullPath(const QDir& modelDataDir,
                                const QString& regionName,
                                const QString& cellTypeName,
                                const int neuronId,
                                const NeuronType presynapticNeuronType);
    /**
        Determines normalized PST file path for the specified neuron.
-       @param dataRootDir The base data directory.
+       @param modelDataDir The model data directory.
        @param regionName The name of the region.
        @param cellTypeName The name of the cell type.
        @param neuronId The neuron ID.
        @param presynapticNeuronType The neuron type.
        @return The PST file path.
    */
-    QString getNormalizedPSTFileFullPath(const QDir& dataRootDir,
+    QString getNormalizedPSTFileFullPath(const QDir& modelDataDir,
                                          const QString& regionName,
                                          const QString& cellTypeName,
                                          const int neuronId,
@@ -194,85 +228,85 @@ namespace CIS3D {
 
     /**
         Determines the directory containing the overall PST density files.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The overall PST density directory.
     */
-    QDir getPSTAllDir(const QDir& dataRootDir);
+    QDir getPSTAllDir(const QDir& modelDataDir);
 
     /**
         Determines the path of the overall PST density file for the specified
         neuron type.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @param presynapticNeuronType The neuron type.
         @return The overall PST density file path.
     */
-    QString getPSTAllFullPath(const QDir& dataRootDir, const NeuronType presynapticNeuronType);
+    QString getPSTAllFullPath(const QDir& modelDataDir, const NeuronType presynapticNeuronType);
 
     /**
         Determines the file containing the defintions of all barrel
         columns.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The file name.
     */
-    QString getColumnsFileName(const QDir& dataRootDir);
+    QString getColumnsFileName(const QDir& modelDataDir);
 
     /**
         Determines the file containing the hierarchical definition
         of regions contained in the model.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The file name.
     */
-    QString getRegionsFileName(const QDir& dataRootDir);
+    QString getRegionsFileName(const QDir& modelDataDir);
 
     /**
         Determines the file containing the neuron defintions.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The file name.
     */
-    QString getNeuronsFileName(const QDir& dataRootDir);
+    QString getNeuronsFileName(const QDir& modelDataDir);
 
     /**
         Determines the file containing the bounding boxes for
         all neurons.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The file name.
     */
-    QString getBoundingBoxesFileName(const QDir& dataRootDir);
+    QString getBoundingBoxesFileName(const QDir& modelDataDir);
 
     /**
         Determines the file containing the cell type definitions of
         the model.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The file name.
     */
-    QString getCellTypesFileName(const QDir& dataRootDir);
+    QString getCellTypesFileName(const QDir& modelDataDir);
 
     /**
         Determines the file containing the neuron ID mapping for
         duplicated axons.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The file name.
     */
-    QString getAxonRedundancyMapFileName(const QDir& dataRootDir);
+    QString getAxonRedundancyMapFileName(const QDir& modelDataDir);
 
     /**
         Determines the file containing calculated innervation for the specified
         region and cell type.
-        @param dataRootDir The base data directory.
+        @param innervationPostDataDir The InnervationPost data directory.
         @param regionName The name of the region.
         @param cellTypeName The name of the cell type.
         @return The file name.
     */
-    QString getInnervationPostFileName(const QDir& dataRootDir,
+    QString getInnervationPostFileName(const QDir& innervationPostDataDir,
                                        const QString& regionName,
                                        const QString& cellTypeName);
 
     /**
         Determines the file containing the cell type specific PST densities.
-        @param dataRootDir The base data directory.
+        @param modelDataDir The model data directory.
         @return The file name.
     */
-    QString getPSTDensitiesFileName(const QDir& dataRootDir);
+    QString getPSTDensitiesFileName(const QDir& modelDataDir);
 
     /**
         Converts structure enum to text string.
