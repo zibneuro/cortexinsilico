@@ -5,6 +5,7 @@
 #include "CIS3DSparseVectorSet.h"
 #include <QTextStream>
 #include <QDebug>
+#include <QTime>
 #include <math.h>
 
 /**
@@ -69,7 +70,7 @@ void InnervationStatistic::doCalculate(const NeuronSelection& selection) {
         }
     }
 
-    this->mNumConnections = this->numPreNeurons * selection.Postsynaptic().size();
+    this->mNumConnections = (long long)(this->numPreNeurons) * (long long)(selection.Postsynaptic().size());
 
     const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(selection.Postsynaptic(), mNetwork);
 
@@ -87,11 +88,17 @@ void InnervationStatistic::doCalculate(const NeuronSelection& selection) {
             vectorSet = mCache.get(innervationFile);
             fromCache = true;
         } else {
+            const QTime loadStart = QTime::currentTime();
             vectorSet = SparseVectorSet::load(innervationFile);
+            const QTime loadEnd = QTime::currentTime();
             fromCache = false;
             qDebug() << "[*] Loading" << innervationFile;
+            qDebug() << "Time load:      " << loadStart.secsTo(loadEnd) << "sec.";
         }
 
+        const IdList preIdList = selection.Presynaptic();
+
+        const QTime processStart = QTime::currentTime();
         for (int post=0; post<ids.size(); ++post) {
             const int postId = ids[post];
 
@@ -100,8 +107,8 @@ void InnervationStatistic::doCalculate(const NeuronSelection& selection) {
             float postNeuronInnervationSumUnique = 0.0f;
             float postNeuronConnProbSumUnique = 0.0f;
 
-            for (int pre=0; pre<selection.Presynaptic().size(); ++pre) {
-                const int preId = selection.Presynaptic()[pre];
+            for (int pre=0; pre<preIdList.size(); ++pre) {
+                const int preId = preIdList[pre];
                 const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
                 const float innervation = vectorSet->getValue(postId, mappedPreId);
                 const float connProb = float(1.0 - exp(-1.0 * innervation));
@@ -131,7 +138,9 @@ void InnervationStatistic::doCalculate(const NeuronSelection& selection) {
             this->innervationPerPost.addSample(postNeuronInnervationSum);
             this->convergence.addSample(postNeuronConnProbSum/this->numPreNeurons);
         }
+        const QTime processEnd = QTime::currentTime();
 
+        const QTime statisticsStart = QTime::currentTime();
         this->innervationPerPre = Statistics();
         this->innervationPerPreUnique = Statistics();
         this->divergence = Statistics();
@@ -151,11 +160,20 @@ void InnervationStatistic::doCalculate(const NeuronSelection& selection) {
         }
 
         mConnectionsDone += (long long)(ids.size()) * (long long)(selection.Presynaptic().size());
+        const QTime statisticsEnd = QTime::currentTime();
+
+        const QTime reportStart = QTime::currentTime();
         reportUpdate();
+        const QTime reportEnd = QTime::currentTime();
 
         if(!fromCache){
             delete vectorSet;
         }
+
+        qDebug() << "Time process:   " << processStart.secsTo(processEnd) 
+                 << "     (" << "Pre:" << preIdList.size() << "Post:" << ids.size() << ")";
+        qDebug() << "Time statistics:" << statisticsStart.secsTo(statisticsEnd);
+        qDebug() << "Time report:    " << reportStart.secsTo(reportEnd);
     }
     reportComplete();
 }

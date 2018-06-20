@@ -98,7 +98,7 @@ void EvaluationQueryHandler::reportUpdate(NetworkStatistic* stat){
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
-    qDebug() << "Posting intermediate result:" << percent;
+    qDebug() << "Posting intermediate result:" << percent << "\%    (" << connectionsDone << "/" << numConnections << ")";
     QEventLoop loop;
     QNetworkReply* reply = mNetworkManager.put(putRequest, putData.toLocal8Bit());
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
