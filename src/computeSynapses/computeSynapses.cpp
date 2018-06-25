@@ -61,6 +61,8 @@ void computeInnervationPost(const QList<int>& preNeurons, const PropsMap& postNe
     const QList<int> uniquePreNeuronsList = Util::getUniquePreNeurons(preNeurons, networkProps);
     PropsMap uniquePreNeurons;
 
+    const QDir modelDataDir = CIS3D::getModelDataDir(dataRoot);
+
     // Map presynpatic neuron IDs taking advantage of the duplicated axon
     // morphologies.
     qDebug() << "[*] Start reading properties for" << uniquePreNeuronsList.size()
@@ -80,7 +82,7 @@ void computeInnervationPost(const QList<int>& preNeurons, const PropsMap& postNe
 
         const QString ctName = networkProps.cellTypes.getName(props.cellTypeId);
         const QString filePath =
-            CIS3D::getBoutonsFileFullPath(dataRoot, ctName, props.mappedAxonId);
+            CIS3D::getBoutonsFileFullPath(modelDataDir, ctName, props.mappedAxonId);
         props.boutons = SparseField::load(filePath);
         uniquePreNeurons.insert(props.id, props);
 

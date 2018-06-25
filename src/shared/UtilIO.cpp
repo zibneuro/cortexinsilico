@@ -47,6 +47,7 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
     const QString    dataRoot  = spec["DATA_ROOT"].toString();
 
     QDir rootDir(dataRoot);
+    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir);
 
     QList<int> selectedNeuronIds = getPostSynapticNeuronIds(spec,networkProps);
 
@@ -68,11 +69,12 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
         const QString ctName = networkProps.cellTypes.getName(props.cellTypeId);
         const QString regionName = networkProps.regions.getName(props.regionId);
 
+
         QString excFilePath;
         if(normalized){
-            excFilePath = CIS3D::getNormalizedPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::EXCITATORY);
+            excFilePath = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, regionName, ctName, props.id, CIS3D::EXCITATORY);
         } else {
-            excFilePath = CIS3D::getPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::EXCITATORY);
+            excFilePath = CIS3D::getPSTFileFullPath(modelDataDir, regionName, ctName, props.id, CIS3D::EXCITATORY);
         }
         props.pstExc = SparseField::load(excFilePath);
         if (!props.pstExc) {
@@ -81,9 +83,9 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
 
         QString inhFilePath;
         if(normalized) {
-            inhFilePath = CIS3D::getNormalizedPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::INHIBITORY);
+            inhFilePath = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, regionName, ctName, props.id, CIS3D::INHIBITORY);
         } else {
-            inhFilePath = CIS3D::getPSTFileFullPath(rootDir, regionName, ctName, props.id, CIS3D::INHIBITORY);
+            inhFilePath = CIS3D::getPSTFileFullPath(modelDataDir, regionName, ctName, props.id, CIS3D::INHIBITORY);
         }
         props.pstInh = SparseField::load(inhFilePath);
         if (!props.pstInh) {
@@ -139,9 +141,10 @@ QList<int> UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec, const Netwo
         throw std::runtime_error("Invalid data root in specification");
     }
 
-    QDir pstDir(rootDir);
-    if (!pstDir.cd("NormalizedPSTs")) {
-        QString msg = QString("No NormalizedPSTs directory in %1").arg(dataRoot);
+    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir);
+    const QDir pstDir = CIS3D::getNormalizedPSTRootDir(modelDataDir);
+    if (!pstDir.exists()) {
+        QString msg = QString("No NormalizedPSTs directory %1").arg(pstDir.absolutePath());
         throw std::runtime_error(qPrintable(msg));
     }
 
@@ -196,9 +199,10 @@ QList<int> UtilIO::getPreSynapticNeurons(const QJsonObject& spec, const NetworkP
         throw std::runtime_error("Invalid data root in specification");
     }
 
-    QDir boutonDir(rootDir);
-    if (!boutonDir.cd("Boutons")) {
-        QString msg = QString("No Boutons directory in %1").arg(dataRoot);
+    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir);
+    const QDir boutonDir = CIS3D::getBoutonsRootDir(modelDataDir);
+    if (!boutonDir.exists()) {
+        QString msg = QString("No Boutons directory %1").arg(boutonDir.absolutePath());
         throw std::runtime_error(qPrintable(msg));
     }
 
