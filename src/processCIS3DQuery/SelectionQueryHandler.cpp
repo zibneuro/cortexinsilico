@@ -220,7 +220,7 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             mNetwork.setDataRoot(mDataRoot);
             mNetwork.loadFilesForQuery();
 
-            CIS3D::SynapticSide synapticSide;
+            CIS3D::SynapticSide synapticSide = CIS3D::BOTH_SIDES;
             QString synapticSideString = jsonResponse.object().value("synapticSide").toString();
             if (synapticSideString == "presynaptic") {
                 synapticSide = CIS3D::PRESYNAPTIC;
