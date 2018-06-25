@@ -173,17 +173,13 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
         QJsonArray preArr = preDoc.array();
 
-        qDebug() << "filter pre" << preArr;
-
-        SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork);
-        preFilter.synapticSide = CIS3D::PRESYNAPTIC;
+        SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork, CIS3D::PRESYNAPTIC);
         const IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
 
         QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
         QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
         QJsonArray postArr = postDoc.array();
-        SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork);
-        postFilter.synapticSide = CIS3D::POSTSYNAPTIC;
+        SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
         const IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
 
         qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";

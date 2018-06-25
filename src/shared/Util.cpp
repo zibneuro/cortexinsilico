@@ -139,7 +139,7 @@ QList<int> filterListRemoving(const QList<int>& elementsToRemove, const QList<in
     @returns A selection filter that can be applied to the (CIS3D)Neurons class.
     @throws runtime_error if the selection filter is not valid.
 */
-SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray, const NetworkProps& network) {
+SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray, const NetworkProps& network, const CIS3D::SynapticSide synapticSide) {
     SelectionFilter filter;
 
     const QJsonObject ctObj = getFilterItemWithName(QString("cellType"), jsonArray);
@@ -147,6 +147,8 @@ SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray, co
 
     QList<int> cellTypeIds;
     CIS3D::NeuronType neuronType = CIS3D::EXC_OR_INH;
+
+    filter.synapticSide = synapticSide;
 
     if (!ctObj.isEmpty()) {
         const QJsonArray value = ctObj["value"].toArray();
