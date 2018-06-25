@@ -51,9 +51,26 @@ class FeatureExtractor {
         @param dimensions Number of voxels in each direction from the origin.
         @param cellTypes The cell types filter.
         @param regions The regions filter.
+        @param neuronIds The neuron IDs filter.
+        @param samplingFactor The sampling factor, 1: take all, 2: take half, etc.
     */
     void writeFeaturesToFile(QVector<float> origin, QVector<int> dimensions,
-                             QSet<QString> cellTypes, QSet<QString> regions);
+                             QSet<QString> cellTypes, QSet<QString> regions, QSet<int> neuronIds,
+                             int samplingFactor);
+
+    /*
+        Counts the number of neurons in each voxel and writes the results
+        to file.
+
+        @param origin Origin of the subvolume (in spatial coordinates).
+        @param dimensions Number of voxels in each direction from the origin.
+        @param cellTypes The cell types filter.
+        @param regions The regions filter.
+        @param neuronIds The neuron IDs filter.
+        @param samplingFactor The sampling factor, 1: take all, 2: take half, etc.
+    */
+    void writeVoxelStats(QVector<float> origin, QVector<int> dimensions, QSet<QString> cellTypes,
+                         QSet<QString> regions, QSet<int> neuronIds, int samplingFactor);
 
    private:
     /*
@@ -64,15 +81,6 @@ class FeatureExtractor {
         @return List of neuron IDs.
     */
     QList<int> getNeuronsWithinVolume(QVector<float> origin, QVector<int> dimensions);
-
-    /*
-        Determines unique ID for the specified voxel.
-
-        @param locationLocal Position of the voxel relative to the origin.
-        @param dimensions Number of voxels in each direction.
-        @return The ID of the voxel.
-    */
-    int getVoxelId(Vec3i locationLocal, QVector<int> dimensions);
 
     /*
         Retrieves the pre- and postsynaptic target counts for one neuron within all voxels.
@@ -120,6 +128,24 @@ class FeatureExtractor {
         @return True, if the first feature is smaller than the second feature.
     */
     static bool lessThan(Feature& a, Feature& b);
+
+    /*
+        Determines all neurons that have intersecting bounding boxes with the
+        specified subcube.
+
+        @param origin The origing of the subcube.
+        @param dimensions The number of voxels in each dimension.
+        @return The intersecting neurons.
+    */
+    QList<int> determineIntersectingNeurons(QVector<float> origin, QVector<int> dimensions);
+
+    /*
+        Saves the properties of the specified neurons into a csv file.
+
+        @param fileName The name of the file.
+        @param neuronsToSave The neuron IDs.
+    */
+    void saveNeurons(QString fileName, QList<int> neuronsToSave);
 
     /*
         The model data.

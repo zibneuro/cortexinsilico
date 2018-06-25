@@ -1,11 +1,13 @@
 #include "CIS3DSparseField.h"
-#include <stdexcept>
 #include <stdio.h>
-#include <cmath>
-#include <QFile>
 #include <QDataStream>
-#include <QIODevice>
 #include <QDebug>
+#include <QFile>
+#include <QIODevice>
+#include <QTextStream>
+#include <QVector>
+#include <cmath>
+#include <stdexcept>
 
 const float SparseField::DEFAULT_FIELD_VALUE = 0.0f;
 
@@ -22,16 +24,16 @@ Vec3i SparseFieldCoordinates::getOffsetTo(const SparseFieldCoordinates& other) c
     if ((spacing - other.spacing).length() > eps) {
         throw std::runtime_error("Error in getOffsetTo. SparseFields have different spacing");
     }
-    for (int i=0; i<=2; ++i) {
+    for (int i = 0; i <= 2; ++i) {
         double fractionPart, integerPart;
-        fractionPart = modf((origin[i] - other.origin[i])/spacing[i], &integerPart);
+        fractionPart = modf((origin[i] - other.origin[i]) / spacing[i], &integerPart);
         if (fabs(fractionPart) > eps) {
-            throw std::runtime_error("Error in getOffsetTo. Origins are not shifted to integer multiples");
+            throw std::runtime_error(
+                "Error in getOffsetTo. Origins are not shifted to integer multiples");
         }
         if (integerPart < 0) {
             offset[i] = int(integerPart - 0.5);
-        }
-        else {
+        } else {
             offset[i] = int(integerPart + 0.5);
         }
     }
@@ -49,14 +51,13 @@ Vec3i SparseFieldCoordinates::getOffsetTo(const SparseFieldCoordinates& other) c
     @throws runtime_error if the spacing differs or if the shift between
         both fields is not an integer multiple of the voxel spacing.
 */
-SparseField multiply(const SparseField& fs1,
-                     const SparseField& fs2)
-{
+SparseField multiply(const SparseField& fs1, const SparseField& fs2) {
     const Vec3i offset = fs1.getCoordinates().getOffsetTo(fs2.getCoordinates());
     SparseField result = SparseField(fs1.getCoordinates());
 
     int newValueIdx = 0;
-    for (SparseField::LocationIndexToValueIndexMap::ConstIterator it1 = fs1.mIndexMap.begin(); it1 != fs1.mIndexMap.end(); ++it1) {
+    for (SparseField::LocationIndexToValueIndexMap::ConstIterator it1 = fs1.mIndexMap.begin();
+         it1 != fs1.mIndexMap.end(); ++it1) {
         const SparseField::LocationIndexT index1 = it1.key();
         const Vec3i loc1 = fs1.getXYZFromIndex(index1);
         const Vec3i loc2 = loc1 + offset;
@@ -78,8 +79,8 @@ SparseField multiply(const SparseField& fs1,
     Applies an generic operator function on all values of the sparse field.
     @param fieldOperator The operator function.
 */
-void SparseField::applyOperator(SparseFieldOperator& fieldOperator){
-    for(int i=0; i<mField.size(); i++){
+void SparseField::applyOperator(SparseFieldOperator& fieldOperator) {
+    for (int i = 0; i < mField.size(); i++) {
         mField[i] = fieldOperator.calculate(mField[i]);
     }
 }
@@ -94,9 +95,7 @@ void SparseField::applyOperator(SparseFieldOperator& fieldOperator){
   @throws runtime_error if the spacing differs or if the shift between
       both fields is not an integer multiple of the voxel spacing.
 */
-SparseField operator+(const SparseField& fs1,
-                      const SparseField& fs2)
-{
+SparseField operator+(const SparseField& fs1, const SparseField& fs2) {
     SparseFieldCoordinates unionGrid(fs1.getCoordinates());
     unionGrid.extendBy(fs2.getCoordinates());
     SparseField result(unionGrid);
@@ -125,15 +124,14 @@ SparseField operator+(const SparseField& fs1,
     @throws runtime_error if the spacing differs or if the shift between
         both fields is not an integer multiple of the voxel spacing.
 */
-SparseField divide(const SparseField& fs1,
-                   const SparseField& fs2)
-{
+SparseField divide(const SparseField& fs1, const SparseField& fs2) {
     const Vec3i offset = fs1.getCoordinates().getOffsetTo(fs2.getCoordinates());
     SparseField result = SparseField(fs1.getCoordinates());
 
     int newValueIdx = 0;
     // Only create value if fs1 and fs2 have value at same location (assumed to be non-zero)
-    for (SparseField::LocationIndexToValueIndexMap::ConstIterator it1 = fs1.mIndexMap.constBegin(); it1 != fs1.mIndexMap.constEnd(); ++it1) {
+    for (SparseField::LocationIndexToValueIndexMap::ConstIterator it1 = fs1.mIndexMap.constBegin();
+         it1 != fs1.mIndexMap.constEnd(); ++it1) {
         const SparseField::LocationIndexT index1 = it1.key();
         const Vec3i loc1 = fs1.getXYZFromIndex(index1);
         const Vec3i loc2 = loc1 + offset;
@@ -156,18 +154,16 @@ SparseField divide(const SparseField& fs1,
     grid by the specified factor.
     @param factor The multiplication factor.
 */
-SparseField SparseField::multiply(const float& factor) const
-{
+SparseField SparseField::multiply(const float& factor) const {
     SparseField result(*this);
     result.multiply(factor);
     return result;
 }
 
-
 SparseField::LocationIndexT SparseField::getIndexFromXYZ(const Vec3i& location) const {
-    return location.getZ() * mDimensions.getX() * mDimensions.getY() + location.getY() * mDimensions.getX() + location.getX();
+    return location.getZ() * mDimensions.getX() * mDimensions.getY() +
+           location.getY() * mDimensions.getX() + location.getX();
 }
-
 
 Vec3i SparseField::getXYZFromIndex(const SparseField::LocationIndexT& index) const {
     Vec3i xyz;
@@ -189,11 +185,7 @@ Vec3i SparseField::getXYZFromIndex(const SparseField::LocationIndexT& index) con
     Constructor.
     Initializes origin and dimenions to (0,0,0) and voxel size to (1,1,1).
 */
-SparseField::SparseField() :
-    mDimensions(0, 0, 0),
-    mOrigin(0, 0, 0),
-    mVoxelSize(1.0f, 1.0f, 1.0f)
-{
+SparseField::SparseField() : mDimensions(0, 0, 0), mOrigin(0, 0, 0), mVoxelSize(1.0f, 1.0f, 1.0f) {
     mField.clear();
 }
 
@@ -203,13 +195,8 @@ SparseField::SparseField() :
     @param origin The origin of the grid.
     @param voxelSize The spacing of the grid.
 */
-SparseField::SparseField(const Vec3i& dims,
-                         const Vec3f& origin,
-                         const Vec3f& voxelSize) :
-    mDimensions(dims),
-    mOrigin(origin),
-    mVoxelSize(voxelSize)
-{
+SparseField::SparseField(const Vec3i& dims, const Vec3f& origin, const Vec3f& voxelSize)
+    : mDimensions(dims), mOrigin(origin), mVoxelSize(voxelSize) {
     mField.clear();
 }
 
@@ -217,11 +204,8 @@ SparseField::SparseField(const Vec3i& dims,
     Constructor.
     @param coords The SparseFieldCoordinates specifying origin, dimensions, and spacing.
 */
-SparseField::SparseField(const SparseFieldCoordinates &coords) :
-    mDimensions(coords.dimensions),
-    mOrigin(coords.origin),
-    mVoxelSize(coords.spacing)
-{
+SparseField::SparseField(const SparseFieldCoordinates& coords)
+    : mDimensions(coords.dimensions), mOrigin(coords.origin), mVoxelSize(coords.spacing) {
     mField.clear();
 }
 
@@ -234,18 +218,13 @@ SparseField::SparseField(const SparseFieldCoordinates &coords) :
     @param voxelSize The spacing of the grid.
     @throws runtime_error if the number of entries in locations and field differs.
 */
-SparseField::SparseField(const Vec3i &dims,
-                         const Locations &locations,
-                         const SparseField::Field &field,
-                         const Vec3f &origin,
-                         const Vec3f &voxelSize) :
-    mDimensions(dims),
-    mOrigin(origin),
-    mVoxelSize(voxelSize),
-    mField(field)
-{
+SparseField::SparseField(const Vec3i& dims, const Locations& locations,
+                         const SparseField::Field& field, const Vec3f& origin,
+                         const Vec3f& voxelSize)
+    : mDimensions(dims), mOrigin(origin), mVoxelSize(voxelSize), mField(field) {
     if (locations.size() != field.size()) {
-        throw std::runtime_error("Cannot create SparseField: locations and field have different size");
+        throw std::runtime_error(
+            "Cannot create SparseField: locations and field have different size");
     }
 
     if (locations.size() == 0) {
@@ -265,25 +244,19 @@ SparseField::SparseField(const Vec3i &dims,
     Returns the dimensions of the grid.
     @return The dimensions.
 */
-Vec3i SparseField::getDimensions() const {
-    return mDimensions;
-}
+Vec3i SparseField::getDimensions() const { return mDimensions; }
 
 /**
     Returns the origin of the grid.
     @return The origin.
 */
-Vec3f SparseField::getOrigin() const {
-    return mOrigin;
-}
+Vec3f SparseField::getOrigin() const { return mOrigin; }
 
 /**
     Returns the spacing of the grid cells.
     @return The voxel size.
 */
-Vec3f SparseField::getVoxelSize() const {
-    return mVoxelSize;
-}
+Vec3f SparseField::getVoxelSize() const { return mVoxelSize; }
 
 /**
     Sets the value at the specified location.
@@ -291,9 +264,10 @@ Vec3f SparseField::getVoxelSize() const {
     @param value The value.
     @throws runtime_error if the location has currently no value.
 */
-void SparseField::setFieldValue(const Vec3i &location, const float value) {
+void SparseField::setFieldValue(const Vec3i& location, const float value) {
     const LocationIndexT locationIdx = getIndexFromXYZ(location);
-    const SparseField::LocationIndexToValueIndexMap::const_iterator it = mIndexMap.find(locationIdx);
+    const SparseField::LocationIndexToValueIndexMap::const_iterator it =
+        mIndexMap.find(locationIdx);
     if (it == mIndexMap.end()) {
         throw std::runtime_error("No value for position");
     }
@@ -307,7 +281,7 @@ void SparseField::setFieldValue(const Vec3i &location, const float value) {
     @param fileName The name of the file.
     @return 1 if successful, 0 otherwise.
 */
-int SparseField::save(const SparseField* fs, const QString &fileName) {
+int SparseField::save(const SparseField* fs, const QString& fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly)) {
         qDebug() << "Could not open file" << fileName << "for writing.";
@@ -321,12 +295,47 @@ int SparseField::save(const SparseField* fs, const QString &fileName) {
 }
 
 /**
+    Saves a SparseField as list of voxels with nonzero values to file.
+
+    @param fileName The name of the file.
+    @throws runtime_error If saving the file failed.
+*/
+void SparseField::saveCSV(const QString& fileName) {
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QString msg = QString("Could not open file %1 for writing").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+
+    const QChar sep(',');
+    QTextStream out(&file);
+    out << "voxelID" << sep << "voxelX" << sep << "voxelY" << sep << "voxelZ" << sep << "value"
+        << "\n";
+
+    QVector<int> dimensions;
+    dimensions.append(mDimensions[0]);
+    dimensions.append(mDimensions[1]);
+    dimensions.append(mDimensions[2]);
+    for (SparseField::LocationIndexToValueIndexMap::ConstIterator it = mIndexMap.begin();
+         it != mIndexMap.end(); ++it) {
+        Vec3i location = getXYZFromIndex(it.key());
+        const float value = mField[it.value()];
+
+        if (value > 0) {
+            int voxelId = SparseField::getVoxelId(location, dimensions);
+            out << voxelId << sep << location[0] << sep << location[1] << sep << location[2] << sep
+                << value << "\n";
+        }
+    }
+}
+
+/**
     Loads a SparseField from file.
     @param fileName The name of the file.
     @return The SparseField if successful, 0 otherwise.
     @throws runtime_error in case of a version mismatch.
 */
-SparseField *SparseField::load(const QString &fileName) {
+SparseField* SparseField::load(const QString& fileName) {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
         qDebug() << QString("Cannot open file for reading: %1").arg(fileName);
@@ -343,7 +352,7 @@ SparseField *SparseField::load(const QString &fileName) {
     @param fs The SparseField to write.
     @param out The data stream.
 */
-void SparseField::writeToStream(const SparseField *fs, QDataStream &out) {
+void SparseField::writeToStream(const SparseField* fs, QDataStream& out) {
     const QString version = "2.0.0";
     out << version;
     out << fs->mDimensions.getX() << fs->mDimensions.getY() << fs->mDimensions.getZ();
@@ -359,7 +368,7 @@ void SparseField::writeToStream(const SparseField *fs, QDataStream &out) {
     @return The SparseField.
     @throws runtime_error in case of a version mismatch.
 */
-SparseField* SparseField::readFromStream(QDataStream &in) {
+SparseField* SparseField::readFromStream(QDataStream& in) {
     QString version;
     in >> version;
 
@@ -393,8 +402,7 @@ SparseField* SparseField::readFromStream(QDataStream &in) {
     Returns the coordinates of the SparseField (origin, dimension, voxel spacing).
     @return The SparseFieldCoordinates.
 */
-SparseFieldCoordinates SparseField::getCoordinates() const
-{
+SparseFieldCoordinates SparseField::getCoordinates() const {
     SparseFieldCoordinates coords;
     coords.dimensions = mDimensions;
     coords.spacing = mVoxelSize;
@@ -402,15 +410,27 @@ SparseFieldCoordinates SparseField::getCoordinates() const
     return coords;
 }
 
+/*
+    Determines unique ID for the specified voxel.
 
-SparseField::ConstIterator SparseField::constBegin() const
-{
+    @param locationLocal Position of the voxel relative to the origin.
+    @param dimensions Number of voxels in each direction.
+    @return The ID of the voxel.
+*/
+int SparseField::getVoxelId(Vec3i locationLocal, QVector<int> dimensions) {
+    int nx = dimensions[0];
+    int ny = dimensions[1];
+    int ix = locationLocal[0];
+    int iy = locationLocal[1];
+    int iz = locationLocal[2];
+    return iz * ny * nx + iy * nx + ix + 1;
+}
+
+SparseField::ConstIterator SparseField::constBegin() const {
     return SparseField::ConstIterator(*this, ITERATOR_BEGIN);
 }
 
-
-SparseField::ConstIterator SparseField::constEnd() const
-{
+SparseField::ConstIterator SparseField::constEnd() const {
     return SparseField::ConstIterator(*this, ITERATOR_END);
 }
 
@@ -420,9 +440,10 @@ SparseField::ConstIterator SparseField::constEnd() const
     @return The value at the location if the location is defined
         DEFAULT_FIELD_VALUE otherwise.
 */
-float SparseField::getFieldValue(const Vec3i &location) const {
+float SparseField::getFieldValue(const Vec3i& location) const {
     const LocationIndexT locationIdx = getIndexFromXYZ(location);
-    const SparseField::LocationIndexToValueIndexMap::const_iterator it = mIndexMap.find(locationIdx);
+    const SparseField::LocationIndexToValueIndexMap::const_iterator it =
+        mIndexMap.find(locationIdx);
     if (it == mIndexMap.end()) {
         return DEFAULT_FIELD_VALUE;
     }
@@ -436,12 +457,13 @@ float SparseField::getFieldValue(const Vec3i &location) const {
     @param locations Is filled with the locations.
     @param values Is filled with the corresponding values.
 */
-void SparseField::getFieldValues(SparseField::Locations &locations, SparseField::Field &values) const
-{
+void SparseField::getFieldValues(SparseField::Locations& locations,
+                                 SparseField::Field& values) const {
     locations.clear();
     values.clear();
 
-    for (LocationIndexToValueIndexMap::ConstIterator it=mIndexMap.begin(); it!=mIndexMap.end(); ++it) {
+    for (LocationIndexToValueIndexMap::ConstIterator it = mIndexMap.begin(); it != mIndexMap.end();
+         ++it) {
         const SparseField::LocationIndexT& index = it.key();
         const int valueIndex = it.value();
         locations.append(getXYZFromIndex(index));
@@ -454,7 +476,7 @@ void SparseField::getFieldValues(SparseField::Locations &locations, SparseField:
     @param location The location to check.
     @return True if a value is defined at the location.
 */
-bool SparseField::hasFieldValue(const Vec3i &location) const {
+bool SparseField::hasFieldValue(const Vec3i& location) const {
     const LocationIndexT locationIdx = getIndexFromXYZ(location);
     return mIndexMap.contains(locationIdx);
 }
@@ -463,8 +485,7 @@ bool SparseField::hasFieldValue(const Vec3i &location) const {
     Returns the sum of all values in the grid.
     @return The sum.
 */
-float SparseField::getFieldSum() const
-{
+float SparseField::getFieldSum() const {
     float sum = 0.0f;
 
     for (Field::ConstIterator it = mField.constBegin(); it != mField.constEnd(); ++it) {
@@ -480,15 +501,13 @@ float SparseField::getFieldSum() const
     @param location The location.
     @param value The value to add.
 */
-void SparseField::addValue(const Vec3i &location, const float value)
-{
+void SparseField::addValue(const Vec3i& location, const float value) {
     const LocationIndexT locationIdx = getIndexFromXYZ(location);
     const SparseField::LocationIndexToValueIndexMap::iterator it = mIndexMap.find(locationIdx);
     if (it == mIndexMap.end()) {
         mIndexMap.insert(locationIdx, mField.size());
         mField.append(value);
-    }
-    else {
+    } else {
         const int valueIdx = int(it.value());
         mField[valueIdx] += value;
     }
@@ -498,9 +517,8 @@ void SparseField::addValue(const Vec3i &location, const float value)
     Multiplies all values in the grid by the specified factor.
     @param factor The multiplication factor.
 */
-void SparseField::multiply(const float factor)
-{
-    for (Field::iterator it=mField.begin(); it!=mField.end(); ++it) {
+void SparseField::multiply(const float factor) {
+    for (Field::iterator it = mField.begin(); it != mField.end(); ++it) {
         *it *= factor;
     }
 }
@@ -511,12 +529,11 @@ void SparseField::multiply(const float factor)
     @return The location in the grid.
     @throws runtime_error if the point is not covered by the grid.
 */
-Vec3i SparseField::getVoxelContainingPoint(const Vec3f& p) const
-{
+Vec3i SparseField::getVoxelContainingPoint(const Vec3f& p) const {
     Vec3i result;
     Vec3f shiftedPos = p - mOrigin;
 
-    for (int i=0; i<=2; ++i) {
+    for (int i = 0; i <= 2; ++i) {
         if (shiftedPos[i] < 0.0f) {
             throw std::runtime_error("Error: point not in grid (too small)");
         }
@@ -535,17 +552,16 @@ Vec3i SparseField::getVoxelContainingPoint(const Vec3f& p) const
     @param v The grid location.
     @return The bounding box.
 */
-BoundingBox SparseField::getVoxelBox(const Vec3i &v) const
-{
+BoundingBox SparseField::getVoxelBox(const Vec3i& v) const {
     Vec3f minBox, maxBox;
 
-    minBox[0] = mOrigin[0] + v[0]*mVoxelSize[0];
-    minBox[1] = mOrigin[1] + v[1]*mVoxelSize[1];
-    minBox[2] = mOrigin[2] + v[2]*mVoxelSize[2];
+    minBox[0] = mOrigin[0] + v[0] * mVoxelSize[0];
+    minBox[1] = mOrigin[1] + v[1] * mVoxelSize[1];
+    minBox[2] = mOrigin[2] + v[2] * mVoxelSize[2];
 
-    maxBox[0] = mOrigin[0] + (v[0]+1)*mVoxelSize[0];
-    maxBox[1] = mOrigin[1] + (v[1]+1)*mVoxelSize[1];
-    maxBox[2] = mOrigin[2] + (v[2]+1)*mVoxelSize[2];
+    maxBox[0] = mOrigin[0] + (v[0] + 1) * mVoxelSize[0];
+    maxBox[1] = mOrigin[1] + (v[1] + 1) * mVoxelSize[1];
+    maxBox[2] = mOrigin[2] + (v[2] + 1) * mVoxelSize[2];
 
     return BoundingBox(minBox, maxBox);
 }
@@ -554,17 +570,15 @@ BoundingBox SparseField::getVoxelBox(const Vec3i &v) const
     Determines the bounding box covering all defined nonzero grid locations.
     @return The bounding box.
 */
-BoundingBox SparseField::getNonZeroBox() const
-{
+BoundingBox SparseField::getNonZeroBox() const {
     Vec3i boxMin(1, 1, 1), boxMax(-1, -1, -1);
-    for (SparseField::ConstIterator it=constBegin(); it!=constEnd(); ++it) {
+    for (SparseField::ConstIterator it = constBegin(); it != constEnd(); ++it) {
         if (it == constBegin()) {
             if (it.value > 1.e-4) {
                 boxMin = it.location;
                 boxMax = it.location;
             }
-        }
-        else {
+        } else {
             if (it.value > 1.e-4) {
                 if (it.location.getX() < boxMin.getX()) boxMin.setX(it.location.getX());
                 if (it.location.getY() < boxMin.getY()) boxMin.setY(it.location.getY());
@@ -581,14 +595,13 @@ BoundingBox SparseField::getNonZeroBox() const
     }
 
     Vec3f boxMinCoords, boxMaxCoords;
-    for (int i=0; i<=2; ++i) {
+    for (int i = 0; i <= 2; ++i) {
         boxMinCoords[i] = mOrigin[i] + boxMin[i] * mVoxelSize[i];
-        boxMaxCoords[i] = mOrigin[i] + (boxMax[i]+1) * mVoxelSize[i];
+        boxMaxCoords[i] = mOrigin[i] + (boxMax[i] + 1) * mVoxelSize[i];
     }
 
     return BoundingBox(boxMinCoords, boxMaxCoords);
 }
-
 
 /**
     Extends this set of SparseFieldCoordinates, such that the other
@@ -597,24 +610,21 @@ BoundingBox SparseField::getNonZeroBox() const
     @throws runtime_error if the spacing differs or if the shift is not an
         integer multiple of the voxel spacing.
 */
-void SparseFieldCoordinates::extendBy(const SparseFieldCoordinates &other)
-{
-    getOffsetTo(other); // Ensure that grid cells are aligned
+void SparseFieldCoordinates::extendBy(const SparseFieldCoordinates& other) {
+    getOffsetTo(other);  // Ensure that grid cells are aligned
     Vec3f newOrigin;
     Vec3i newDimensions;
-    for (int i=0; i<=2; ++i) {
+    for (int i = 0; i <= 2; ++i) {
         newOrigin[i] = qMin(origin[i], other.origin[i]);
-        const float oldMax      = origin[i] + dimensions[i] * spacing[i];
+        const float oldMax = origin[i] + dimensions[i] * spacing[i];
         const float otherOldMax = other.origin[i] + other.dimensions[i] * other.spacing[i];
-        newDimensions[i] = int((qMax(oldMax, otherOldMax)-newOrigin[i])/spacing[i] + 0.5);
+        newDimensions[i] = int((qMax(oldMax, otherOldMax) - newOrigin[i]) / spacing[i] + 0.5);
     }
     origin = newOrigin;
     dimensions = newDimensions;
 }
 
-
-void SparseFieldCoordinates::print() const
-{
+void SparseFieldCoordinates::print() const {
     qDebug() << "Dimensions:" << dimensions.getX() << dimensions.getY() << dimensions.getZ();
     qDebug() << "Spacing:   " << spacing.getX() << spacing.getY() << spacing.getZ();
     qDebug() << "Origin:    " << origin.getX() << origin.getY() << origin.getZ();

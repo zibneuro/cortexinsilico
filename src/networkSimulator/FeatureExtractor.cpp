@@ -14,11 +14,28 @@ FeatureExtractor::FeatureExtractor(NetworkProps& props) : mNetworkProps(props) {
     @param origin Origin of the subvolume (in spatial coordinates).
     @param dimensions Number of voxels in each direction from the origin.
     @param cellTypes The cell types filter.
-    @param regions The region filter.
+    @param regions The regions filter.
+    @param neuronIds The neuron IDs filter.
+    @param samplingFactor The sampling factor, 1: take all, 2: take half, etc.
 */
 void FeatureExtractor::writeFeaturesToFile(QVector<float> origin, QVector<int> dimensions,
-                                           QSet<QString> cellTypes, QSet<QString> regions) {
-    QList<int> neurons = getNeuronsWithinVolume(origin, dimensions);
+                                           QSet<QString> cellTypes, QSet<QString> regions,
+                                           QSet<int> /*neuronIds*/, int /*samplingFactor*/) {
+    QList<int> intersectingNeurons = determineIntersectingNeurons(origin, dimensions);
+    QList<int> neuronsWithin = getNeuronsWithinVolume(origin, dimensions);
+    QSet<int> intersectingNeuronsSet = intersectingNeurons.toSet();
+    QSet<int> neuronsWithinSet = neuronsWithin.toSet();
+    QSet<int> neuronsOutsideSet = intersectingNeurons.toSet();
+    neuronsOutsideSet.subtract(neuronsWithinSet);
+
+    qDebug() << "[*] Neurons with axons and dendrites intersecting subcube:"
+             << neuronsOutsideSet.size();
+    qDebug() << "[*] Neurons with soma located within subcube:" << neuronsWithin.size();
+
+    saveNeurons("extractedNeuronsSomaInside.csv", neuronsWithinSet.toList());
+    saveNeurons("extractedNeuronsSomaOutside.csv", neuronsOutsideSet.toList());
+
+    QList<int> neurons = intersectingNeurons;
     QList<int> prunedNeurons;
     QList<int> prunedNeurons2;
 
@@ -48,18 +65,94 @@ void FeatureExtractor::writeFeaturesToFile(QVector<float> origin, QVector<int> d
         }
     }
 
-    Neurons extractedNeurons;
-    for(int i=0; i<prunedNeurons2.size(); i++){
-        int neuronId = prunedNeurons2[i];
-        extractedNeurons.addNeuron(mNetworkProps.neurons.getNeuronProps(neuronId));    
-    }
-    extractedNeurons.saveCSV("extractedNeurons.csv");
-
     qDebug() << "[*] Extracting features.";
     QList<Feature> features = extractFeatures(prunedNeurons2, origin, dimensions);
     qDebug() << "[*] Writing model data to file: features.csv.";
     qSort(features.begin(), features.end(), lessThan);
     writeCSV(features);
+}
+
+/*
+    Counts the number of neurons in each voxel and writes the results
+    to file.
+
+    @param origin Origin of the subvolume (in spatial coordinates).
+    @param dimensions Number of voxels in each direction from the origin.
+    @param cellTypes The cell types filter.
+    @param regions The regions filter.
+    @param neuronIds The neuron IDs filter.
+    @param samplingFactor The sampling factor, 1: take all, 2: take half, etc.
+*/
+void FeatureExtractor::writeVoxelStats(QVector<float> /*origin*/, QVector<int> /*dimensions*/,
+                                       QSet<QString> /*cellTypes*/, QSet<QString> /*regions*/,
+                                       QSet<int> /*neuronIds*/, int /*samplingFactor*/) {
+    QDir modelDataDir = CIS3D::getModelDataDir(mNetworkProps.dataRoot);
+    const QString pstAllFileExc = CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
+    SparseField* postAllExc = SparseField::load(pstAllFileExc);
+    Vec3f origin = postAllExc->getOrigin();
+    Vec3i dimensions(1, 1, 1);
+    Vec3f voxelSize = postAllExc->getVoxelSize();
+    delete postAllExc;
+
+    SparseField count(dimensions, origin, voxelSize);
+
+    SelectionFilter emptyFilter;
+    QList<int> allNeurons = mNetworkProps.neurons.getFilteredNeuronIds(emptyFilter);
+    SparseFieldCalculator calculator;
+    // std::random_shuffle(allNeurons.begin(),allNeurons.end());
+    for (int i = 0; i < allNeurons.size(); i++) {
+        int neuronId = allNeurons[i];
+        int synapticSide = mNetworkProps.neurons.getSynapticSide(neuronId);
+        int regionId = mNetworkProps.neurons.getRegionId(neuronId);
+        QString region = mNetworkProps.regions.getName(regionId);
+        int cellTypeId = mNetworkProps.neurons.getCellTypeId(neuronId);
+        QString cellType = mNetworkProps.cellTypes.getName(cellTypeId);
+
+        SparseField temp(dimensions, origin, voxelSize);
+
+        SparseField* boutons = NULL;
+        SparseField* postExc = NULL;
+        SparseField* postInh = NULL;
+        if (synapticSide == CIS3D::SynapticSide::PRESYNAPTIC ||
+            synapticSide == CIS3D::SynapticSide::BOTH_SIDES) {
+            int mappedId = mNetworkProps.axonRedundancyMap.getNeuronIdToUse(neuronId);
+            const QString filePath =
+                CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, mappedId);
+            boutons = SparseField::load(filePath);
+        }
+        if (synapticSide == CIS3D::SynapticSide::POSTSYNAPTIC ||
+            synapticSide == CIS3D::SynapticSide::BOTH_SIDES) {
+            const QString filePathExc = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType,
+                                                                  neuronId, CIS3D::EXCITATORY);
+            postExc = SparseField::load(filePathExc);
+            const QString filePathInh = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType,
+                                                                  neuronId, CIS3D::INHIBITORY);
+            postInh = SparseField::load(filePathInh);
+        }
+
+        if (boutons != NULL) {
+            temp = temp + *boutons;
+            delete boutons;
+        }
+        if (postExc != NULL) {
+            temp = temp + *postExc;
+            delete postExc;
+        }
+        if (postInh != NULL) {
+            temp = temp + *postInh;
+            delete postInh;
+        }
+
+        temp = calculator.binarize(temp);
+        count = count + temp;
+
+        if (i % 1000 == 0) {
+            qDebug() << "[*] Processed neuron" << i << "of" << allNeurons.size();
+        }
+    }
+
+    qDebug() << "[*] Writing voxel stats to file voxelStats.csv";
+    count.saveCSV("voxelStats.csv");
 }
 
 /*
@@ -97,22 +190,6 @@ QList<int> FeatureExtractor::getNeuronsWithinVolume(QVector<float> origin,
 }
 
 /*
-    Determines unique ID for the specified voxel.
-
-    @param locationLocal Position of the voxel relative to the origin.
-    @param dimensions Number of voxels in each direction.
-    @return The ID of the voxel.
-*/
-int FeatureExtractor::getVoxelId(Vec3i locationLocal, QVector<int> dimensions) {
-    int nx = dimensions[0];
-    int ny = dimensions[1];
-    int ix = locationLocal[0];
-    int iy = locationLocal[1];
-    int iz = locationLocal[2];
-    return iz * ny * nx + iy * nx + ix + 1;
-}
-
-/*
     Retrieves the pre- and postsynaptic target counts for one neuron within all voxels.
 
     @param pre The presynaptic target counts.
@@ -142,7 +219,7 @@ QList<Voxel> FeatureExtractor::determineVoxels(SparseField* pre, SparseField* po
                 position.setZ(origin[2] + z * voxelSize);
 
                 Voxel voxel;
-                voxel.voxelId = getVoxelId(Vec3i(x, y, z), dimensions);
+                voxel.voxelId = SparseField::getVoxelId(Vec3i(x, y, z), dimensions);
                 voxel.voxelX = x + 1;
                 voxel.voxelY = y + 1;
                 voxel.voxelZ = z + 1;
@@ -182,7 +259,9 @@ QList<Voxel> FeatureExtractor::determineVoxels(SparseField* pre, SparseField* po
                     voxel.postAllInh = 0;
                 }
 
-                voxels.append(voxel);
+                if (voxel.pre != 0 || voxel.postExc != 0 || voxel.postInh != 0) {
+                    voxels.append(voxel);
+                }
             }
         }
     }
@@ -200,17 +279,16 @@ QList<Voxel> FeatureExtractor::determineVoxels(SparseField* pre, SparseField* po
 QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<float> origin,
                                                  QVector<int> dimensions) {
     QList<Feature> features;
+    QList<int> onlyBoundingBoxIntersects;
 
-    const QString pstAllFileExc =
-        CIS3D::getPSTAllFullPath(mNetworkProps.dataRoot, CIS3D::EXCITATORY);
+    QDir modelDataDir = CIS3D::getModelDataDir(mNetworkProps.dataRoot);
+
+    const QString pstAllFileExc = CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
     SparseField* postAllExc = SparseField::load(pstAllFileExc);
-    const QString pstAllFileInh =
-        CIS3D::getPSTAllFullPath(mNetworkProps.dataRoot, CIS3D::INHIBITORY);
+    const QString pstAllFileInh = CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::INHIBITORY);
     SparseField* postAllInh = SparseField::load(pstAllFileInh);
 
     for (int i = 0; i < neurons.size(); i++) {
-        qDebug() << "[*] Processing neuron " << i + 1 << "of" << neurons.size();
-
         int neuronId = neurons[i];
         int cellTypeId = mNetworkProps.neurons.getCellTypeId(neuronId);
         QString cellType = mNetworkProps.cellTypes.getName(cellTypeId);
@@ -229,21 +307,25 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
             synapticSide == CIS3D::SynapticSide::BOTH_SIDES) {
             int mappedId = mNetworkProps.axonRedundancyMap.getNeuronIdToUse(neuronId);
             const QString filePath =
-                CIS3D::getBoutonsFileFullPath(mNetworkProps.dataRoot, cellType, mappedId);
+                CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, mappedId);
             boutons = SparseField::load(filePath);
         }
         if (synapticSide == CIS3D::SynapticSide::POSTSYNAPTIC ||
             synapticSide == CIS3D::SynapticSide::BOTH_SIDES) {
-            const QString filePathExc = CIS3D::getPSTFileFullPath(
-                mNetworkProps.dataRootDir, region, cellType, neuronId, CIS3D::EXCITATORY);
+            const QString filePathExc = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType,
+                                                                  neuronId, CIS3D::EXCITATORY);
             postExc = SparseField::load(filePathExc);
-            const QString filePathInh = CIS3D::getPSTFileFullPath(
-                mNetworkProps.dataRootDir, region, cellType, neuronId, CIS3D::INHIBITORY);
+            const QString filePathInh = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType,
+                                                                  neuronId, CIS3D::INHIBITORY);
             postInh = SparseField::load(filePathInh);
         }
 
+        int sizeBefore = voxels.size();
         voxels.append(
             determineVoxels(boutons, postExc, postAllExc, postInh, postAllInh, origin, dimensions));
+        if (sizeBefore == voxels.size()) {
+            onlyBoundingBoxIntersects.append(neuronId);
+        }
 
         if (boutons != NULL) {
             delete boutons;
@@ -273,7 +355,15 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
             feature.postAllInh = voxels[j].postAllInh;
             features.append(feature);
         }
+
+        if (i % 1000 == 0) {
+            qDebug() << "[*] Processed neuron " << i + 1 << "of" << neurons.size()
+                     << "total number of features" << features.size();
+        }
     }
+
+    qDebug() << "Neurons with intersecting bounding box but without pre- or postsynaptic targets"
+             << onlyBoundingBoxIntersects.size();
 
     delete postAllExc;
     delete postAllInh;
@@ -309,8 +399,8 @@ void FeatureExtractor::writeCSV(QList<Feature>& features) {
 }
 
 /*
-    Comparator for two features. Feature is considered smaller than other feature, if voxel ID
-    is lower. If the voxel IDs are identical the comparison is based on the neuron ID.
+    Comparator for two features. Feature is considered smaller than other feature, if voxel
+   ID is lower. If the voxel IDs are identical the comparison is based on the neuron ID.
 
     @param a First feature.
     @param b Second feature.
@@ -322,4 +412,67 @@ bool FeatureExtractor::lessThan(Feature& a, Feature& b) {
     } else {
         return a.voxelID < b.voxelID;
     }
+}
+
+/*
+    Determines all neurons that have intersecting bounding boxes with the
+    specified subcube.
+
+    @param origin The origing of the subcube.
+    @param dimensions The number of voxels in each dimension.
+    @return The intersecting neurons.
+*/
+QList<int> FeatureExtractor::determineIntersectingNeurons(QVector<float> origin,
+                                                          QVector<int> dimensions) {
+    const float voxelSize = 50;
+    Vec3f shiftedOrigin(origin[0] - voxelSize, origin[1] - voxelSize, origin[2] - voxelSize);
+    Vec3f pointMax(origin[0] + dimensions[0] * voxelSize, origin[1] + dimensions[1] * voxelSize,
+                   origin[2] + dimensions[2] * voxelSize);
+    BoundingBox subcube(shiftedOrigin, pointMax);
+
+    QList<int> intersectingNeurons;
+    SelectionFilter emptyFilter;
+    QList<int> allNeurons = mNetworkProps.neurons.getFilteredNeuronIds(emptyFilter);
+
+    qDebug() << allNeurons.size();
+
+    for (int i = 0; i < allNeurons.size(); i++) {
+        int neuronId = allNeurons[i];
+        bool axonIntersects = false;
+        bool dendriteIntersects = false;
+        bool isPresynaptic =
+            mNetworkProps.neurons.getSynapticSide(neuronId) != CIS3D::SynapticSide::POSTSYNAPTIC;
+        bool isPostsynaptic =
+            mNetworkProps.neurons.getSynapticSide(neuronId) != CIS3D::SynapticSide::PRESYNAPTIC;
+
+        if (isPresynaptic) {
+            axonIntersects = mNetworkProps.boundingBoxes.getAxonBox(neuronId).intersects(subcube);
+        }
+
+        if (isPostsynaptic) {
+            dendriteIntersects =
+                mNetworkProps.boundingBoxes.getDendriteBox(neuronId).intersects(subcube);
+        }
+
+        if (axonIntersects || dendriteIntersects) {
+            intersectingNeurons.append(neuronId);
+        }
+    }
+
+    return intersectingNeurons;
+}
+
+/*
+    Saves the properties of the specified neurons into a csv file.
+
+    @param fileName The name of the file.
+    @param neurons The neuron IDs.
+*/
+void FeatureExtractor::saveNeurons(QString fileName, QList<int> neuronsToSave) {
+    Neurons neurons;
+    for (int i = 0; i < neuronsToSave.size(); i++) {
+        int neuronId = neuronsToSave[i];
+        neurons.addNeuron(mNetworkProps.neurons.getNeuronProps(neuronId));
+    }
+    neurons.saveCSV(fileName);
 }

@@ -141,9 +141,9 @@ QSet<QString> extractCellTypes(const QJsonObject spec) {
     if (spec["CELLTYPES"] == QJsonValue::Undefined) {
         throw std::runtime_error("Key CELLTYPES not found in spec file.");
     };
-    QSet<QString> cellTypes;    
+    QSet<QString> cellTypes;
     QJsonArray parameters = spec["CELLTYPES"].toArray();
-    for(int i=0; i<parameters.size(); i++){
+    for (int i = 0; i < parameters.size(); i++) {
         const QString cellType = parameters[i].toString();
         cellTypes.insert(cellType);
     }
@@ -161,13 +161,59 @@ QSet<QString> extractRegions(const QJsonObject spec) {
     if (spec["REGIONS"] == QJsonValue::Undefined) {
         throw std::runtime_error("Key REGIONS not found in spec file.");
     };
-    QSet<QString> regions;    
+    QSet<QString> regions;
     QJsonArray parameters = spec["REGIONS"].toArray();
-    for(int i=0; i<parameters.size(); i++){
+    for (int i = 0; i < parameters.size(); i++) {
         const QString region = parameters[i].toString();
         regions.insert(region);
     }
     return regions;
+}
+
+/*
+    Reads the NEURON_IDS property from the specification file.
+
+    @param spec The specification file as json object.
+    @return The NEURON_IDS as set, empty by default.
+*/
+QSet<int> extractNeuronIds(const QJsonObject spec) {
+    QSet<int> neuronIds;
+    if (spec["NEURON_IDS"] != QJsonValue::Undefined) {
+        QJsonArray parameters = spec["NEURON_IDS"].toArray();
+        for (int i = 0; i < parameters.size(); i++) {
+            const int neuronId = parameters[i].toInt();
+            neuronIds.insert(neuronId);
+        }
+    };
+    return neuronIds;
+}
+
+/*
+    Reads the SAMPLING_FACTOR property from the specification file.
+
+    @param spec The specification file as json object.
+    @return The SAMPLING_FACTOR, 1 by default.
+*/
+int extractSamplingFactor(const QJsonObject spec) {
+    if (spec["SAMPLING_FACTOR"] != QJsonValue::Undefined) {
+        return spec["SAMPLING_FACTOR"].toInt();
+    } else {
+        return 1;
+    }
+}
+
+/*
+    Reads the VOXEL_STATS property from the specification file.
+
+    @param spec The specification file as json object.
+    @return The VOXEL_STATS, false by default.
+*/
+bool extractVoxelstats(const QJsonObject spec) {
+    if (spec["VOXEL_STATS"] != QJsonValue::Undefined) {
+        return spec["VOXEL_STATS"].toBool();
+    } else {
+        return false;
+    }
 }
 
 /*
@@ -216,8 +262,16 @@ int main(int argc, char **argv) {
             QVector<int> dimensions = extractDimensions(spec);
             QSet<QString> cellTypes = extractCellTypes(spec);
             QSet<QString> regions = extractRegions(spec);
+            QSet<int> neuronIds = extractNeuronIds(spec);
+            int samplingFactor = extractSamplingFactor(spec);
+            bool voxelStats = extractVoxelstats(spec);
             FeatureExtractor extractor(networkProps);
-            extractor.writeFeaturesToFile(origin, dimensions, cellTypes, regions);
+            extractor.writeFeaturesToFile(origin, dimensions, cellTypes, regions, neuronIds,
+                                          samplingFactor);
+            if (voxelStats) {
+                extractor.writeVoxelStats(origin, dimensions, cellTypes, regions, neuronIds,
+                                          samplingFactor);
+            }
             return 0;
         }
     } else {

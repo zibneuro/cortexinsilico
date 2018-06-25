@@ -26,6 +26,15 @@ public:
                                 const float theta2,
                                 const float theta3,
                                 const float theta4);
+
+    /*
+        Creates a field in which non zero entries from the specified
+        field are represented as ones.
+
+        @param field The non binary field.
+        @return The binary field. 
+    */
+    SparseField binarize(const SparseField& field);
 };
 
 #endif //SPARSEFIELDCALCULATOR_H
