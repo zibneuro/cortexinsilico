@@ -38,6 +38,8 @@ SOURCES += \
     ../shared/CIS3DSparseVectorSet.cpp \
     ../shared/SparseVectorCache.cpp \
     ../shared/CIS3DVec3.cpp \
+    ../shared/CIS3DStatistics.cpp \
+    ../shared/Histogram.cpp \
     ../shared/Util.cpp \
     ../shared/UtilIO.cpp \
 
@@ -55,5 +57,7 @@ HEADERS += \
     ../shared/SparseVectorCache.h \
     ../shared/CIS3DVec3.h \
     ../shared/Typedefs.h\
+    ../shared/CIS3DStatistics.h \
+    ../shared/Histogram.h \
     ../shared/Util.h \
     ../shared/UtilIO.h

@@ -107,10 +107,11 @@ class FeatureExtractor {
         @param neurons The neurons within the subvolume.
         @param origin Origin of the subvolume.
         @param dimensions Number of voxels in each direction.
+        @param samplingFactor The sampling factor, 1: take all, 2: take half, etc.
         @return A list of features.
     */
     QList<Feature> extractFeatures(QList<int> neurons, QVector<float> origin,
-                                   QVector<int> dimensions);
+                                   QVector<int> dimensions, int samplingFactor);
 
     /*
         Writes the features into a file named features.csv
@@ -121,7 +122,7 @@ class FeatureExtractor {
 
     /*
         Comparator for two features. Feature is considered smaller than other feature, if voxel ID
-        is lower. If the voxel IDs are identical the comparison is based on the neuron ID.
+        is lower. If the voxel IDs are identical, the comparison is based on the neuron ID.
 
         @param a First feature.
         @param b Second feature.
@@ -138,6 +139,19 @@ class FeatureExtractor {
         @return The intersecting neurons.
     */
     QList<int> determineIntersectingNeurons(QVector<float> origin, QVector<int> dimensions);
+
+    /*
+        Determines all neurons that meet the specified properties.
+
+        @param origin Origin of the subvolume (in spatial coordinates).
+        @param dimensions Number of voxels in each direction from the origin.
+        @param cellTypes The cell types filter.
+        @param regions The regions filter.
+        @param neuronIds The neuron IDs filter.
+    */
+    QList<int> determineNeurons(QVector<float> origin, QVector<int> dimensions,
+                                QSet<QString> cellTypes, QSet<QString> regions,
+                                QSet<int> neuronIds);
 
     /*
         Saves the properties of the specified neurons into a csv file.

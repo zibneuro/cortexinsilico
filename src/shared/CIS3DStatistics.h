@@ -2,7 +2,6 @@
 #define STATISTICS_H
 
 #include <QFlags>
-#include <QJsonObject>
 
 /**
     Collects a set of samples and computes basic statistics.
@@ -65,13 +64,7 @@ class Statistics {
         /**
             Writes the statistics to console.
         */
-        void print() const;
-
-        /**
-            Creates a JSON representation of the statistics.
-            @return The JSON object.
-        */
-        QJsonObject createJson() const;
+        void print() const;        
 
         enum Field {
             Sum               = 1 << 0,

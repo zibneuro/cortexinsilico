@@ -110,16 +110,3 @@ void Statistics::print() const {
     printf("Range:\t%.3f - %.3f\n", getMinimum(), getMaximum());
     printf("------------------\n");
 }
-
-/**
-    Creates a JSON representation of the statistics.
-    @return The JSON object.
-*/
-QJsonObject Statistics::createJson() const {
-    QJsonObject obj;
-    obj.insert("average", getMean());
-    obj.insert("stdev", getStandardDeviation());
-    obj.insert("min", getMinimum());
-    obj.insert("max", getMaximum());
-    return obj;
-}

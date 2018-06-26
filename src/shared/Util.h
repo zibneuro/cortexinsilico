@@ -6,6 +6,8 @@
 #include "CIS3DNetworkProps.h"
 #include "CIS3DNeurons.h"
 #include "Typedefs.h"
+#include "CIS3DStatistics.h"
+#include "Histogram.h"
 
 class QJsonObject;
 class QJsonArray;
@@ -66,6 +68,24 @@ namespace Util {
             The fields of the generation filter are appended.
     */
     void addGenerationFilter(QJsonObject& spec);
+
+    /**
+        Creates a JSON report of a statistic.
+        
+        @param statistics The statistics to report.
+        @return The JSON object.
+    */
+    QJsonObject createJsonStatistic(const Statistics& statistics);
+
+    /**
+        Creates a JSON report of a histogram
+        
+        @param statistics The histogram to report.
+        @return The JSON object.
+    */
+    QJsonObject createJsonHistogram(const Histogram& histogram);
+
+
 }
 
 #endif // UTIL_H

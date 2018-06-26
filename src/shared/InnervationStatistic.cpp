@@ -285,23 +285,22 @@ void InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
 */
 void InnervationStatistic::doCreateJson(QJsonObject& obj) const {
 
-    QJsonObject innervationHistogram = innervationHisto.createJson();
+    QJsonObject innervationHistogram = Util::createJsonHistogram(innervationHisto);
     obj.insert("innervationHisto", innervationHistogram);
 
-    QJsonObject connProbHistogram = connProbHisto.createJson();
+    QJsonObject connProbHistogram = Util::createJsonHistogram(connProbHisto);
     obj.insert("connectionProbabilityHisto", connProbHistogram);
 
-    obj.insert("innervation",                 innervation.createJson());
-    obj.insert("connectionProbability",       connProb.createJson());
-    obj.insert("innervationUnique",           innervationUnique.createJson());
-    obj.insert("connectionProbabilityUnique", connProbUnique.createJson());
+    obj.insert("innervation",                 Util::createJsonStatistic(innervation));
+    obj.insert("connectionProbability",       Util::createJsonStatistic(connProb));
+    obj.insert("innervationUnique",           Util::createJsonStatistic(innervationUnique));
+    obj.insert("connectionProbabilityUnique", Util::createJsonStatistic(connProbUnique));
 
-    obj.insert("innervationPerPre",           innervationPerPre.createJson());
-    obj.insert("divergence",                  divergence.createJson());
-    obj.insert("innervationPerPreUnique",     innervationPerPreUnique.createJson());
-    obj.insert("divergenceUnique",            divergenceUnique.createJson());
+    obj.insert("innervationPerPre",           Util::createJsonStatistic(innervationPerPre));
+    obj.insert("divergence",                  Util::createJsonStatistic(divergence));
+    obj.insert("innervationPerPreUnique",     Util::createJsonStatistic(innervationPerPreUnique));
+    obj.insert("divergenceUnique",            Util::createJsonStatistic(divergenceUnique));
 
-    obj.insert("innervationPerPost",          innervationPerPost.createJson());
-    obj.insert("convergence",                 convergence.createJson());
-
+    obj.insert("innervationPerPost",          Util::createJsonStatistic(innervationPerPost));
+    obj.insert("convergence",                 Util::createJsonStatistic(convergence));
 }

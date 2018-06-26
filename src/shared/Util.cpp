@@ -1,6 +1,8 @@
 #include "Typedefs.h"
 #include "Util.h"
 #include "CIS3DAxonRedundancyMap.h"
+#include "CIS3DStatistics.h"
+#include "Histogram.h"
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QSet>
@@ -387,4 +389,56 @@ void Util::addGenerationFilter(QJsonObject& spec){
     addGenerationField(spec, "POST_NEURON_REGIONS", true);
     addGenerationField(spec, "POST_NEURON_CELLTYPES", true);
     addGenerationField(spec, "POST_NEURON_IDS", false);
+}
+
+
+/**
+    Creates a JSON report of a statistic.
+    
+    @param statistics The statistics to report.
+    @return The JSON object.
+*/
+QJsonObject Util::createJsonStatistic(const Statistics& statistics){
+    QJsonObject obj;
+    obj.insert("average", statistics.getMean());
+    obj.insert("stdev", statistics.getStandardDeviation());
+    obj.insert("min", statistics.getMinimum());
+    obj.insert("max", statistics.getMaximum());
+    return obj;
+}
+
+/**
+    Creates a JSON report of a histogram
+    
+    @param statistics The histogram to report.
+    @return The JSON object.
+*/
+QJsonObject Util::createJsonHistogram(const Histogram& histogram){
+    QJsonArray histArr = QJsonArray();
+    for (int b=0; b<histogram.getNumberOfBins(); ++b) {
+        QJsonObject binObj;
+        binObj["BinNumber"] = b;
+        binObj["BinStart"] = histogram.getBinStart(b);
+        binObj["BinEnd"] = histogram.getBinEnd(b);
+        binObj["Value"] = histogram.getBinValue(b);
+        histArr.append(binObj);
+    }
+
+    QJsonObject histObj;
+    if (histogram.getNumberOfValues() == 0) {
+        histObj.insert("numberOfValues", 0);
+        histObj.insert("numberOfZeros", 0);
+        histObj.insert("minValue", 0);
+        histObj.insert("maxValue", 0);
+        histObj.insert("histogram", histArr);
+    }
+    else {
+        histObj.insert("numberOfValues", histogram.getNumberOfValues());
+        histObj.insert("numberOfZeros", histogram.getNumberOfZeros());
+        histObj.insert("minValue", histogram.getMinValue());
+        histObj.insert("maxValue", histogram.getMaxValue());
+        histObj.insert("histogram", histArr);
+    }
+
+    return histObj;
 }

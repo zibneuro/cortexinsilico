@@ -203,20 +203,6 @@ int extractSamplingFactor(const QJsonObject spec) {
 }
 
 /*
-    Reads the VOXEL_STATS property from the specification file.
-
-    @param spec The specification file as json object.
-    @return The VOXEL_STATS, false by default.
-*/
-bool extractVoxelstats(const QJsonObject spec) {
-    if (spec["VOXEL_STATS"] != QJsonValue::Undefined) {
-        return spec["VOXEL_STATS"].toBool();
-    } else {
-        return false;
-    }
-}
-
-/*
     Entry point for the console application.
 
     @param argc Number of arguments.
@@ -264,14 +250,31 @@ int main(int argc, char **argv) {
             QSet<QString> regions = extractRegions(spec);
             QSet<int> neuronIds = extractNeuronIds(spec);
             int samplingFactor = extractSamplingFactor(spec);
-            bool voxelStats = extractVoxelstats(spec);
             FeatureExtractor extractor(networkProps);
             extractor.writeFeaturesToFile(origin, dimensions, cellTypes, regions, neuronIds,
                                           samplingFactor);
-            if (voxelStats) {
-                extractor.writeVoxelStats(origin, dimensions, cellTypes, regions, neuronIds,
-                                          samplingFactor);
-            }
+            return 0;
+        }
+    } else if (mode == "VOXELSTATS") {
+        if (argc != 3) {
+            printUsage();
+            return 1;
+        } else {
+            const QString specFile = argv[2];
+            QJsonObject spec = UtilIO::parseSpecFile(specFile);
+            const QString dataRoot = spec["DATA_ROOT"].toString();
+            NetworkProps networkProps;
+            networkProps.setDataRoot(dataRoot);
+            networkProps.loadFilesForSynapseComputation();
+            QVector<float> origin = extractOrigin(spec);
+            QVector<int> dimensions = extractDimensions(spec);
+            QSet<QString> cellTypes = extractCellTypes(spec);
+            QSet<QString> regions = extractRegions(spec);
+            QSet<int> neuronIds = extractNeuronIds(spec);
+            int samplingFactor = extractSamplingFactor(spec);
+            FeatureExtractor extractor(networkProps);
+            extractor.writeVoxelStats(origin, dimensions, cellTypes, regions, neuronIds,
+                                      samplingFactor);
             return 0;
         }
     } else {
