@@ -55,10 +55,11 @@ namespace Util {
         Creates a selection filter for neurons.
         @param jsonArray The filter query as received from  the webframework.
         @param network The model data of the network.
+        @param synapticSide Specifies whether selection is pre- or postsynaptic.
         @returns A selection filter that can be applied to the (CIS3D)Neurons class.
         @throws runtime_error if the selection filter is not valid.
     */
-    SelectionFilter getSelectionFilterFromJson(const QJsonArray& jsonArray, const NetworkProps& network);
+    SelectionFilter getSelectionFilterFromJson(const QJsonArray& jsonArray, const NetworkProps& network, const CIS3D::SynapticSide synapticSide);
 
     /**
         Determines and sets the neuron filter for the generation of the connectome

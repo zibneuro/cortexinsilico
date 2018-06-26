@@ -220,9 +220,22 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             mNetwork.setDataRoot(mDataRoot);
             mNetwork.loadFilesForQuery();
 
+            CIS3D::SynapticSide synapticSide = CIS3D::BOTH_SIDES;
+            QString synapticSideString = jsonResponse.object().value("synapticSide").toString();
+            if (synapticSideString == "presynaptic") {
+                synapticSide = CIS3D::PRESYNAPTIC;
+            }
+            else if (synapticSideString == "postsynaptic") {
+                synapticSide = CIS3D::POSTSYNAPTIC;
+            }
+            else {
+                const QString msg = QString("[-] Invalid synaptic side string: %1").arg(synapticSideString);
+                std::runtime_error(qPrintable(msg));
+            }
+
             QJsonDocument selectionDoc = QJsonDocument::fromJson(selectionString.toLocal8Bit());
             QJsonArray selectionArr = selectionDoc.array();
-            SelectionFilter filter = Util::getSelectionFilterFromJson(selectionArr, mNetwork);
+            SelectionFilter filter = Util::getSelectionFilterFromJson(selectionArr, mNetwork, synapticSide);
             const IdList neurons = mNetwork.neurons.getFilteredNeuronIds(filter);
 
             qDebug() << "    Start sorting " << neurons.size() << " neurons.";
