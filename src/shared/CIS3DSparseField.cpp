@@ -346,7 +346,7 @@ SparseField* SparseField::load(const QString& fileName) {
         return 0;
     }
 
-    qDebug() << "Loading SparseField from file:" << fileName;
+    //qDebug() << "Loading SparseField from file:" << fileName;
     QDataStream in(&file);
     SparseField* fs = readFromStream(in);
     return fs;

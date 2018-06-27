@@ -55,9 +55,9 @@
     Prints the usage manual to the console.
 */
 void printUsage() {
-    qDebug() << "This tool provides two modes: SYNAPSES and SUBCUBE.";
+    qDebug() << "This tool provides two modes: SYNAPSE and SUBCUBE.";
     qDebug() << "";
-    qDebug() << "In the SYNAPSES mode, the tool computes synapse counts between neurons";
+    qDebug() << "In the SYNAPSE mode, the tool computes synapse counts between neurons";
     qDebug() << "according to generalized Peters' rule, which is parametrized by theta. To do so,";
     qDebug() << "the tool requires neuron features that must be provided in file features.csv";
     qDebug() << "(in the same directory).";
@@ -193,10 +193,16 @@ QSet<int> extractNeuronIds(const QJsonObject spec) {
 
     @param spec The specification file as json object.
     @return The SAMPLING_FACTOR, 1 by default.
+    @throws runtime_error if the smapling factor has an invalid value.
 */
 int extractSamplingFactor(const QJsonObject spec) {
-    if (spec["SAMPLING_FACTOR"] != QJsonValue::Undefined) {
-        return spec["SAMPLING_FACTOR"].toInt();
+    if (spec["SAMPLING_FACTOR"] != QJsonValue::Undefined) {        
+        int samplingFactor = spec["SAMPLING_FACTOR"].toInt();
+        if(samplingFactor == 0){
+            throw std::runtime_error("Invalid value for sampling factor. Possible reason: \"-symbols.");
+        } else {
+            return samplingFactor;
+        }
     } else {
         return 1;
     }
@@ -251,30 +257,7 @@ int main(int argc, char **argv) {
             QSet<int> neuronIds = extractNeuronIds(spec);
             int samplingFactor = extractSamplingFactor(spec);
             FeatureExtractor extractor(networkProps);
-            extractor.writeFeaturesToFile(origin, dimensions, cellTypes, regions, neuronIds,
-                                          samplingFactor);
-            return 0;
-        }
-    } else if (mode == "VOXELSTATS") {
-        if (argc != 3) {
-            printUsage();
-            return 1;
-        } else {
-            const QString specFile = argv[2];
-            QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            const QString dataRoot = spec["DATA_ROOT"].toString();
-            NetworkProps networkProps;
-            networkProps.setDataRoot(dataRoot);
-            networkProps.loadFilesForSynapseComputation();
-            QVector<float> origin = extractOrigin(spec);
-            QVector<int> dimensions = extractDimensions(spec);
-            QSet<QString> cellTypes = extractCellTypes(spec);
-            QSet<QString> regions = extractRegions(spec);
-            QSet<int> neuronIds = extractNeuronIds(spec);
-            int samplingFactor = extractSamplingFactor(spec);
-            FeatureExtractor extractor(networkProps);
-            extractor.writeVoxelStats(origin, dimensions, cellTypes, regions, neuronIds,
-                                      samplingFactor);
+            extractor.extract(origin, dimensions, cellTypes, regions, neuronIds, samplingFactor);
             return 0;
         }
     } else {

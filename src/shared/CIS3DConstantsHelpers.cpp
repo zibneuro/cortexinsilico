@@ -1,6 +1,58 @@
 #include "CIS3DConstantsHelpers.h"
+#include <QString>
 
 const int CIS3D::NeuronIdNumDigits = 7;
+
+
+/*
+    Returns a string representation of functional cell type.
+
+    @param typeFunctional The functional cell type as enum.
+    @return The functional cell type as string.
+*/
+QString CIS3D::getFunctionalType(NeuronType functionalType){    
+    if(functionalType == EXCITATORY){
+        return "exc";
+    } else if(functionalType == INHIBITORY){
+        return "inh";
+    } else {
+        return "unknown";
+    }
+}
+
+/*
+    Returns a string representation of the synaptic side.
+
+    @param side The synaptic side as enum.
+    @return The synaptic side as string.
+*/
+QString CIS3D::getSynapticSide(SynapticSide side){    
+    if(side == PRESYNAPTIC){
+        return "pre";
+    } else if (side == POSTSYNAPTIC){
+        return "post";
+    } else {
+        return "both";
+    }
+}
+
+/*
+    Returns a string representation of the laminar location.
+
+    @param location The laminar location as enum.
+    @return The laminar location as string.
+*/
+QString CIS3D::getLaminarLocation(LaminarLocation location){
+    if(location == INFRAGRANULAR){
+        return "infragranular";
+    } else if(location == GRANULAR){
+        return "granular";
+    } else if(location == SUPRAGRANULAR){
+        return "supragranular";
+    } else {
+        return "unknown";
+    }
+}
 
 
 QDir CIS3D::getModelDataDir(const QDir& dataRootDir) {

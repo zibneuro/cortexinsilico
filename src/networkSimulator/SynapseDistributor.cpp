@@ -25,7 +25,12 @@ QList<Synapse> SynapseDistributor::apply(Rule rule, QVector<float> parameters) {
     const int maxSynapseCount = 999999;
 
     QSetIterator<int> voxelIt(mVoxels);
+    int progress = 1;
     while (voxelIt.hasNext()) {
+        if (progress % 10 == 0) {
+            qDebug() << "[*] Processing voxel" << progress << "of" << mVoxels.size();
+        }
+        progress++;
         int voxelId = voxelIt.next();
         if (mPreNeuronsVoxelwise[voxelId].size() > 0 && mPostNeuronsVoxelwise[voxelId].size()) {
             QList<int> preFeatures = mPreNeuronsVoxelwise[voxelId].toList();
@@ -78,7 +83,9 @@ QList<Synapse> SynapseDistributor::apply(Rule rule, QVector<float> parameters) {
                         synapse.count = 0;
                     }
 
-                    synapses.append(synapse);
+                    if (synapse.count != 0) {
+                        synapses.append(synapse);
+                    }
                 }
             }
         }

@@ -44,43 +44,33 @@ class FeatureExtractor {
     FeatureExtractor(NetworkProps& props);
 
     /*
-        Extracts the model features from the specified subvolume and
-        writes them into a file named features.csv.
+        Extracts the model features from the specified subvolume according
+        to the specified filters and writes the results to file. Creates
+        the files features.csv, neurons.csv, voxels.csv.
 
         @param origin Origin of the subvolume (in spatial coordinates).
         @param dimensions Number of voxels in each direction from the origin.
         @param cellTypes The cell types filter.
         @param regions The regions filter.
-        @param neuronIds The neuron IDs filter.
-        @param samplingFactor The sampling factor, 1: take all, 2: take half, etc.
+        @param neuronIds The neuron IDs filter (overrules all others, if set).
+        @param samplingFactor The neuron sampling factor, 1: take all, 2: take half, etc.
     */
-    void writeFeaturesToFile(QVector<float> origin, QVector<int> dimensions,
-                             QSet<QString> cellTypes, QSet<QString> regions, QSet<int> neuronIds,
-                             int samplingFactor);
-
-    /*
-        Counts the number of neurons in each voxel and writes the results
-        to file.
-
-        @param origin Origin of the subvolume (in spatial coordinates).
-        @param dimensions Number of voxels in each direction from the origin.
-        @param cellTypes The cell types filter.
-        @param regions The regions filter.
-        @param neuronIds The neuron IDs filter.
-        @param samplingFactor The sampling factor, 1: take all, 2: take half, etc.
-    */
-    void writeVoxelStats(QVector<float> origin, QVector<int> dimensions, QSet<QString> cellTypes,
-                         QSet<QString> regions, QSet<int> neuronIds, int samplingFactor);
+    void extract(QVector<float> origin, QVector<int> dimensions, QSet<QString> cellTypes,
+                 QSet<QString> regions, QSet<int> neuronIds, int samplingFactor);
 
    private:
     /*
-        Determines all neurons within the subvolume (based on soma position)
+         Determines all neurons that meet the specified properties.
 
-        @param origin Origin of the voxelcube.
-        @param dimensions Number of voxels in each direction.
-        @return List of neuron IDs.
-    */
-    QList<int> getNeuronsWithinVolume(QVector<float> origin, QVector<int> dimensions);
+         @param origin Origin of the subvolume (in spatial coordinates).
+         @param dimensions Number of voxels in each direction from the origin.
+         @param cellTypes The cell types filter.
+         @param regions The regions filter.
+         @param neuronIds The neuron IDs filter.
+     */
+    QList<int> determineNeurons(QVector<float> origin, QVector<int> dimensions,
+                                QSet<QString> cellTypes, QSet<QString> regions,
+                                QSet<int> neuronIds);
 
     /*
         Retrieves the pre- and postsynaptic target counts for one neuron within all voxels.
@@ -95,7 +85,6 @@ class FeatureExtractor {
         @param origin The origin of the voxel grid.
         @param dimensions The number of voxels in each direction.
         @return All voxels that with the pre- and postsynaptic target counts.
-
     */
     QList<Voxel> determineVoxels(SparseField* pre, SparseField* postExc, SparseField* postAllExc,
                                  SparseField* postInh, SparseField* postAllInh,
@@ -114,11 +103,31 @@ class FeatureExtractor {
                                    QVector<int> dimensions, int samplingFactor);
 
     /*
-        Writes the features into a file named features.csv
+        Writes the features into a csv file.
 
+        @param fileName The name of the file.
         @param features A list with the features.
     */
-    void writeCSV(QList<Feature>& features);
+    void writeFeatures(QString fileName, QList<Feature>& features);
+
+    /*
+        Writes properties of the extracted neurons into a csv file.
+
+        @param fileName The name of the file.
+        @param features A list with the features.
+        @param origin Origin of the subvolume (in spatial coordinates).
+        @param dimensions Number of voxels in each direction from the origin.
+    */
+    void writeNeurons(QString fileName, QList<Feature>& features, QVector<float> origin,
+                                   QVector<int> dimensions);
+
+    /*
+        Writes properties of the extracted voxels into a csv file.
+
+        @param fileName The name of the file.
+        @param features The extracted features.
+    */
+    void writeVoxels(QString fileName, QList<Feature>& features);
 
     /*
         Comparator for two features. Feature is considered smaller than other feature, if voxel ID
@@ -134,32 +143,21 @@ class FeatureExtractor {
         Determines all neurons that have intersecting bounding boxes with the
         specified subcube.
 
-        @param origin The origing of the subcube.
+        @param origin The origin of the subcube.
         @param dimensions The number of voxels in each dimension.
         @return The intersecting neurons.
     */
     QList<int> determineIntersectingNeurons(QVector<float> origin, QVector<int> dimensions);
 
     /*
-        Determines all neurons that meet the specified properties.
+        Determines whether the soma is located within the specified subcube.
 
-        @param origin Origin of the subvolume (in spatial coordinates).
-        @param dimensions Number of voxels in each direction from the origin.
-        @param cellTypes The cell types filter.
-        @param regions The regions filter.
-        @param neuronIds The neuron IDs filter.
+        @param somaPosition Spatial location of the soma. 
+        @param origin The origin of the subcube.
+        @param dimensions The number of voxels in each dimension.
+        @return True, if the soma is located within the subcube.
     */
-    QList<int> determineNeurons(QVector<float> origin, QVector<int> dimensions,
-                                QSet<QString> cellTypes, QSet<QString> regions,
-                                QSet<int> neuronIds);
-
-    /*
-        Saves the properties of the specified neurons into a csv file.
-
-        @param fileName The name of the file.
-        @param neuronsToSave The neuron IDs.
-    */
-    void saveNeurons(QString fileName, QList<int> neuronsToSave);
+    bool somaWithinSubcube(Vec3f somaPosition, QVector<float> origin, QVector<int> dimensions);
 
     /*
         The model data.

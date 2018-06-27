@@ -97,6 +97,22 @@ CIS3D::SynapticSide Neurons::getSynapticSide(const int id) const {
 }
 
 /**
+    Determines the laminar location of the specified neuron.
+    @param id The neuron ID.
+    @return The laminar location.
+    @throws runtime_error if neuron ID does not exist.
+*/
+CIS3D::LaminarLocation Neurons::getLaminarLocation(const int id) const{
+    const PropsMap::const_iterator it = mPropsMap.constFind(id);
+    if (it == mPropsMap.constEnd()) {
+        const QString msg =
+            QString("Error in getLaminarLocation: Neuron ID %1 does not exist.").arg(id);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    return it->loc;
+}
+
+/**
     Returns the IDs of all neurons with the specified properties.
     @includedCellTypeIds The desired cell types.
     @includedRegionIds The desired regions.

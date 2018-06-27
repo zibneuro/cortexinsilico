@@ -101,6 +101,14 @@ public:
     */
     CIS3D::SynapticSide getSynapticSide(const int id) const;
 
+     /**
+        Determines the laminar location of the specified neuron.
+        @param id The neuron ID.
+        @return The laminar location.
+        @throws runtime_error if neuron ID does not exist.
+    */
+    CIS3D::LaminarLocation getLaminarLocation(const int id) const;
+
     /**
         Returns the IDs of all neurons with the specified properties.
         @includedCellTypeIds The desired cell types.

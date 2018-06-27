@@ -77,6 +77,30 @@ namespace CIS3D {
         Structure     structure;
     };
 
+    /*
+        Returns a string representation of functional cell type.
+
+        @param typeFunctional The functional cell type as enum.
+        @return The functional cell type as string.
+    */
+    QString getFunctionalType(NeuronType functionalType);
+
+    /*
+        Returns a string representation of the synaptic side.
+
+        @param side The synaptic side as enum.
+        @return The synaptic side as string.
+    */
+    QString getSynapticSide(SynapticSide side);
+
+    /*
+        Returns a string representation of the laminar location.
+
+        @param location The laminar location as enum.
+        @return The laminar location as string.
+    */
+    QString getLaminarLocation(LaminarLocation location);
+
     /**
         A tuple of cell type ID and region ID
     */
