@@ -169,6 +169,10 @@ Vec3i SparseField::getXYZFromIndex(const SparseField::LocationIndexT& index) con
     Vec3i xyz;
     SparseField::LocationIndexT remainder;
 
+    if (index < 0) {
+        throw std::runtime_error("Error in getXYZFromIndex: index < 0");
+    }
+
     xyz.setZ(index / (mDimensions.getX() * mDimensions.getY()));
     remainder = index - (xyz.getZ() * mDimensions.getX() * mDimensions.getY());
     xyz.setY(remainder / mDimensions.getX());
@@ -342,6 +346,7 @@ SparseField* SparseField::load(const QString& fileName) {
         return 0;
     }
 
+    qDebug() << "Loading SparseField from file:" << fileName;
     QDataStream in(&file);
     SparseField* fs = readFromStream(in);
     return fs;
@@ -394,6 +399,13 @@ SparseField* SparseField::readFromStream(QDataStream& in) {
     SparseField* fs = new SparseField(dims, origin, voxelSize);
     in >> fs->mIndexMap;
     in >> fs->mField;
+
+    // Sanity check for loaded data
+    for (LocationIndexToValueIndexMap::const_iterator it=fs->mIndexMap.constBegin(); it!=fs->mIndexMap.constEnd(); ++it) {
+        if (it.key() < 0) {
+            throw std::runtime_error("Error in SparseField: negative location index");
+        }
+    }
 
     return fs;
 }

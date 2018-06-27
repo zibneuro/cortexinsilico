@@ -352,8 +352,10 @@ class SparseField {
         ConstIterator(const SparseField& sf, const IteratorState state) : mSparseField(sf) {
             if (state == ITERATOR_BEGIN) {
                 mIt = mSparseField.mIndexMap.constBegin();
-                location = mSparseField.getXYZFromIndex(mIt.key());
-                value = mSparseField.mField.at(mIt.value());
+                if (mIt != mSparseField.mIndexMap.constEnd()) {
+                    location = mSparseField.getXYZFromIndex(mIt.key());
+                    value = mSparseField.mField.at(mIt.value());
+                }
             } else if (state == ITERATOR_END) {
                 mIt = mSparseField.mIndexMap.constEnd();
             }
