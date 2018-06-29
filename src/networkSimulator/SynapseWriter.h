@@ -26,6 +26,9 @@
 */
 class SynapseWriter {
    public:
+
+    void init();
+
     /*
         Writes a synapses.csv file.
 

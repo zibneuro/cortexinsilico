@@ -188,6 +188,30 @@ QSet<int> extractNeuronIds(const QJsonObject spec) {
     return neuronIds;
 }
 
+QSet<int> extractVoxelIds(const QJsonObject spec) {
+    QSet<int> neuronIds;
+    if (spec["VOXEL_IDS"] != QJsonValue::Undefined) {
+        QJsonArray parameters = spec["VOXEL_IDS"].toArray();
+        for (int i = 0; i < parameters.size(); i++) {
+            const int neuronId = parameters[i].toInt();
+            neuronIds.insert(neuronId);
+        }
+    };
+    return neuronIds;
+}
+
+QString extractOutputMode(const QJsonObject spec) {
+    if (spec["OUTPUT_MODE"] != QJsonValue::Undefined) {
+        const QString mode = spec["OUTPUT_MODE"].toString();
+        return mode;
+    } else {
+        return "completePerVoxel";
+    }
+}
+
+
+
+
 /*
     Reads the SAMPLING_FACTOR property from the specification file.
 
@@ -228,16 +252,15 @@ int main(int argc, char **argv) {
             printUsage();
             return 1;
         } else {
-            FeatureReader reader;
-            QList<Feature> features = reader.load("features.csv");
-            SynapseDistributor distributor(features);
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
+            FeatureReader reader;
+            QList<Feature> features = reader.load("features.csv");
+            QSet<int> voxelIds = extractVoxelIds(spec);
+            QString outputMode = extractOutputMode(spec);
+            SynapseDistributor distributor(features,voxelIds,outputMode);
             QVector<float> parameters = extractRuleParameters(spec);
-            QList<Synapse> synapses =
-                distributor.apply(SynapseDistributor::Rule::GeneralizedPeters, parameters);
-            SynapseWriter writer;
-            writer.write("synapses.csv", synapses);
+            distributor.apply(SynapseDistributor::Rule::GeneralizedPeters, parameters);
         }
     } else if (mode == "SUBCUBE") {
         if (argc != 3) {

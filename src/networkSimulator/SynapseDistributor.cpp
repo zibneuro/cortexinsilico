@@ -1,11 +1,25 @@
 #include "SynapseDistributor.h"
+#include "SynapseWriter.h"
+
 
 /*
     Constructor.
 
     @param features The neuron features.
 */
-SynapseDistributor::SynapseDistributor(QList<Feature>& features) : mFeatures(features) {
+SynapseDistributor::SynapseDistributor(QList<Feature>& features, QSet<int> voxelIds, QString outputMode) : mFeatures(features), mVoxels(voxelIds) {
+    qDebug() << "[*] Output mode:" << outputMode;
+    if(outputMode == "complete" || outputMode == "completePerVoxel"){
+        mSparse = false;
+    } else {
+        mSparse = true;
+    }
+
+    if(outputMode == "completePerVoxel" || outputMode == "sparsePerVoxel"){
+        mPerVoxel = true;
+    } else {
+        mPerVoxel = false;
+    }
     initHashMaps();
 }
 
@@ -17,7 +31,9 @@ SynapseDistributor::SynapseDistributor(QList<Feature>& features) : mFeatures(fea
     @param parameters Rule parameters.
     @return A list of synapses.
 */
-QList<Synapse> SynapseDistributor::apply(Rule rule, QVector<float> parameters) {
+void SynapseDistributor::apply(Rule rule, QVector<float> parameters) {
+    SynapseWriter writer;
+    writer.init();
     QList<Synapse> synapses;
     std::random_device rd;
     std::mt19937 randomGenerator(rd());
@@ -32,7 +48,7 @@ QList<Synapse> SynapseDistributor::apply(Rule rule, QVector<float> parameters) {
         }
         progress++;
         int voxelId = voxelIt.next();
-        if (mPreNeuronsVoxelwise[voxelId].size() > 0 && mPostNeuronsVoxelwise[voxelId].size()) {
+        if (mPreNeuronsVoxelwise[voxelId].size() > 0 && mPostNeuronsVoxelwise[voxelId].size() > 0) {
             QList<int> preFeatures = mPreNeuronsVoxelwise[voxelId].toList();
             QList<int> postFeatures = mPostNeuronsVoxelwise[voxelId].toList();
             for (int i = 0; i < preFeatures.size(); i++) {
@@ -83,14 +99,21 @@ QList<Synapse> SynapseDistributor::apply(Rule rule, QVector<float> parameters) {
                         synapse.count = 0;
                     }
 
-                    if (synapse.count != 0) {
+                    if (synapse.count != 0 || !mSparse) {
                         synapses.append(synapse);
                     }
                 }
             }
         }
+        if(mPerVoxel){
+            QString fileName = QString("synapses_%1.csv").arg(voxelId);
+            writer.write(fileName, synapses);
+            synapses.clear();
+        }
     }
-    return synapses;
+    if(!mPerVoxel){
+        writer.write("synapses.csv", synapses);
+    }
 }
 
 /*
@@ -130,8 +153,10 @@ float SynapseDistributor::determineInnervationMean(Rule rule, QVector<float> par
 */
 void SynapseDistributor::initHashMaps() {
     // Init empty neuron hash tables for all voxels.
-    for (int i = 0; i < mFeatures.size(); i++) {
-        mVoxels.insert(mFeatures[i].voxelID);
+    if(mVoxels.size() == 0){
+        for (int i = 0; i < mFeatures.size(); i++) {
+            mVoxels.insert(mFeatures[i].voxelID);
+        }
     }
     QSetIterator<int> voxelIt(mVoxels);
     while (voxelIt.hasNext()) {
@@ -145,11 +170,15 @@ void SynapseDistributor::initHashMaps() {
     for (int i = 0; i < mFeatures.size(); i++) {
         Feature feature = mFeatures[i];
         int voxelId = feature.voxelID;
-        if (feature.pre != 0) {
-            mPreNeuronsVoxelwise[voxelId].insert(i);
-        }
-        if (feature.postExc != 0 || feature.postInh != 0) {
-            mPostNeuronsVoxelwise[voxelId].insert(i);
+        if(mVoxels.contains(voxelId)){
+
+            if (feature.pre != 0) {
+                mPreNeuronsVoxelwise[voxelId].insert(i);
+            }
+            if (feature.postExc != 0 || feature.postInh != 0) {
+                mPostNeuronsVoxelwise[voxelId].insert(i);
+            }
         }
     }
+
 }

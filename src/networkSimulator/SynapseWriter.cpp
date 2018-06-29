@@ -7,6 +7,21 @@
 #include <QStringList>
 #include <QTextStream>
 #include <stdexcept>
+#include <QDir>
+
+void SynapseWriter::init(){
+    QDir dir;
+    if(dir.exists("output")){
+        QDir outputDir("output");
+        outputDir.setNameFilters(QStringList() << "*.*");
+        outputDir.setFilter(QDir::Files);
+        foreach(QString dirFile, outputDir.entryList())
+        {
+            outputDir.remove(dirFile);
+        }
+    }
+    dir.mkdir("output");
+}
 
 /*
     Writes a synapses.csv file.
@@ -21,21 +36,22 @@ void SynapseWriter::write(QString fileName, QList<Synapse> synapses) {
 
     qSort(synapses.begin(), synapses.end(), lessThan);
 
-    QFile csv(fileName);
+    QString filePath = QDir("output").filePath(fileName);
+    QFile csv(filePath);
     if (!csv.open(QIODevice::WriteOnly)) {
         const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
         throw std::runtime_error(qPrintable(msg));
     }
     const QChar sep(',');
     QTextStream out(&csv);
-    out << "voxelID" << sep << "voxelX" << sep << "voxelY" << sep << "voxelZ" << sep
+    out << "voxelID" /*<< sep << "voxelX" << sep << "voxelY" << sep << "voxelZ"*/ << sep
         << "presynapticNeuronID" << sep << "postsynapticNeuronID" << sep << "pre" << sep << "post"
         << sep << "postAll" << sep << "count"
         << "\n";
     for (int i = 0; i < synapses.size(); i++) {
         Synapse synapse = synapses[i];
-        out << synapse.voxelId << sep << synapse.voxelX << sep << synapse.voxelY << sep
-            << synapse.voxelZ << sep << synapse.preNeuronId << sep << synapse.postNeuronId << sep
+        out << synapse.voxelId /*<< sep << synapse.voxelX << sep << synapse.voxelY << sep
+            << synapse.voxelZ */ << sep << synapse.preNeuronId << sep << synapse.postNeuronId << sep
             << synapse.pre << sep << synapse.post << sep << synapse.postAll << sep << synapse.count
             << "\n";
     }

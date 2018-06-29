@@ -42,7 +42,7 @@ class SynapseDistributor {
 
         @param features The neuron features.
     */
-    SynapseDistributor(QList<Feature>& features);
+    SynapseDistributor(QList<Feature>& features, QSet<int> voxelIds, QString outputMode);
 
     /*
         Calculates synase counts according to the specified mode
@@ -52,7 +52,7 @@ class SynapseDistributor {
         @param parameters Rule parameters.
         @return A list of synapses.
     */
-    QList<Synapse> apply(Rule rule, QVector<float> parameters);
+    void apply(Rule rule, QVector<float> parameters);
 
    private:
     /*
@@ -80,4 +80,6 @@ class SynapseDistributor {
     QHash<int, QSet<int> > mPreNeuronsVoxelwise;
     QHash<int, QSet<int> > mPostNeuronsVoxelwise;
     QSet<int> mVoxels;
+    bool mSparse;
+    bool mPerVoxel;
 };
