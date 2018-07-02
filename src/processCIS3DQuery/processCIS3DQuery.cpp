@@ -51,6 +51,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    qDebug() << "[*] Processing" << queryType;
+
     if (queryType == "networkDataUpload" && app.arguments().size() == 4) {
         qDebug() << "Wrong number of arguments for networkDataUpload." << app.arguments().at(2);
         printUsage();
