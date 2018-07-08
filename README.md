@@ -41,7 +41,7 @@ size of the subcube to be extracted from the model data.
 
 Note that in order to extract subcubes from the model, you need to download the original model data from the ZIB website:
 
-1) [Download the model data](https://visual.zib.de/2018/IXDtH2G8/latest/)
+1) [Download the model data](https://visual.zib.de/2018/IXDtH2G8/)
 
 2) Extract modelData into a desired folder.
 
@@ -53,7 +53,7 @@ Note that in order to extract subcubes from the model, you need to download the 
 
 ## How to implement and run custom statistics 
 
-1) [Download the precomputed innervation data](https://visual.zib.de/2018/IXDtH2G8/latest/)
+1) [Download the precomputed innervation data](https://visual.zib.de/2018/IXDtH2G8/)
 
 2) View class src/computeStatistic/MyStatistic.h as template for your own implementation.
 
