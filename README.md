@@ -27,19 +27,19 @@ the tool requires neuron features that must be provided in the file *features.cs
 (in the same directory).
 
 In the SUBCUBE mode, the tool creates a *features.csv* file by extracting a
-sucube from the complete model.
+subset of neurons from the complete model.
 
 Usage:
 ```
 ./networkSimulator SYNAPSE <synapseSpecFile>
 ./networkSimulator SUBCUBE <voxelSpecFile>
 ```
-- The *synapseSpecFile* contains the theta parameters for Peters' rule. 
-- The *voxelSpecFile* contains the model data directory and the origin and
-size of the subcube to be extracted from the model data.
+- The *synapseSpecFile* contains the theta parameters for Peters' rule and the outmode mode. 
+- The *voxelSpecFile* contains the model data directory and specifications of the neuron subset.
 
+For detailed instructions, refer to the PDF manual of the latest release (see *Releases* Tab on the github repository page).
 
-Note that in order to extract subcubes from the model, you need to download the original model data from the ZIB website:
+Note that in order to extract subsets from the model, you need to download the original model data from the ZIB website:
 
 1) [Download the model data](https://visual.zib.de/2018/IXDtH2G8/)
 
