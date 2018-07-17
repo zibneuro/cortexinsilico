@@ -37,7 +37,7 @@ Usage:
 - The *synapseSpecFile* contains the theta parameters for Peters' rule and the outmode mode. 
 - The *voxelSpecFile* contains the model data directory and specifications of the neuron subset.
 
-**For detailed instructions, refer to the PDF manual of the latest release (see *Releases* Tab on the github repository page).**
+**For detailed instructions, refer to the PDF manual of the latest release (see *releases* tab on the github page).**
 
 Note that in order to extract subsets from the model, you need to download the original model data from the ZIB website:
 
