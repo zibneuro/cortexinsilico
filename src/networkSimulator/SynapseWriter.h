@@ -1,6 +1,7 @@
 #pragma once
 
-#include <QtCore>
+#include <QString>
+#include <QList>
 #include <random>
 #include "CIS3DAxonRedundancyMap.h"
 #include "CIS3DBoundingBoxes.h"

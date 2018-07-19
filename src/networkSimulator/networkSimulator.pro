@@ -9,8 +9,9 @@ CONFIG -= app_bundle
 
 TEMPLATE = app
 
-INCLUDEPATH += ../shared \
-    ../shared
+INCLUDEPATH += ../shared 
+
+QMAKE_LFLAGS += -fuse-ld=gold
 
 CONFIG(debug, debug|release) {
     DESTDIR = ../../build/networkSimulator/debug

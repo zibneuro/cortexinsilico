@@ -1,6 +1,10 @@
 #pragma once
 
-#include <QtCore>
+#include <QList>
+#include <QSet>
+#include <QVector>
+#include <QHash>
+#include <QString>
 #include <random>
 #include "CIS3DAxonRedundancyMap.h"
 #include "CIS3DBoundingBoxes.h"
