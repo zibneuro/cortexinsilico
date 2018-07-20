@@ -9,17 +9,17 @@ import sys
 def compileCppAndRunUnitTests(src_dir, build_dir):
     print("[*] Compiling c++ programs")
 
-    networkSimulator_pro_file = os.path.join(src_dir, "networkSimulator/networkSimulator.pro")
-    networkSimulator_build_dir = os.path.join(build_dir, "networkSimulator")
-    os.makedirs(networkSimulator_build_dir, exist_ok=True)
-    check_call(["qmake", networkSimulator_pro_file], cwd=networkSimulator_build_dir)
-    check_call(["make", "all"], cwd=networkSimulator_build_dir)
-
     computeStatistic_pro_file = os.path.join(src_dir, "computeStatistic/computeStatistic.pro")
     computeStatistic_build_dir = os.path.join(build_dir, "computeStatistic")
     os.makedirs(computeStatistic_build_dir, exist_ok=True)
     check_call(["qmake", computeStatistic_pro_file], cwd=computeStatistic_build_dir)
     check_call(["make", "all"], cwd=computeStatistic_build_dir)
+
+    networkSimulator_pro_file = os.path.join(src_dir, "networkSimulator/networkSimulator.pro")
+    networkSimulator_build_dir = os.path.join(build_dir, "networkSimulator")
+    os.makedirs(networkSimulator_build_dir, exist_ok=True)
+    check_call(["qmake", networkSimulator_pro_file], cwd=networkSimulator_build_dir)
+    check_call(["make", "all"], cwd=networkSimulator_build_dir)
 
     test_pro_file = os.path.join(src_dir, "test/runTests.pro")
     test_build_dir = os.path.join(build_dir, "test")

@@ -1,5 +1,4 @@
 #include "FeatureReader.h"
-#include <QBitArray>
 #include <QFile>
 #include <QStringList>
 #include <QTextStream>

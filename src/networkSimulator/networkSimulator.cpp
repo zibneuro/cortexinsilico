@@ -20,7 +20,6 @@
     size of the subcube to be extracted from the model data.
 */
 
-#include <omp.h>
 #include <QDebug>
 #include <QSet>
 #include <random>

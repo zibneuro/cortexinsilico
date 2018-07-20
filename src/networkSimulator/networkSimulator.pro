@@ -11,8 +11,6 @@ TEMPLATE = app
 
 INCLUDEPATH += ../shared 
 
-QMAKE_LFLAGS += -fuse-ld=gold
-
 CONFIG(debug, debug|release) {
     DESTDIR = ../../build/networkSimulator/debug
 }

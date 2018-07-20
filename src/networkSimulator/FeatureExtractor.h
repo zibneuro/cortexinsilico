@@ -1,12 +1,8 @@
 #pragma once
 
-#include <omp.h>
 #include <QDebug>
 #include <QHash>
 #include <QPair>
-#include <QScopedPointer>
-#include <QtAlgorithms>
-#include <QtCore>
 #include <random>
 #include "CIS3DAxonRedundancyMap.h"
 #include "CIS3DBoundingBoxes.h"
