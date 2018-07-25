@@ -25,7 +25,7 @@ CONFIG(release, debug|release) {
 OBJECTS_DIR = $$DESTDIR/.obj
 MOC_DIR = $$DESTDIR/.moc
 
-SOURCES += \
+SOURCES += \    
     computeStatistic.cpp \
     MyStatistic.cpp \
     ../shared/CIS3DAxonRedundancyMap.cpp \
@@ -46,10 +46,11 @@ SOURCES += \
     ../shared/InnervationStatistic.cpp \
     ../shared/UtilIO.cpp \
     ../shared/Util.cpp \
-    ../shared/NeuronSelection.cpp \
     ../shared/TripletMotif.cpp \
     ../shared/MotifCombinations.cpp \
-    ../shared/TripletStatistic.cpp
+    ../shared/TripletStatistic.cpp \
+    ../shared/NeuronSelection.cpp \
+    ../shared/InnervationMatrix.cpp 
 
 HEADERS += \
     MyStatistic.h \
@@ -72,7 +73,8 @@ HEADERS += \
     ../shared/Typedefs.h \
     ../shared/UtilIO.h \
     ../shared/Util.h \
-    ../shared/NeuronSelection.h \
     ../shared/TripletMotif.h \
     ../shared/MotifCombinations.h \
-    ../shared/TripletStatistic.h
+    ../shared/TripletStatistic.h \
+    ../shared/NeuronSelection.h \
+    ../shared/InnervationMatrix.h 

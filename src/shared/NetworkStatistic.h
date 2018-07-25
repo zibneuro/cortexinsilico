@@ -13,6 +13,7 @@
 #include "Histogram.h"
 #include "Typedefs.h"
 #include "NeuronSelection.h"
+#include "InnervationMatrix.h"
 
 
 /**
@@ -160,6 +161,11 @@ protected:
         matrix entries) that have already been loaded.
     */
     SparseVectorCache mCache;
+
+    /*
+        The innervation matrix. 
+    */
+    InnervationMatrix* mConnectome;
 };
 
 #endif // NETWORKSTATISTIC_H

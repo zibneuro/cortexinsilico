@@ -9,6 +9,7 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, QObject* pa
     : QObject(parent), mNetwork(networkProps)
     {
         mCache = SparseVectorCache();
+        mConnectome = new InnervationMatrix(networkProps);
     };
 
 /**
@@ -21,12 +22,14 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps,
     const SparseVectorCache& cache, QObject* parent)
     : QObject(parent), mNetwork(networkProps), mCache(cache)
     {
+        mConnectome = new InnervationMatrix(networkProps);
     };
 
 /**
     Destructor.
 */
 NetworkStatistic::~NetworkStatistic() {
+    delete mConnectome;
 }
 
 /**

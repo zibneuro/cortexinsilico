@@ -37,12 +37,14 @@ SOURCES += \
     ../shared/CIS3DPSTDensities.cpp \
     ../shared/CIS3DRegions.cpp \
     ../shared/CIS3DSparseVectorSet.cpp \
+    ../shared/CIS3DSparseField.cpp \
     ../shared/CIS3DStatistics.cpp \
     ../shared/CIS3DVec3.cpp \
     ../shared/NetworkStatistic.cpp \
     ../shared/Histogram.cpp \
     ../shared/InnervationStatistic.cpp \
     ../shared/Util.cpp \
+    ../shared/UtilIO.cpp \
     ../shared/SparseVectorCache.cpp \
     ../shared/NeuronSelection.cpp \
     EvaluationQueryHandler.cpp \
@@ -60,6 +62,7 @@ HEADERS += \
     ../shared/CIS3DPSTDensities.h \
     ../shared/CIS3DRegions.h \
     ../shared/CIS3DSparseVectorSet.h \
+    ../shared/CIS3DSparseField.h \
     ../shared/CIS3DStatistics.h \
     ../shared/CIS3DVec3.h \
     ../shared/Histogram.h \
@@ -67,6 +70,7 @@ HEADERS += \
     ../shared/InnervationStatistic.h \
     ../shared/Typedefs.h \
     ../shared/Util.h \
+    ../shared/UtilIO.h \
     ../shared/SparseVectorCache.h \
     ../shared/NeuronSelection.h \
     EvaluationQueryHandler.h \

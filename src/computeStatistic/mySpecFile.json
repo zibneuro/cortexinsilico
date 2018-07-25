@@ -1,10 +1,13 @@
 {
-    "DATA_ROOT": "../../data/RBCF10/realization-entireRBCF10_2018-04-19/export",
-    "OUTPUT_DIR": "",
-    "PRE_NEURON_REGIONS": [ ],
-    "PRE_NEURON_CELLTYPES": ["L34"],
-    "PRE_NEURON_IDS": [ ],
-    "POST_NEURON_REGIONS": [ ],
-    "POST_NEURON_CELLTYPES": ["L5st"],
-    "POST_NEURON_IDS": [ ]
+    "DATA_ROOT": "/local/bzfharth/2018/neuroconnect_rbc-network-egger_2018/realization-entireRBC_2015-10-07/",
+    "SAMPLE_SIZE": 2000,
+    "MOTIF_A_REGIONS": ["D2"],
+    "MOTIF_A_CELLTYPES": ["L4ss"],
+    "MOTIF_A_IDS": [],
+    "MOTIF_B_REGIONS": ["D2"],
+    "MOTIF_B_CELLTYPES": ["L4ss"],
+    "MOTIF_B_IDS": [],
+    "MOTIF_C_REGIONS": ["D2"],
+    "MOTIF_C_CELLTYPES": ["L4ss"],
+    "MOTIF_C_IDS": []
 }

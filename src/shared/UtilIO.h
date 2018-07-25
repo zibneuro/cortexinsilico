@@ -4,6 +4,7 @@
 #include <QList>
 #include "CIS3DNetworkProps.h"
 #include "Typedefs.h"
+#include "NeuronSelection.h"
 
 class QString;
 class QJsonObject;
@@ -32,7 +33,7 @@ QJsonObject parseSpecFile(const QString& fileName);
 QList<int> getPreSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps);
 
 /**
-    Determines ids of postsynaptic neurons meeting the filter definition
+    Determines IDs of postsynaptic neurons meeting the filter definition
     @param spec The spec file with the filter definition.
     @param networkProps The model data of the network.
     @returns A list of postsynaptic neuron IDs.
@@ -51,6 +52,16 @@ QList<int> getPostSynapticNeuronIds(const QJsonObject& spec, const NetworkProps&
 */
 PropsMap getPostSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps,
                                 bool normalized = true);
+
+/**
+    Determines IDs of neurons meeting the filter definition (irrespective of pre- or
+    postsynaptic type)
+    @param spec The spec file with the filter definition.
+    @param networkProps The model data of the network.
+    @returns A list neuron IDs.
+    @throws runtime_error if data cannot be loaded.
+*/
+QList<int> getNeuronIds(const QJsonObject& spec, const NetworkProps& networkProps);
 
 /**
     Determines the neuron ID from the specfied presynaptic data file name.

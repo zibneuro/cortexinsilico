@@ -48,8 +48,8 @@ SOURCES += \
     ../shared/InnervationStatistic.cpp \
     ../shared/SparseFieldCalculator.cpp \
     ../shared/SparseVectorCache.cpp \
-    ../shared/NeuronSelection.cpp
-
+    ../shared/NeuronSelection.cpp \
+    ../shared/InnervationMatrix.cpp 
 
 HEADERS += \
     FeatureExtractor.h \
@@ -76,4 +76,5 @@ HEADERS += \
     ../shared/InnervationStatistic.h \
     ../shared/SparseFieldCalculator.h \
     ../shared/SparseVectorCache.h \
-    ../shared/NeuronSelection.h
+    ../shared/NeuronSelection.h \
+    ../shared/InnervationMatrix.h 

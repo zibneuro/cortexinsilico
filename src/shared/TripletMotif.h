@@ -20,6 +20,7 @@
 
 #include <vector>
 #include <list>
+#include "InnervationMatrix.h"
 
 typedef std::pair< unsigned int, unsigned int > ConnectionType;
 
@@ -49,15 +50,17 @@ private:
 class CellTriplet
 {
 public:
-	CellTriplet(unsigned int preCell1, unsigned int preCell2, unsigned int preCell3, unsigned int postCell1, unsigned int postCell2, unsigned int postCell3);
+	CellTriplet(int neuron1, int neuron2, int neuron3);
 
 	std::vector< unsigned int > preCellIndex;
 	std::vector< unsigned int > postCellIndex;
 	std::vector< std::vector< double > > innervation;
 	std::vector< std::vector< double > > avgConvergence;
 
-	//void setInnervationMatrix(ConnectionMatrix * connectome);
+	void setInnervation(InnervationMatrix* connectome);
 	void setAverageConvergenceMatrix(std::vector< std::vector< double > > avgConvergence);
+
+	void print();
 };
 
 #endif // TRILETMOTIF_H

@@ -1,13 +1,13 @@
 #include "UtilIO.h"
-#include "CIS3DSparseField.h"
-#include <QString>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QFile>
-#include <QJsonParseError>
-#include <QJsonDocument>
 #include <QDebug>
+#include <QFile>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
 #include <QRegularExpression>
+#include <QString>
+#include "CIS3DSparseField.h"
 
 /**
     Reads specification file which can contain filter definitions
@@ -16,7 +16,7 @@
     @returns A JSON object with the specifications.
     @throws runtime_error if file cannot be loaded or parsed.
 */
-QJsonObject UtilIO::parseSpecFile(const QString& fileName){
+QJsonObject UtilIO::parseSpecFile(const QString& fileName) {
     QFile jsonFile(fileName);
     if (!jsonFile.open(QIODevice::ReadOnly)) {
         const QString msg = QString("Cannot open file for reading: %1").arg(fileName);
@@ -37,30 +37,36 @@ QJsonObject UtilIO::parseSpecFile(const QString& fileName){
     that meet the filter definition.
     @param spec The spec file with the filter definition.
     @param networkProps the model data of the network.
-    @param normalized Whether the PST density of each neuron is normalized by the overall PST density.
+    @param normalized Whether the PST density of each neuron is normalized by the overall PST
+   density.
     @returns The postsynaptic neurons.
 */
-PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps, bool normalized) {
-    const QJsonArray regions   = spec["POST_NEURON_REGIONS"].toArray();
+PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps,
+                                        bool normalized) {
+    const QJsonArray regions = spec["POST_NEURON_REGIONS"].toArray();
     const QJsonArray cellTypes = spec["POST_NEURON_CELLTYPES"].toArray();
     const QJsonArray neuronIds = spec["POST_NEURON_IDS"].toArray();
-    const QString    dataRoot  = spec["DATA_ROOT"].toString();
+    const QString dataRoot = spec["DATA_ROOT"].toString();
 
     QDir rootDir(dataRoot);
     const QDir modelDataDir = CIS3D::getModelDataDir(rootDir);
 
-    QList<int> selectedNeuronIds = getPostSynapticNeuronIds(spec,networkProps);
+    QList<int> selectedNeuronIds = getPostSynapticNeuronIds(spec, networkProps);
 
     PropsMap neurons;
-    neurons.reserve(selectedNeuronIds.size() + int(0.02 * selectedNeuronIds.size())); // Slightly bigger than necessary, see QHash doc.
+    neurons.reserve(
+        selectedNeuronIds.size() +
+        int(0.02 * selectedNeuronIds.size()));  // Slightly bigger than necessary, see QHash doc.
 
-    qDebug() << "[*] Start reading properties for" << selectedNeuronIds.size() << "postsynaptic neurons";
-    for (int i=0; i<selectedNeuronIds.size(); ++i) {
+    qDebug() << "[*] Start reading properties for" << selectedNeuronIds.size()
+             << "postsynaptic neurons";
+    for (int i = 0; i < selectedNeuronIds.size(); ++i) {
         NeuronProps props;
         props.id = selectedNeuronIds[i];
         props.boundingBox = networkProps.boundingBoxes.getDendriteBox(props.id);
         if (props.boundingBox.isEmpty()) {
-            throw std::runtime_error(qPrintable(QString("Empty dendrite bounding box for neuron %1.").arg(props.id)));
+            throw std::runtime_error(
+                qPrintable(QString("Empty dendrite bounding box for neuron %1.").arg(props.id)));
         }
         props.cellTypeId = networkProps.neurons.getCellTypeId(props.id);
         props.regionId = networkProps.neurons.getRegionId(props.id);
@@ -69,27 +75,32 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
         const QString ctName = networkProps.cellTypes.getName(props.cellTypeId);
         const QString regionName = networkProps.regions.getName(props.regionId);
 
-
         QString excFilePath;
-        if(normalized){
-            excFilePath = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, regionName, ctName, props.id, CIS3D::EXCITATORY);
+        if (normalized) {
+            excFilePath = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, regionName, ctName,
+                                                              props.id, CIS3D::EXCITATORY);
         } else {
-            excFilePath = CIS3D::getPSTFileFullPath(modelDataDir, regionName, ctName, props.id, CIS3D::EXCITATORY);
+            excFilePath = CIS3D::getPSTFileFullPath(modelDataDir, regionName, ctName, props.id,
+                                                    CIS3D::EXCITATORY);
         }
         props.pstExc = SparseField::load(excFilePath);
         if (!props.pstExc) {
-            throw std::runtime_error(qPrintable(QString("No excitatory PST file for neuron %1.").arg(props.id)));
+            throw std::runtime_error(
+                qPrintable(QString("No excitatory PST file for neuron %1.").arg(props.id)));
         }
 
         QString inhFilePath;
-        if(normalized) {
-            inhFilePath = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, regionName, ctName, props.id, CIS3D::INHIBITORY);
+        if (normalized) {
+            inhFilePath = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, regionName, ctName,
+                                                              props.id, CIS3D::INHIBITORY);
         } else {
-            inhFilePath = CIS3D::getPSTFileFullPath(modelDataDir, regionName, ctName, props.id, CIS3D::INHIBITORY);
+            inhFilePath = CIS3D::getPSTFileFullPath(modelDataDir, regionName, ctName, props.id,
+                                                    CIS3D::INHIBITORY);
         }
         props.pstInh = SparseField::load(inhFilePath);
         if (!props.pstInh) {
-            throw std::runtime_error(qPrintable(QString("No inhibitory PST file for neuron %1.").arg(props.id)));
+            throw std::runtime_error(
+                qPrintable(QString("No inhibitory PST file for neuron %1.").arg(props.id)));
         }
 
         neurons.insert(props.id, props);
@@ -98,7 +109,8 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
             qDebug() << "    Read properties for" << i << "neurons";
         }
     }
-    qDebug() << "[*] Completed reading properties for" << selectedNeuronIds.size() << "postsynaptic neurons";
+    qDebug() << "[*] Completed reading properties for" << selectedNeuronIds.size()
+             << "postsynaptic neurons";
 
     return neurons;
 }
@@ -110,17 +122,17 @@ PropsMap UtilIO::getPostSynapticNeurons(const QJsonObject& spec, const NetworkPr
     @returns A list of postsynaptic neuron IDs.
     @throws runtime_error if data cannot be loaded.
 */
-QList<int> UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec, const NetworkProps& networkProps){
-    
-    const QJsonArray regions   = spec["POST_NEURON_REGIONS"].toArray();
+QList<int> UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec,
+                                            const NetworkProps& networkProps) {
+    const QJsonArray regions = spec["POST_NEURON_REGIONS"].toArray();
     const QJsonArray cellTypes = spec["POST_NEURON_CELLTYPES"].toArray();
     const QJsonArray neuronIds = spec["POST_NEURON_IDS"].toArray();
-    const QString    dataRoot  = spec["DATA_ROOT"].toString();
+    const QString dataRoot = spec["DATA_ROOT"].toString();
 
     QList<int> selectedCellTypes;
     QList<int> selectedRegions;
 
-    for (int c=0; c<cellTypes.size(); ++c) {
+    for (int c = 0; c < cellTypes.size(); ++c) {
         const QString cellTypeStr = cellTypes[c].toString();
         if (!cellTypeStr.isEmpty()) {
             const int cellTypeId = networkProps.cellTypes.getId(cellTypeStr);
@@ -128,7 +140,7 @@ QList<int> UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec, const Netwo
         }
     }
 
-    for (int r=0; r<regions.size(); ++r) {
+    for (int r = 0; r < regions.size(); ++r) {
         const QString regionStr = regions[r].toString();
         if (!regionStr.isEmpty()) {
             const int regionId = networkProps.regions.getId(regionStr);
@@ -148,11 +160,10 @@ QList<int> UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec, const Netwo
         throw std::runtime_error(qPrintable(msg));
     }
 
-    QList<int> selectedNeuronIds = networkProps.neurons.getFilteredNeuronIds(selectedCellTypes,
-                                                                             selectedRegions,
-                                                                             CIS3D::POSTSYNAPTIC);
+    QList<int> selectedNeuronIds = networkProps.neurons.getFilteredNeuronIds(
+        selectedCellTypes, selectedRegions, CIS3D::POSTSYNAPTIC);
 
-    for (int i=0; i<neuronIds.size(); ++i) {
+    for (int i = 0; i < neuronIds.size(); ++i) {
         const int selectedId = neuronIds[i].toInt(-1);
         if (selectedId != -1) {
             selectedNeuronIds.append(selectedId);
@@ -163,22 +174,23 @@ QList<int> UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec, const Netwo
 }
 
 /**
-    Determines IDs of presynaptic neurons meeting the filter definition.
+    Determines IDs of neurons meeting the filter definition (irrespective of pre- or
+    postsynaptic type)
     @param spec The spec file with the filter definition.
     @param networkProps The model data of the network.
-    @returns A list of presynaptic neuron IDs.
+    @returns A list neuron IDs.
     @throws runtime_error if data cannot be loaded.
 */
-QList<int> UtilIO::getPreSynapticNeurons(const QJsonObject& spec, const NetworkProps& networkProps) {
-    const QJsonArray regions   = spec["PRE_NEURON_REGIONS"].toArray();
-    const QJsonArray cellTypes = spec["PRE_NEURON_CELLTYPES"].toArray();
-    const QJsonArray neuronIds = spec["PRE_NEURON_IDS"].toArray();
-    const QString    dataRoot  = spec["DATA_ROOT"].toString();
+QList<int> UtilIO::getNeuronIds(const QJsonObject& spec, const NetworkProps& networkProps) {
+
+    const QJsonArray regions = spec["NEURON_REGIONS"].toArray();
+    const QJsonArray cellTypes = spec["NEURON_CELLTYPES"].toArray();
+    const QJsonArray neuronIds = spec["NEURON_IDS"].toArray();
 
     QList<int> selectedCellTypes;
     QList<int> selectedRegions;
 
-    for (int c=0; c<cellTypes.size(); ++c) {
+    for (int c = 0; c < cellTypes.size(); ++c) {
         const QString cellTypeStr = cellTypes[c].toString();
         if (!cellTypeStr.isEmpty()) {
             const int cellTypeId = networkProps.cellTypes.getId(cellTypeStr);
@@ -186,7 +198,59 @@ QList<int> UtilIO::getPreSynapticNeurons(const QJsonObject& spec, const NetworkP
         }
     }
 
-    for (int r=0; r<regions.size(); ++r) {
+    for (int r = 0; r < regions.size(); ++r) {
+        const QString regionStr = regions[r].toString();
+        if (!regionStr.isEmpty()) {
+            const int regionId = networkProps.regions.getId(regionStr);
+            selectedRegions.append(regionId);
+        }
+    }
+
+    QList<int> preNeuronIds = networkProps.neurons.getFilteredNeuronIds(
+        selectedCellTypes, selectedRegions, CIS3D::PRESYNAPTIC);
+    QList<int> postNeuronIds = networkProps.neurons.getFilteredNeuronIds(
+        selectedCellTypes, selectedRegions, CIS3D::POSTSYNAPTIC);
+
+    QSet<int> result;
+    result.unite(preNeuronIds.toSet());
+    result.unite(postNeuronIds.toSet());
+
+    for (int i = 0; i < neuronIds.size(); ++i) {
+        const int selectedId = neuronIds[i].toInt(-1);
+        if (selectedId != -1) {
+            result.insert(selectedId);
+        }
+    }
+
+    return result.toList();
+}
+
+/**
+    Determines IDs of presynaptic neurons meeting the filter definition.
+    @param spec The spec file with the filter definition.
+    @param networkProps The model data of the network.
+    @returns A list of presynaptic neuron IDs.
+    @throws runtime_error if data cannot be loaded.
+*/
+QList<int> UtilIO::getPreSynapticNeurons(const QJsonObject& spec,
+                                         const NetworkProps& networkProps) {
+    const QJsonArray regions = spec["PRE_NEURON_REGIONS"].toArray();
+    const QJsonArray cellTypes = spec["PRE_NEURON_CELLTYPES"].toArray();
+    const QJsonArray neuronIds = spec["PRE_NEURON_IDS"].toArray();
+    const QString dataRoot = spec["DATA_ROOT"].toString();
+
+    QList<int> selectedCellTypes;
+    QList<int> selectedRegions;
+
+    for (int c = 0; c < cellTypes.size(); ++c) {
+        const QString cellTypeStr = cellTypes[c].toString();
+        if (!cellTypeStr.isEmpty()) {
+            const int cellTypeId = networkProps.cellTypes.getId(cellTypeStr);
+            selectedCellTypes.append(cellTypeId);
+        }
+    }
+
+    for (int r = 0; r < regions.size(); ++r) {
         const QString regionStr = regions[r].toString();
         if (!regionStr.isEmpty()) {
             const int regionId = networkProps.regions.getId(regionStr);
@@ -206,11 +270,10 @@ QList<int> UtilIO::getPreSynapticNeurons(const QJsonObject& spec, const NetworkP
         throw std::runtime_error(qPrintable(msg));
     }
 
-    QList<int> selectedNeuronIds = networkProps.neurons.getFilteredNeuronIds(selectedCellTypes,
-                                                                             selectedRegions,
-                                                                             CIS3D::PRESYNAPTIC);
+    QList<int> selectedNeuronIds = networkProps.neurons.getFilteredNeuronIds(
+        selectedCellTypes, selectedRegions, CIS3D::PRESYNAPTIC);
 
-    for (int i=0; i<neuronIds.size(); ++i) {
+    for (int i = 0; i < neuronIds.size(); ++i) {
         const int selectedId = neuronIds[i].toInt(-1);
         if (selectedId != -1) {
             selectedNeuronIds.append(selectedId);
@@ -220,7 +283,6 @@ QList<int> UtilIO::getPreSynapticNeurons(const QJsonObject& spec, const NetworkP
     return selectedNeuronIds;
 }
 
-
 int getNeuronIdFromFile(const QString& pattern, const QString& fileName, const int regExGroup) {
     const QRegularExpression rx(pattern);
     QRegularExpressionMatch match = rx.match(fileName);
@@ -229,8 +291,8 @@ int getNeuronIdFromFile(const QString& pattern, const QString& fileName, const i
         int id = str.toInt();
         return id;
     }
-    const QString errorStr = QString("Cannot find neuron ID in filename %1 (pattern: %2)")
-            .arg(fileName).arg(pattern);
+    const QString errorStr =
+        QString("Cannot find neuron ID in filename %1 (pattern: %2)").arg(fileName).arg(pattern);
     throw std::runtime_error(errorStr.toStdString());
 }
 
@@ -241,7 +303,7 @@ int getNeuronIdFromFile(const QString& pattern, const QString& fileName, const i
     @throws runtime_error if ID cannot be extracted from file name.
 */
 int UtilIO::getPreNeuronIdFromFile(const QString& fileName) {
-    return  getNeuronIdFromFile("Boutons_(\\d+).dat", fileName, 1);
+    return getNeuronIdFromFile("Boutons_(\\d+).dat", fileName, 1);
 }
 
 /**
@@ -251,7 +313,7 @@ int UtilIO::getPreNeuronIdFromFile(const QString& fileName) {
     @throws runtime_error if ID cannot be extracted from file name.
 */
 int UtilIO::getPostNeuronIdFromFile(const QString& fileName) {
-    return  getNeuronIdFromFile("NormalizedPST_(excitatory|inhibitory)Pre_(\\d+).dat", fileName, 2);
+    return getNeuronIdFromFile("NormalizedPST_(excitatory|inhibitory)Pre_(\\d+).dat", fileName, 2);
 }
 
 /**
