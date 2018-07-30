@@ -43,12 +43,16 @@ SOURCES += \
     ../shared/NetworkStatistic.cpp \
     ../shared/Histogram.cpp \
     ../shared/InnervationStatistic.cpp \
+    ../shared/TripletMotif.cpp \
+    ../shared/TripletStatistic.cpp \
+    ../shared/MotifCombinations.cpp \
     ../shared/Util.cpp \
     ../shared/UtilIO.cpp \
     ../shared/SparseVectorCache.cpp \
     ../shared/NeuronSelection.cpp \
     ../shared/InnervationMatrix.cpp \
     EvaluationQueryHandler.cpp \
+    MotifQueryHandler.cpp \
     SelectionQueryHandler.cpp \
     NetworkDataUploadHandler.cpp \
     QueryHelpers.cpp
@@ -69,6 +73,9 @@ HEADERS += \
     ../shared/Histogram.h \
     ../shared/NetworkStatistic.h \
     ../shared/InnervationStatistic.h \
+    ../shared/TripletStatistic.h \
+    ../shared/TripletMotif.h \
+    ../shared/MotifCombinations.h \
     ../shared/Typedefs.h \
     ../shared/Util.h \
     ../shared/UtilIO.h \
@@ -76,6 +83,7 @@ HEADERS += \
     ../shared/NeuronSelection.h \
     ../shared/InnervationMatrix.h \
     EvaluationQueryHandler.h \
+    MotifQueryHandler.h \
     SelectionQueryHandler.h \
     NetworkDataUploadHandler.h \
     QueryHelpers.h

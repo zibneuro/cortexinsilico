@@ -40,6 +40,24 @@ class NeuronSelection {
     void setTripletSelection(const QJsonObject& spec, const NetworkProps& networkProps);
 
     /**
+        Determines a triplet motif statistic selection from selection strings.
+        @param motifASelString The first selection string.
+        @param motifBSelString The second selection string.
+        @param motifASelString The third selection string.
+        @param networkProps the model data of the network.
+    */
+    void setTripletSelection(const QString motifASelString, const QString motifBSelString,
+                             const QString motifCSelString, const NetworkProps& networkProps);
+
+    /**
+        Determines neuron IDs based on a selection string;
+        @param selectionString The selection string.
+        @param networkProps The model data of the network.
+        @return A list of neuron IDs.      
+    */
+    IdList getSelectedNeurons(const QString selectionString, const NetworkProps& networkProps);                             
+
+    /**
       Returns the presynaptic subselection.
     */
     IdList Presynaptic() const;
@@ -63,6 +81,11 @@ class NeuronSelection {
       Returns the third neuron subselection for motif statistics.
     */
     IdList MotifC() const;
+
+    /*
+      Prints the number of selected neurons for motif statistics.
+    */
+    void printMotifStats();
 
    private:
     IdList mPresynaptic;

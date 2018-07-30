@@ -1,10 +1,11 @@
-#include <QtCore>
 #include <QDebug>
+#include <QtCore>
 #include "EvaluationQueryHandler.h"
-#include "SelectionQueryHandler.h"
+#include "MotifQueryHandler.h"
 #include "NetworkDataUploadHandler.h"
+#include "SelectionQueryHandler.h"
 
-QJsonObject parseSpecFile(const QString& fileName) {
+QJsonObject parseSpecFile(const QString &fileName) {
     QFile jsonFile(fileName);
     if (!jsonFile.open(QIODevice::ReadOnly)) {
         const QString msg = QString("Cannot open file for reading: %1").arg(fileName);
@@ -15,20 +16,17 @@ QJsonObject parseSpecFile(const QString& fileName) {
     return doc.object();
 }
 
-
 void printUsage() {
-    qDebug() << "Usage: ./processCIS3DQuery <config-file> [evaluationQuery|selectionQuery|networkDataUpload] <query-id>";
+    qDebug() << "Usage: ./processCIS3DQuery <config-file> "
+                "[evaluationQuery|selectionQuery|networkDataUpload] <query-id>";
 }
 
-
-void myMessageOutput(QtMsgType, const QMessageLogContext&, const QString &msg) {
+void myMessageOutput(QtMsgType, const QMessageLogContext &, const QString &msg) {
     QTextStream cout(stdout, QIODevice::WriteOnly);
     cout << msg << endl;
 }
 
-
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     qInstallMessageHandler(myMessageOutput);
     QCoreApplication app(argc, argv);
 
@@ -42,10 +40,8 @@ int main(int argc, char *argv[])
     const QJsonObject config = parseSpecFile(specFile);
 
     const QString queryType = app.arguments().at(2);
-    if (queryType != "evaluationQuery" &&
-        queryType != "selectionQuery" &&
-        queryType != "networkDataUpload")
-    {
+    if (queryType != "evaluationQuery" && queryType != "motifQuery" &&
+        queryType != "selectionQuery" && queryType != "networkDataUpload") {
         qDebug() << "Invalid query type.";
         printUsage();
         return 1;
@@ -72,17 +68,23 @@ int main(int argc, char *argv[])
 
     if (queryType == "evaluationQuery") {
         EvaluationQueryHandler *handler = new EvaluationQueryHandler();
-        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
+        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()),
+                         Qt::QueuedConnection);
         handler->process(queryId, config);
-    }
-    else if (queryType == "selectionQuery") {
+    } else if (queryType == "motifQuery") {
+        MotifQueryHandler *handler = new MotifQueryHandler();
+        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()),
+                         Qt::QueuedConnection);
+        handler->process(queryId, config);
+    } else if (queryType == "selectionQuery") {
         SelectionQueryHandler *handler = new SelectionQueryHandler();
-        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
+        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()),
+                         Qt::QueuedConnection);
         handler->process(queryId, config);
-    }
-    else if (queryType == "networkDataUpload") {
+    } else if (queryType == "networkDataUpload") {
         NetworkDataUploadHandler *handler = new NetworkDataUploadHandler();
-        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
+        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()),
+                         Qt::QueuedConnection);
         handler->process(config);
     }
 

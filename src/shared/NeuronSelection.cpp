@@ -1,7 +1,9 @@
 #include "NeuronSelection.h"
-#include "UtilIO.h"
 #include <QDebug>
 #include <QJsonArray>
+#include <QJsonDocument>
+#include "Util.h"
+#include "UtilIO.h"
 
 /**
   Empty constructor.
@@ -60,6 +62,39 @@ void NeuronSelection::setTripletSelection(const QJsonObject& spec,
 }
 
 /**
+    Determines a triplet motif statistic selection from selection strings.
+    @param motifASelString The first selection string.
+    @param motifBSelString The second selection string.
+    @param motifASelString The third selection string.
+    @param networkProps the model data of the network.
+*/
+void NeuronSelection::setTripletSelection(const QString motifASelString,
+                                          const QString motifBSelString,
+                                          const QString motifCSelString,
+                                          const NetworkProps& networkProps) {
+    mMotifA.clear();
+    mMotifA.append(getSelectedNeurons(motifASelString, networkProps));
+    mMotifB.clear();
+    mMotifB.append(getSelectedNeurons(motifBSelString, networkProps));
+    mMotifC.clear();
+    mMotifC.append(getSelectedNeurons(motifCSelString, networkProps));
+}
+
+/**
+    Determines neuron IDs based on a selection string;
+    @param selectionString The selection string.
+    @param networkProps The model data of the network.
+    @return A list of neuron IDs.
+*/
+IdList NeuronSelection::getSelectedNeurons(const QString selectionString,
+                                           const NetworkProps& networkProps) {
+    QJsonDocument doc = QJsonDocument::fromJson(selectionString.toLocal8Bit());
+    QJsonArray arr = doc.array();
+    SelectionFilter filter = Util::getSelectionFilterFromJson(arr, networkProps, CIS3D::BOTH_SIDES);
+    return networkProps.neurons.getFilteredNeuronIds(filter);
+}
+
+/**
   Returns the presynaptic subselection.
 */
 IdList NeuronSelection::Presynaptic() const { return mPresynaptic; }
@@ -74,7 +109,6 @@ IdList NeuronSelection::Postsynaptic() const { return mPostsynaptic; }
 */
 IdList NeuronSelection::MotifA() const { return mMotifA; }
 
-
 /**
   Returns the second neuron subselection for motif statistics.
 */
@@ -84,3 +118,11 @@ IdList NeuronSelection::MotifB() const { return mMotifB; }
   Returns the third neuron subselection for motif statistics.
 */
 IdList NeuronSelection::MotifC() const { return mMotifC; }
+
+/*
+    Prints the number of selected neurons for motif statistics.
+*/
+void NeuronSelection::printMotifStats() {
+    qDebug() << "[*] Number of selected neurons (motif A,B,C):" << mMotifA.size() << mMotifB.size()
+             << mMotifC.size();
+}
