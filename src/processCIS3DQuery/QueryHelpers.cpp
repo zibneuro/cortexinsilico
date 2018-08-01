@@ -109,6 +109,9 @@ int QueryHelpers::uploadToS3(const QString &key,
 QString QueryHelpers::getDatasetPath(const QString& datasetShortName,
                                      const QJsonObject& config)
 {
+
+    qDebug() << datasetShortName;
+    
     const QJsonValue datasetsJson = config["WORKER_DATASETS_CIS3D"];
     if (!datasetsJson.isArray()) {
         throw std::runtime_error("QueryHelpers::getDatasetPath: WORKER_DATASETS_CIS3D is not an array");

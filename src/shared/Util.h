@@ -86,6 +86,15 @@ namespace Util {
     */
     QJsonObject createJsonHistogram(const Histogram& histogram);
 
+    /**
+        Checks whether two values are almost equal.
+        @param a First value.
+        @param b Second value.
+        @param eps Tolerance.
+        @return True, if the values are almost equal.
+    */
+    bool almostEqual(double a, double b, double eps);
+
 
 }
 

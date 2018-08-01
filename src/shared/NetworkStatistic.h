@@ -1,38 +1,34 @@
 #ifndef NETWORKSTATISTIC_H
 #define NETWORKSTATISTIC_H
 
-#include <QString>
+#include <QJsonObject>
 #include <QList>
 #include <QObject>
-#include <QJsonObject>
+#include <QString>
 #include <QTextStream>
-#include "CIS3DStatistics.h"
 #include "CIS3DNetworkProps.h"
 #include "CIS3DSparseVectorSet.h"
-#include "SparseVectorCache.h"
+#include "CIS3DStatistics.h"
 #include "Histogram.h"
-#include "Typedefs.h"
-#include "NeuronSelection.h"
 #include "InnervationMatrix.h"
-
+#include "NeuronSelection.h"
+#include "SparseVectorCache.h"
+#include "Typedefs.h"
 
 /**
     Serves as base class for any summary statistic about the neural network.
     Provides interfaces to integrate statistic into the webframework.
 */
-class NetworkStatistic : public QObject
-{
+class NetworkStatistic : public QObject {
+    Q_OBJECT
 
-Q_OBJECT
-
-public:
-
+   public:
     /**
         Constructor.
         @param networkProps The model data of the network.
         @param parent The Qt parent object. Empty by default.
     */
-    NetworkStatistic(const NetworkProps& networkProps, QObject* parent=0);
+    NetworkStatistic(const NetworkProps& networkProps, QObject* parent = 0);
 
     /**
         Constructor.
@@ -41,7 +37,7 @@ public:
         @param parent The Qt parent object. Empty by default.
     */
     NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache,
-        QObject* parent=0);
+                     QObject* parent = 0);
 
     /**
         Destructor.
@@ -76,14 +72,25 @@ public:
         Creates a csv-file of the statistic.
         @param key The S3 key under which the csv-file is stored.
         @param presynSelectionText Textual description of presynaptic filter.
-        @param postsynSelectionText Textual representation of postsynaptic filter.
-    `   @param tmpDir Folder where the file is initially created.
+        @param postsynSelectionText Textual description of postsynaptic filter.
+        @param tmpDir Folder where the file is initially created.
         @returns The file name.
     */
-    virtual QString createCSVFile(const QString& key,
-                          const QString& presynSelectionText,
-                          const QString& postsynSelectionText,
-                          const QString& tmpDir) const;
+    virtual QString createCSVFile(const QString& key, const QString& presynSelectionText,
+                                  const QString& postsynSelectionText, const QString& tmpDir) const;
+
+    /**
+        Creates a csv-file of the statistic.
+        @param key The S3 key under which the csv-file is stored.
+        @param motifASelectionText Textual description of the first filter.
+        @param motifBSelectionText Textual description of the second filter.
+        @param motifCSelectionText Textual description of the third filter.
+        @param tmpDir Folder where the file is initially created.
+        @returns The file name.
+    */
+    virtual QString createCSVFile(const QString& key, const QString& motifASelectionText,
+                                  const QString& motifBSelectionText,
+                                  const QString& motifCSelectionText, const QString& tmpDir) const;
 
     /**
         Retrieves the total number of connections to be analysed.
@@ -97,7 +104,7 @@ public:
     */
     long long getConnectionsDone() const;
 
-signals:
+   signals:
     // Signals intermediate results are available
     //
     // param stat: the statistic being computed
@@ -108,8 +115,7 @@ signals:
     // param stat: the statistic being computed
     void complete(NetworkStatistic* stat);
 
-protected:
-
+   protected:
     /**
         Performs the actual computation based on the specified neurons.
         @param selection The selected neurons.
@@ -163,9 +169,9 @@ protected:
     SparseVectorCache mCache;
 
     /*
-        The innervation matrix. 
+        The innervation matrix.
     */
     InnervationMatrix* mConnectome;
 };
 
-#endif // NETWORKSTATISTIC_H
+#endif  // NETWORKSTATISTIC_H

@@ -24,8 +24,8 @@
 */
 TripletStatistic::TripletStatistic(const NetworkProps& networkProps, int sampleSize)
     : NetworkStatistic(networkProps), mSampleSize(sampleSize) {
-        this->mNumConnections = (long long)mSampleSize;
-    }
+    this->mNumConnections = (long long)mSampleSize;
+}
 
 /**
         Checks whether the neuron selectio is valid.
@@ -85,7 +85,7 @@ QList<CellTriplet> TripletStatistic::drawTriplets(const NeuronSelection& selecti
         }
 
         CellTriplet newTriplet(neuron1, neuron2, neuron3);
-        triplets.append(newTriplet);        
+        triplets.append(newTriplet);
     }
     return triplets;
 }
@@ -195,7 +195,7 @@ void TripletStatistic::computeProbabilities(
 }
 
 /**
-        Computes the expected occurrence probability of each motifs based
+        Computes the expected occurrence probability of each motif based
         on the average connection probability between the neuron subselections.
         @param avgInnervation The average connection probabilties.
         @param tripletMotifs The motif combinations.
@@ -241,11 +241,11 @@ void TripletStatistic::doCreateJson(QJsonObject& obj) const {
     obj["sampleSize"] = mSampleSize;
 
     for (int i = 0; i < 16; i++) {
-        const QString key = QString("motif%1").arg(i+1);
-        const QString keyRef = QString("motif%1Ref").arg(i+1);
+        const QString key = QString("motif%1").arg(i + 1);
+        const QString keyRef = QString("motif%1Ref").arg(i + 1);
         obj.insert(key, Util::createJsonStatistic(mMotifProbabilities[i]));
-        obj.insert(keyRef, Util::createJsonStatistic(mMotifExpectedProbabilities[i]));        
-    }        
+        obj.insert(keyRef, Util::createJsonStatistic(mMotifExpectedProbabilities[i]));
+    }
 }
 
 /**
@@ -253,9 +253,17 @@ void TripletStatistic::doCreateJson(QJsonObject& obj) const {
     @param out The file stream to which the values are written.
     @param sep The separator between parameter name and value.
 */
-void TripletStatistic::doCreateCSV(QTextStream& /*out*/, const QChar /*sep*/) const {
-    // Implement when integrating the statistic into the webframework
-    // refer to shared/InnervationStatistic.cpp as reference
+void TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const {
+
+
+    out << "Number of triplet samples:" << sep << mSampleSize << "\n\n";    
+
+    for (int i = 0; i < mMotifProbabilities.size(); i++) {
+        out << QString("Motif %1").arg(i + 1) << sep << "Probability" << sep << mMotifProbabilities[i].getMean()
+            << sep << "StDev" << sep << mMotifProbabilities[i].getStandardDeviation() << sep << "Min" << sep
+            << mMotifProbabilities[i].getMinimum() << sep << "Max" << sep << mMotifProbabilities[i].getMaximum() << sep
+            << "Motif deviation" << sep << getDeviation(i) << "\n";
+    }
 }
 
 /**
@@ -278,4 +286,21 @@ void TripletStatistic::writeResult() const {
         double expectedProbability = mMotifExpectedProbabilities[i].getMean();
         out << motifID << sep << probability << sep << expectedProbability << "\n";
     }
+}
+
+/**
+    Determines the deviation for the specified motif.
+    @param motif The number of the motif.
+    @return The deviation.
+*/
+double TripletStatistic::getDeviation(int motif) const {
+    double deviation;
+    double d = mMotifProbabilities[motif].getMean();
+    double dRef = mMotifExpectedProbabilities[motif].getMean();
+    if (Util::almostEqual(dRef, 0, 0.0001)) {
+        deviation = Util::almostEqual(d, 0, 0.0001) ? 0 : 1;
+    } else {
+        deviation = (d - dRef) / dRef;
+    }
+    return deviation;
 }

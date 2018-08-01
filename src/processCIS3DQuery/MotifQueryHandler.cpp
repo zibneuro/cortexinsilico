@@ -117,7 +117,8 @@ void MotifQueryHandler::reportComplete(NetworkStatistic* stat){
     const QString key = QString("motif_%1_%2_%3_%4.csv").arg(mQueryId).arg(motifASelId).arg(motifBSelId).arg(motifCSelId);
     const QString motifASelectionText = mCurrentJsonData["motifASelectionFilterAsText"].toString();
     const QString motifBSelectionText = mCurrentJsonData["motifBSelectionFilterAsText"].toString();
-    const QString csvfile = stat->createCSVFile(key, motifASelectionText, motifBSelectionText,
+    const QString motifCSelectionText = mCurrentJsonData["motifCSelectionFilterAsText"].toString();
+    const QString csvfile = stat->createCSVFile(key, motifASelectionText, motifBSelectionText, motifCSelectionText,
                                           mConfig["WORKER_TMP_DIR"].toString());
     const qint64 fileSizeBytes = QFileInfo(csvfile).size();
     if (QueryHelpers::uploadToS3(key, csvfile, mConfig) != 0) {

@@ -86,7 +86,7 @@ class TripletStatistic : public NetworkStatistic {
                               std::map<unsigned int, std::list<TripletMotif*> > tripletMotifs);
 
     /**
-        Computes the expected occurrence probability of each motifs based
+        Computes the expected occurrence probability of each motif based
         on the average connection probability between the neuron subselections.
         @param avgInnervation The average connection probabilties.
         @param tripletMotifs The motif combinations.
@@ -100,6 +100,13 @@ class TripletStatistic : public NetworkStatistic {
         @param Map of motif combinations.
     */
     void deleteMotifCombinations(std::map<unsigned int, std::list<TripletMotif*> > tripletMotifs);
+
+    /**
+        Determines the deviation for the specified motif.
+        @param motif The number of the motif.
+        @return The deviation.
+    */
+    double getDeviation(int motif) const;
 
     QList<Statistics> mMotifProbabilities;
     QList<Statistics> mMotifExpectedProbabilities;
