@@ -1,15 +1,14 @@
 #pragma once
 
-#include <QString>
 #include <QMap>
+#include <QString>
 
 /**
     This class represents the hierachy of brain regions that are part of the
     model.
 */
 class Regions {
-
-public:
+   public:
     /**
         Constructor. Initializes default model of rat vS1.
     */
@@ -28,6 +27,13 @@ public:
         @throws runtime_error if name is not found.
     */
     int getId(const QString& name) const;
+
+    /**
+        Checks whether the specified name exists.
+        @param name The name of the cell type.
+        @return True, if the name exists.
+    */
+    bool nameExists(const QString& name) const;
 
     /**
         Returns the IDs of all brain regions.
@@ -58,12 +64,11 @@ public:
     */
     void loadCSV(const QString& fileName);
 
-private:
+   private:
     struct RegionProperties {
-        RegionProperties() :
-            id(-1), name(""), parentId(-1) {}
-        RegionProperties(int regionId, QString regionName, int regionParentId) :
-            id(regionId), name(regionName), parentId(regionParentId) {}
+        RegionProperties() : id(-1), name(""), parentId(-1) {}
+        RegionProperties(int regionId, QString regionName, int regionParentId)
+            : id(regionId), name(regionName), parentId(regionParentId) {}
 
         int id;
         QString name;
@@ -72,5 +77,4 @@ private:
 
     typedef QMap<int, RegionProperties> PropsMap;
     PropsMap mPropsMap;
-
 };

@@ -91,6 +91,7 @@ IdList NeuronSelection::getSelectedNeurons(const QString selectionString,
     QJsonDocument doc = QJsonDocument::fromJson(selectionString.toLocal8Bit());
     QJsonArray arr = doc.array();
     SelectionFilter filter = Util::getSelectionFilterFromJson(arr, networkProps, CIS3D::BOTH_SIDES);
+    Util::correctVPMSelectionFilter(filter, networkProps);
     return networkProps.neurons.getFilteredNeuronIds(filter);
 }
 

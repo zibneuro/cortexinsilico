@@ -236,6 +236,7 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             QJsonDocument selectionDoc = QJsonDocument::fromJson(selectionString.toLocal8Bit());
             QJsonArray selectionArr = selectionDoc.array();
             SelectionFilter filter = Util::getSelectionFilterFromJson(selectionArr, mNetwork, synapticSide);
+            Util::correctVPMSelectionFilter(filter, mNetwork);
             const IdList neurons = mNetwork.neurons.getFilteredNeuronIds(filter);
 
             qDebug() << "    Start sorting " << neurons.size() << " neurons.";

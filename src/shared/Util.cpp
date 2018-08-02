@@ -1,4 +1,5 @@
 #include "Util.h"
+#include <QDebug>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QSet>
@@ -137,6 +138,9 @@ SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
                                                  const NetworkProps& network,
                                                  const CIS3D::SynapticSide synapticSide) {
     SelectionFilter filter;
+
+    qDebug() << "selection filter";
+    qDebug() << jsonArray;
 
     const QJsonObject ctObj = getFilterItemWithName(QString("cellType"), jsonArray);
     const QJsonObject excObj = getFilterItemWithName(QString("isExcitatory"), jsonArray);
@@ -431,3 +435,26 @@ QJsonObject Util::createJsonHistogram(const Histogram& histogram) {
     @return True, if the values are almost equal.
 */
 bool Util::almostEqual(double a, double b, double eps) { return std::abs(a - b) <= eps; }
+
+/*
+    Handles case that only VPM is selected in combination with nearest column.
+    In this case, the nearest column name X is replaced by X_Barreloid and set as region filter.
+    @param selection The selection filter.
+    @param networkProps The model data.
+*/
+void Util::correctVPMSelectionFilter(SelectionFilter& filter, const NetworkProps& networkProps) {
+    if (filter.cellTypeIds.size() == 1) {
+        int cellTypeId = filter.cellTypeIds[0];
+        if (networkProps.cellTypes.getName(cellTypeId) == "VPM") {
+            filter.regionIds.clear();
+            for (int i = 0; i < filter.nearestColumnIds.size(); i++) {
+                QString column = networkProps.regions.getName(filter.nearestColumnIds[i]);
+                column.append("_Barreloid");
+                if(networkProps.regions.nameExists(column)){
+                    filter.regionIds.push_back(networkProps.regions.getId(column));
+                }
+            }
+            filter.nearestColumnIds.clear();
+        }
+    }
+}
