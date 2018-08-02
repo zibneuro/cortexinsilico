@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
         NeuronSelection selection;
         selection.setTripletSelection(spec, networkProps);
         int sampleSize = extractSampleSize(spec);
-        TripletStatistic statistic(networkProps, sampleSize);
+        TripletStatistic statistic(networkProps, sampleSize, 1);
         statistic.calculate(selection);
     } else {
         printUsage();

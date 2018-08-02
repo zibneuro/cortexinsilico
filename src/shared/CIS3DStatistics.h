@@ -2,90 +2,100 @@
 #define STATISTICS_H
 
 #include <QFlags>
+#include <deque>
 
 /**
     Collects a set of samples and computes basic statistics.
 */
 class Statistics {
-    public:
-        /**
-            Constructor.
-        */
-        Statistics();
+   public:
+    /**
+        Constructor.
+    */
+    Statistics();
 
-        /**
-            Adds a sample to the set.
-            @param value The sample to add.
-        */
-        void addSample(const double value);
+    /**
+        Adds a sample to the set.
+        @param value The sample to add.
+    */
+    void addSample(const double value);
 
-        /**
-            Calculates sum of all samples.
-            @return The sum.
-        */
-        double getSum() const;
+    /**
+        Calculates sum of all samples.
+        @return The sum.
+    */
+    double getSum() const;
 
-        /**
-            Calculates mean value of all samples.
-            @return The mean.
-        */
-        double getMean() const;
+    /**
+        Calculates mean value of all samples.
+        @return The mean.
+    */
+    double getMean() const;
 
-        /**
-            Determines minimum value of all samples.
-            @return The minimum value.
-        */
-        double getMinimum() const;
+    /**
+        Determines minimum value of all samples.
+        @return The minimum value.
+    */
+    double getMinimum() const;
 
-        /**
-            Determines maximum value of all samples.
-            @return The maximum value.
-        */
-        double getMaximum() const;
+    /**
+        Determines maximum value of all samples.
+        @return The maximum value.
+    */
+    double getMaximum() const;
 
-        /**
-            Calculates standard deviation of the samples.
-            @return The standard deviation.
-        */
-        double getStandardDeviation() const;
+    /**
+        Calculates standard deviation of the samples.
+        @return The standard deviation.
+    */
+    double getStandardDeviation() const;
 
-        /**
-            Calculates variance of the samples.
-            @return The variance.
-        */
-        double getVariance() const;
+    /**
+        Calculates variance of the samples.
+        @return The variance.
+    */
+    double getVariance() const;
 
-        /**
-            Returns the number of samples.
-            @return Number of samples.
-        */
-        unsigned int getNumberOfSamples() const;
+    /**
+        Returns the number of samples.
+        @return Number of samples.
+    */
+    unsigned int getNumberOfSamples() const;
 
-        /**
-            Writes the statistics to console.
-        */
-        void print() const;        
+    /**
+        Determines whether the statistic has converged based
+        on the maximum deviation in the last 50 mean values.
+        @param maxVariance The maximum deviation in the last 50 mean values.
+        @return True, if the statistic has converged.
+    */
+    bool hasConverged(double maxDeviation);
 
-        enum Field {
-            Sum               = 1 << 0,
-            Mean              = 1 << 1,
-            Minimum           = 1 << 2,
-            Maximum           = 1 << 3,
-            StandardDeviation = 1 << 4,
-            Variance          = 1 << 5
-        };
+    /**
+        Writes the statistics to console.
+    */
+    void print() const;
 
-        Q_DECLARE_FLAGS(Fields, Field)
+    enum Field {
+        Sum = 1 << 0,
+        Mean = 1 << 1,
+        Minimum = 1 << 2,
+        Maximum = 1 << 3,
+        StandardDeviation = 1 << 4,
+        Variance = 1 << 5
+    };
 
+    Q_DECLARE_FLAGS(Fields, Field)
 
-    private:
-        unsigned int mNumberOfSamples;
-        double mMinimum;
-        double mMaximum;
-        double mSum;
-        double mSumSquared;
+   private:
+    unsigned int mNumberOfSamples;
+    double mMinimum;
+    double mMaximum;
+    double mSum;
+    double mSumSquared;
+    std::deque<double> mLastMeans;
+    unsigned int mWindowSize;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(Statistics::Fields)
 
-#endif // STATISTICS_H
+#endif  // STATISTICS_H

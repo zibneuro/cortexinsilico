@@ -14,8 +14,9 @@ class TripletStatistic : public NetworkStatistic {
         Constructor.
         @param networkProps The model data of the network.
         @param sampleSize The number of triplets to draw.
+        @param iterations The number of iterations.
     */
-    TripletStatistic(const NetworkProps& networkProps, int sampleSize);
+    TripletStatistic(const NetworkProps& networkProps, int sampleSize, int iterations);
 
     /**
         Writes result to file, for testing purposes.
@@ -68,13 +69,43 @@ class TripletStatistic : public NetworkStatistic {
     */
     void initializeStatistics();
 
+    /*
+        Calculates the connection probabiltiy for the specfied innervation.
+        @param innervation The innervation.
+        @return The connection probability.
+    */
+    double calculateConnectionProbability(double innervation);
+
     /**
-        Determines the average innervation values between the three neuron
+        Calculates the convergence to the specified postsynaptic neuron.
+        @param presynapticNeurons The IDs of the presynaptic neurons.
+        @param postsynapticNeuronId The ID of the postsynaptic neuron.
+        @return  The convergence to the postsynaptic neuron.
+    */
+    double calculateConvergence(IdList& presynapticNeurons, int postsynapticNeuronId);
+
+    /**
+        Calculates the average convergence to for all combinations by
+        sampling a subset of the postsynaptic neurons in each group.
+        @param selection The selected neuron groups.
+    */
+    void calculateAverageConvergence(const NeuronSelection& selection);
+
+    /**
+        Calculates the average convergence to the specified postsynaptic neurons.
+        @param presynapticNeurons The IDs of the presynaptic neurons.
+        @param postsynapticNeuronId The IDs of the postsynaptic neurons.
+        @return  The average convergence to the postsynaptic neurons.
+    */
+    double calculateAverageConvergence(IdList& presynapticNeurons, IdList& postsynapticNeurons);
+
+    /**
+        Determines the average convergence values between the three neuron
         subselections using the randomly drawn triplets for sampling.
         @param triplets The randomly drawn triplets.
-        @return The average innervation values.
+        @return The average convergence values.
     */
-    std::vector<std::vector<double> > getAverageInnervation(QList<CellTriplet>& triplets);
+    std::vector<std::vector<double> > getAverageConvergence(QList<CellTriplet>& triplets);
 
     /**
         Computes the occurrence probability of the specified motifs based
@@ -96,6 +127,14 @@ class TripletStatistic : public NetworkStatistic {
         std::map<unsigned int, std::list<TripletMotif*> > tripletMotifs);
 
     /**
+        Computes the expected occurrence probability of each motif based
+        on the average convergence between the neuron subselections.
+        @param tripletMotifs The motif combinations.
+    */
+    void computeExpectedProbabilities(
+        std::map<unsigned int, std::list<TripletMotif*> > tripletMotifs);
+
+    /**
         Deletes the motif combinations.
         @param Map of motif combinations.
     */
@@ -108,9 +147,33 @@ class TripletStatistic : public NetworkStatistic {
     */
     double getDeviation(int motif) const;
 
+    /**
+        Draws a random selection of neuron IDs.
+        @param neuronIds The complete ID list.
+        @param number The number of neurons to draw.
+        @return The selected IDs.
+    */
+    IdList drawRandomly(const IdList& neuronIds, int number);
+
+    /**
+        Draws a random selection of neuron IDs, if the number of elements 
+        in the specified list exceeds a certain limit.
+        @param neuronIds The complete ID list.        
+        @param limit The permissible number of elements.
+        @return The selected IDs.
+    */
+    IdList drawRandomlyExceeds(const IdList& neuronIds, int limit);
+
+    /**
+        Prints the average convergence values between the subselections.
+    */
+    void printAverageConvergence();
+
     QList<Statistics> mMotifProbabilities;
     QList<Statistics> mMotifExpectedProbabilities;
+    std::vector<std::vector<Statistics> > mConvergences;
     int mSampleSize;
+    int mIterations;
 };
 
 #endif  // TRIPLETSTATISTIC

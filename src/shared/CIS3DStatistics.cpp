@@ -1,19 +1,19 @@
 #include "CIS3DStatistics.h"
-#include <limits>
+#include <QDebug>
 #include <cmath>
 #include <cstdio>
+#include <limits>
 
 /**
     Constructor.
 */
-Statistics::Statistics() :
-    mNumberOfSamples(0),
-    mMinimum(std::numeric_limits<double>::max()),
-    mMaximum(std::numeric_limits<double>::min()),
-    mSum(0.0),
-    mSumSquared(0.0)
-{
-}
+Statistics::Statistics()
+    : mNumberOfSamples(0),
+      mMinimum(std::numeric_limits<double>::max()),
+      mMaximum(std::numeric_limits<double>::min()),
+      mSum(0.0),
+      mSumSquared(0.0),
+      mWindowSize(100) {}
 
 /**
     Adds a sample to the set.
@@ -28,16 +28,19 @@ void Statistics::addSample(const double value) {
     }
     ++mNumberOfSamples;
     mSum += value;
-    mSumSquared += (value*value);
+    mSumSquared += (value * value);
+
+    if (mLastMeans.size() >= mWindowSize) {
+        mLastMeans.pop_front();
+    }
+    mLastMeans.push_back(getMean());
 }
 
 /**
     Calculates sum of all samples.
     @return The sum.
 */
-double Statistics::getSum() const {
-    return mSum;
-}
+double Statistics::getSum() const { return mSum; }
 
 /**
     Calculates mean value of all samples.
@@ -45,9 +48,8 @@ double Statistics::getSum() const {
 */
 double Statistics::getMean() const {
     if (mNumberOfSamples > 0) {
-        return mSum/double(mNumberOfSamples);
-    }
-    else {
+        return mSum / double(mNumberOfSamples);
+    } else {
         return 0.0;
     }
 }
@@ -56,25 +58,19 @@ double Statistics::getMean() const {
     Determines minimum value of all samples.
     @return The minimum value.
 */
-double Statistics::getMinimum() const {
-    return mMinimum;
-}
+double Statistics::getMinimum() const { return mMinimum; }
 
 /**
     Determines maximum value of all samples.
     @return The maximum value.
 */
-double Statistics::getMaximum() const {
-    return mMaximum;
-}
+double Statistics::getMaximum() const { return mMaximum; }
 
 /**
     Calculates standard deviation of the samples.
     @return The standard deviation.
 */
-double Statistics::getStandardDeviation() const {
-    return sqrt(getVariance());
-}
+double Statistics::getStandardDeviation() const { return sqrt(getVariance()); }
 
 /**
     Calculates variance of the samples.
@@ -82,11 +78,10 @@ double Statistics::getStandardDeviation() const {
 */
 double Statistics::getVariance() const {
     if (mNumberOfSamples > 0) {
-        const double v = mSum/double(mNumberOfSamples);
-        const double variance = (mSumSquared/double(mNumberOfSamples)) - (v*v);
+        const double v = mSum / double(mNumberOfSamples);
+        const double variance = (mSumSquared / double(mNumberOfSamples)) - (v * v);
         return variance;
-    }
-    else {
+    } else {
         return 0.0;
     }
 }
@@ -95,8 +90,30 @@ double Statistics::getVariance() const {
     Returns the number of samples.
     @return Number of samples.
 */
-unsigned int Statistics::getNumberOfSamples() const {
-    return mNumberOfSamples;
+unsigned int Statistics::getNumberOfSamples() const { return mNumberOfSamples; }
+
+/**
+    Determines whether the statistic has converged based
+    on the maximum deviation in the last 50 mean values.
+    @param maxVariance The maximum deviation in the last 50 mean values.
+    @return True, if the statistic has converged.
+*/
+bool Statistics::hasConverged(double maxDeviation) {
+    if (mLastMeans.size() < mWindowSize) {
+        return false;
+    } else {
+        Statistics stat;
+        for (unsigned int i = 0; i < mWindowSize; i++) {
+            stat.addSample(mLastMeans[i]);
+        }
+        double delta = stat.getMaximum() - stat.getMinimum();
+        if (delta <= maxDeviation) {
+            qDebug() << "Mean" << getNumberOfSamples() << stat.getMean() << stat.getVariance()
+                     << delta;
+            return true;                     
+        }
+        return false;
+    }
 }
 
 /**
