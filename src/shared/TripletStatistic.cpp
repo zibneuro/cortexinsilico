@@ -1,5 +1,6 @@
 #include "TripletStatistic.h"
 #include <math.h>
+#include <ctime>
 #include <QChar>
 #include <QDebug>
 #include <QFile>
