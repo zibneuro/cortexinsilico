@@ -15,6 +15,8 @@
 #include <QtNetwork/QNetworkReply>
 #include <QProcess>
 #include <stdexcept>
+#include <QFile>
+#include <QTextStream>
 
 
 
@@ -217,6 +219,11 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             const QString datasetShortName = jsonResponse.object().value("network").toString();
             mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
             qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
+
+            QFile file(mQueryId);
+            QTextStream stream(&file);
+            stream << selectionString << datasetShortName;
+
             mNetwork.setDataRoot(mDataRoot);
             mNetwork.loadFilesForQuery();
 
