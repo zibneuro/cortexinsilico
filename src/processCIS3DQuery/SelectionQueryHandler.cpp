@@ -220,7 +220,10 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
             qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
 
-            QFile file(mQueryId);
+            QString fileName = mQueryId;
+            fileName.append(".log");
+            QFile file(fileName);
+            file.open(QIODevice::WriteOnly);
             QTextStream stream(&file);
             stream << selectionString << datasetShortName;
 
@@ -247,6 +250,8 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             const IdList neurons = mNetwork.neurons.getFilteredNeuronIds(filter);
 
             qDebug() << "    Start sorting " << neurons.size() << " neurons.";
+
+            stream << neurons.size() << "\n";
 
             const QString key = QString("neuronselection_%1.json.zip").arg(mQueryId);
             QString geometryFile;
