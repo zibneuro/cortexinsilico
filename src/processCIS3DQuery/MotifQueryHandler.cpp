@@ -31,17 +31,17 @@ void MotifQueryHandler::process(const QString& motifQueryId, const QJsonObject& 
     const QString logoutEndPoint = mConfig["METEOR_LOGOUT_ENDPOINT"].toString();
 
     if (baseUrl.isEmpty()) {
-        throw std::runtime_error("EvaluationQueryHandler: Cannot find METEOR_URL_CIS3D");
+        throw std::runtime_error("MotifQueryHandler: Cannot find METEOR_URL_CIS3D");
     }
     if (queryEndPoint.isEmpty()) {
         throw std::runtime_error(
-            "EvaluationQueryHandler: Cannot find METEOR_EVALUATIONQUERY_ENDPOINT");
+            "MotifQueryHandler: Cannot find METEOR_MOTIFQUERY_ENDPOINT");
     }
     if (loginEndPoint.isEmpty()) {
-        throw std::runtime_error("EvaluationQueryHandler: Cannot find METEOR_LOGIN_ENDPOINT");
+        throw std::runtime_error("MotifQueryHandler: Cannot find METEOR_LOGIN_ENDPOINT");
     }
     if (logoutEndPoint.isEmpty()) {
-        throw std::runtime_error("EvaluationQueryHandler: Cannot find METEOR_LOGOUT_ENDPOINT");
+        throw std::runtime_error("MotifQueryHandler: Cannot find METEOR_LOGOUT_ENDPOINT");
     }
 
     mQueryUrl = baseUrl + queryEndPoint + mQueryId;
@@ -84,7 +84,7 @@ void MotifQueryHandler::reportUpdate(NetworkStatistic* stat) {
     putRequest.setUrl(mQueryUrl);
     putRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
     putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
-    putRequest.setAttribute(QNetworkRequest::User, QVariant("putIntermediateEvaluationResult"));
+    putRequest.setAttribute(QNetworkRequest::User, QVariant("putIntermediateMotifResult"));
     putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
@@ -184,7 +184,7 @@ void MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
                 SLOT(reportComplete(NetworkStatistic*)));
         statistic.calculate(selection);
     } else {
-        qDebug() << "[-] Error obtaining EvaluationQuery data:";
+        qDebug() << "[-] Error obtaining MotifQuery data:";
         qDebug() << reply->errorString();
         if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
             qDebug() << QString(reply->readAll().replace("\"", ""));
