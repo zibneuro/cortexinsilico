@@ -564,7 +564,7 @@ int main(int argc, char* argv[]) {
     // CIS3D::INHIBITORY);
 
     const SparseField* normalizedPSTexc =
-        SparseField::load(CIS3D::getPSTAllFullPath(dataRoot, CIS3D::EXCITATORY));
+        SparseField::load(CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY));
     // const SparseField* normalizedPSTinh = SparseField::load(CIS3D::getPSTAllFullPath(dataRoot,
     // CIS3D::INHIBITORY));
 
