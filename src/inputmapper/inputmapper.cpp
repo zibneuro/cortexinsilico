@@ -531,6 +531,7 @@ int main(int argc, char* argv[]) {
     const QString celltype = argv[2];
     const QString dataRoot = argv[3];
     const QString outputDir = argv[4];
+    const QDir modelDataDir = CIS3D::getModelDataDir(dataRoot);
 
     NetworkProps networkProps;
     networkProps.setDataRoot(dataRoot);
@@ -634,7 +635,7 @@ int main(int argc, char* argv[]) {
         const QString preCTname = networkProps.cellTypes.getName(preCT);
 
         const SparseField* boutons =
-            SparseField::load(CIS3D::getBoutonsFileFullPath(dataRoot, preCTname, axonIdToUse));
+            SparseField::load(CIS3D::getBoutonsFileFullPath(modelDataDir, preCTname, axonIdToUse));
         const bool isExc = networkProps.cellTypes.isExcitatory(preCT);
 
         if (!isExc) {
