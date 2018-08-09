@@ -303,9 +303,10 @@ class SparseField {
         Saves the SparseField as csv list of voxels with nonzero values to file.
 
         @param fileName The name of the file.
+        @param spatial Use coordinates instead of voxel indices.
         @throws runtime_error if saving the file failed.
     */
-    void saveCSV(const QString& fileName);
+    void saveCSV(const QString& fileName, const bool spatial=false);
 
     /**
         Loads a SparseField from file.

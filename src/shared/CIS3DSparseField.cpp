@@ -299,12 +299,13 @@ int SparseField::save(const SparseField* fs, const QString& fileName) {
 }
 
 /**
-    Saves a SparseField as list of voxels with nonzero values to file.
+    Saves the SparseField as csv list of voxels with nonzero values to file.
 
     @param fileName The name of the file.
-    @throws runtime_error If saving the file failed.
+    @param spatial Use coordinates instead of voxel indices.
+    @throws runtime_error if saving the file failed.
 */
-void SparseField::saveCSV(const QString& fileName) {
+void SparseField::saveCSV(const QString& fileName, const bool spatial) {
     QFile file(fileName);
     if (!file.open(QIODevice::WriteOnly)) {
         QString msg = QString("Could not open file %1 for writing").arg(fileName);
@@ -323,11 +324,21 @@ void SparseField::saveCSV(const QString& fileName) {
     for (SparseField::LocationIndexToValueIndexMap::ConstIterator it = mIndexMap.begin();
          it != mIndexMap.end(); ++it) {
         Vec3i location = getXYZFromIndex(it.key());
+        float x,y,z;
+        if(spatial){
+            x = mOrigin[0] + location[0] * mVoxelSize[0] + 0.5 * mVoxelSize[0];
+            y = mOrigin[1] + location[1] * mVoxelSize[1] + 0.5 * mVoxelSize[1];
+            z = mOrigin[2] + location[2] * mVoxelSize[2] + 0.5 * mVoxelSize[2];
+        } else {
+            x = (float)location[0] + 1;
+            y = (float)location[1] + 1;
+            z = (float)location[2] + 1;
+        }
         const float value = mField[it.value()];
 
         if (value > 0) {
             int voxelId = SparseField::getVoxelId(location, dimensions);
-            out << voxelId << sep << location[0] << sep << location[1] << sep << location[2] << sep
+            out << voxelId << sep << x << sep << y << sep << z << sep
                 << value << "\n";
         }
     }
