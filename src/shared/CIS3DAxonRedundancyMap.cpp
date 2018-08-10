@@ -1,10 +1,10 @@
 #include "CIS3DAxonRedundancyMap.h"
-#include <QString>
+#include <QDataStream>
+#include <QDebug>
 #include <QFile>
 #include <QIODevice>
-#include <QDataStream>
+#include <QString>
 #include <QTextStream>
-#include <QDebug>
 #include <stdexcept>
 
 /**
@@ -13,11 +13,13 @@
     @param neuronIdToUse The id to use for retrieving axon data.
 */
 void AxonRedundancyMap::add(const int neuronId, const int neuronIdToUse) {
-   if (mMap.contains(neuronId)) {
-       QString msg = QString("Error adding neuron to AxonRedundancyMap: neuronId %1 already exists.").arg(neuronId);
-       throw std::runtime_error(qPrintable(msg));
-   }
-   mMap.insert(neuronId, neuronIdToUse);
+    if (mMap.contains(neuronId)) {
+        QString msg =
+            QString("Error adding neuron to AxonRedundancyMap: neuronId %1 already exists.")
+                .arg(neuronId);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    mMap.insert(neuronId, neuronIdToUse);
 }
 
 /**
@@ -27,11 +29,12 @@ void AxonRedundancyMap::add(const int neuronId, const int neuronIdToUse) {
     @throws runtime_error when id is not registered.
 */
 int AxonRedundancyMap::getNeuronIdToUse(const int neuronId) const {
-   if (!mMap.contains(neuronId)) {
-       QString msg = QString("Error in AxonRedundancyMap: neuronId %1 does not exist.").arg(neuronId);
-       throw std::runtime_error(qPrintable(msg));
-   }
-   return mMap.value(neuronId);
+    if (!mMap.contains(neuronId)) {
+        QString msg =
+            QString("Error in AxonRedundancyMap: neuronId %1 does not exist.").arg(neuronId);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    return mMap.value(neuronId);
 }
 
 /**
@@ -51,6 +54,30 @@ int AxonRedundancyMap::saveBinary(const QString &fileName) const {
 }
 
 /**
+    Saves the axon redundancy map as a csv file.
+    @param fileName Name of the file to write.
+    @throws runtime_error in case of failure.
+*/
+void AxonRedundancyMap::saveCSV(const QString &fileName) const {
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        QString msg = QString("Could not open file %1 for writing").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+
+    const QChar sep(',');
+    QTextStream out(&file);
+    out << "neuronID" << sep << "mappedNeuronID"
+        << "\n";
+
+    QList<int> neuronIds = mMap.keys();
+    qSort(neuronIds);
+    for(int i=0; i<neuronIds.size(); i++){
+        out << neuronIds[i] << sep << mMap[neuronIds[i]] << "\n";
+    }
+}
+
+/**
     Loads the axon redundancy map from a binary file.
     @param fileName Name of the file to load.
     @returns 1 if file was successfully loaded.
@@ -66,7 +93,7 @@ int AxonRedundancyMap::loadBinary(const QString &fileName) {
     QDataStream stream(&redundancyMapFile);
     stream >> mMap;
 
-    QTextStream(stdout) << "[*] Completed reading " <<  mMap.size() << " entries.\n";
+    QTextStream(stdout) << "[*] Completed reading " << mMap.size() << " entries.\n";
 
     return 1;
 }

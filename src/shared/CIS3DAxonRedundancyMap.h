@@ -35,6 +35,13 @@ public:
     int saveBinary(const QString& fileName) const;
 
     /**
+        Saves the axon redundancy map as a csv file.
+        @param fileName Name of the file to write.        
+        @throws runtime_error in case of failure.
+    */
+    void saveCSV(const QString& fileName) const;
+
+    /**
         Loads the axon redundancy map from a binary file.
         @param fileName Name of the file to load.
         @returns 1 if file was successfully loaded.
