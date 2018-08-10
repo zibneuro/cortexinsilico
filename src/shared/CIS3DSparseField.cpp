@@ -299,7 +299,8 @@ int SparseField::save(const SparseField* fs, const QString& fileName) {
 }
 
 /**
-    Saves the SparseField as csv list of voxels with nonzero values to file.
+    Saves the SparseField as csv file of voxel locations (or
+    spatial coordinates) associated with nonzero values.
 
     @param fileName The name of the file.
     @param spatial Use coordinates instead of voxel indices.
@@ -314,7 +315,7 @@ void SparseField::saveCSV(const QString& fileName, const bool spatial) {
 
     const QChar sep(',');
     QTextStream out(&file);
-    out << "voxelID" << sep << "voxelX" << sep << "voxelY" << sep << "voxelZ" << sep << "value"
+    out << "locationX" << sep << "locationY" << sep << "locationZ" << sep << "value"
         << "\n";
 
     QVector<int> dimensions;
@@ -324,8 +325,8 @@ void SparseField::saveCSV(const QString& fileName, const bool spatial) {
     for (SparseField::LocationIndexToValueIndexMap::ConstIterator it = mIndexMap.begin();
          it != mIndexMap.end(); ++it) {
         Vec3i location = getXYZFromIndex(it.key());
-        float x,y,z;
-        if(spatial){
+        float x, y, z;
+        if (spatial) {
             x = mOrigin[0] + location[0] * mVoxelSize[0] + 0.5 * mVoxelSize[0];
             y = mOrigin[1] + location[1] * mVoxelSize[1] + 0.5 * mVoxelSize[1];
             z = mOrigin[2] + location[2] * mVoxelSize[2] + 0.5 * mVoxelSize[2];
@@ -337,9 +338,7 @@ void SparseField::saveCSV(const QString& fileName, const bool spatial) {
         const float value = mField[it.value()];
 
         if (value > 0) {
-            int voxelId = SparseField::getVoxelId(location, dimensions);
-            out << voxelId << sep << x << sep << y << sep << z << sep
-                << value << "\n";
+            out << x << sep << y << sep << z << sep << value << "\n";
         }
     }
 }
@@ -357,7 +356,7 @@ SparseField* SparseField::load(const QString& fileName) {
         return 0;
     }
 
-    //qDebug() << "Loading SparseField from file:" << fileName;
+    // qDebug() << "Loading SparseField from file:" << fileName;
     QDataStream in(&file);
     SparseField* fs = readFromStream(in);
     return fs;
@@ -412,7 +411,8 @@ SparseField* SparseField::readFromStream(QDataStream& in) {
     in >> fs->mField;
 
     // Sanity check for loaded data
-    for (LocationIndexToValueIndexMap::const_iterator it=fs->mIndexMap.constBegin(); it!=fs->mIndexMap.constEnd(); ++it) {
+    for (LocationIndexToValueIndexMap::const_iterator it = fs->mIndexMap.constBegin();
+         it != fs->mIndexMap.constEnd(); ++it) {
         if (it.key() < 0) {
             throw std::runtime_error("Error in SparseField: negative location index");
         }
