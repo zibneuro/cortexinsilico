@@ -569,6 +569,29 @@ Vec3i SparseField::getVoxelContainingPoint(const Vec3f& p) const {
     return result;
 }
 
+/*
+    Checks whether the specfied position is within spatial bounds 
+    of the field.
+    @param p The position in spatial coordinates.
+    @return True, if the position is within range.
+*/
+bool SparseField::inRange(const Vec3f& p) const {
+    Vec3i result;
+    Vec3f shiftedPos = p - mOrigin;
+
+    for (int i = 0; i <= 2; ++i) {
+        if (shiftedPos[i] < 0.0f) {
+            return false;
+        }
+        result[i] = int(shiftedPos[i] / mVoxelSize[i]);
+        if (result[i] >= mDimensions[i]) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 /**
     Determines bounding box covering the voxel specified by the grid
     location.

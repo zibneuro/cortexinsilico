@@ -21,6 +21,18 @@ def compileCppAndRunUnitTests(src_dir, build_dir):
     check_call(["qmake", networkSimulator_pro_file], cwd=networkSimulator_build_dir)
     check_call(["make", "all"], cwd=networkSimulator_build_dir)
 
+    convertAxon_pro_file = os.path.join(src_dir, "convertAxonRedundancyMap/convertAxonRedundancyMap.pro")
+    convertAxon_build_dir = os.path.join(build_dir, "convertAxonRedundancyMap")
+    os.makedirs(convertAxon_build_dir, exist_ok=True)
+    check_call(["qmake", convertAxon_pro_file], cwd=convertAxon_build_dir)
+    check_call(["make", "all"], cwd=convertAxon_build_dir)
+
+    convertSparse_pro_file = os.path.join(src_dir, "convertSparseField/convertSparseField.pro")
+    convertSparse_build_dir = os.path.join(build_dir, "convertSparseField")
+    os.makedirs(convertSparse_build_dir, exist_ok=True)
+    check_call(["qmake", convertSparse_pro_file], cwd=convertSparse_build_dir)
+    check_call(["make", "all"], cwd=convertSparse_build_dir)
+
     test_pro_file = os.path.join(src_dir, "test/runTests.pro")
     test_build_dir = os.path.join(build_dir, "test")
     os.makedirs(test_build_dir, exist_ok=True)

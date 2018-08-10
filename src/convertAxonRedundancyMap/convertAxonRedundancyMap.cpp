@@ -1,5 +1,5 @@
 /*
-    This tool converts a AxonRedundancyMap into a csv-File    
+    This tool converts a AxonRedundancyMap into a csv file.    
 
     ./convertAxonRedundancyMap  <inputFile> <outputFile>
 */

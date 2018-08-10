@@ -28,7 +28,8 @@
     from the model data. All features are provided voxelwise. The voxel grid
     to be extracted from the complete model is specified by an origin (spatial
     coordinates) and the number of voxels in each direction. The output is
-    written into the file "features.csv".
+    written into the file "features.csv", "featuresSpatial.csv", "neurons.csv"
+    and "voxels.csv".
 */
 class FeatureExtractor {
    public:
@@ -107,6 +108,15 @@ class FeatureExtractor {
     void writeFeatures(QString fileName, QList<Feature>& features);
 
     /*
+        Writes the features into a csv file using spatial coordinates.
+
+        @param fileName The name of the file.
+        @param origin The corrected origin.
+        @param features A list with the features.
+    */
+    void writeFeaturesSpatial(QString fileName, QList<Feature>& features, QVector<float> origin);
+
+    /*
         Writes properties of the extracted neurons into a csv file.
 
         @param fileName The name of the file.
@@ -154,6 +164,13 @@ class FeatureExtractor {
         @return True, if the soma is located within the subcube.
     */
     bool somaWithinSubcube(Vec3f somaPosition, QVector<float> origin, QVector<int> dimensions);
+
+    /*
+        Corrects the user specified origin such that it lies in the
+        centre of the voxel (according to the grid exported from Amira).
+        @param origin The user specified origin.
+    */
+    void correctOrigin(QVector<float>& origin);
 
     /*
         The model data.

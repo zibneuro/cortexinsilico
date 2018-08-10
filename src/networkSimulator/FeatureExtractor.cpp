@@ -22,12 +22,15 @@ FeatureExtractor::FeatureExtractor(NetworkProps& props) : mNetworkProps(props) {
 void FeatureExtractor::extract(QVector<float> origin, QVector<int> dimensions,
                                QSet<QString> cellTypes, QSet<QString> regions, QSet<int> neuronIds,
                                int samplingFactor) {
+    correctOrigin(origin);
     qDebug() << "[*] Pre-filtering neurons.";
     QList<int> neurons = determineNeurons(origin, dimensions, cellTypes, regions, neuronIds);
     qDebug() << "[*] Extracting features.";
     QList<Feature> features = extractFeatures(neurons, origin, dimensions, samplingFactor);
     qDebug() << "[*] Writing extracted features to file: features.csv.";
     writeFeatures("features.csv", features);
+    qDebug() << "[*] Writing extracted features to file: featuresSpatial.csv.";
+    writeFeaturesSpatial("featuresSpatial.csv", features, origin);
     qDebug() << "[*] Writing extracted neurons to file: neurons.csv.";
     writeNeurons("neurons.csv", features, origin, dimensions);
     qDebug() << "[*] Writing extracted voxels to file: voxels.csv.";
@@ -118,35 +121,35 @@ QList<Voxel> FeatureExtractor::determineVoxels(SparseField* pre, SparseField* po
                 voxel.voxelY = y + 1;
                 voxel.voxelZ = z + 1;
 
-                if (pre != NULL) {
+                if (pre != NULL && pre->inRange(position)) {
                     Vec3i voxelLocation = pre->getVoxelContainingPoint(position);
                     voxel.pre = pre->getFieldValue(voxelLocation);
                 } else {
                     voxel.pre = 0;
                 }
 
-                if (postExc != NULL) {
+                if (postExc != NULL && postExc->inRange(position)) {
                     Vec3i voxelLocation = postExc->getVoxelContainingPoint(position);
                     voxel.postExc = postExc->getFieldValue(voxelLocation);
                 } else {
                     voxel.postExc = 0;
                 }
 
-                if (postAllExc != NULL) {
+                if (postAllExc != NULL && postAllExc->inRange(position)) {
                     Vec3i voxelLocation = postAllExc->getVoxelContainingPoint(position);
                     voxel.postAllExc = postAllExc->getFieldValue(voxelLocation);
                 } else {
                     voxel.postAllExc = 0;
                 }
 
-                if (postInh != NULL) {
+                if (postInh != NULL && postInh->inRange(position)) {
                     Vec3i voxelLocation = postInh->getVoxelContainingPoint(position);
                     voxel.postInh = postInh->getFieldValue(voxelLocation);
                 } else {
                     voxel.postInh = 0;
                 }
 
-                if (postAllInh != NULL) {
+                if (postAllInh != NULL && postAllInh->inRange(position)) {
                     Vec3i voxelLocation = postAllInh->getVoxelContainingPoint(position);
                     voxel.postAllInh = postAllInh->getFieldValue(voxelLocation);
                 } else {
@@ -296,6 +299,40 @@ void FeatureExtractor::writeFeatures(QString fileName, QList<Feature>& features)
 }
 
 /*
+    Writes the features into a csv file using spatial coordinates.
+
+    @param fileName The name of the file.
+    @param origin The corrected origin.
+    @param features A list with the features.
+*/
+void FeatureExtractor::writeFeaturesSpatial(QString fileName, QList<Feature>& features,
+                                            QVector<float> origin) {
+    QFile csv(fileName);
+    if (!csv.open(QIODevice::WriteOnly)) {
+        const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    const QChar sep(',');
+    QTextStream out(&csv);
+    out << "x" << sep << "y" << sep << "z" << sep << "neuronID" << sep << "morphologicalCellType"
+        << sep << "functionalCellType" << sep << "region" << sep << "synapticSide" << sep << "pre"
+        << sep << "postExc" << sep << "postAllExc" << sep << "postInh" << sep << "postAllInh"
+        << "\n";
+    float voxelSize = 50;
+    for (int i = 0; i < features.size(); i++) {
+        Feature feature = features[i];
+        float x = origin[0] + (feature.voxelX - 1) * voxelSize;
+        float y = origin[1] + (feature.voxelY - 1) * voxelSize;
+        float z = origin[2] + (feature.voxelZ - 1) * voxelSize;
+        out << x << sep << y << sep << z << sep << feature.neuronID << sep
+            << feature.morphologicalCellType << sep << feature.functionalCellType << sep
+            << feature.region << sep << feature.synapticSide << sep << feature.pre << sep
+            << feature.postExc << sep << feature.postAllExc << sep << feature.postInh << sep
+            << feature.postAllInh << "\n";
+    }
+}
+
+/*
     Writes properties of the extracted neurons into a csv file.
 
     @param fileName The name of the file.
@@ -417,7 +454,7 @@ bool FeatureExtractor::lessThan(Feature& a, Feature& b) {
 QList<int> FeatureExtractor::determineIntersectingNeurons(QVector<float> origin,
                                                           QVector<int> dimensions) {
     const float voxelSize = 50;
-    Vec3f shiftedOrigin(origin[0] - voxelSize, origin[1] - voxelSize, origin[2] - voxelSize);
+    Vec3f shiftedOrigin(origin[0], origin[1], origin[2]);
     Vec3f pointMax(origin[0] + dimensions[0] * voxelSize, origin[1] + dimensions[1] * voxelSize,
                    origin[2] + dimensions[2] * voxelSize);
     BoundingBox subcube(shiftedOrigin, pointMax);
@@ -470,4 +507,23 @@ bool FeatureExtractor::somaWithinSubcube(Vec3f somaPosition, QVector<float> orig
         within = within && (somaPosition[i] >= low && somaPosition[i] <= high);
     }
     return within;
+}
+
+/*
+    Corrects the user specified origin such that it lies in the
+    centre of the voxel (according to the grid exported from Amira).
+    @param origin The user specified origin.
+*/
+void FeatureExtractor::correctOrigin(QVector<float>& origin) {
+    QDir modelDataDir = CIS3D::getModelDataDir(mNetworkProps.dataRoot);
+    const QString pstAllFileExc = CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
+    SparseField* postAllExc = SparseField::load(pstAllFileExc);
+    Vec3f origin3f(origin[0], origin[1], origin[2]);
+    Vec3i voxelLocation = postAllExc->getVoxelContainingPoint(origin3f);
+    Vec3f referenceOrigin = postAllExc->getOrigin();
+    Vec3f voxelSize = postAllExc->getVoxelSize();
+    for (int i = 0; i < 3; i++) {
+        origin[i] = referenceOrigin[i] + voxelLocation[i] * voxelSize[i] + 0.5 * voxelSize[i];
+    }
+    delete postAllExc;
 }
