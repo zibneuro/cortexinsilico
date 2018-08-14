@@ -1,7 +1,6 @@
 #pragma once
 
 #include "NeuronSelection.h"
-#include "FeatureSet.h"
 
 /**
     This class provides memory efficient access to neuron features.
@@ -15,40 +14,38 @@ public:
     /*
         Constructor.
     */
-    FeatureProvider();
+    FeatureProvider(NetworkProps& networkProps);
 
     /*
         Initializes the features according to the specified collection.
         @selection The neuron selection.
     */
-    void init(NeuronSelection selection);
+    void init(NeuronSelection& selection);
 
-    /*
-        Returns the filtered neuron features for each voxel.
-        @return The neuron features per voxel.
-    */
-    QList<FeatureSet> getVoxelFeatures();
+    NeuronSelection getSelection();
 
-    /*
-        Determines the number of presynaptic neurons.
-        @return The numner of neurons.
-    */
-    int getNumPre();
+    SparseField* getPre(int neuronId);
 
-    /*
-        Determines the presynaptic neuron IDs of the current 
-        selection.
-        @return The neuron IDs.
-    */
-    IdList getPre();
+    SparseField* getPostExc(int neuronId);
 
-    /*
-        Determines the number of postsynaptic neurons.
-        @return The numner of neurons.
-    */
-    int getNumPost();
+    SparseField* getPostInh(int neuronId);
+
+    SparseField* getPostAllExc();
+
+    SparseField* getPostAllInh();
+
+    int getPresynapticMultiplicity(int neuronId);
+
+    QList<int> getUniquePresynaptic();
 
 private:
     NeuronSelection mSelection;
-    QList<FeatureSet> mVoxelFeatures;
+    NetworkProps& mNetworkProps;
+
+    SparseField* mPostsynapticAllExc;
+    SparseField* mPostsynapticAllInh;
+    QMap<int, SparseField*> mPresynaptic;
+    QMap<int, int> mPresynapticMultiplicity;
+    QMap<int, SparseField*> mPostsynapticExc;
+    QMap<int, SparseField*> mPostsynapticInh;
 };

@@ -2,8 +2,10 @@
 
 #include <QVector>
 #include "CIS3DSparseVectorSet.h"
+#include "CIS3DStatistics.h"
 #include "Distribution.h"
 #include "FeatureProvider.h"
+#include "Typedefs.h"
 
 class ConnectionProbabilityCalculator {
    public:
@@ -11,12 +13,12 @@ class ConnectionProbabilityCalculator {
 
     double calculate(QVector<float> parameters);
 
-    void calculateVoxel(FeatureSet& features, QVector<float>& parameters,
-                        SparseVectorSet& synapses);
+   private:    
 
-   private:
-    double calculateProbability(SparseVectorSet& synapses);
-    FeatureProvider& mFeatureProvider;
-    Distribution mDistribution;
-    float mEps = 0.000001;
+    double calculateProbability(double innervationMean);
+
+    FeatureProvider& mFeatureProvider;    
+    NeuronSelection mNeuronSelection;    
+    IdList mPresynaptic;
+    IdList mPostsynaptic;
 };

@@ -109,15 +109,6 @@ struct Feature {
     float postAllInh;
 };
 
-struct CalculationFeature{
-    int neuronId;
-    float pre;
-    float pstExc;
-    float pstInh;
-    CIS3D::SynapticSide synapticSide;
-    CIS3D::NeuronType functionalType;
-};
-
 /*
     Voxel ID and location. Pre- and postsynaptic target counts.
 */

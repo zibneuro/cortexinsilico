@@ -17,7 +17,7 @@
     @throws runtime_error if the spacing differs or if the shift between
         the fields is not an integer multiple of the voxel spacing.
 */
-SparseField SparseFieldCalculator::calculatePetersRule(const SparseField& bouton,
+float SparseFieldCalculator::calculatePetersRule(const SparseField& bouton,
                                                        const SparseField& pst,
                                                        const SparseField& pstAll,
                                                        const float theta1, const float theta2,
@@ -26,6 +26,8 @@ SparseField SparseFieldCalculator::calculatePetersRule(const SparseField& bouton
     const Vec3i offset2 = bouton.getCoordinates().getOffsetTo(pstAll.getCoordinates());
 
     SparseField result = SparseField(bouton.getCoordinates());
+
+    const float maxInnervation = 1000000;
 
     int newValueIdx = 0;
     for (SparseField::LocationIndexToValueIndexMap::ConstIterator it1 = bouton.mIndexMap.begin();
@@ -56,12 +58,14 @@ SparseField SparseFieldCalculator::calculatePetersRule(const SparseField& bouton
             }
 
             result.mIndexMap.insert(index1, newValueIdx);
-            result.mField.push_back(y);
+            result.mField.push_back(std::min(y,maxInnervation));
             ++newValueIdx;
         }
     }
 
-    return result;
+    // Todo: Draw random Poisson synapse count in each nonzeror field of "result".
+    // Then return 0 or 1 depending on whether neurons are connected. 
+    return result.getFieldSum();
 }
 
 /*

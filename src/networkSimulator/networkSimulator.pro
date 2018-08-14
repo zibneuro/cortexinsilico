@@ -13,6 +13,9 @@ INCLUDEPATH += ../shared
 
 QMAKE_LFLAGS += -fuse-ld=gold
 
+QMAKE_CXXFLAGS += -fopenmp
+QMAKE_LFLAGS += -fopenmp
+
 CONFIG(debug, debug|release) {
     DESTDIR = ../../build/networkSimulator/debug
 }
@@ -28,7 +31,6 @@ SOURCES += \
     FeatureProvider.cpp \
     ConnectionProbabilityCalculator.cpp \
     Distribution.cpp \
-    FeatureSet.cpp \
     FeatureExtractor.cpp \
     FeatureReader.cpp \
     SynapseDistributor.cpp \
@@ -60,7 +62,6 @@ HEADERS += \
     FeatureProvider.h \
     ConnectionProbabilityCalculator.h \
     Distribution.h \
-    FeatureSet.h \
     FeatureReader.h \
     SynapseDistributor.h \
     SynapseWriter.h \

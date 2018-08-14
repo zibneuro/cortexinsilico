@@ -24,6 +24,7 @@
 #include <QSet>
 #include <random>
 #include "CIS3DAxonRedundancyMap.h"
+#include "ConnectionProbabilityCalculator.h"
 #include "CIS3DBoundingBoxes.h"
 #include "CIS3DCellTypes.h"
 #include "CIS3DConstantsHelpers.h"
@@ -35,6 +36,7 @@
 #include "CIS3DVec3.h"
 #include "FeatureExtractor.h"
 #include "FeatureReader.h"
+#include "FeatureProvider.h"
 #include "Histogram.h"
 #include "InnervationStatistic.h"
 #include "NeuronSelection.h"
@@ -272,13 +274,33 @@ int main(int argc, char **argv) {
             if (dimensions[0] == -1 && dimensions[1] == -1 && dimensions[2] == -1) {
                 extractor.extractAll(cellTypes);
             } else {
-                QVector<float> origin = extractOrigin(spec);                
+                QVector<float> origin = extractOrigin(spec);
                 QSet<QString> regions = extractRegions(spec);
                 QSet<int> neuronIds = extractNeuronIds(spec);
                 int samplingFactor = extractSamplingFactor(spec);
                 extractor.extract(origin, dimensions, cellTypes, regions, neuronIds,
                                   samplingFactor);
             }
+            return 0;
+        }
+    } else if (mode == "INIT") {
+        if (argc != 3) {
+            printUsage();
+            return 1;
+        } else {
+            const QString specFile = argv[2];
+            QJsonObject spec = UtilIO::parseSpecFile(specFile);
+            const QString dataRoot = spec["DATA_ROOT"].toString();
+            NetworkProps networkProps;
+            networkProps.setDataRoot(dataRoot);
+            networkProps.loadFilesForSynapseComputation();        
+            FeatureProvider featureProvider(networkProps);
+            NeuronSelection selection;
+            selection.setInnervationSelection(spec, networkProps);
+            featureProvider.init(selection);            
+            ConnectionProbabilityCalculator calculator(featureProvider);
+            QVector<float> parameters = extractRuleParameters(spec);
+            qDebug() << calculator.calculate(parameters);
             return 0;
         }
     } else {

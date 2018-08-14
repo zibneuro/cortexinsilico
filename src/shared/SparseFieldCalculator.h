@@ -19,7 +19,7 @@ public:
         @throws runtime_error if the spacing differs or if the shift between
             the fields is not an integer multiple of the voxel spacing.
     */
-    SparseField calculatePetersRule(const SparseField& bouton,
+    float calculatePetersRule(const SparseField& bouton,
                                 const SparseField& pst,
                                 const SparseField& pstAll,
                                 const float theta1,
