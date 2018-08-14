@@ -2,6 +2,7 @@
 #define TYPEDEFS_H
 
 #include "CIS3DBoundingBoxes.h"
+#include "CIS3DConstantsHelpers.h"
 #include <QHash>
 
 class Vec3f;
@@ -106,6 +107,15 @@ struct Feature {
     float postAllExc;
     float postInh;
     float postAllInh;
+};
+
+struct CalculationFeature{
+    int neuronId;
+    float pre;
+    float pstExc;
+    float pstInh;
+    CIS3D::SynapticSide synapticSide;
+    CIS3D::NeuronType functionalType;
 };
 
 /*

@@ -1,11 +1,13 @@
 #include "FeatureExtractor.h"
+#include <QDir>
+#include <QMap>
 
 /*
     Constructor.
 
     @param props The complete model data.
 */
-FeatureExtractor::FeatureExtractor(NetworkProps& props) : mNetworkProps(props) {}
+FeatureExtractor::FeatureExtractor(NetworkProps& props) : mNetworkProps(props), mVerbose(true) {}
 
 /*
     Extracts the model features from the specified subvolume according
@@ -35,6 +37,65 @@ void FeatureExtractor::extract(QVector<float> origin, QVector<int> dimensions,
     writeNeurons("neurons.csv", features, origin, dimensions);
     qDebug() << "[*] Writing extracted voxels to file: voxels.csv.";
     writeVoxels("voxels.csv", features);
+}
+
+/*
+    Extracts all features from the model data. Writes the features per voxel
+    into the folder "voxelFeatures", one file per voxel. Creates an index file
+    "index.dat" with a mapping (neuronID -> voxel_1, ..., voxel_k).
+    @param cellTypes The cell types filter.
+*/
+void FeatureExtractor::extractAll(QSet<QString> cellTypes) {
+    mVerbose = false;
+    createOutputDir("voxelFeatures");
+
+    QVector<float> origin;
+    QVector<int> dimensions;
+    QVector<float> voxelSize;
+    determineModelDimensions(origin, dimensions, voxelSize);
+
+    QSet<QString> regions;
+    QSet<int> neuronIds;
+    QVector<int> dimOne;
+    dimOne.push_back(1);
+    dimOne.push_back(1);
+    dimOne.push_back(1);
+
+    QMap<int, QSet<QString> > index;
+    SelectionFilter emptyFilter;
+    QList<int> allNeurons = mNetworkProps.neurons.getFilteredNeuronIds(emptyFilter);
+    for(int i=0; i<allNeurons.size(); i++){
+        QSet<QString> emptySet;
+        index.insert(allNeurons[i], emptySet);
+    }
+    
+    // Iterate over voxels.
+    for (int x = 0; x < dimensions[0]; x++) {
+        for (int y = 0; y < dimensions[1]; y++) {
+            for (int z = 0; z < dimensions[2]; z++) {
+                QVector<float> location;
+                location.push_back(origin[0] + x * voxelSize[0]);
+                location.push_back(origin[1] + y * voxelSize[1]);
+                location.push_back(origin[2] + z * voxelSize[2]);
+                //qDebug() << "Location" << location[0] << location[1] << location[2];
+                const QString voxelId = QString("%1-%2-%3").arg(x + 1).arg(y + 1).arg(z + 1);
+                qDebug() << "[*] Processing voxel" << voxelId;
+                QList<int> currentNeurons =
+                    determineNeurons(location, dimOne, cellTypes, regions, neuronIds);        
+                QList<Feature> features = extractFeatures(currentNeurons, location, dimOne, 1);
+                if(features.size() > 0){
+                    QString voxelFilePath = QDir("voxelFeatures").filePath(voxelId + ".csv");                
+                    writeFeaturesSparse(voxelFilePath, features);
+                    for(int i=0; i<features.size(); i++){
+                        index[features[i].neuronID].insert(voxelId);
+                    }
+                }
+            }
+        }
+    }
+    
+    QString indexFilePath = QDir("voxelFeatures").filePath("index.dat");
+    writeIndexFile(indexFilePath, index);
 }
 
 /*
@@ -113,7 +174,7 @@ QList<Voxel> FeatureExtractor::determineVoxels(SparseField* pre, SparseField* po
         for (int y = 0; y < dimensions[1]; y++) {
             position.setY(origin[1] + y * voxelSize);
             for (int z = 0; z < dimensions[2]; z++) {
-                position.setZ(origin[2] + z * voxelSize);
+                position.setZ(origin[2] + z * voxelSize);                
 
                 Voxel voxel;
                 voxel.voxelId = SparseField::getVoxelId(Vec3i(x, y, z), dimensions);
@@ -124,7 +185,7 @@ QList<Voxel> FeatureExtractor::determineVoxels(SparseField* pre, SparseField* po
                 if (pre != NULL && pre->inRange(position)) {
                     Vec3i voxelLocation = pre->getVoxelContainingPoint(position);
                     voxel.pre = pre->getFieldValue(voxelLocation);
-                } else {
+                } else {                    
                     voxel.pre = 0;
                 }
 
@@ -207,30 +268,20 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
             int mappedId = mNetworkProps.axonRedundancyMap.getNeuronIdToUse(neuronId);
             const QString filePath =
                 CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, mappedId);
-            boutons = SparseField::load(filePath);
+            boutons = loadSparseField(filePath);
         }
         if (synapticSide == CIS3D::SynapticSide::POSTSYNAPTIC ||
             synapticSide == CIS3D::SynapticSide::BOTH_SIDES) {
             const QString filePathExc = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType,
                                                                   neuronId, CIS3D::EXCITATORY);
-            postExc = SparseField::load(filePathExc);
+            postExc = loadSparseField(filePathExc);
             const QString filePathInh = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType,
                                                                   neuronId, CIS3D::INHIBITORY);
-            postInh = SparseField::load(filePathInh);
+            postInh = loadSparseField(filePathInh);
         }
 
         QList<Voxel> voxels =
             determineVoxels(boutons, postExc, postAllExc, postInh, postAllInh, origin, dimensions);
-
-        if (boutons != NULL) {
-            delete boutons;
-        }
-        if (postExc != NULL) {
-            delete postExc;
-        }
-        if (postInh != NULL) {
-            delete postInh;
-        }
 
         if (voxels.size() > 0) {
             nonEmptyNeurons++;
@@ -255,8 +306,8 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
                 }
             }
         }
-
-        if (i % 1000 == 0) {
+        
+        if (mVerbose && i % 1000 == 0) {
             qDebug() << "   Processed neuron " << i + 1 << "of" << neurons.size()
                      << "- Number of features" << features.size();
         }
@@ -329,6 +380,30 @@ void FeatureExtractor::writeFeaturesSpatial(QString fileName, QList<Feature>& fe
             << feature.region << sep << feature.synapticSide << sep << feature.pre << sep
             << feature.postExc << sep << feature.postAllExc << sep << feature.postInh << sep
             << feature.postAllInh << "\n";
+    }
+}
+
+/*
+    Writes the features into a csv file without coordinates or voxel ID.
+
+    @param fileName The name of the file.
+    @param features A list with the features.
+*/
+void FeatureExtractor::writeFeaturesSparse(QString fileName, QList<Feature>& features) {
+    QFile csv(fileName);
+    if (!csv.open(QIODevice::WriteOnly)) {
+        const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    const QChar sep(',');
+    QTextStream out(&csv);
+    out << "neuronID" << sep << "pre" << sep << "postExc" << sep
+        << "postAllExc" << sep << "postInh" << sep << "postAllInh"
+        << "\n";    
+    for (int i = 0; i < features.size(); i++) {
+        Feature feature = features[i];
+        out << feature.neuronID << sep << feature.pre << sep << feature.postExc << sep << feature.postAllExc << sep
+            << feature.postInh << sep << feature.postAllInh << "\n";
     }
 }
 
@@ -526,4 +601,81 @@ void FeatureExtractor::correctOrigin(QVector<float>& origin) {
         origin[i] = referenceOrigin[i] + voxelLocation[i] * voxelSize[i] + 0.5 * voxelSize[i];
     }
     delete postAllExc;
+}
+
+/*
+    Creates a directory with the specified name. If the directory already exists,
+    all files in the directory are deleted.
+    @param dirName The name of the directory.
+*/
+void FeatureExtractor::createOutputDir(QString dirName) {
+    QDir dir;
+    if (dir.exists(dirName)) {
+        QDir outputDir(dirName);
+        outputDir.setNameFilters(QStringList() << "*.*");
+        outputDir.setFilter(QDir::Files);
+        foreach (QString dirFile, outputDir.entryList()) { outputDir.remove(dirFile); }
+    }
+    dir.mkdir(dirName);
+}
+
+/*
+    Determines the overall model size.
+    @param origin The model origin (ouput).
+    @param dimensions The model dimensions (ouput).
+*/
+void FeatureExtractor::determineModelDimensions(QVector<float>& origin, QVector<int>& dimensions,
+                                                QVector<float>& voxelSize) {
+    QDir modelDataDir = CIS3D::getModelDataDir(mNetworkProps.dataRoot);
+    const QString pstAllFileExc = CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
+    SparseField* postAllExc = SparseField::load(pstAllFileExc);
+    Vec3f originRef = postAllExc->getOrigin();
+    Vec3f voxelSizeRef = postAllExc->getVoxelSize();
+    Vec3i dimRef = postAllExc->getDimensions();
+    delete postAllExc;
+    for (int i = 0; i < 3; i++) {
+        origin.push_back(originRef[i] + 0.5 * voxelSizeRef[i]);
+        dimensions.push_back(dimRef[i]);
+        voxelSize.push_back(voxelSizeRef[i]);
+    }
+    qDebug() << "Model dimensions" << origin << dimensions << voxelSize;
+}
+
+/*
+    Writes the index to file, which maps neuron IDs to the voxels
+    that contain features from the neuron.
+    @fileName The name of the file.
+    @index The index to write.
+*/
+void FeatureExtractor::writeIndexFile(QString fileName, QMap<int, QSet<QString> >& index) {
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    const QChar sep(' ');
+    QTextStream out(&file);
+    QList<int> neuronIds = index.keys();
+    for(int i=0; i<neuronIds.size(); i++){
+        out << neuronIds[i];
+        QList<QString> voxelIds = index[neuronIds[i]].toList();
+        for(int j=0; j<voxelIds.size(); j++){
+            out << sep << voxelIds[j];
+        } 
+        out << "\n";
+    }
+}
+
+/*
+    Loads a sparse field using a cache.
+*/
+SparseField* FeatureExtractor::loadSparseField(QString fileName){
+    QMap<QString, SparseField*>::const_iterator it = mSparseFieldCache.find(fileName);
+    if(it == mSparseFieldCache.end()){
+        SparseField* field = SparseField::load(fileName);
+        mSparseFieldCache.insert(fileName, field);
+        return field;
+    } else {
+        return mSparseFieldCache[fileName];
+    }
 }

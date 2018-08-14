@@ -204,9 +204,6 @@ QString extractOutputMode(const QJsonObject spec) {
     }
 }
 
-
-
-
 /*
     Reads the SAMPLING_FACTOR property from the specification file.
 
@@ -215,10 +212,11 @@ QString extractOutputMode(const QJsonObject spec) {
     @throws runtime_error if the smapling factor has an invalid value.
 */
 int extractSamplingFactor(const QJsonObject spec) {
-    if (spec["SAMPLING_FACTOR"] != QJsonValue::Undefined) {        
+    if (spec["SAMPLING_FACTOR"] != QJsonValue::Undefined) {
         int samplingFactor = spec["SAMPLING_FACTOR"].toInt();
-        if(samplingFactor == 0){
-            throw std::runtime_error("Invalid value for sampling factor. Possible reason: \"-symbols.");
+        if (samplingFactor == 0) {
+            throw std::runtime_error(
+                "Invalid value for sampling factor. Possible reason: \"-symbols.");
         } else {
             return samplingFactor;
         }
@@ -253,7 +251,7 @@ int main(int argc, char **argv) {
             QList<Feature> features = reader.load("features.csv");
             QSet<int> voxelIds = extractVoxelIds(spec);
             QString outputMode = extractOutputMode(spec);
-            SynapseDistributor distributor(features,voxelIds,outputMode);
+            SynapseDistributor distributor(features, voxelIds, outputMode);
             QVector<float> parameters = extractRuleParameters(spec);
             distributor.apply(SynapseDistributor::Rule::GeneralizedPeters, parameters);
         }
@@ -268,14 +266,19 @@ int main(int argc, char **argv) {
             NetworkProps networkProps;
             networkProps.setDataRoot(dataRoot);
             networkProps.loadFilesForSynapseComputation();
-            QVector<float> origin = extractOrigin(spec);
             QVector<int> dimensions = extractDimensions(spec);
             QSet<QString> cellTypes = extractCellTypes(spec);
-            QSet<QString> regions = extractRegions(spec);
-            QSet<int> neuronIds = extractNeuronIds(spec);
-            int samplingFactor = extractSamplingFactor(spec);
             FeatureExtractor extractor(networkProps);
-            extractor.extract(origin, dimensions, cellTypes, regions, neuronIds, samplingFactor);
+            if (dimensions[0] == -1 && dimensions[1] == -1 && dimensions[2] == -1) {
+                extractor.extractAll(cellTypes);
+            } else {
+                QVector<float> origin = extractOrigin(spec);                
+                QSet<QString> regions = extractRegions(spec);
+                QSet<int> neuronIds = extractNeuronIds(spec);
+                int samplingFactor = extractSamplingFactor(spec);
+                extractor.extract(origin, dimensions, cellTypes, regions, neuronIds,
+                                  samplingFactor);
+            }
             return 0;
         }
     } else {

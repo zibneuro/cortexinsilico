@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QHash>
 #include <QPair>
+#include <QMap>
 #include <random>
 #include "CIS3DAxonRedundancyMap.h"
 #include "CIS3DBoundingBoxes.h"
@@ -54,6 +55,14 @@ class FeatureExtractor {
     */
     void extract(QVector<float> origin, QVector<int> dimensions, QSet<QString> cellTypes,
                  QSet<QString> regions, QSet<int> neuronIds, int samplingFactor);
+
+    /*
+        Extracts all features from the model data. Writes the features per voxel
+        into the folder "voxelFeatures", one file per voxel. Creates an index file
+        "index.dat" with a mapping (neuronID -> voxel_1, ..., voxel_k).
+        @param cellTypes The cell types filter.
+    */
+    void extractAll(QSet<QString> cellTypes);
 
    private:
     /*
@@ -117,6 +126,14 @@ class FeatureExtractor {
     void writeFeaturesSpatial(QString fileName, QList<Feature>& features, QVector<float> origin);
 
     /*
+        Writes the features into a csv file without coordinates or voxel ID.
+
+        @param fileName The name of the file.
+        @param features A list with the features.
+    */
+    void writeFeaturesSparse(QString fileName, QList<Feature>& features);
+
+    /*
         Writes properties of the extracted neurons into a csv file.
 
         @param fileName The name of the file.
@@ -125,7 +142,7 @@ class FeatureExtractor {
         @param dimensions Number of voxels in each direction from the origin.
     */
     void writeNeurons(QString fileName, QList<Feature>& features, QVector<float> origin,
-                                   QVector<int> dimensions);
+                      QVector<int> dimensions);
 
     /*
         Writes properties of the extracted voxels into a csv file.
@@ -158,7 +175,7 @@ class FeatureExtractor {
     /*
         Determines whether the soma is located within the specified subcube.
 
-        @param somaPosition Spatial location of the soma. 
+        @param somaPosition Spatial location of the soma.
         @param origin The origin of the subcube.
         @param dimensions The number of voxels in each dimension.
         @return True, if the soma is located within the subcube.
@@ -173,7 +190,45 @@ class FeatureExtractor {
     void correctOrigin(QVector<float>& origin);
 
     /*
+        Creates a directory with the specified name. If the directory already exists,
+        all files in the directory are deleted.
+        @param dirName The name of the directory.
+    */
+    void createOutputDir(QString dirName);
+
+    /*
+        Determines the overall model size.
+        @param origin The model origin (ouput).
+        @param dimensions The model dimensions (ouput).
+        @param voxelSize The voxel size (ouput).
+    */
+    void determineModelDimensions(QVector<float>& origin, QVector<int>& dimensions, QVector<float>& voxelSize);
+
+    /*
+        Writes the index to file, which maps neuron IDs to the voxels
+        that contain features from the neuron.
+        @fileName The name of the file.
+        @index The index to write.
+    */
+    void writeIndexFile(QString fileName, QMap<int, QSet<QString> >& index);
+
+    /*
+        Loads a sparse field using a cache.
+    */
+    SparseField* loadSparseField(QString fileName);
+
+    /*
         The model data.
     */
     NetworkProps& mNetworkProps;
+
+    /*
+        Sparse field cache. FileName -> SparseField
+    */
+    QMap<QString, SparseField*> mSparseFieldCache;
+
+    /*
+        Info level.
+    */
+    bool mVerbose;
 };

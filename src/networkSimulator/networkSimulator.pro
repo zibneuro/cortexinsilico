@@ -25,6 +25,10 @@ MOC_DIR = $$DESTDIR/.moc
 
 SOURCES += \
     networkSimulator.cpp \
+    FeatureProvider.cpp \
+    ConnectionProbabilityCalculator.cpp \
+    Distribution.cpp \
+    FeatureSet.cpp \
     FeatureExtractor.cpp \
     FeatureReader.cpp \
     SynapseDistributor.cpp \
@@ -53,6 +57,10 @@ SOURCES += \
 
 HEADERS += \
     FeatureExtractor.h \
+    FeatureProvider.h \
+    ConnectionProbabilityCalculator.h \
+    Distribution.h \
+    FeatureSet.h \
     FeatureReader.h \
     SynapseDistributor.h \
     SynapseWriter.h \
