@@ -36,7 +36,7 @@ double ConnectionProbabilityCalculator::calculate(QVector<float> parameters) {
             mutex.unlock();
         }
     }
-    qDebug() << innervationHistogram.getNumberOfSamples();
+    //qDebug() << innervationHistogram.getNumberOfSamples();
     return calculateProbability(innervationHistogram.getMean());
 }
 

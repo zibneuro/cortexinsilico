@@ -5,6 +5,7 @@
 #include <QList>
 #include "CIS3DVec3.h"
 #include "CIS3DConstantsHelpers.h" 
+#include <QSharedMemory>
 
 /**
     A filter to select subroups of neurons based on cell type, region,
@@ -151,7 +152,7 @@ public:
 private:
 
     typedef QMap<int, NeuronProperties> PropsMap;
-    PropsMap mPropsMap;
+    PropsMap mPropsMap;    
 
 };
 

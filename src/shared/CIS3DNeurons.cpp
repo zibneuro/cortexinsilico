@@ -4,6 +4,9 @@
 #include <QStringList>
 #include <QTextStream>
 #include <stdexcept>
+#include <QBuffer>
+#include <QDataStream>
+#include <QDebug>
 
 /**
     Constructor.

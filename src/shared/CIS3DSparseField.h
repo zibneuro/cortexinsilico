@@ -3,6 +3,7 @@
 #include <QHash>
 #include <QMap>
 #include <QVector>
+#include <QDataStream>
 #include "CIS3DBoundingBoxes.h"
 #include "CIS3DVec3.h"
 
@@ -330,7 +331,7 @@ class SparseField {
         @param fs The SparseField to write.
         @param out The data stream.
     */
-    static void writeToStream(const SparseField* fs, QDataStream& out);
+    static void writeToStream(const SparseField* fs, QDataStream& out);   
 
     /**
         Reads a SparseField from the specified data stream.
@@ -340,6 +341,20 @@ class SparseField {
     */
     static SparseField* readFromStream(QDataStream& in);
 
+    /*
+        Writes sparse field to memory under the specified key.
+        @param key The memory segment.
+        @field The sparse field.
+    */
+    static void writeToMemory(QString key, SparseField* field);
+
+    /*
+        Loads sparse field from memory under the specified key.
+        @param key The memory segment.
+        @return The sparse field.
+    */
+    static SparseField* loadFromMemory(QString key);
+    
     /**
         Returns the coordinates of the SparseField (origin, dimension, voxel spacing).
         @return The SparseFieldCoordinates.

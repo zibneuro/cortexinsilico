@@ -1,6 +1,8 @@
 #include "CIS3DSparseField.h"
 #include <stdio.h>
 #include <QDataStream>
+#include <QSharedMemory>
+#include <QBuffer>
 #include <QDebug>
 #include <QFile>
 #include <QIODevice>
@@ -8,6 +10,8 @@
 #include <QVector>
 #include <cmath>
 #include <stdexcept>
+#include <QBuffer>
+
 
 const float SparseField::DEFAULT_FIELD_VALUE = 0.0f;
 
@@ -419,6 +423,54 @@ SparseField* SparseField::readFromStream(QDataStream& in) {
     }
 
     return fs;
+}
+
+/*
+    Writes sparse field to memory under the specified key.
+    @param key The memory segment.
+    @field The sparse field.
+*/
+void SparseField::writeToMemory(QString key, SparseField* field){
+    QSharedMemory sharedMemory(key);
+    QBuffer buffer;
+    buffer.open(QBuffer::ReadWrite);
+    QDataStream out(&buffer);
+    writeToStream(field, out);
+    int size = buffer.size();
+    if (!sharedMemory.create(size)) {
+        qDebug() << "Unable to create shared memory segment" << key;
+        return;
+    }
+    sharedMemory.lock();
+    char *to = (char*)sharedMemory.data();
+    const char *from = buffer.data().data();
+    memcpy(to, from, qMin(sharedMemory.size(), size));
+    sharedMemory.unlock();
+}
+
+/*
+    Loads sparse field from memory under the specified key.
+    @param key The memory segment.
+    @return The sparse field.
+*/
+SparseField* SparseField::loadFromMemory(QString key){
+    QSharedMemory sharedMemory(key);
+    if (!sharedMemory.attach()) {
+        qDebug() << "Unable to attach to shared memory segment" << key;                             
+        return NULL;
+    }
+
+    QBuffer buffer;
+    QDataStream in(&buffer);
+    SparseField* field;
+    sharedMemory.lock();
+    buffer.setData((char*)sharedMemory.constData(), sharedMemory.size());
+    buffer.open(QBuffer::ReadOnly);
+    field = readFromStream(in);
+    sharedMemory.unlock();
+    sharedMemory.detach();
+
+    return field;
 }
 
 /**

@@ -3,6 +3,7 @@ QT -= gui
 
 CONFIG += c++11
 CONFIG += debug_and_release
+CONFIG += thread
 
 CONFIG += console
 CONFIG -= app_bundle
@@ -12,9 +13,11 @@ TEMPLATE = app
 INCLUDEPATH += ../shared 
 
 QMAKE_LFLAGS += -fuse-ld=gold
-
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
+
+LIBS += -lrt
+    
 
 CONFIG(debug, debug|release) {
     DESTDIR = ../../build/networkSimulator/debug

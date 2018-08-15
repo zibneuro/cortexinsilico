@@ -2,9 +2,9 @@
     "DATA_ROOT": "/local/bzfharth/2018/neuroconnect_rbc-network-egger_2018/realization-entireRBC_2015-10-07/",    
     "CONNECTIVITY_RULE_PARAMETERS": [0,1,1,-1],
     "PRE_NEURON_CELLTYPES": ["L5st"],
-    "PRE_NEURON_REGIONS": [],
+    "PRE_NEURON_REGIONS": ["C2"],
     "PRE_NEURON_IDS": [],
     "POST_NEURON_CELLTYPES": ["L5tt"],
-    "POST_NEURON_REGIONS": [],
+    "POST_NEURON_REGIONS": ["C2"],
     "POST_NEURON_IDS": []
 }

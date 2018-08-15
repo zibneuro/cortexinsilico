@@ -21,10 +21,13 @@
 */
 
 #include <QDebug>
+#include <QFile>
+#include <QIODevice>
 #include <QSet>
+#include <QTextStream>
+#include <boost/interprocess/shared_memory_object.hpp>
 #include <random>
 #include "CIS3DAxonRedundancyMap.h"
-#include "ConnectionProbabilityCalculator.h"
 #include "CIS3DBoundingBoxes.h"
 #include "CIS3DCellTypes.h"
 #include "CIS3DConstantsHelpers.h"
@@ -34,9 +37,10 @@
 #include "CIS3DSparseField.h"
 #include "CIS3DSparseVectorSet.h"
 #include "CIS3DVec3.h"
+#include "ConnectionProbabilityCalculator.h"
 #include "FeatureExtractor.h"
-#include "FeatureReader.h"
 #include "FeatureProvider.h"
+#include "FeatureReader.h"
 #include "Histogram.h"
 #include "InnervationStatistic.h"
 #include "NeuronSelection.h"
@@ -227,6 +231,18 @@ int extractSamplingFactor(const QJsonObject spec) {
     }
 }
 
+void writeOutputFile(double connectionProbability) {
+    QString fileName = "output.json";
+    QFile json(fileName);
+    if (!json.open(QIODevice::WriteOnly)) {
+        const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+
+    QTextStream out(&json);
+    out << "{\"CONNECTION_PROBABILITY\":" << connectionProbability << "}";
+}
+
 /*
     Entry point for the console application.
 
@@ -246,16 +262,21 @@ int main(int argc, char **argv) {
         if (argc != 3) {
             printUsage();
             return 1;
-        } else {
+        } else {        
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            FeatureReader reader;
-            QList<Feature> features = reader.load("features.csv");
-            QSet<int> voxelIds = extractVoxelIds(spec);
-            QString outputMode = extractOutputMode(spec);
-            SynapseDistributor distributor(features, voxelIds, outputMode);
+            const QString dataRoot = spec["DATA_ROOT"].toString();
+            NetworkProps networkProps;
+            networkProps.setDataRoot(dataRoot);
+            networkProps.loadFilesForSynapseComputation();
+            FeatureProvider featureProvider(networkProps);
+            NeuronSelection selection;
+            selection.setInnervationSelection(spec, networkProps);
+            featureProvider.init(selection);
+            ConnectionProbabilityCalculator calculator(featureProvider);
             QVector<float> parameters = extractRuleParameters(spec);
-            distributor.apply(SynapseDistributor::Rule::GeneralizedPeters, parameters);
+            double connProb = calculator.calculate(parameters);
+            writeOutputFile(connProb);
         }
     } else if (mode == "SUBCUBE") {
         if (argc != 3) {
@@ -293,11 +314,11 @@ int main(int argc, char **argv) {
             const QString dataRoot = spec["DATA_ROOT"].toString();
             NetworkProps networkProps;
             networkProps.setDataRoot(dataRoot);
-            networkProps.loadFilesForSynapseComputation();        
+            networkProps.loadFilesForSynapseComputation();
             FeatureProvider featureProvider(networkProps);
             NeuronSelection selection;
             selection.setInnervationSelection(spec, networkProps);
-            featureProvider.init(selection);            
+            featureProvider.init(selection);
             ConnectionProbabilityCalculator calculator(featureProvider);
             QVector<float> parameters = extractRuleParameters(spec);
             qDebug() << calculator.calculate(parameters);
