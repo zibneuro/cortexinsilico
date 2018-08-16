@@ -9,7 +9,7 @@
 
 class ConnectionProbabilityCalculator {
    public:
-    ConnectionProbabilityCalculator(FeatureProvider featureProvider);
+    ConnectionProbabilityCalculator(FeatureProvider& featureProvider);
 
     double calculate(QVector<float> parameters);
 
@@ -18,7 +18,6 @@ class ConnectionProbabilityCalculator {
     double calculateProbability(double innervationMean);
 
     FeatureProvider& mFeatureProvider;    
-    NeuronSelection mNeuronSelection;    
-    IdList mPresynaptic;
-    IdList mPostsynaptic;
+    int mNumPre;
+    int mNumPost;
 };

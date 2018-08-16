@@ -262,21 +262,15 @@ int main(int argc, char **argv) {
         if (argc != 3) {
             printUsage();
             return 1;
-        } else {        
+        } else {                    
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            const QString dataRoot = spec["DATA_ROOT"].toString();
-            NetworkProps networkProps;
-            networkProps.setDataRoot(dataRoot);
-            networkProps.loadFilesForSynapseComputation();
-            FeatureProvider featureProvider(networkProps);
-            NeuronSelection selection;
-            selection.setInnervationSelection(spec, networkProps);
-            featureProvider.init(selection);
-            ConnectionProbabilityCalculator calculator(featureProvider);
-            QVector<float> parameters = extractRuleParameters(spec);
+            QVector<float> parameters = extractRuleParameters(spec);            
+            FeatureProvider featureProvider;            
+            featureProvider.init();
+            ConnectionProbabilityCalculator calculator(featureProvider);            
             double connProb = calculator.calculate(parameters);
-            writeOutputFile(connProb);
+            writeOutputFile(connProb);                        
         }
     } else if (mode == "SUBCUBE") {
         if (argc != 3) {
@@ -315,13 +309,10 @@ int main(int argc, char **argv) {
             NetworkProps networkProps;
             networkProps.setDataRoot(dataRoot);
             networkProps.loadFilesForSynapseComputation();
-            FeatureProvider featureProvider(networkProps);
+            FeatureProvider featureProvider;
             NeuronSelection selection;
             selection.setInnervationSelection(spec, networkProps);
-            featureProvider.init(selection);
-            ConnectionProbabilityCalculator calculator(featureProvider);
-            QVector<float> parameters = extractRuleParameters(spec);
-            qDebug() << calculator.calculate(parameters);
+            featureProvider.preprocess(networkProps,selection);            
             return 0;
         }
     } else {

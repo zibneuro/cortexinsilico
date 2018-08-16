@@ -7,37 +7,43 @@
 #include "SparseFieldCalculator.h"
 #include "Typedefs.h"
 
-ConnectionProbabilityCalculator::ConnectionProbabilityCalculator(FeatureProvider featureProvider)
+ConnectionProbabilityCalculator::ConnectionProbabilityCalculator(FeatureProvider& featureProvider)
     : mFeatureProvider(featureProvider) {
-    mNeuronSelection = mFeatureProvider.getSelection();
-    mPresynaptic = mFeatureProvider.getUniquePresynaptic();
-    mPostsynaptic = mNeuronSelection.Postsynaptic();
+    mNumPre = mFeatureProvider.getNumPre();
+    mNumPost = mFeatureProvider.getNumPost();
 }
 
 double ConnectionProbabilityCalculator::calculate(QVector<float> parameters) {
+
+    //qDebug() << "[*] Start simulation.";
+    
     SparseField* postAll = mFeatureProvider.getPostAllExc();
     Statistics innervationHistogram;
     SparseFieldCalculator fieldCalculator;
-    std::mutex mutex;    
-    for (int i = 0; i < mPostsynaptic.size(); i++) {
-        int postNeuron = mPostsynaptic[i];
+    std::mutex mutex;
+    std::mutex mutex2;        
+    for (int i = 0; i < mNumPre; i++) {                
         #pragma omp parallel for schedule(dynamic)
-        for (int j = 0; j < mPresynaptic.size(); j++) {
-            int preNeuron = mPresynaptic[j];
-            SparseField* pre = mFeatureProvider.getPre(preNeuron);
-            SparseField* post = mFeatureProvider.getPostExc(postNeuron);
-            int multiplicity = mFeatureProvider.getPresynapticMultiplicity(preNeuron);
+        for (int j = 0; j < mNumPost; j++) {
+            mutex.lock();                        
+            SparseField* pre = mFeatureProvider.getPre(i);
+            SparseField* post = mFeatureProvider.getPostExc(j);
+            int multiplicity = mFeatureProvider.getPreMultiplicity(i);
+            mutex.unlock();
             float innervation = fieldCalculator.calculatePetersRule(
                 *pre, *post, *postAll, parameters[0], parameters[1], parameters[2], parameters[3]);
-            mutex.lock();
+            mutex2.lock();
             for (int k = 0; k < multiplicity; k++) {
                 innervationHistogram.addSample(innervation);
             }
-            mutex.unlock();
+            mutex2.unlock();
         }
     }
-    //qDebug() << innervationHistogram.getNumberOfSamples();
+
+    //qDebug() << "[*] Finish simulation.";
+
     return calculateProbability(innervationHistogram.getMean());
+    
 }
 
 double ConnectionProbabilityCalculator::calculateProbability(double innervationMean) {

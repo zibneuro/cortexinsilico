@@ -11,41 +11,40 @@ class FeatureProvider {
 
 public:
 
-    /*
-        Constructor.
-    */
-    FeatureProvider(NetworkProps& networkProps);
+    FeatureProvider();
+
+    ~FeatureProvider();
 
     /*
         Initializes the features according to the specified collection.
         @selection The neuron selection.
     */
-    void init(NeuronSelection& selection);
+    void preprocess(NetworkProps& networkProps, NeuronSelection& selection);
+    
+    void init();
 
-    NeuronSelection getSelection();
+    int getNumPre();
 
-    SparseField* getPre(int neuronId);
+    int getNumPost();
 
-    SparseField* getPostExc(int neuronId);
+    SparseField* getPre(int index);
 
-    SparseField* getPostInh(int neuronId);
+    SparseField* getPostExc(int index);
 
     SparseField* getPostAllExc();
 
-    SparseField* getPostAllInh();
-
-    int getPresynapticMultiplicity(int neuronId);
-
-    QList<int> getUniquePresynaptic();
+    int getPreMultiplicity(int index);
 
 private:
-    NeuronSelection mSelection;
-    NetworkProps& mNetworkProps;
 
-    SparseField* mPostsynapticAllExc;
-    SparseField* mPostsynapticAllInh;
-    QMap<int, SparseField*> mPresynaptic;
-    QMap<int, int> mPresynapticMultiplicity;
-    QMap<int, SparseField*> mPostsynapticExc;
-    QMap<int, SparseField*> mPostsynapticInh;
+    void saveInitFile(QString fileName);
+
+    void loadInitFile(QString fileName);
+    
+    SparseField* mPostAllExc;    
+    QList<SparseField*> mPre;
+    QList<int> mPreMultiplicity;
+    QList<SparseField*> mPostExc; 
+
+    const QString mInitFileName = "init.csv";
 };
