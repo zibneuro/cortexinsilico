@@ -34,7 +34,7 @@ double ConnectionProbabilityCalculator::calculate(QVector<float> parameters) {
   std::mutex mutex;
   std::mutex mutex2;
   for (int i = 0; i < mNumPre; i++) {
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
     for (int j = 0; j < mNumPost; j++) {
       mutex.lock();
       SparseField *pre = mFeatureProvider.getPre(i);

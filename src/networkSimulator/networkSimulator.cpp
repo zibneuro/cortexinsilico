@@ -32,7 +32,6 @@
 #include <QIODevice>
 #include <QSet>
 #include <QTextStream>
-#include <boost/interprocess/shared_memory_object.hpp>
 #include <random>
 
 /*

@@ -16,9 +16,6 @@ QMAKE_LFLAGS += -fuse-ld=gold
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
 
-LIBS += -lrt
-    
-
 CONFIG(debug, debug|release) {
     DESTDIR = ../../build/networkSimulator/debug
 }
