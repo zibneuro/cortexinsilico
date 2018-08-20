@@ -1,4 +1,5 @@
 #include "Distribution.h"
+#include <algorithm>
 
 /*
     Constructor.
@@ -15,11 +16,9 @@ Distribution::Distribution() {
     @return The number of synapses.
 */
 int Distribution::drawSynapseCount(float mu) {
-  if (mu > 0 && mu <= mMaxMu) {
+  if (mu > 0) {
     std::poisson_distribution<> distribution(mu);
-    return distribution(mRandomGenerator);
-  } else if (mu > mMaxMu) {
-    return mMaxSynapseCount;
+    return std::min(mMaxSynapseCount, distribution(mRandomGenerator));
   } else {
     return 0;
   }

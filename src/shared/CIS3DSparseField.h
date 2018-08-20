@@ -6,6 +6,8 @@
 #include <QDataStream>
 #include "CIS3DBoundingBoxes.h"
 #include "CIS3DVec3.h"
+#include <set>
+
 
 class SparseFieldCalculator;
 
@@ -96,6 +98,11 @@ struct SparseFieldCoordinates {
 */
 enum IteratorState { ITERATOR_BEGIN, ITERATOR_END };
 
+struct ScalarField{
+    std::set<int> locations;
+    std::map<int, float> values;
+};
+
 /**
     An efficient implementation of a 3D scalar field that is discretized
     as a voxel grid. Provides functions to perform basic calculations based on
@@ -149,6 +156,8 @@ class SparseField {
     */
     SparseField(const Vec3i& dims, const Locations& locations, const Field& field,
                 const Vec3f& origin = Vec3f(), const Vec3f& voxelSize = Vec3f(1.0f));
+
+    std::map<int,float> getModifiedCopy(float coefficient, float eps);
 
     /**
         Returns the dimensions of the grid.

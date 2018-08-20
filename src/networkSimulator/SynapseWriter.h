@@ -49,4 +49,6 @@ class SynapseWriter {
         @return True, if the first synapse is smaller than the second synapse.
     */
     static bool lessThan(Synapse& a, Synapse& b);
+
+
 };

@@ -21,6 +21,5 @@ public:
 
 private:
   std::mt19937 mRandomGenerator;
-  float mMaxMu = 1000000;
-  int mMaxSynapseCount = 999999;
+  int mMaxSynapseCount = 1000;
 };

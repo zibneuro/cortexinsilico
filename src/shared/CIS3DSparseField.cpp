@@ -248,6 +248,20 @@ SparseField::SparseField(const Vec3i& dims, const Locations& locations,
     }
 }
 
+std::map<int,float> SparseField::getModifiedCopy(float coefficient, float eps){
+    std::map<int, float> field;
+    for(LocationIndexToValueIndexMap::ConstIterator it = mIndexMap.begin(); it != mIndexMap.end(); ++it){           
+        float value = mField[it.value()];
+        if(value > eps){
+            value = coefficient * log(value);
+            std::pair<int, float> pair(it.key(),value);     
+            field.insert(pair);
+        }
+        
+    }
+    return field; 
+}
+
 /**
     Returns the dimensions of the grid.
     @return The dimensions.

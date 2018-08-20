@@ -27,6 +27,8 @@ public:
   */
   double calculate(QVector<float> parameters);
 
+  void calculateSynapse(QVector<float> parameters);
+
 private:
   double calculateProbability(double innervationMean);
 
