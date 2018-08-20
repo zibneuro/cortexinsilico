@@ -2,14 +2,25 @@
 
 #include <random>
 
+/*
+    This class represents a Poisson distribution.
+*/
 class Distribution {
-   public:
-    Distribution();
+public:
+  /*
+   Constructor.
+  */
+  Distribution();
 
-    int drawSynapseCount(float mu);
+  /*
+      Selects the number of synapses for the specified
+      mean innervation value.
+      @param mu The mean innervation value.
+  */
+  int drawSynapseCount(float mu);
 
-   private:
-    std::mt19937 mRandomGenerator;
-    float mMaxMu = 1000000;
-    int mMaxSynapseCount = 999999;
+private:
+  std::mt19937 mRandomGenerator;
+  float mMaxMu = 1000000;
+  int mMaxSynapseCount = 999999;
 };

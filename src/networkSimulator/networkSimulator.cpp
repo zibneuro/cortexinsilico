@@ -1,32 +1,8 @@
 /*
-    This tool provides two modes: SYNAPSE and SUBCUBE.
-
-    In the SYNAPSE mode, the tool computes synapse counts between neurons
-    according to generalized Peters' rule, which is parametrized by theta. To do so,
-    the tool requires neuron features that must be provided in file features.csv
-    (in the same directory).
-
-    In the SUBCUBE mode, the tool creates a features.csv file by extracting a
-    sucube from the complete model.
-
-    Usage:
-
-    ./networkSimulator SYNAPSE <synapseSpecFile>
-    ./networkSimulator SUBCUBE <voxelSpecFile>
-
-    The <synapseSpecFile> contains the theta parameters for Peter's rule.
-
-    The <voxelSpecFile> contains the model data directory and the origin and
-    size of the subcube to be extracted from the model data.
+    This tool extracts features from the model and performs
+    synaptic connectivity simulations.
 */
 
-#include <QDebug>
-#include <QFile>
-#include <QIODevice>
-#include <QSet>
-#include <QTextStream>
-#include <boost/interprocess/shared_memory_object.hpp>
-#include <random>
 #include "CIS3DAxonRedundancyMap.h"
 #include "CIS3DBoundingBoxes.h"
 #include "CIS3DCellTypes.h"
@@ -51,30 +27,45 @@
 #include "Typedefs.h"
 #include "Util.h"
 #include "UtilIO.h"
+#include <QDebug>
+#include <QFile>
+#include <QIODevice>
+#include <QSet>
+#include <QTextStream>
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <random>
 
 /*
     Prints the usage manual to the console.
 */
 void printUsage() {
-    qDebug() << "This tool provides two modes: SYNAPSE and SUBCUBE.";
-    qDebug() << "";
-    qDebug() << "In the SYNAPSE mode, the tool computes synapse counts between neurons";
-    qDebug() << "according to generalized Peters' rule, which is parametrized by theta. To do so,";
-    qDebug() << "the tool requires neuron features that must be provided in file features.csv";
-    qDebug() << "(in the same directory).";
-    qDebug() << "";
-    qDebug() << "In the SUBCUBE mode, the tool creates a features.csv file by extracting a";
-    qDebug() << "sucube from the complete model.";
-    qDebug() << "";
-    qDebug() << "Usage:";
-    qDebug() << "";
-    qDebug() << "./networkSimulator SYNAPSE <synapseSpecFile>";
-    qDebug() << "./networkSimulator SUBCUBE <voxelSpecFile>";
-    qDebug() << "";
-    qDebug() << "The <synapseSpecFile> contains the theta parameters for Peter's rule.";
-    qDebug() << "";
-    qDebug() << "The <voxelSpecFile> contains the model data directory and the origin and";
-    qDebug() << "size of the subcube to be extracted from the model data.";
+  qDebug() << "This tool provides three modes: INIT, SYNAPSE and SUBCUBE.";
+  qDebug() << "";
+  qDebug() << "In the SYNAPSE mode, the tool simulates connectivity formation"
+           << "between neuron selections"
+           << "according to generalized Peters' rule, which is parametrized by"
+           << "theta. To do so,"
+           << "the tool requires that are provided in file"
+           << "init.csv, and which can be generated in the INIT mode.";
+  qDebug() << "";
+  qDebug() << "In the SUBCUBE mode, the tool extracts individual features per"
+           << "voxel from a subcube of the compete model."
+           << "The features are written to the files features.csv, "
+           << "featuresSpatial.csv, voxels.csv and neurons.csv";
+  qDebug() << "";
+  qDebug() << "Usage:";
+  qDebug() << "";
+  qDebug() << "./networkSimulator INIT    <initSpecFile>";
+  qDebug() << "./networkSimulator SYNAPSE <synapseSpecFile>";
+  qDebug() << "./networkSimulator SUBCUBE <voxelSpecFile>";
+  qDebug() << "";
+  qDebug() << "The <initSpecFile> contains the neuron selection to be used for"
+           << "simulation.";
+  qDebug() << "The <synapseSpecFile> contains the theta parameters for Peter's"
+           << "rule.";
+  qDebug() << "The <voxelSpecFile> contains the model data directory and the "
+           << "origin and"
+           << "size of the subcube to be extracted from the model data.";
 }
 
 /*
@@ -84,13 +75,13 @@ void printUsage() {
     @return A vector with the theta parameters.
 */
 QVector<float> extractRuleParameters(const QJsonObject spec) {
-    QVector<float> theta;
-    QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
-    theta.append((float)parameters[0].toDouble());
-    theta.append((float)parameters[1].toDouble());
-    theta.append((float)parameters[2].toDouble());
-    theta.append((float)parameters[3].toDouble());
-    return theta;
+  QVector<float> theta;
+  QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
+  theta.append((float)parameters[0].toDouble());
+  theta.append((float)parameters[1].toDouble());
+  theta.append((float)parameters[2].toDouble());
+  theta.append((float)parameters[3].toDouble());
+  return theta;
 }
 
 /*
@@ -101,15 +92,15 @@ QVector<float> extractRuleParameters(const QJsonObject spec) {
     @throws runtime_error if the VOXEL_ORIGIN property is not found.
 */
 QVector<float> extractOrigin(const QJsonObject spec) {
-    if (spec["VOXEL_ORIGIN"] == QJsonValue::Undefined) {
-        throw std::runtime_error("Key VOXEL_ORIGIN not found in spec file.");
-    };
-    QVector<float> origin;
-    QJsonArray parameters = spec["VOXEL_ORIGIN"].toArray();
-    origin.append((float)parameters[0].toDouble());
-    origin.append((float)parameters[1].toDouble());
-    origin.append((float)parameters[2].toDouble());
-    return origin;
+  if (spec["VOXEL_ORIGIN"] == QJsonValue::Undefined) {
+    throw std::runtime_error("Key VOXEL_ORIGIN not found in spec file.");
+  };
+  QVector<float> origin;
+  QJsonArray parameters = spec["VOXEL_ORIGIN"].toArray();
+  origin.append((float)parameters[0].toDouble());
+  origin.append((float)parameters[1].toDouble());
+  origin.append((float)parameters[2].toDouble());
+  return origin;
 }
 
 /*
@@ -120,15 +111,15 @@ QVector<float> extractOrigin(const QJsonObject spec) {
     @throws runtime_error if the VOXEL_DIMENSIONS property is not found.
 */
 QVector<int> extractDimensions(const QJsonObject spec) {
-    if (spec["VOXEL_DIMENSIONS"] == QJsonValue::Undefined) {
-        throw std::runtime_error("Key VOXEL_DIMENSIONS not found in spec file.");
-    };
-    QVector<int> origin;
-    QJsonArray parameters = spec["VOXEL_DIMENSIONS"].toArray();
-    origin.append((int)parameters[0].toDouble());
-    origin.append((int)parameters[1].toDouble());
-    origin.append((int)parameters[2].toDouble());
-    return origin;
+  if (spec["VOXEL_DIMENSIONS"] == QJsonValue::Undefined) {
+    throw std::runtime_error("Key VOXEL_DIMENSIONS not found in spec file.");
+  };
+  QVector<int> origin;
+  QJsonArray parameters = spec["VOXEL_DIMENSIONS"].toArray();
+  origin.append((int)parameters[0].toDouble());
+  origin.append((int)parameters[1].toDouble());
+  origin.append((int)parameters[2].toDouble());
+  return origin;
 }
 
 /*
@@ -139,16 +130,16 @@ QVector<int> extractDimensions(const QJsonObject spec) {
     @throws runtime_error if the CELLTYPES property is not found.
 */
 QSet<QString> extractCellTypes(const QJsonObject spec) {
-    if (spec["CELLTYPES"] == QJsonValue::Undefined) {
-        throw std::runtime_error("Key CELLTYPES not found in spec file.");
-    };
-    QSet<QString> cellTypes;
-    QJsonArray parameters = spec["CELLTYPES"].toArray();
-    for (int i = 0; i < parameters.size(); i++) {
-        const QString cellType = parameters[i].toString();
-        cellTypes.insert(cellType);
-    }
-    return cellTypes;
+  if (spec["CELLTYPES"] == QJsonValue::Undefined) {
+    throw std::runtime_error("Key CELLTYPES not found in spec file.");
+  };
+  QSet<QString> cellTypes;
+  QJsonArray parameters = spec["CELLTYPES"].toArray();
+  for (int i = 0; i < parameters.size(); i++) {
+    const QString cellType = parameters[i].toString();
+    cellTypes.insert(cellType);
+  }
+  return cellTypes;
 }
 
 /*
@@ -159,16 +150,16 @@ QSet<QString> extractCellTypes(const QJsonObject spec) {
     @throws runtime_error if the REGIONS property is not found.
 */
 QSet<QString> extractRegions(const QJsonObject spec) {
-    if (spec["REGIONS"] == QJsonValue::Undefined) {
-        throw std::runtime_error("Key REGIONS not found in spec file.");
-    };
-    QSet<QString> regions;
-    QJsonArray parameters = spec["REGIONS"].toArray();
-    for (int i = 0; i < parameters.size(); i++) {
-        const QString region = parameters[i].toString();
-        regions.insert(region);
-    }
-    return regions;
+  if (spec["REGIONS"] == QJsonValue::Undefined) {
+    throw std::runtime_error("Key REGIONS not found in spec file.");
+  };
+  QSet<QString> regions;
+  QJsonArray parameters = spec["REGIONS"].toArray();
+  for (int i = 0; i < parameters.size(); i++) {
+    const QString region = parameters[i].toString();
+    regions.insert(region);
+  }
+  return regions;
 }
 
 /*
@@ -178,36 +169,36 @@ QSet<QString> extractRegions(const QJsonObject spec) {
     @return The NEURON_IDS as set, empty by default.
 */
 QSet<int> extractNeuronIds(const QJsonObject spec) {
-    QSet<int> neuronIds;
-    if (spec["NEURON_IDS"] != QJsonValue::Undefined) {
-        QJsonArray parameters = spec["NEURON_IDS"].toArray();
-        for (int i = 0; i < parameters.size(); i++) {
-            const int neuronId = parameters[i].toInt();
-            neuronIds.insert(neuronId);
-        }
-    };
-    return neuronIds;
+  QSet<int> neuronIds;
+  if (spec["NEURON_IDS"] != QJsonValue::Undefined) {
+    QJsonArray parameters = spec["NEURON_IDS"].toArray();
+    for (int i = 0; i < parameters.size(); i++) {
+      const int neuronId = parameters[i].toInt();
+      neuronIds.insert(neuronId);
+    }
+  };
+  return neuronIds;
 }
 
 QSet<int> extractVoxelIds(const QJsonObject spec) {
-    QSet<int> neuronIds;
-    if (spec["VOXEL_IDS"] != QJsonValue::Undefined) {
-        QJsonArray parameters = spec["VOXEL_IDS"].toArray();
-        for (int i = 0; i < parameters.size(); i++) {
-            const int neuronId = parameters[i].toInt();
-            neuronIds.insert(neuronId);
-        }
-    };
-    return neuronIds;
+  QSet<int> neuronIds;
+  if (spec["VOXEL_IDS"] != QJsonValue::Undefined) {
+    QJsonArray parameters = spec["VOXEL_IDS"].toArray();
+    for (int i = 0; i < parameters.size(); i++) {
+      const int neuronId = parameters[i].toInt();
+      neuronIds.insert(neuronId);
+    }
+  };
+  return neuronIds;
 }
 
 QString extractOutputMode(const QJsonObject spec) {
-    if (spec["OUTPUT_MODE"] != QJsonValue::Undefined) {
-        const QString mode = spec["OUTPUT_MODE"].toString();
-        return mode;
-    } else {
-        return "completePerVoxel";
-    }
+  if (spec["OUTPUT_MODE"] != QJsonValue::Undefined) {
+    const QString mode = spec["OUTPUT_MODE"].toString();
+    return mode;
+  } else {
+    return "completePerVoxel";
+  }
 }
 
 /*
@@ -218,29 +209,30 @@ QString extractOutputMode(const QJsonObject spec) {
     @throws runtime_error if the smapling factor has an invalid value.
 */
 int extractSamplingFactor(const QJsonObject spec) {
-    if (spec["SAMPLING_FACTOR"] != QJsonValue::Undefined) {
-        int samplingFactor = spec["SAMPLING_FACTOR"].toInt();
-        if (samplingFactor == 0) {
-            throw std::runtime_error(
-                "Invalid value for sampling factor. Possible reason: \"-symbols.");
-        } else {
-            return samplingFactor;
-        }
+  if (spec["SAMPLING_FACTOR"] != QJsonValue::Undefined) {
+    int samplingFactor = spec["SAMPLING_FACTOR"].toInt();
+    if (samplingFactor == 0) {
+      throw std::runtime_error(
+          "Invalid value for sampling factor. Possible reason: \"-symbols.");
     } else {
-        return 1;
+      return samplingFactor;
     }
+  } else {
+    return 1;
+  }
 }
 
 void writeOutputFile(double connectionProbability) {
-    QString fileName = "output.json";
-    QFile json(fileName);
-    if (!json.open(QIODevice::WriteOnly)) {
-        const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
-        throw std::runtime_error(qPrintable(msg));
-    }
+  QString fileName = "output.json";
+  QFile json(fileName);
+  if (!json.open(QIODevice::WriteOnly)) {
+    const QString msg =
+        QString("Cannot open file %1 for writing.").arg(fileName);
+    throw std::runtime_error(qPrintable(msg));
+  }
 
-    QTextStream out(&json);
-    out << "{\"CONNECTION_PROBABILITY\":" << connectionProbability << "}";
+  QTextStream out(&json);
+  out << "{\"CONNECTION_PROBABILITY\":" << connectionProbability << "}";
 }
 
 /*
@@ -251,72 +243,73 @@ void writeOutputFile(double connectionProbability) {
     @return 0 if successfull, 1 in case of invalid arguments.
 */
 int main(int argc, char **argv) {
-    if (argc < 2) {
-        printUsage();
-        return 1;
-    }
+  if (argc < 2) {
+    printUsage();
+    return 1;
+  }
 
-    const QString mode = argv[1];
+  const QString mode = argv[1];
 
-    if (mode == "SYNAPSE") {
-        if (argc != 3) {
-            printUsage();
-            return 1;
-        } else {                    
-            const QString specFile = argv[2];
-            QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            QVector<float> parameters = extractRuleParameters(spec);            
-            FeatureProvider featureProvider;            
-            featureProvider.init();
-            ConnectionProbabilityCalculator calculator(featureProvider);            
-            double connProb = calculator.calculate(parameters);
-            writeOutputFile(connProb);                        
-        }
-    } else if (mode == "SUBCUBE") {
-        if (argc != 3) {
-            printUsage();
-            return 1;
-        } else {
-            const QString specFile = argv[2];
-            QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            const QString dataRoot = spec["DATA_ROOT"].toString();
-            NetworkProps networkProps;
-            networkProps.setDataRoot(dataRoot);
-            networkProps.loadFilesForSynapseComputation();
-            QVector<int> dimensions = extractDimensions(spec);
-            QSet<QString> cellTypes = extractCellTypes(spec);
-            FeatureExtractor extractor(networkProps);
-            if (dimensions[0] == -1 && dimensions[1] == -1 && dimensions[2] == -1) {
-                extractor.extractAll(cellTypes);
-            } else {
-                QVector<float> origin = extractOrigin(spec);
-                QSet<QString> regions = extractRegions(spec);
-                QSet<int> neuronIds = extractNeuronIds(spec);
-                int samplingFactor = extractSamplingFactor(spec);
-                extractor.extract(origin, dimensions, cellTypes, regions, neuronIds,
-                                  samplingFactor);
-            }
-            return 0;
-        }
-    } else if (mode == "INIT") {
-        if (argc != 3) {
-            printUsage();
-            return 1;
-        } else {
-            const QString specFile = argv[2];
-            QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            const QString dataRoot = spec["DATA_ROOT"].toString();
-            NetworkProps networkProps;
-            networkProps.setDataRoot(dataRoot);
-            networkProps.loadFilesForSynapseComputation();
-            FeatureProvider featureProvider;
-            NeuronSelection selection;
-            selection.setInnervationSelection(spec, networkProps);
-            featureProvider.preprocess(networkProps,selection);            
-            return 0;
-        }
+  if (mode == "SYNAPSE") {
+    if (argc != 3) {
+      printUsage();
+      return 1;
     } else {
-        printUsage();
-        return 1;
+      const QString specFile = argv[2];
+      QJsonObject spec = UtilIO::parseSpecFile(specFile);
+      QVector<float> parameters = extractRuleParameters(spec);
+      FeatureProvider featureProvider;
+      featureProvider.init();
+      ConnectionProbabilityCalculator calculator(featureProvider);
+      double connProb = calculator.calculate(parameters);
+      writeOutputFile(connProb);
     }
+  } else if (mode == "SUBCUBE") {
+    if (argc != 3) {
+      printUsage();
+      return 1;
+    } else {
+      const QString specFile = argv[2];
+      QJsonObject spec = UtilIO::parseSpecFile(specFile);
+      const QString dataRoot = spec["DATA_ROOT"].toString();
+      NetworkProps networkProps;
+      networkProps.setDataRoot(dataRoot);
+      networkProps.loadFilesForSynapseComputation();
+      QVector<int> dimensions = extractDimensions(spec);
+      QSet<QString> cellTypes = extractCellTypes(spec);
+      FeatureExtractor extractor(networkProps);
+      if (dimensions[0] == -1 && dimensions[1] == -1 && dimensions[2] == -1) {
+        extractor.extractAll(cellTypes);
+      } else {
+        QVector<float> origin = extractOrigin(spec);
+        QSet<QString> regions = extractRegions(spec);
+        QSet<int> neuronIds = extractNeuronIds(spec);
+        int samplingFactor = extractSamplingFactor(spec);
+        extractor.extract(origin, dimensions, cellTypes, regions, neuronIds,
+                          samplingFactor);
+      }
+      return 0;
+    }
+  } else if (mode == "INIT") {
+    if (argc != 3) {
+      printUsage();
+      return 1;
+    } else {
+      const QString specFile = argv[2];
+      QJsonObject spec = UtilIO::parseSpecFile(specFile);
+      const QString dataRoot = spec["DATA_ROOT"].toString();
+      NetworkProps networkProps;
+      networkProps.setDataRoot(dataRoot);
+      networkProps.loadFilesForSynapseComputation();
+      FeatureProvider featureProvider;
+      NeuronSelection selection;
+      int samplingFactor = extractSamplingFactor(spec);
+      selection.setInnervationSelection(spec, networkProps, samplingFactor);
+      featureProvider.preprocess(networkProps, selection);
+      return 0;
+    }
+  } else {
+    printUsage();
+    return 1;
+  }
 }

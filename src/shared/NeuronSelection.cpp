@@ -20,16 +20,29 @@ NeuronSelection::NeuronSelection(const IdList& presynaptic, const IdList& postsy
     : mPresynaptic(presynaptic), mPostsynaptic(postsynaptic){};
 
 /**
-      Determines a innervation statistic selection from a specification file.
-      @param spec The spec file with the filter definition.
-      @param networkProps the model data of the network.
+    Determines a innervation statistic selection from a specification file.
+    @param spec The spec file with the filter definition.
+    @param networkProps the model data of the network.
+    @param samplingFactor Sampling rate for selection (default: 1 = take all)
 */
-void NeuronSelection::setInnervationSelection(const QJsonObject& spec,
-                                              const NetworkProps& networkProps) {
+void NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor){    
     mPresynaptic.clear();
-    mPresynaptic.append(UtilIO::getPreSynapticNeurons(spec, networkProps));
     mPostsynaptic.clear();
-    mPostsynaptic.append(UtilIO::getPostSynapticNeuronIds(spec, networkProps));
+    IdList pre = UtilIO::getPreSynapticNeurons(spec, networkProps);
+    IdList post = UtilIO::getPostSynapticNeuronIds(spec, networkProps);
+    if(samplingFactor == 1){
+        mPresynaptic.append(pre);        
+        mPostsynaptic.append(post);
+    } else {
+        std::random_shuffle(pre.begin(), pre.end());
+        std::random_shuffle(post.begin(), post.end());
+        for(int i=0; i<pre.size(); i+=samplingFactor){
+            mPresynaptic.append(pre[i]);
+        }
+        for(int i=0; i<post.size(); i+=samplingFactor){
+            mPostsynaptic.append(post[i]);
+        }
+    }
 }
 
 /**
