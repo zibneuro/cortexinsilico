@@ -30,7 +30,7 @@ FeatureProvider::~FeatureProvider() {}
     @param selection The neuron selection.
 */
 void FeatureProvider::preprocess(NetworkProps &networkProps,
-                                 NeuronSelection &selection) {
+                                 NeuronSelection &selection, bool duplicity) {
   QDir modelDataDir = CIS3D::getModelDataDir(networkProps.dataRoot);
 
   QString postAllExcFile;
@@ -42,36 +42,52 @@ void FeatureProvider::preprocess(NetworkProps &networkProps,
   postAllExcFile = CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
 
   // Pre
-  QMap<int, int> multiplicity;
-  for (int i = 0; i < selection.Presynaptic().size(); i++) {
-    int neuronId = selection.Presynaptic()[i];
-    int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
-    if (!networkProps.cellTypes.isExcitatory(cellTypeId)) {
-      const QString msg =
-          QString("Presynaptic inhibitory neurons not implemented yet.")
-              .arg(mInitFileName);
-      throw std::runtime_error(qPrintable(msg));
+  if (duplicity) {
+    QMap<int, int> multiplicity;
+    for (int i = 0; i < selection.Presynaptic().size(); i++) {
+      int neuronId = selection.Presynaptic()[i];
+      int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
+      if (!networkProps.cellTypes.isExcitatory(cellTypeId)) {
+        const QString msg =
+            QString("Presynaptic inhibitory neurons not implemented yet.");
+        throw std::runtime_error(qPrintable(msg));
+      }
+      int mappedId = networkProps.axonRedundancyMap.getNeuronIdToUse(neuronId);
+      QMap<int, int>::const_iterator it = multiplicity.find(mappedId);
+      if (it == multiplicity.end()) {
+        multiplicity.insert(mappedId, 1);
+      } else {
+        multiplicity.insert(mappedId, multiplicity[mappedId] + 1);
+      }
+      if (selection.Postsynaptic().contains(neuronId)) {
+        multiplicity.insert(mappedId, multiplicity[mappedId] - 1);
+      }
     }
-    int mappedId = networkProps.axonRedundancyMap.getNeuronIdToUse(neuronId);
-    QMap<int, int>::const_iterator it = multiplicity.find(mappedId);
-    if (it == multiplicity.end()) {
-      multiplicity.insert(mappedId, 1);
-    } else {
-      multiplicity.insert(mappedId, multiplicity[mappedId] + 1);
+    QList<int> uniquePreIds = multiplicity.keys();
+    qSort(uniquePreIds);
+    for (int i = 0; i < uniquePreIds.size(); i++) {
+      int neuronId = uniquePreIds[i];
+      preMultiplicities.push_back(multiplicity[neuronId]);
+      int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
+      QString cellType = networkProps.cellTypes.getName(cellTypeId);
+      preFiles.push_back(
+          CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, neuronId));
     }
-    if (selection.Postsynaptic().contains(neuronId)) {
-      multiplicity.insert(mappedId, multiplicity[mappedId] - 1);
+  } else {
+    for (int i = 0; i < selection.Presynaptic().size(); i++) {
+      int neuronId = selection.Presynaptic()[i];
+      int mappedId = networkProps.axonRedundancyMap.getNeuronIdToUse(neuronId);
+      int cellTypeId = networkProps.neurons.getCellTypeId(mappedId);
+      QString cellType = networkProps.cellTypes.getName(cellTypeId);
+      if (!networkProps.cellTypes.isExcitatory(cellTypeId)) {
+        const QString msg =
+            QString("Presynaptic inhibitory neurons not implemented yet.");
+        throw std::runtime_error(qPrintable(msg));
+      }
+      preFiles.push_back(
+          CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, mappedId));
+      preMultiplicities.push_back(1);
     }
-  }
-  QList<int> uniquePreIds = multiplicity.keys();
-  qSort(uniquePreIds);
-  for (int i = 0; i < uniquePreIds.size(); i++) {
-    int neuronId = uniquePreIds[i];
-    preMultiplicities.push_back(multiplicity[neuronId]);
-    int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
-    QString cellType = networkProps.cellTypes.getName(cellTypeId);
-    preFiles.push_back(
-        CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, neuronId));
   }
 
   // Post

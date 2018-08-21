@@ -6,6 +6,5 @@
     "POST_NEURON_REGIONS" : ["C2"],
     "PRE_NEURON_IDS" : [],
     "POST_NEURON_IDS" : [],
-    "SAMPLING_FACTOR" : 1,
-    "CONNECTIVITY_RULE_PARAMETERS": [0,1,1,-1]    
+    "SAMPLING_FACTOR" : 1
 }

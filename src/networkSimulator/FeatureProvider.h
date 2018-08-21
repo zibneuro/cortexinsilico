@@ -26,7 +26,7 @@ public:
       @param networkProps The model data.
       @param selection The neuron selection.
   */
-  void preprocess(NetworkProps &networkProps, NeuronSelection &selection);
+  void preprocess(NetworkProps &networkProps, NeuronSelection &selection, bool duplicity=true);
 
   /*
     Loads the features for simulation based on an init.csv file.

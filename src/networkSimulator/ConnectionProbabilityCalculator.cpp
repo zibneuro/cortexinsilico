@@ -2,15 +2,15 @@
 #include "CIS3DConstantsHelpers.h"
 #include "CIS3DSparseField.h"
 #include "CIS3DSparseVectorSet.h"
+#include "Distribution.h"
 #include "SparseFieldCalculator.h"
 #include "Typedefs.h"
+#include <QFile>
+#include <QIODevice>
+#include <QTextStream>
+#include <iomanip>
 #include <mutex>
 #include <omp.h>
-#include <iomanip> 
-#include <QTextStream>
-#include <QIODevice>
-#include <QFile>
-#include "Distribution.h"
 
 /*
     Constructor.
@@ -39,7 +39,7 @@ double ConnectionProbabilityCalculator::calculate(QVector<float> parameters) {
   std::mutex mutex;
   std::mutex mutex2;
   for (int i = 0; i < mNumPre; i++) {
-//#pragma omp parallel for schedule(dynamic)
+    //#pragma omp parallel for schedule(dynamic)
     for (int j = 0; j < mNumPost; j++) {
       mutex.lock();
       SparseField *pre = mFeatureProvider.getPre(i);
@@ -62,64 +62,68 @@ double ConnectionProbabilityCalculator::calculate(QVector<float> parameters) {
   return calculateProbability(innervationHistogram.getMean());
 }
 
-void ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters){
-  
+double
+ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters) {
+
   float eps = 0.000001;
   float b0 = parameters[0];
   float b1 = parameters[1];
   float b2 = parameters[2];
-  float b3 = parameters[3];
+  float b3 = parameters[3];  
 
-  std::map<int, float> postAllField = mFeatureProvider.getPostAllExc()->getModifiedCopy(b3,eps);
+  std::map<int, float> postAllField =
+      mFeatureProvider.getPostAllExc()->getModifiedCopy(b3, eps);
+  std::vector<std::map<int, float>> preFields;
+  for (int i = 0; i < mNumPre; i++) {
+    preFields.push_back(mFeatureProvider.getPre(i)->getModifiedCopy(b1, eps));
+  }  
 
-  std::vector<std::map<int,float> > preFields;
-  for(int i=0; i<mNumPre; i++){
-    preFields.push_back(mFeatureProvider.getPre(i)->getModifiedCopy(b1,eps));
-  }
-
-  std::vector<std::map<int,float> > postFields;
-  for(int i=0; i<mNumPost; i++){
-    postFields.push_back(mFeatureProvider.getPostExc(i)->getModifiedCopy(b2,eps));
-  }
+  std::vector<std::map<int, float>> postFields;
+  for (int i = 0; i < mNumPost; i++) {
+    postFields.push_back(
+        mFeatureProvider.getPostExc(i)->getModifiedCopy(b2, eps));
+  }  
 
   std::vector<int> empty(mNumPost,0);
   std::vector<std::vector<int> > synapses(mNumPre,empty);
 
-  for(int i=0; i<mNumPre; i++){    
-    #pragma omp parallel for schedule(dynamic)
-    for(int j=0; j<mNumPost; j++){
+#pragma omp parallel for schedule(dynamic)
+  for (int i = 0; i < mNumPre; i++) {
+    for (int j = 0; j < mNumPost; j++) {
       Distribution dist;
-      for (std::map<int,float>::iterator itPre=preFields[i].begin(); itPre!=preFields[i].end(); ++itPre)    {  
-        std::map<int,float>::iterator itPost = postFields[j].find(itPre->first);
-        std::map<int,float>::iterator itPostAll = postAllField.find(itPre->first);
-        if(itPost != postFields[j].end() && itPostAll != postAllField.end()){
-          float mu = exp(b0 + itPre->second + itPost->second + itPostAll->second);
-          int synapsesInVoxel = dist.drawSynapseCount(mu);
-          synapses[i][j] = synapses[i][j] + synapsesInVoxel;
+      for (auto itPre = preFields[i].begin(); itPre != preFields[i].end();
+           ++itPre) {
+        auto itPost = postFields[j].find(itPre->first);
+        auto itPostAll = postAllField.find(itPre->first);
+        if (itPost != postFields[j].end() && itPostAll != postAllField.end()) {
+          float innervation =
+              exp(b0 + itPre->second + itPost->second + itPostAll->second);
+          synapses[i][j] = synapses[i][j] + dist.drawSynapseCount(innervation);          
         }
+      }
     }
   }
-  }
- 
- 
+
   QString filename;
-  filename.sprintf("%+06.3f_%+06.3f_%+06.3f_%+06.3f", parameters[0],parameters[1],parameters[2],parameters[3]);
+  filename.sprintf("synapses_%+06.3f_%+06.3f_%+06.3f_%+06.3f", parameters[0],
+                   parameters[1], parameters[2], parameters[3]);
   QFile file(filename);
   if (!file.open(QIODevice::WriteOnly)) {
-      const QString msg = QString("Cannot open file %1 for writing.").arg(filename);
-      throw std::runtime_error(qPrintable(msg));
+    const QString msg =
+        QString("Cannot open file %1 for writing.").arg(filename);
+    throw std::runtime_error(qPrintable(msg));
   }
-   QTextStream out(&file);
-  for(int i=0; i<mNumPre; i++){
-    for(int j=0; j<mNumPost; j++){
-    out << synapses[i][j];
-    if(j+1<mNumPost){
-      out << " ";
+  QTextStream out(&file);
+  for (int i = 0; i < mNumPre; i++) {
+    for (int j = 0; j < mNumPost; j++) {
+      out << synapses[i][j];
+      if (j + 1 < mNumPost) {
+        out << " ";
+      }
     }
-      }
-      if(i+1 <mNumPre){ 
-      out << "\n"; 
-      }
+    if (i + 1 < mNumPre) {
+      out << "\n";
+    }
   }
 }
 

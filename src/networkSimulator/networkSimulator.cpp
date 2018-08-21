@@ -260,7 +260,7 @@ int main(int argc, char **argv) {
       FeatureProvider featureProvider;
       featureProvider.init();
       ConnectionProbabilityCalculator calculator(featureProvider);
-      double connProb = calculator.calculate(parameters);
+      double connProb = calculator.calculateSynapse(parameters);
       writeOutputFile(connProb);
     }
   } else if (mode == "SUBCUBE") {
@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
       NeuronSelection selection;
       int samplingFactor = extractSamplingFactor(spec);
       selection.setInnervationSelection(spec, networkProps, samplingFactor);
-      featureProvider.preprocess(networkProps, selection);
+      featureProvider.preprocess(networkProps, selection, false);
       return 0;
     }
   } else {
