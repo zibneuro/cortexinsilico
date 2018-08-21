@@ -63,33 +63,35 @@ double ConnectionProbabilityCalculator::calculate(QVector<float> parameters) {
 }
 
 double
-ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters) {
-
+ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters,
+                                                  bool matrix) {
   float eps = 0.000001;
   float b0 = parameters[0];
   float b1 = parameters[1];
   float b2 = parameters[2];
-  float b3 = parameters[3];  
+  float b3 = parameters[3];
 
   std::map<int, float> postAllField =
       mFeatureProvider.getPostAllExc()->getModifiedCopy(b3, eps);
   std::vector<std::map<int, float>> preFields;
   for (int i = 0; i < mNumPre; i++) {
     preFields.push_back(mFeatureProvider.getPre(i)->getModifiedCopy(b1, eps));
-  }  
+  }
 
   std::vector<std::map<int, float>> postFields;
   for (int i = 0; i < mNumPost; i++) {
     postFields.push_back(
         mFeatureProvider.getPostExc(i)->getModifiedCopy(b2, eps));
-  }  
+  }
 
-  std::vector<int> empty(mNumPost,0);
-  std::vector<std::vector<int> > synapses(mNumPre,empty);
+  std::vector<int> empty(mNumPost, 0);
+  std::vector<std::vector<int>> synapses(mNumPre, empty);
 
 #pragma omp parallel for schedule(dynamic)
   for (int i = 0; i < mNumPre; i++) {
     for (int j = 0; j < mNumPost; j++) {
+
+      //qDebug() << i << j;
       Distribution dist;
       for (auto itPre = preFields[i].begin(); itPre != preFields[i].end();
            ++itPre) {
@@ -98,33 +100,48 @@ ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters) {
         if (itPost != postFields[j].end() && itPostAll != postAllField.end()) {
           float innervation =
               exp(b0 + itPre->second + itPost->second + itPostAll->second);
-          synapses[i][j] = synapses[i][j] + dist.drawSynapseCount(innervation);          
+          //qDebug() << innervation;
+          synapses[i][j] = synapses[i][j] + dist.drawSynapseCount(innervation);
+          //qDebug() << synapses[i][j];
         }
       }
     }
   }
 
-  QString filename;
-  filename.sprintf("synapses_%+06.3f_%+06.3f_%+06.3f_%+06.3f", parameters[0],
-                   parameters[1], parameters[2], parameters[3]);
-  QFile file(filename);
-  if (!file.open(QIODevice::WriteOnly)) {
-    const QString msg =
-        QString("Cannot open file %1 for writing.").arg(filename);
-    throw std::runtime_error(qPrintable(msg));
-  }
-  QTextStream out(&file);
+  int realizedConnections = 0;
   for (int i = 0; i < mNumPre; i++) {
     for (int j = 0; j < mNumPost; j++) {
-      out << synapses[i][j];
-      if (j + 1 < mNumPost) {
-        out << " ";
-      }
-    }
-    if (i + 1 < mNumPre) {
-      out << "\n";
+      realizedConnections += synapses[i][j];
     }
   }
+
+  if (matrix) {
+
+    QString filename;
+    filename.sprintf("synapses_%+06.3f_%+06.3f_%+06.3f_%+06.3f", parameters[0],
+                     parameters[1], parameters[2], parameters[3]);
+    filename = QDir("matrices").filePath(filename);
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)) {
+      const QString msg =
+          QString("Cannot open file %1 for writing.").arg(filename);
+      throw std::runtime_error(qPrintable(msg));
+    }
+    QTextStream out(&file);
+    for (int i = 0; i < mNumPre; i++) {
+      for (int j = 0; j < mNumPost; j++) {
+        out << synapses[i][j];
+        if (j + 1 < mNumPost) {
+          out << " ";
+        }
+      }
+      if (i + 1 < mNumPre) {
+        out << "\n";
+      }
+    }
+  }
+
+  return (double)realizedConnections / (double)(mNumPre * mNumPost);
 }
 
 double

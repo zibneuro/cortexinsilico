@@ -22,4 +22,5 @@ public:
 private:
   std::mt19937 mRandomGenerator;
   int mMaxSynapseCount = 1000;
+  float mMaxInnervation = 1000;
 };

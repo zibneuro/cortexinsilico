@@ -200,6 +200,23 @@ QString extractOutputMode(const QJsonObject spec) {
   }
 }
 
+QString extractSimulationMode(const QJsonObject spec) {
+  if (spec["SIMULATION_MODE"] != QJsonValue::Undefined) {
+    const QString mode = spec["SIMULATION_MODE"].toString();
+    return mode;
+  } else {
+    return "innervationSum";
+  }
+}
+
+bool extractCreateMatrix(const QJsonObject spec) {
+  if (spec["CREATE_MATRIX"] != QJsonValue::Undefined) {
+    return  "true" == spec["CREATE_MATRIX"].toString();    
+  } else {
+    return false;
+  }
+}
+
 /*
     Reads the SAMPLING_FACTOR property from the specification file.
 
@@ -234,6 +251,19 @@ void writeOutputFile(double connectionProbability) {
   out << "{\"CONNECTION_PROBABILITY\":" << connectionProbability << "}";
 }
 
+void makeCleanDir(QString dirname) {
+  QDir dir;
+  if (dir.exists(dirname)) {
+    QDir outputDir(dirname);
+    outputDir.setNameFilters(QStringList() << "*.*");
+    outputDir.setFilter(QDir::Files);
+    foreach (QString dirFile, outputDir.entryList()) {
+      outputDir.remove(dirFile);
+    }
+  }
+  dir.mkdir(dirname);
+}
+
 /*
     Entry point for the console application.
 
@@ -253,14 +283,22 @@ int main(int argc, char **argv) {
     if (argc != 3) {
       printUsage();
       return 1;
-    } else {
+    } else {      
       const QString specFile = argv[2];
       QJsonObject spec = UtilIO::parseSpecFile(specFile);
       QVector<float> parameters = extractRuleParameters(spec);
       FeatureProvider featureProvider;
       featureProvider.init();
+      bool matrices = extractCreateMatrix(spec);
+      QString mode = extractSimulationMode(spec);
       ConnectionProbabilityCalculator calculator(featureProvider);
-      double connProb = calculator.calculateSynapse(parameters);
+      double connProb;
+      if(mode == "synapsePerVoxel"){
+        connProb = calculator.calculateSynapse(parameters, matrices);
+      } else {
+        connProb = calculator.calculate(parameters);
+      }
+       
       writeOutputFile(connProb);
     }
   } else if (mode == "SUBCUBE") {
@@ -294,17 +332,20 @@ int main(int argc, char **argv) {
       printUsage();
       return 1;
     } else {
+      makeCleanDir("matrices");
       const QString specFile = argv[2];
       QJsonObject spec = UtilIO::parseSpecFile(specFile);
       const QString dataRoot = spec["DATA_ROOT"].toString();
+      QString mode = extractSimulationMode(spec);
       NetworkProps networkProps;
       networkProps.setDataRoot(dataRoot);
       networkProps.loadFilesForSynapseComputation();
       FeatureProvider featureProvider;
       NeuronSelection selection;
-      int samplingFactor = extractSamplingFactor(spec);
+      int samplingFactor = extractSamplingFactor(spec);      
       selection.setInnervationSelection(spec, networkProps, samplingFactor);
-      featureProvider.preprocess(networkProps, selection, false);
+      bool duplicity = mode == "innervationSum";
+      featureProvider.preprocess(networkProps, selection, duplicity);
       return 0;
     }
   } else {
