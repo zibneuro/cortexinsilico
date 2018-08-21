@@ -16,7 +16,7 @@ To compile the relevant sources under linux, proceed as follows:
 2) Run: 
 ```
 python3 install/CompileCppMinimalSuse.py
-``
+```
 
 ## How to use the network simulator
 
