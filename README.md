@@ -8,34 +8,17 @@ For more detailed information about this DFG-funded project, refer to a [descrip
 
 ## How to compile all sources
 
-Note that precompiled *releases* for Windows are made available under the releases tab. 
-To compile all sources under linux, proceed as follows:
+Note that precompiled *releases* for Windows are made available under the **releases tab**. 
+To compile the relevant sources under linux, proceed as follows:
 
 1) Navigate to the cortexinsilico directory
 
 2) Run: 
 ```
-python3 install/CompileCppAndRunTests.py
+python3 install/CompileCppMinimalSuse.py
 ```
+
 ## How to use the network simulator
-
-The *network simulator* tool provides two modes: SYNAPSE and SUBCUBE.
-
-In the SYNAPSE mode, the tool computes synapse counts between neurons
-according to generalized Peters' rule, which is parametrized by theta. To do so,
-the tool requires neuron features that must be provided in the file *features.csv*
-(in the same directory).
-
-In the SUBCUBE mode, the tool creates a *features.csv* file by extracting a
-subset of neurons from the complete model.
-
-Usage:
-```
-./networkSimulator SYNAPSE <synapseSpecFile>
-./networkSimulator SUBCUBE <voxelSpecFile>
-```
-- The *synapseSpecFile* contains the theta parameters for Peters' rule and the outmode mode. 
-- The *voxelSpecFile* contains the model data directory and specifications of the neuron subset.
 
 **For detailed instructions, refer to the PDF manual of the latest release (see *releases* tab on the github page).**
 
