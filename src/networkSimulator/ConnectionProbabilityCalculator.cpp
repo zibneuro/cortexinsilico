@@ -91,7 +91,7 @@ ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters,
   for (int i = 0; i < mNumPre; i++) {
     for (int j = 0; j < mNumPost; j++) {
 
-      //qDebug() << i << j;
+      // qDebug() << i << j;
       Distribution dist;
       for (auto itPre = preFields[i].begin(); itPre != preFields[i].end();
            ++itPre) {
@@ -100,19 +100,22 @@ ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters,
         if (itPost != postFields[j].end() && itPostAll != postAllField.end()) {
           float innervation =
               exp(b0 + itPre->second + itPost->second + itPostAll->second);
-          //qDebug() << innervation;
+          // qDebug() << innervation;
           synapses[i][j] = synapses[i][j] + dist.drawSynapseCount(innervation);
-          //qDebug() << synapses[i][j];
+          // qDebug() << synapses[i][j];
         }
       }
     }
   }
 
-  int realizedConnections = 0;
+  Statistics connectionProbabilities;
   for (int i = 0; i < mNumPre; i++) {
+    int realizedConnections = 0;
     for (int j = 0; j < mNumPost; j++) {
-      realizedConnections += synapses[i][j];
+      realizedConnections += synapses[i][j] > 0 ? 1 : 0;
     }
+    double probability = (double)realizedConnections / (double)mNumPost;
+    connectionProbabilities.addSample(probability);
   }
 
   if (matrix) {
@@ -141,7 +144,7 @@ ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters,
     }
   }
 
-  return (double)realizedConnections / (double)(mNumPre * mNumPost);
+  return connectionProbabilities.getMean();
 }
 
 double
