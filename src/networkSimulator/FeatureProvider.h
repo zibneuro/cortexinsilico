@@ -43,6 +43,7 @@ private:
     void writeMapInt(std::map<int, int>& mapping, QString folder, QString file);
     void registerVoxelIds(std::set<int>& voxelIds, std::map<int, float>& field);
     void writeVoxels(SparseField* postAllExc, std::set<int>& voxelIds, QString folder, QString fileName);
+    bool inRange(SparseField* postAllExc, QVector<float>& bbMin, QVector<float>& bbMax, int voxelId);
 
     Vec3f mGridOrigin;
     Vec3i mGridDimensions;

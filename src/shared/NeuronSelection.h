@@ -1,5 +1,6 @@
 #include <QJsonObject>
 #include <QString>
+#include <QVector>
 #include "CIS3DNetworkProps.h"
 #include "Typedefs.h"
 
@@ -88,12 +89,20 @@ class NeuronSelection {
     */
     void printMotifStats();
 
+    void setBBox(QVector<float> min, QVector<float> max);
+
+    QVector<float> getBBoxMin();
+
+    QVector<float> getBBoxMax();
+
    private:
     IdList mPresynaptic;
     IdList mPostsynaptic;
     IdList mMotifA;
     IdList mMotifB;
     IdList mMotifC;
+    QVector<float> mBBoxMin;
+    QVector<float> mBBoxMax;
 };
 
 #endif

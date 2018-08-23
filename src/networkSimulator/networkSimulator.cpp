@@ -102,6 +102,36 @@ QVector<float> extractOrigin(const QJsonObject spec) {
   return origin;
 }
 
+QVector<float> extractBBoxMin(const QJsonObject spec) {
+  QVector<float> min;
+  if (spec["BBOX_MIN"] == QJsonValue::Undefined) {
+    min.append(-10000);
+    min.append(-10000);
+    min.append(-10000);
+  } else {
+  QJsonArray parameters = spec["BBOX_MIN"].toArray();
+  min.append((float)parameters[0].toDouble());
+  min.append((float)parameters[1].toDouble());
+  min.append((float)parameters[2].toDouble());  
+  }  
+  return min;
+}
+
+QVector<float> extractBBoxMax(const QJsonObject spec) {
+  QVector<float> max;
+  if (spec["BBOX_MAX"] == QJsonValue::Undefined) {
+    max.append(10000);
+    max.append(10000);
+    max.append(10000);
+  } else {
+  QJsonArray parameters = spec["BBOX_MAX"].toArray();
+  max.append((float)parameters[0].toDouble());
+  max.append((float)parameters[1].toDouble());
+  max.append((float)parameters[2].toDouble());  
+  }  
+  return max;
+}
+
 /*
     Reads the VOXEL_DIMENSIONS property from the specification file.
 
@@ -341,8 +371,11 @@ int main(int argc, char **argv) {
       networkProps.loadFilesForSynapseComputation();
       FeatureProvider featureProvider;
       NeuronSelection selection;
-      int samplingFactor = extractSamplingFactor(spec);      
+      int samplingFactor = extractSamplingFactor(spec);     
+      QVector<float> bboxMin = extractBBoxMin(spec);
+      QVector<float> bboxMax = extractBBoxMax(spec); 
       selection.setInnervationSelection(spec, networkProps, samplingFactor);
+      selection.setBBox(bboxMin,bboxMax);
       //bool duplicity = mode == "innervationSum";
       featureProvider.preprocessFeatures(networkProps, selection, 0.0001);
       /*

@@ -213,6 +213,17 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
         neuron_postInh[neuronId] = postFieldInh->getModifiedCopy(1, eps);        
     }
 
+    // ########### PRUNE ###########
+    QVector<float> bbMin = selection.getBBoxMin();
+    QVector<float> bbMax = selection.getBBoxMax();
+    for(auto it = voxel_postAllExc.begin();it!=voxel_postAllExc.end();){
+        if(inRange(postAllExcField,bbMin,bbMax,it->first)){
+            ++it;
+        } else {
+            voxel_postAllExc.erase(it++);
+        }
+    }
+
     // ########### WRITE TO FILE ###########
     UtilIO::makeDir("features_meta");
     UtilIO::makeDir("features_pre");    
@@ -402,4 +413,10 @@ FeatureProvider::registerVoxelIds(std::set<int>& voxelIds, std::map<int, float>&
     {
         voxelIds.insert(it->first);
     }
+}
+
+bool FeatureProvider::inRange(SparseField* postAllExc, QVector<float>& bbMin, QVector<float>& bbMax, int voxelId){
+    Vec3f pos = postAllExc->getSpatialLocation(voxelId);
+    return pos[0] >= bbMin[0] && pos[1] >= bbMin[1] && pos[2] >= bbMin[2] 
+        && pos[0] <= bbMax[0] && pos[1] <= bbMax[1] && pos[2] <= bbMax[2];
 }

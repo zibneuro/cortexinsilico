@@ -140,3 +140,16 @@ void NeuronSelection::printMotifStats() {
     qDebug() << "[*] Number of selected neurons (motif A,B,C):" << mMotifA.size() << mMotifB.size()
              << mMotifC.size();
 }
+
+void NeuronSelection::setBBox(QVector<float> min, QVector<float> max){
+    mBBoxMin = min;
+    mBBoxMax = max;
+}
+
+QVector<float> NeuronSelection::getBBoxMin(){
+    return mBBoxMin;
+}
+
+QVector<float> NeuronSelection::getBBoxMax(){
+    return mBBoxMax;
+}
