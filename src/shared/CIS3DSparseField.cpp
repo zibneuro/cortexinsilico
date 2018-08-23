@@ -262,6 +262,15 @@ std::map<int,float> SparseField::getModifiedCopy(float coefficient, float eps){
     return field; 
 }
 
+Vec3f SparseField::getSpatialLocation(int voxelIndex){
+    Vec3i gridLocation = getXYZFromIndex(voxelIndex);
+    Vec3f spatialLocation;
+    for(int i=0; i<3; i++){
+        spatialLocation[i] = mOrigin[i] + (gridLocation[i] + 0.5) * mVoxelSize[i];
+    }   
+    return spatialLocation;
+}
+
 /**
     Returns the dimensions of the grid.
     @return The dimensions.

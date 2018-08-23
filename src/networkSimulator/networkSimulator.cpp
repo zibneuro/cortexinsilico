@@ -332,6 +332,20 @@ int main(int argc, char **argv) {
       printUsage();
       return 1;
     } else {
+      const QString specFile = argv[2];
+      QJsonObject spec = UtilIO::parseSpecFile(specFile);
+      const QString dataRoot = spec["DATA_ROOT"].toString();
+      //QString mode = extractSimulationMode(spec);
+      NetworkProps networkProps;
+      networkProps.setDataRoot(dataRoot);
+      networkProps.loadFilesForSynapseComputation();
+      FeatureProvider featureProvider;
+      NeuronSelection selection;
+      int samplingFactor = extractSamplingFactor(spec);      
+      selection.setInnervationSelection(spec, networkProps, samplingFactor);
+      //bool duplicity = mode == "innervationSum";
+      featureProvider.preprocessFeatures(networkProps, selection, 0.0001);
+      /*
       makeCleanDir("matrices");
       const QString specFile = argv[2];
       QJsonObject spec = UtilIO::parseSpecFile(specFile);
@@ -346,6 +360,7 @@ int main(int argc, char **argv) {
       selection.setInnervationSelection(spec, networkProps, samplingFactor);
       bool duplicity = mode == "innervationSum";
       featureProvider.preprocess(networkProps, selection, duplicity);
+      */
       return 0;
     }
   } else {

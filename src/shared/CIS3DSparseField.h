@@ -98,11 +98,6 @@ struct SparseFieldCoordinates {
 */
 enum IteratorState { ITERATOR_BEGIN, ITERATOR_END };
 
-struct ScalarField{
-    std::set<int> locations;
-    std::map<int, float> values;
-};
-
 /**
     An efficient implementation of a 3D scalar field that is discretized
     as a voxel grid. Provides functions to perform basic calculations based on
@@ -158,6 +153,8 @@ class SparseField {
                 const Vec3f& origin = Vec3f(), const Vec3f& voxelSize = Vec3f(1.0f));
 
     std::map<int,float> getModifiedCopy(float coefficient, float eps);
+
+    Vec3f getSpatialLocation(int voxelIndex);
 
     /**
         Returns the dimensions of the grid.

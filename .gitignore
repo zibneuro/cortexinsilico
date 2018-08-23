@@ -7,4 +7,5 @@ src/computeStatistic/specLocal.json
 data/connectome
 .vscode/
 src/networkSimulator/.qmake.stash
-src/.clang-format
+.clang-format
+

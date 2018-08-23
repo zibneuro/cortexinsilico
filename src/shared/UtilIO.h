@@ -5,6 +5,7 @@
 #include "CIS3DNetworkProps.h"
 #include "Typedefs.h"
 #include "NeuronSelection.h"
+#include <QTextStream>
 
 class QString;
 class QJsonObject;
@@ -87,6 +88,11 @@ int getPostNeuronIdFromFile(const QString& fileName);
 */
 bool isExcitatoryFileName(const QString& fileName);
 
+void makeDir(QString dirname);
+
+
+
 }  // namespace UtilIO
+
 
 #endif  // UTILIO_H
