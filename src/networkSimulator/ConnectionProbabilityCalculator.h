@@ -29,6 +29,8 @@ public:
 
   double calculateSynapse(QVector<float> parameters, bool matrix=false);
 
+  void distributeSynapses(QVector<float> parameters);
+
 private:
   double calculateProbability(double innervationMean);
 

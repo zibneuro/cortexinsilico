@@ -378,6 +378,9 @@ int main(int argc, char **argv) {
       selection.setBBox(bboxMin,bboxMax);
       //bool duplicity = mode == "innervationSum";
       featureProvider.preprocessFeatures(networkProps, selection, 0.0001);
+      ConnectionProbabilityCalculator calculator(featureProvider);
+      QVector<float> parameter;
+      calculator.distributeSynapses(parameter);
       /*
       makeCleanDir("matrices");
       const QString specFile = argv[2];

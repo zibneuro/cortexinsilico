@@ -24,6 +24,7 @@
 #include "Typedefs.h"
 #include "Util.h"
 #include "UtilIO.h"
+#include "FeatureProvider.h"
 
 /*
     This class assigns synapse counts to each neuron pair within
