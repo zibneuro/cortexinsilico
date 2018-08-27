@@ -16,13 +16,10 @@ Distribution::Distribution() {
     @return The number of synapses.
 */
 int Distribution::drawSynapseCount(float mu) {
-  if(mu > mMaxInnervation){
-    return mMaxSynapseCount;
-  }
-  if (mu > 0) {
-    std::poisson_distribution<> distribution(mu);
-    return std::min(mMaxSynapseCount, distribution(mRandomGenerator));
-  } else {
+    if(mu > 0){
+        std::poisson_distribution<> distribution(mu);
+        return distribution(mRandomGenerator);
+    } else {
     return 0;
   }
 };

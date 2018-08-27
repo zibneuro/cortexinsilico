@@ -4,6 +4,7 @@
 #include "CIS3DSparseVectorSet.h"
 #include "Distribution.h"
 #include "SparseFieldCalculator.h"
+#include "UtilIO.h"
 #include "Typedefs.h"
 #include <QFile>
 #include <QIODevice>
@@ -164,24 +165,97 @@ ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters,
 }
 
 void
-ConnectionProbabilityCalculator::distributeSynapses(QVector<float> /*parameters*/)
+ConnectionProbabilityCalculator::distributeSynapses(QVector<float> parameters)
 {
+
+    float b1 = parameters[0];
+    float b2 = parameters[1];
+    float b3 = parameters[2];
+    float b4 = parameters[3];
+
+    qDebug() << QString("Distributing synapses [%1,%2,%3,%4]").arg(b1).arg(b2).arg(b3).arg(b4);
+
+    UtilIO::makeDir("output_synapses");
     std::map<int, std::map<int, float> > neuron_pre;
     std::map<int, std::map<int, float> > neuron_postExc;
     std::map<int, std::map<int, float> > neuron_postInh;
     std::map<int, float> voxel_postAllExc;
     std::map<int, float> voxel_postAllInh;
     std::map<int, int> neuron_funct;
+    std::map<int, std::set<int> > voxel_neuronsPre;
+    std::map<int, std::set<int> > voxel_neuronsPostExc;
+    std::map<int, std::set<int> > voxel_neuronsPostInh;
+    std::vector<int> voxel;
+
     mFeatureProvider.load(neuron_pre,
                           neuron_postExc,
                           neuron_postInh,
                           voxel_postAllExc,
                           voxel_postAllInh,
-                          neuron_funct);
-    for (auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it)
-    {
-        qDebug() << it->first << it->second.size();
+                          neuron_funct,
+                          voxel_neuronsPre,
+                          voxel_neuronsPostExc,
+                          voxel_neuronsPostInh);
+
+
+    for(auto it = voxel_neuronsPre.begin(); it!=voxel_neuronsPre.end(); ++it){
+        voxel.push_back(it->first);
     }
+
+    Distribution poisson;
+    #pragma omp parallel for schedule(dynamic)
+    for(unsigned int i=0; i<voxel.size(); i++){
+        int voxelId = voxel[i];
+        //qDebug() << "Processing voxel (ID):" << voxelId;
+        std::vector<Contact> contacts;
+        float postAllVal = voxel_postAllExc[voxelId];
+        for(auto pre = voxel_neuronsPre[voxelId].begin(); pre != voxel_neuronsPre[voxelId].end(); ++pre){
+            for(auto post = voxel_neuronsPostExc[voxelId].begin(); post != voxel_neuronsPostExc[voxelId].end(); ++post){
+                if(*pre != *post){
+                    float preVal = neuron_pre[*pre][voxelId];
+                    float postVal = neuron_postExc[*post][voxelId];
+                    float mu = exp(b1 + b2 * preVal + b3 * postVal + b4 * postAllVal);
+                    int synapses = poisson.drawSynapseCount(mu);
+
+                    Contact c;
+                    c.pre = *pre;
+                    c.post = *post;
+                    c.preVal = preVal;
+                    c.postVal = postVal;
+                    c.postAllVal = postAllVal;
+                    c.mu = mu;
+                    c.count = synapses;
+                    contacts.push_back(c);
+
+                }
+            }
+        }
+        QString filename = QString("%1.dat").arg(voxelId);
+        filename = QDir("output_synapses").filePath(filename);
+        QFile file(filename);
+        if (!file.open(QIODevice::WriteOnly))
+        {
+            const QString msg =
+                QString("Cannot open file %1 for writing.").arg(filename);
+            throw std::runtime_error(qPrintable(msg));
+        }
+        QTextStream out(&file);
+        out << "presynapticNeuronID" << " " << "postsynapticNeuronID" << " "
+            << "boutons" << " "<< "PSTs" << " " << "PSTs_all" << " " << "synapses" << "\n";
+        for (unsigned int i = 0; i < contacts.size(); i++)
+        {
+            out << contacts[i].pre << " " <<
+                   contacts[i].post << " " <<
+                   contacts[i].preVal << " " <<
+                   contacts[i].postVal << " " <<
+                   contacts[i].postAllVal << " " <<
+                   /*contacts[i].mu << " " <<*/
+                   contacts[i].count << "\n";
+        }
+    }
+
+    qDebug() << "[*] Finished distributing synapses.";
+
 }
 
 double
