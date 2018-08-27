@@ -45,6 +45,7 @@ SOURCES += \
     ../shared/InnervationStatistic.cpp \
     ../shared/TripletMotif.cpp \
     ../shared/TripletStatistic.cpp \
+    ../shared/InDegreeStatistic.cpp \
     ../shared/MotifCombinations.cpp \
     ../shared/Util.cpp \
     ../shared/UtilIO.cpp \
@@ -53,6 +54,7 @@ SOURCES += \
     ../shared/InnervationMatrix.cpp \
     EvaluationQueryHandler.cpp \
     MotifQueryHandler.cpp \
+    InDegreeQueryHandler.cpp \
     SelectionQueryHandler.cpp \
     NetworkDataUploadHandler.cpp \
     QueryHelpers.cpp
@@ -74,6 +76,7 @@ HEADERS += \
     ../shared/NetworkStatistic.h \
     ../shared/InnervationStatistic.h \
     ../shared/TripletStatistic.h \
+    ../shared/InDegreeStatistic.h \
     ../shared/TripletMotif.h \
     ../shared/MotifCombinations.h \
     ../shared/Typedefs.h \
@@ -84,6 +87,7 @@ HEADERS += \
     ../shared/InnervationMatrix.h \
     EvaluationQueryHandler.h \
     MotifQueryHandler.h \
+    InDegreeQueryHandler.h \
     SelectionQueryHandler.h \
     NetworkDataUploadHandler.h \
     QueryHelpers.h

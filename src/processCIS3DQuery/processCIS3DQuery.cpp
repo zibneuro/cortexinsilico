@@ -2,6 +2,7 @@
 #include <QtCore>
 #include "EvaluationQueryHandler.h"
 #include "MotifQueryHandler.h"
+#include "InDegreeQueryHandler.h"
 #include "NetworkDataUploadHandler.h"
 #include "SelectionQueryHandler.h"
 
@@ -73,6 +74,11 @@ int main(int argc, char *argv[]) {
         handler->process(queryId, config);
     } else if (queryType == "motifQuery") {
         MotifQueryHandler *handler = new MotifQueryHandler();
+        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()),
+                         Qt::QueuedConnection);
+        handler->process(queryId, config);
+    } else if (queryType == "inDegreeQuery") {
+        InDegreeQueryHandler *handler = new InDegreeQueryHandler();
         QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()),
                          Qt::QueuedConnection);
         handler->process(queryId, config);
