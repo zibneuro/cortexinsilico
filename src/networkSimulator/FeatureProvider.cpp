@@ -152,8 +152,12 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     std::map<int, std::map<int, float> > neuron_postInh;
     std::map<int, float> voxel_postAllExc;
     std::map<int, float> voxel_postAllInh;
+    std::map<int, std::set<int> > voxel_neuronsPre;
+    std::map<int, std::set<int> > voxel_neuronsPostExc;
+    std::map<int, std::set<int> > voxel_neuronsPostInh;
 
     // ########### POST ALL EXC ###########
+    qDebug() << "[*] Loading postsynaptic all excitatory.";
     QString postAllExcFile =
         CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
     SparseField* postAllExcField = SparseField::load(postAllExcFile);
@@ -162,6 +166,7 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     voxel_postAllExc = postAllExcField->getModifiedCopy(1, eps);
 
     // ########### POST ALL INH ###########
+    qDebug() << "[*] Loading postsynaptic all inhibitory.";
     QString postAllInhFile =
         CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::INHIBITORY);
     SparseField* postAllInhField = SparseField::load(postAllInhFile);
@@ -169,6 +174,7 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     voxel_postAllInh = postAllInhField->getModifiedCopy(1, eps);
 
     // ########### PRE ###########
+    qDebug() << "[*] Loading presynaptic.";
     for (int i = 0; i < selection.Presynaptic().size(); i++)
     {
         int neuronId = selection.Presynaptic()[i];
@@ -190,6 +196,7 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     }
 
     // ########### POST ###########
+    qDebug() << "[*] Loading postsynaptic.";
     for (int i = 0; i < selection.Postsynaptic().size(); i++)
     {
         int neuronId = selection.Postsynaptic()[i];
@@ -215,6 +222,7 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     }
 
     // ########### PRUNE ###########
+    qDebug() << "[*] Prune.";
     QVector<float> bbMin = selection.getBBoxMin();
     QVector<float> bbMax = selection.getBBoxMax();
     for (auto it = voxel_postAllExc.begin(); it != voxel_postAllExc.end(); ++it)
@@ -238,6 +246,16 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     std::set<int> voxel_unionPost = createUnion(voxel_unionPostExc, voxel_unionPostInh);
     intersectSets(voxel, voxel_unionPost);
 
+    qDebug() << "[*] Number of voxels after prunig" << voxel.size();
+
+    // ########### BUILD INDEX ###########
+    qDebug() << "[*] Build index presynaptic.";
+    buildIndex(voxel_neuronsPre, voxel, neuron_pre);
+    qDebug() << "[*] Build index postsynaptic excitatory.";
+    buildIndex(voxel_neuronsPostExc, voxel, neuron_postExc);
+    qDebug() << "[*] Build index postsynaptic inhibitory.";
+    buildIndex(voxel_neuronsPostInh, voxel, neuron_postInh);
+
     // ########### WRITE TO FILE ###########
     UtilIO::makeDir("features_meta");
     UtilIO::makeDir("features_pre");
@@ -245,28 +263,36 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     UtilIO::makeDir("features_postInh");
     UtilIO::makeDir("features_postAll");
 
-    qDebug() << neuron_pre.size();
-
+    qDebug() << "[*] Write presynaptic.";
     for (auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it)
     {
         writeMapFloat(it->second, voxel, "features_pre", QString("%1.dat").arg(it->first));
     }
+    qDebug() << "[*] Write postsynaptic excitatory.";
     for (auto it = neuron_postExc.begin(); it != neuron_postExc.end(); ++it)
     {
         writeMapFloat(it->second, voxel, "features_postExc", QString("%1.dat").arg(it->first));
     }
+    qDebug() << "[*] Write postsynaptic inhibitory.";
     for (auto it = neuron_postInh.begin(); it != neuron_postInh.end(); ++it)
     {
         writeMapFloat(it->second, voxel, "features_postInh", QString("%1.dat").arg(it->first));
     }
-
+    qDebug() << "[*] Write postsynaptic all excitatory.";
     writeMapFloat(voxel_postAllExc, voxel, "features_postAll", "voxel_postAllExc.dat");
+    qDebug() << "[*] Write postsynaptic all inhibitory.";
     writeMapFloat(voxel_postAllInh, voxel, "features_postAll", "voxel_postAllInh.dat");
 
-    writeMapInt(neuron_funct, voxel, "features_meta", "neuron_funct.dat");
-    writeMapInt(neuron_morph, voxel, "features_meta", "neuron_morph.dat");
-    writeMapInt(neuron_regio, voxel, "features_meta", "neuron_regio.dat");
+    qDebug() << "[*] Write meta files.";
+    writeMapInt(neuron_funct, "features_meta", "neuron_funct.dat");
+    writeMapInt(neuron_morph, "features_meta", "neuron_morph.dat");
+    writeMapInt(neuron_regio, "features_meta", "neuron_regio.dat");
+    qDebug() << "[*] Write index files.";
+    writeIndex(voxel_neuronsPre, "features_meta", "voxel_neuronsPre.dat");
+    writeIndex(voxel_neuronsPostExc, "features_meta", "voxel_neuronsPostExc.dat");
+    writeIndex(voxel_neuronsPostInh, "features_meta", "voxel_neuronsPostInh.dat");
     writeVoxels(postAllExcField, voxel, "features_meta", "voxel_pos.dat");
+    qDebug() << "[*] Finished writing features.";
 }
 
 void
@@ -359,7 +385,10 @@ FeatureProvider::load(std::map<int, std::map<int, float> >& neuron_pre,
                       std::map<int, std::map<int, float> >& neuron_postInh,
                       std::map<int, float>& voxel_postAllExc,
                       std::map<int, float>& voxel_postAllInh,
-                      std::map<int, int>& neuron_funct)
+                      std::map<int, int>& neuron_funct,
+                      std::map<int, std::set<int> >& voxel_neuronsPre,
+                      std::map<int, std::set<int> >& voxel_neuronsPostExc,
+                      std::map<int, std::set<int> >& voxel_neuronsPostInh)
 {
     QDirIterator it_pre("features_pre");
     while (it_pre.hasNext())
@@ -408,6 +437,10 @@ FeatureProvider::load(std::map<int, std::map<int, float> >& neuron_pre,
     readMapFloat(voxel_postAllInh, "features_postAll", "voxel_postAllInh.dat");
 
     readMapInt(neuron_funct, "features_meta", "neuron_funct.dat");
+
+    readIndex(voxel_neuronsPre, "features_meta","voxel_neuronsPre.dat");
+    readIndex(voxel_neuronsPostExc, "features_meta","voxel_neuronsPostExc.dat");
+    readIndex(voxel_neuronsPostInh, "features_meta","voxel_neuronsPostInh.dat");
 }
 
 void
@@ -499,7 +532,7 @@ FeatureProvider::readMapInt(std::map<int, int>& mapping, QString folder, QString
 }
 
 void
-FeatureProvider::writeMapInt(std::map<int, int>& mapping, std::set<int>& voxelIds, QString folder, QString fileName)
+FeatureProvider::writeMapInt(std::map<int, int>& mapping, QString folder, QString fileName)
 {
     //qDebug() << "[*] Writing file " << fileName;
     if (folder != "")
@@ -517,10 +550,7 @@ FeatureProvider::writeMapInt(std::map<int, int>& mapping, std::set<int>& voxelId
 
     for (auto it = mapping.begin(); it != mapping.end(); ++it)
     {
-        if (voxelIds.find(it->first) != voxelIds.end())
-        {
-            stream << it->first << " " << it->second << "\n";
-        }
+        stream << it->first << " " << it->second << "\n";
     }
 }
 
@@ -549,11 +579,78 @@ FeatureProvider::writeVoxels(SparseField* postAllExc, std::set<int>& voxelIds, Q
 }
 
 void
+FeatureProvider::writeIndex(std::map<int, std::set<int> >& index, QString folder, QString fileName){
+    if (folder != "")
+    {
+        fileName = QDir(folder).filePath(fileName);
+    }
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        const QString msg =
+            QString("Cannot open file %1 for writing.").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    QTextStream stream(&file);
+    for(auto it = index.begin(); it!=index.end(); ++it){
+        stream << it->first;
+        for(auto it2 = index[it->first].begin(); it2 != index[it->first].end(); ++it2){
+            stream << " " << *it2;
+        }
+        stream << "\n";
+    }
+}
+
+void
+FeatureProvider::readIndex(std::map<int, std::set<int> >& index, QString folder, QString fileName){
+    if (folder != "")
+    {
+        fileName = QDir(folder).filePath(fileName);
+    }
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        const QString msg =
+            QString("Error reading features file. Could not open file %1").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+
+    QTextStream in(&file);
+    QString line = in.readLine();
+    while (!line.isNull())
+    {
+        QStringList parts = line.split(' ');
+        std::set<int> neurons;
+        for(int i=1; i<parts.size(); i++){
+            neurons.insert((parts[i].toInt()));
+        }
+        index[parts[0].toInt()] = neurons;
+        line = in.readLine();
+    }
+}
+
+
+void
 FeatureProvider::registerVoxelIds(std::set<int>& voxelIds, std::map<int, float>& field)
 {
     for (auto it = field.begin(); it != field.end(); ++it)
     {
         voxelIds.insert(it->first);
+    }
+}
+
+void
+FeatureProvider::buildIndex(std::map<int, std::set<int> >& index, std::set<int>& voxelIds, std::map<int, std::map<int, float> >& fields){
+    for(auto it = voxelIds.begin(); it!=voxelIds.end(); ++it){
+        std::set<int> empty;
+        index[*it] = empty;
+    }
+    for(auto it = fields.begin(); it != fields.end(); ++it){
+        for(auto it2 = fields[it->first].begin(); it2 != fields[it->first].end(); ++it2){
+            if(index.find(it2->first) != index.end()){
+                index[it2->first].insert(it->first);
+            }
+        }
     }
 }
 

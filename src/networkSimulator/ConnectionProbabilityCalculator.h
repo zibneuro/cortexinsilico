@@ -13,6 +13,17 @@
 */
 class ConnectionProbabilityCalculator {
 public:
+
+    struct Contact{
+        int pre;
+        int post;
+        float preVal;
+        float postVal;
+        float postAllVal;
+        float mu;
+        int count;
+    };
+
   /*
    Constructor.
    @param featureProvider The features of the neuron selections.

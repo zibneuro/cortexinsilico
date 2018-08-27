@@ -1,5 +1,6 @@
 #include "Distribution.h"
 #include <algorithm>
+#include <QRandomGenerator>
 
 /*
     Constructor.
@@ -16,13 +17,10 @@ Distribution::Distribution() {
     @return The number of synapses.
 */
 int Distribution::drawSynapseCount(float mu) {
-  if(mu > mMaxInnervation){
-    return mMaxSynapseCount;
-  }
-  if (mu > 0) {
-    std::poisson_distribution<> distribution(mu);
-    return std::min(mMaxSynapseCount, distribution(mRandomGenerator));
-  } else {
+    if(mu > 0){
+        std::poisson_distribution<> distribution(mu);
+        return distribution(*QRandomGenerator::global());
+    } else {
     return 0;
   }
 };

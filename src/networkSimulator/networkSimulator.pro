@@ -12,7 +12,6 @@ TEMPLATE = app
 
 INCLUDEPATH += ../shared 
 
-QMAKE_LFLAGS += -fuse-ld=gold
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
 

@@ -318,18 +318,8 @@ int main(int argc, char **argv) {
       QJsonObject spec = UtilIO::parseSpecFile(specFile);
       QVector<float> parameters = extractRuleParameters(spec);
       FeatureProvider featureProvider;
-      featureProvider.init();
-      bool matrices = extractCreateMatrix(spec);
-      QString mode = extractSimulationMode(spec);
       ConnectionProbabilityCalculator calculator(featureProvider);
-      double connProb;
-      if(mode == "synapsePerVoxel"){
-        connProb = calculator.calculateSynapse(parameters, matrices);
-      } else {
-        connProb = calculator.calculate(parameters);
-      }
-       
-      writeOutputFile(connProb);
+      calculator.distributeSynapses(parameters);
     }
   } else if (mode == "SUBCUBE") {
     if (argc != 3) {
@@ -365,7 +355,6 @@ int main(int argc, char **argv) {
       const QString specFile = argv[2];
       QJsonObject spec = UtilIO::parseSpecFile(specFile);
       const QString dataRoot = spec["DATA_ROOT"].toString();
-      //QString mode = extractSimulationMode(spec);
       NetworkProps networkProps;
       networkProps.setDataRoot(dataRoot);
       networkProps.loadFilesForSynapseComputation();
@@ -376,27 +365,7 @@ int main(int argc, char **argv) {
       QVector<float> bboxMax = extractBBoxMax(spec); 
       selection.setInnervationSelection(spec, networkProps, samplingFactor);
       selection.setBBox(bboxMin,bboxMax);
-      //bool duplicity = mode == "innervationSum";
       featureProvider.preprocessFeatures(networkProps, selection, 0.0001);
-      ConnectionProbabilityCalculator calculator(featureProvider);
-      QVector<float> parameter;
-      calculator.distributeSynapses(parameter);
-      /*
-      makeCleanDir("matrices");
-      const QString specFile = argv[2];
-      QJsonObject spec = UtilIO::parseSpecFile(specFile);
-      const QString dataRoot = spec["DATA_ROOT"].toString();
-      QString mode = extractSimulationMode(spec);
-      NetworkProps networkProps;
-      networkProps.setDataRoot(dataRoot);
-      networkProps.loadFilesForSynapseComputation();
-      FeatureProvider featureProvider;
-      NeuronSelection selection;
-      int samplingFactor = extractSamplingFactor(spec);      
-      selection.setInnervationSelection(spec, networkProps, samplingFactor);
-      bool duplicity = mode == "innervationSum";
-      featureProvider.preprocess(networkProps, selection, duplicity);
-      */
       return 0;
     }
   } else {

@@ -56,7 +56,7 @@ QString CIS3D::getLaminarLocation(LaminarLocation location){
 
 
 QDir CIS3D::getModelDataDir(const QDir& dataRootDir) {
-    const QDir modelDataDir(dataRootDir.absolutePath() + "/modelData");
+    const QDir modelDataDir(dataRootDir.absolutePath());
     return modelDataDir;
 }
 
