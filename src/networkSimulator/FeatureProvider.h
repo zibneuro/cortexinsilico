@@ -36,9 +36,12 @@ public:
     int getPreMultiplicity(int index);
 
     void load(std::map<int, std::map<int, float> >& neuron_pre,
+              float b1,
               std::map<int, std::map<int, float> >& neuron_postExc,
+              float b2,
               std::map<int, std::map<int, float> >& neuron_postInh,
               std::map<int, float>& voxel_postAllExc,
+              float b3,
               std::map<int, float>& voxel_postAllInh,
               std::map<int, int>& neuron_funct,
               std::map<int, std::set<int> >& voxel_neuronsPre,
@@ -53,7 +56,7 @@ private:
     void writeMapInt(std::map<int, int>& mapping, QString folder, QString file);
     void writeIndex(std::map<int, std::set<int> >& index, QString folder, QString file);
     void loadIndex(std::map<int, std::set<int> >& index, QString folder, QString fileName);
-    void readMapFloat(std::map<int, float>& mapping, QString folder, QString fileName);
+    void readMapFloat(std::map<int, float>& mapping, QString folder, QString fileName, float coefficient = 1);
     void readMapInt(std::map<int, int>& mapping, QString folder, QString fileName);
     void readIndex(std::map<int, std::set<int> >& index, QString folder, QString file);
     void registerVoxelIds(std::set<int>& voxelIds, std::map<int, float>& field);
