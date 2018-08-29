@@ -164,18 +164,16 @@ ConnectionProbabilityCalculator::calculateSynapse(QVector<float> parameters,
     return connectionProbabilities.getMean();
 }
 
-void
+double
 ConnectionProbabilityCalculator::distributeSynapses(QVector<float> parameters)
 {
+    float b0 = parameters[0];
+    float b1 = parameters[1];
+    float b2 = parameters[2];
+    float b3 = parameters[3];
 
-    float b1 = parameters[0];
-    float b2 = parameters[1];
-    float b3 = parameters[2];
-    float b4 = parameters[3];
+    qDebug() << QString("Start distributing synapses [%1,%2,%3,%4].").arg(b0).arg(b1).arg(b2).arg(b3);
 
-    qDebug() << QString("Distributing synapses [%1,%2,%3,%4]").arg(b1).arg(b2).arg(b3).arg(b4);
-
-    UtilIO::makeDir("output_synapses");
     std::map<int, std::map<int, float> > neuron_pre;
     std::map<int, std::map<int, float> > neuron_postExc;
     std::map<int, std::map<int, float> > neuron_postInh;
@@ -187,76 +185,85 @@ ConnectionProbabilityCalculator::distributeSynapses(QVector<float> parameters)
     std::map<int, std::set<int> > voxel_neuronsPostInh;
     std::vector<int> voxel;
 
-    mFeatureProvider.load(neuron_pre,
-                          neuron_postExc,
+    mFeatureProvider.load(neuron_pre, b1,
+                          neuron_postExc, b2,
                           neuron_postInh,
-                          voxel_postAllExc,
+                          voxel_postAllExc, b3,
                           voxel_postAllInh,
                           neuron_funct,
                           voxel_neuronsPre,
                           voxel_neuronsPostExc,
                           voxel_neuronsPostInh);
 
+    std::vector<int> preIndices;
+    //preIndices.push_back(284568);
 
-    for(auto it = voxel_neuronsPre.begin(); it!=voxel_neuronsPre.end(); ++it){
-        voxel.push_back(it->first);
+    for(auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it){
+        preIndices.push_back(it->first);
     }
+
+
+    std::vector<int> postIndices;
+    //postIndices.push_back(341887);
+
+    for(auto it = neuron_postExc.begin(); it != neuron_postExc.end(); ++it){
+        postIndices.push_back(it->first);
+    }
+
+    std::vector<int> empty(postIndices.size(), 0);
+    std::vector<std::vector<int> > contacts(preIndices.size(), empty);
 
     Distribution poisson;
     #pragma omp parallel for schedule(dynamic)
-    for(int i=0; i<voxel.size(); i++){
-        int voxelId = voxel[i];
-        //qDebug() << "Processing voxel (ID):" << voxelId;
-        std::vector<Contact> contacts;
-        float postAllVal = voxel_postAllExc[voxelId];
-        for(auto pre = voxel_neuronsPre[voxelId].begin(); pre != voxel_neuronsPre[voxelId].end(); ++pre){
-            for(auto post = voxel_neuronsPostExc[voxelId].begin(); post != voxel_neuronsPostExc[voxelId].end(); ++post){
-                if(*pre != *post){
-                    float preVal = neuron_pre[*pre][voxelId];
-                    float postVal = neuron_postExc[*post][voxelId];
-                    float mu = exp(b1 + b2 * preVal + b3 * postVal + b4 * postAllVal);
-                    int synapses = poisson.drawSynapseCount(mu);
+    for(int i=0; i<preIndices.size(); i++){
+            int preId = preIndices[i];
+            for(int j=0; j<postIndices.size(); j++){
+                    int postId = postIndices[j];
+                    //qDebug() << i << j << preId << postId;
+                    if(preId != postId){
+                        for(auto pre = neuron_pre[preId].begin(); pre != neuron_pre[preId].end(); ++pre){
+                            if(neuron_postExc[postId].find(pre->first) != neuron_postExc[postId].end()){
 
-                    Contact c;
-                    c.pre = *pre;
-                    c.post = *post;
-                    c.preVal = preVal;
-                    c.postVal = postVal;
-                    c.postAllVal = postAllVal;
-                    c.mu = mu;
-                    c.count = synapses;
-                    contacts.push_back(c);
+                                float preVal = pre->second;
+                                float postVal = neuron_postExc[postId][pre->first];
+                                float postAllVal = voxel_postAllExc[pre->first];
+                                float arg = b0 + preVal + postVal + postAllVal;
+                                //qDebug() << k++ << arg << preVal << postVal << postAllVal;
+                                int synapses = 0;
+                                if(arg >= -7 && arg <= 7){
+                                    float mu = exp(arg);
+                                    synapses = poisson.drawSynapseCount(mu);
+                                } else if (arg > 7){
+                                    synapses = 1000;
+                                }
+                                if(synapses > 0){
+                                    contacts[i][j] = synapses;
+                                    break;
+                                }
+                            }
+                        }
 
+                    }
                 }
             }
-        }
-        QString filename = QString("%1.dat").arg(voxelId);
-        filename = QDir("output_synapses").filePath(filename);
-        QFile file(filename);
-        if (!file.open(QIODevice::WriteOnly))
+    Statistics connectionProbabilities;
+    for (int i = 0; i < preIndices.size(); i++)
+    {
+        int realizedConnections = 0;
+        for (int j = 0; j < postIndices.size(); j++)
         {
-            const QString msg =
-                QString("Cannot open file %1 for writing.").arg(filename);
-            throw std::runtime_error(qPrintable(msg));
+            realizedConnections += contacts[i][j] > 0 ? 1 : 0;
         }
-        QTextStream out(&file);
-        out << "presynapticNeuronID" << " " << "postsynapticNeuronID" << " "
-            << "boutons" << " "<< "PSTs" << " " << "PSTs_all" << " " << "synapses" << "\n";
-        for (unsigned int i = 0; i < contacts.size(); i++)
-        {
-            out << contacts[i].pre << " " <<
-                   contacts[i].post << " " <<
-                   contacts[i].preVal << " " <<
-                   contacts[i].postVal << " " <<
-                   contacts[i].postAllVal << " " <<
-                   /*contacts[i].mu << " " <<*/
-                   contacts[i].count << "\n";
-        }
+        double probability = (double)realizedConnections / (double)postIndices.size();
+        connectionProbabilities.addSample(probability);
     }
 
-    qDebug() << "[*] Finished distributing synapses.";
-
+    double connProb = connectionProbabilities.getMean();
+    qDebug() << QString("Distributed synapses [%1,%2,%3,%4]. Connection prob.: %5").arg(b0).arg(b1).arg(b2).arg(b3).arg(connProb);
+    return connProb;
 }
+
+
 
 double
 ConnectionProbabilityCalculator::calculateProbability(double innervationMean)

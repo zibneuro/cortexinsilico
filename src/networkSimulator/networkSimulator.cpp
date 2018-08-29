@@ -319,7 +319,8 @@ int main(int argc, char **argv) {
       QVector<float> parameters = extractRuleParameters(spec);
       FeatureProvider featureProvider;
       ConnectionProbabilityCalculator calculator(featureProvider);
-      calculator.distributeSynapses(parameters);
+      double probability = calculator.distributeSynapses(parameters);
+      writeOutputFile(probability);
     }
   } else if (mode == "SUBCUBE") {
     if (argc != 3) {
