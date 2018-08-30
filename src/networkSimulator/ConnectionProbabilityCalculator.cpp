@@ -208,10 +208,10 @@ ConnectionProbabilityCalculator::distributeSynapses(QVector<float> parameters)
 
     Distribution poisson;
 #pragma omp parallel for schedule(dynamic)
-    for (int i = 0; i < preIndices.size(); i++)
+    for (unsigned int i = 0; i < preIndices.size(); i++)
     {
         int preId = preIndices[i];
-        for (int j = 0; j < postIndices.size(); j++)
+        for (unsigned int j = 0; j < postIndices.size(); j++)
         {
             int postId = postIndices[j];
             //qDebug() << i << j << preId << postId;
@@ -247,10 +247,10 @@ ConnectionProbabilityCalculator::distributeSynapses(QVector<float> parameters)
         }
     }
     Statistics connectionProbabilities;
-    for (int i = 0; i < preIndices.size(); i++)
+    for (unsigned int i = 0; i < preIndices.size(); i++)
     {
         int realizedConnections = 0;
-        for (int j = 0; j < postIndices.size(); j++)
+        for (unsigned int j = 0; j < postIndices.size(); j++)
         {
             realizedConnections += contacts[i][j] > 0 ? 1 : 0;
         }

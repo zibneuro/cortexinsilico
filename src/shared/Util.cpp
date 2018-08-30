@@ -14,7 +14,9 @@
     @param n2 Properties of second neurons.
     @returns True if the neurons overlap.
 */
-bool Util::overlap(const NeuronProps& n1, const NeuronProps& n2) {
+bool
+Util::overlap(const NeuronProps& n1, const NeuronProps& n2)
+{
     const bool intersect = n1.boundingBox.intersects(n2.boundingBox);
     return intersect;
 }
@@ -25,11 +27,14 @@ bool Util::overlap(const NeuronProps& n1, const NeuronProps& n2) {
     @param networkProps The model data of the network.
     @returns The IDs of unique presynaptic neurons.
 */
-QList<int> Util::getUniquePreNeurons(const QList<int>& preNeuronsList,
-                                     const NetworkProps& networkProps) {
+QList<int>
+Util::getUniquePreNeurons(const QList<int>& preNeuronsList,
+                          const NetworkProps& networkProps)
+{
     QSet<int> unique;
     const AxonRedundancyMap& axonMap = networkProps.axonRedundancyMap;
-    for (int i = 0; i < preNeuronsList.size(); ++i) {
+    for (int i = 0; i < preNeuronsList.size(); ++i)
+    {
         const int preId = preNeuronsList[i];
         const int mappedId = axonMap.getNeuronIdToUse(preId);
         unique.insert(mappedId);
@@ -42,21 +47,27 @@ QList<int> Util::getUniquePreNeurons(const QList<int>& preNeuronsList,
     @param propsMap The neuron properties.
     @returns A mapping (hash) with (cellType, region) as hash-key.
 */
-IdsPerCellTypeRegion Util::sortByCellTypeRegion(const PropsMap& propsMap) {
+IdsPerCellTypeRegion
+Util::sortByCellTypeRegion(const PropsMap& propsMap)
+{
     IdsPerCellTypeRegion sorted;
 
-    for (PropsMap::ConstIterator it = propsMap.constBegin(); it != propsMap.constEnd(); ++it) {
+    for (PropsMap::ConstIterator it = propsMap.constBegin(); it != propsMap.constEnd(); ++it)
+    {
         const int neuronId = it.key();
         const int cellTypeId = it.value().cellTypeId;
         const int regionId = it.value().regionId;
 
         CellTypeRegion ctr(cellTypeId, regionId);
         IdsPerCellTypeRegion::iterator i = sorted.find(ctr);
-        if (i == sorted.end()) {
+        if (i == sorted.end())
+        {
             QList<int> list;
             list.append(neuronId);
             sorted.insert(ctr, list);
-        } else {
+        }
+        else
+        {
             i.value().append(neuronId);
         }
     }
@@ -71,22 +82,28 @@ IdsPerCellTypeRegion Util::sortByCellTypeRegion(const PropsMap& propsMap) {
     @param networkProps The model data of the network.
     @returns A mapping (hash) with (cellType, region) as hash-key.
 */
-IdsPerCellTypeRegion Util::sortByCellTypeRegionIDs(const IdList& neuronIds,
-                                                   const NetworkProps& networkProps) {
+IdsPerCellTypeRegion
+Util::sortByCellTypeRegionIDs(const IdList& neuronIds,
+                              const NetworkProps& networkProps)
+{
     IdsPerCellTypeRegion sorted;
 
-    for (IdList::ConstIterator it = neuronIds.constBegin(); it != neuronIds.constEnd(); ++it) {
+    for (IdList::ConstIterator it = neuronIds.constBegin(); it != neuronIds.constEnd(); ++it)
+    {
         const int neuronId = *it;
         const int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
         const int regionId = networkProps.neurons.getRegionId(neuronId);
 
         CellTypeRegion ctr(cellTypeId, regionId);
         IdsPerCellTypeRegion::iterator i = sorted.find(ctr);
-        if (i == sorted.end()) {
+        if (i == sorted.end())
+        {
             IdList list;
             list.append(neuronId);
             sorted.insert(ctr, list);
-        } else {
+        }
+        else
+        {
             i.value().append(neuronId);
         }
     }
@@ -94,33 +111,45 @@ IdsPerCellTypeRegion Util::sortByCellTypeRegionIDs(const IdList& neuronIds,
     return sorted;
 }
 
-QJsonObject getFilterItemWithName(const QString& name, const QJsonArray& filters) {
-    for (int i = 0; i < filters.size(); ++i) {
+QJsonObject
+getFilterItemWithName(const QString& name, const QJsonArray& filters)
+{
+    for (int i = 0; i < filters.size(); ++i)
+    {
         QJsonObject obj = filters.at(i).toObject();
         const QString nameId = obj["ID"].toString();
-        if (nameId == name) {
+        if (nameId == name)
+        {
             return obj;
         }
     }
     return QJsonObject();
 }
 
-QList<int> filterListKeeping(const QList<int>& elementsToKeep, const QList<int>& list) {
+QList<int>
+filterListKeeping(const QList<int>& elementsToKeep, const QList<int>& list)
+{
     QList<int> result;
-    for (int i = 0; i < list.size(); ++i) {
+    for (int i = 0; i < list.size(); ++i)
+    {
         const int item = list[i];
-        if (elementsToKeep.contains(item)) {
+        if (elementsToKeep.contains(item))
+        {
             result.append(item);
         }
     }
     return result;
 }
 
-QList<int> filterListRemoving(const QList<int>& elementsToRemove, const QList<int>& list) {
+QList<int>
+filterListRemoving(const QList<int>& elementsToRemove, const QList<int>& list)
+{
     QList<int> result;
-    for (int i = 0; i < list.size(); ++i) {
+    for (int i = 0; i < list.size(); ++i)
+    {
         const int item = list[i];
-        if (!elementsToRemove.contains(item)) {
+        if (!elementsToRemove.contains(item))
+        {
             result.append(item);
         }
     }
@@ -134,9 +163,11 @@ QList<int> filterListRemoving(const QList<int>& elementsToRemove, const QList<in
     @returns A selection filter that can be applied to the (CIS3D)Neurons class.
     @throws runtime_error if the selection filter is not valid.
 */
-SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
-                                                 const NetworkProps& network,
-                                                 const CIS3D::SynapticSide synapticSide) {
+SelectionFilter
+Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
+                                 const NetworkProps& network,
+                                 const CIS3D::SynapticSide synapticSide)
+{
     SelectionFilter filter;
 
     qDebug() << "selection filter";
@@ -150,80 +181,116 @@ SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
 
     filter.synapticSide = synapticSide;
 
-    if (!ctObj.isEmpty()) {
+    if (!ctObj.isEmpty())
+    {
         const QJsonArray value = ctObj["value"].toArray();
-        for (int v = 0; v < value.size(); ++v) {
+        for (int v = 0; v < value.size(); ++v)
+        {
             const QString ctName = value.at(v).toString();
             const int ctId = network.cellTypes.getId(ctName);
             cellTypeIds.append(ctId);
         }
     }
-    if (!excObj.isEmpty()) {
+    if (!excObj.isEmpty())
+    {
         const QString value = excObj["value"].toString();
-        if (value == "Yes") {
+        if (value == "Yes")
+        {
             neuronType = CIS3D::EXCITATORY;
-        } else if (value == "No") {
+        }
+        else if (value == "No")
+        {
             neuronType = CIS3D::INHIBITORY;
-        } else {
+        }
+        else
+        {
             const QString msg =
                 QString("[-] Invalid selection filter value (IsExcitatory): %1").arg(value);
             std::runtime_error(qPrintable(msg));
         }
     }
 
-    if (cellTypeIds.isEmpty() && neuronType == CIS3D::EXC_OR_INH) {
+    if (cellTypeIds.isEmpty() && neuronType == CIS3D::EXC_OR_INH)
+    {
         // Do nothing.
-    } else if (cellTypeIds.isEmpty() && neuronType == CIS3D::EXCITATORY) {
+    }
+    else if (cellTypeIds.isEmpty() && neuronType == CIS3D::EXCITATORY)
+    {
         // Add all excitatory types
         const QList<int> allCellTypeIds = network.cellTypes.getAllCellTypeIds();
-        for (int c = 0; c < allCellTypeIds.size(); ++c) {
+        for (int c = 0; c < allCellTypeIds.size(); ++c)
+        {
             const int ctid = allCellTypeIds.at(c);
-            if (network.cellTypes.isExcitatory(ctid)) {
+            if (network.cellTypes.isExcitatory(ctid))
+            {
                 filter.cellTypeIds.append(ctid);
             }
         }
-    } else if (cellTypeIds.isEmpty() && neuronType == CIS3D::INHIBITORY) {
+    }
+    else if (cellTypeIds.isEmpty() && neuronType == CIS3D::INHIBITORY)
+    {
         // Add all inhibitory types
         const QList<int> allCellTypeIds = network.cellTypes.getAllCellTypeIds();
-        for (int c = 0; c < allCellTypeIds.size(); ++c) {
+        for (int c = 0; c < allCellTypeIds.size(); ++c)
+        {
             const int ctid = allCellTypeIds.at(c);
-            if (!network.cellTypes.isExcitatory(ctid)) {
+            if (!network.cellTypes.isExcitatory(ctid))
+            {
                 filter.cellTypeIds.append(ctid);
             }
         }
-    } else if (!cellTypeIds.isEmpty() && neuronType == CIS3D::EXC_OR_INH) {
+    }
+    else if (!cellTypeIds.isEmpty() && neuronType == CIS3D::EXC_OR_INH)
+    {
         // Add all selected types
         filter.cellTypeIds = cellTypeIds;
-    } else if (!cellTypeIds.isEmpty() && neuronType == CIS3D::EXCITATORY) {
+    }
+    else if (!cellTypeIds.isEmpty() && neuronType == CIS3D::EXCITATORY)
+    {
         // Select only excitatory types
-        for (int c = 0; c < cellTypeIds.size(); ++c) {
+        for (int c = 0; c < cellTypeIds.size(); ++c)
+        {
             const int ctid = cellTypeIds.at(c);
-            if (network.cellTypes.isExcitatory(ctid)) {
+            if (network.cellTypes.isExcitatory(ctid))
+            {
                 filter.cellTypeIds.append(ctid);
             }
         }
-    } else if (cellTypeIds.isEmpty() && neuronType == CIS3D::INHIBITORY) {
+    }
+    else if (cellTypeIds.isEmpty() && neuronType == CIS3D::INHIBITORY)
+    {
         // Select only inhibitory types
-        for (int c = 0; c < cellTypeIds.size(); ++c) {
+        for (int c = 0; c < cellTypeIds.size(); ++c)
+        {
             const int ctid = cellTypeIds.at(c);
-            if (!network.cellTypes.isExcitatory(ctid)) {
+            if (!network.cellTypes.isExcitatory(ctid))
+            {
                 filter.cellTypeIds.append(ctid);
             }
         }
     }
 
     const QJsonObject llObj = getFilterItemWithName("laminarLocation", jsonArray);
-    if (!llObj.isEmpty()) {
+    if (!llObj.isEmpty())
+    {
         const QJsonArray value = llObj["value"].toArray();
-        for (int i = 0; i < value.size(); ++i) {
+        for (int i = 0; i < value.size(); ++i)
+        {
             const QString v = value.at(i).toString();
-            if (v == "Infragranular") {
+            if (v == "Infragranular")
+            {
                 filter.laminarLocations.append(CIS3D::INFRAGRANULAR);
-            } else if (v == "Granular") {
+            }
+            else if (v == "Granular")
+            {
                 filter.laminarLocations.append(CIS3D::GRANULAR);
-            } else if (v == "Supragranular") {
+            }
+            else if (v == "Supragranular")
+            {
                 filter.laminarLocations.append(CIS3D::SUPRAGRANULAR);
-            } else {
+            }
+            else
+            {
                 const QString msg =
                     QString("[-] Invalid selection filter value (Laminar Location): %1").arg(v);
                 std::runtime_error(qPrintable(msg));
@@ -232,9 +299,11 @@ SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
     }
 
     const QJsonObject ncObj = getFilterItemWithName("nearestColumn", jsonArray);
-    if (!ncObj.isEmpty()) {
+    if (!ncObj.isEmpty())
+    {
         const QJsonArray value = ncObj["value"].toArray();
-        for (int v = 0; v < value.size(); ++v) {
+        for (int v = 0; v < value.size(); ++v)
+        {
             const QString colName = value.at(v).toString();
             const int colId = network.regions.getId(colName);
             filter.nearestColumnIds.append(colId);
@@ -243,11 +312,15 @@ SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
 
     const QJsonObject regObj = getFilterItemWithName("regions", jsonArray);
 
-    if (regObj.isEmpty()) {
+    if (regObj.isEmpty())
+    {
         filter.regionIds = network.regions.getAllRegionIds();
-    } else {
+    }
+    else
+    {
         const QJsonArray value = ctObj["value"].toArray();
-        for (int v = 0; v < value.size(); ++v) {
+        for (int v = 0; v < value.size(); ++v)
+        {
             const QString regName = value.at(v).toString();
             const int regId = network.regions.getId(regName);
             filter.regionIds.append(regId);
@@ -255,7 +328,8 @@ SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
     }
 
     const QJsonObject icObj = getFilterItemWithName("insideColumn", jsonArray);
-    if (!icObj.isEmpty()) {
+    if (!icObj.isEmpty())
+    {
         QList<int> columnRegionIds;
         columnRegionIds.append(network.regions.getId("A1"));
         columnRegionIds.append(network.regions.getId("A2"));
@@ -283,33 +357,46 @@ SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
         columnRegionIds.append(network.regions.getId("Delta"));
 
         const QString value = icObj["value"].toString();
-        if (value == "Yes") {
+        if (value == "Yes")
+        {
             filter.regionIds = filterListKeeping(columnRegionIds, filter.regionIds);
-        } else if (value == "No") {
+        }
+        else if (value == "No")
+        {
             filter.regionIds = filterListRemoving(columnRegionIds, filter.regionIds);
         }
     }
 
     const QJsonObject insideS1Obj = getFilterItemWithName("insideS1", jsonArray);
-    if (!insideS1Obj.isEmpty()) {
+    if (!insideS1Obj.isEmpty())
+    {
         const QString value = insideS1Obj["value"].toString();
         QList<int> filteredRegionIds;
         const int S1id = network.regions.getId("S1");
-        if (value == "Yes") {
-            for (int r = 0; r < filter.regionIds.size(); ++r) {
+        if (value == "Yes")
+        {
+            for (int r = 0; r < filter.regionIds.size(); ++r)
+            {
                 const int regionId = filter.regionIds.at(r);
-                if (network.regions.isInSubtree(regionId, S1id)) {
+                if (network.regions.isInSubtree(regionId, S1id))
+                {
                     filteredRegionIds.append(regionId);
                 }
             }
-        } else if (value == "No") {
-            for (int r = 0; r < filter.regionIds.size(); ++r) {
+        }
+        else if (value == "No")
+        {
+            for (int r = 0; r < filter.regionIds.size(); ++r)
+            {
                 const int regionId = filter.regionIds.at(r);
-                if (!network.regions.isInSubtree(regionId, S1id)) {
+                if (!network.regions.isInSubtree(regionId, S1id))
+                {
                     filteredRegionIds.append(regionId);
                 }
             }
-        } else {
+        }
+        else
+        {
             const QString msg =
                 QString("[-] Invalid selection filter value (Inside S1): %1").arg(value);
             std::runtime_error(qPrintable(msg));
@@ -320,42 +407,56 @@ SelectionFilter Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
     return filter;
 }
 
-QJsonArray mergeJsonArrays(QList<QJsonArray> arrays, bool emptyMeansAll) {
+QJsonArray
+mergeJsonArrays(QList<QJsonArray> arrays, bool emptyMeansAll)
+{
     QSet<QString> filterValues;
     QJsonArray merged;
     bool atLeastOneEmpty = false;
 
-    for (int i = 0; i < arrays.size(); i++) {
+    for (int i = 0; i < arrays.size(); i++)
+    {
         QJsonArray array = arrays[i];
-        if (array.size() == 0) {
+        if (array.size() == 0)
+        {
             atLeastOneEmpty = true;
-        } else {
-            for (int j = 0; j < array.size(); j++) {
+        }
+        else
+        {
+            for (int j = 0; j < array.size(); j++)
+            {
                 filterValues.insert(array[j].toString());
             }
         }
     }
 
-    if (!(emptyMeansAll && atLeastOneEmpty)) {
+    if (!(emptyMeansAll && atLeastOneEmpty))
+    {
         QSetIterator<QString> i(filterValues);
-        while (i.hasNext()) {
+        while (i.hasNext())
+        {
             merged.push_back(i.next());
         }
     }
     return merged;
 }
 
-QList<QJsonArray> retrieveStatisticFilters(const QJsonObject& spec, const QString filterField) {
+QList<QJsonArray>
+retrieveStatisticFilters(const QJsonObject& spec, const QString filterField)
+{
     QList<QJsonArray> list;
     QJsonArray statisticDefinitions = spec["STATISTIC_DEFINTIONS"].toArray();
-    for (int i = 0; i < statisticDefinitions.size(); i++) {
+    for (int i = 0; i < statisticDefinitions.size(); i++)
+    {
         QJsonObject definition = statisticDefinitions[i].toObject();
         list.push_back(definition[filterField].toArray());
     }
     return list;
 }
 
-void addGenerationField(QJsonObject& spec, const QString field, const bool emptyMeansAll) {
+void
+addGenerationField(QJsonObject& spec, const QString field, const bool emptyMeansAll)
+{
     QList<QJsonArray> arrays = retrieveStatisticFilters(spec, field);
     QJsonArray mergedArray = mergeJsonArrays(arrays, emptyMeansAll);
     spec[field] = mergedArray;
@@ -368,7 +469,9 @@ void addGenerationField(QJsonObject& spec, const QString field, const bool empty
     @param spec The JSON specification object with the statistic definitions.
         The fields of the generation filter are appended.
 */
-void Util::addGenerationFilter(QJsonObject& spec) {
+void
+Util::addGenerationFilter(QJsonObject& spec)
+{
     addGenerationField(spec, "PRE_NEURON_REGIONS", true);
     addGenerationField(spec, "PRE_NEURON_CELLTYPES", true);
     addGenerationField(spec, "PRE_NEURON_IDS", false);
@@ -383,7 +486,9 @@ void Util::addGenerationFilter(QJsonObject& spec) {
     @param statistics The statistics to report.
     @return The JSON object.
 */
-QJsonObject Util::createJsonStatistic(const Statistics& statistics) {
+QJsonObject
+Util::createJsonStatistic(const Statistics& statistics)
+{
     QJsonObject obj;
     obj.insert("average", statistics.getMean());
     obj.insert("stdev", statistics.getStandardDeviation());
@@ -392,15 +497,29 @@ QJsonObject Util::createJsonStatistic(const Statistics& statistics) {
     return obj;
 }
 
+QJsonArray
+Util::createJsonArray(const std::vector<double>& vector)
+{
+    QJsonArray array;
+    for (auto it = vector.begin(); it != vector.end(); ++it)
+    {
+        array.push_back(*it);
+    }
+    return array;
+}
+
 /**
     Creates a JSON report of a histogram
 
     @param statistics The histogram to report.
     @return The JSON object.
 */
-QJsonObject Util::createJsonHistogram(const Histogram& histogram) {
+QJsonObject
+Util::createJsonHistogram(const Histogram& histogram)
+{
     QJsonArray histArr = QJsonArray();
-    for (int b = 0; b < histogram.getNumberOfBins(); ++b) {
+    for (int b = 0; b < histogram.getNumberOfBins(); ++b)
+    {
         QJsonObject binObj;
         binObj["BinNumber"] = b;
         binObj["BinStart"] = histogram.getBinStart(b);
@@ -410,13 +529,16 @@ QJsonObject Util::createJsonHistogram(const Histogram& histogram) {
     }
 
     QJsonObject histObj;
-    if (histogram.getNumberOfValues() == 0) {
+    if (histogram.getNumberOfValues() == 0)
+    {
         histObj.insert("numberOfValues", 0);
         histObj.insert("numberOfZeros", 0);
         histObj.insert("minValue", 0);
         histObj.insert("maxValue", 0);
         histObj.insert("histogram", histArr);
-    } else {
+    }
+    else
+    {
         histObj.insert("numberOfValues", histogram.getNumberOfValues());
         histObj.insert("numberOfZeros", histogram.getNumberOfZeros());
         histObj.insert("minValue", histogram.getMinValue());
@@ -434,7 +556,11 @@ QJsonObject Util::createJsonHistogram(const Histogram& histogram) {
     @param eps Tolerance.
     @return True, if the values are almost equal.
 */
-bool Util::almostEqual(double a, double b, double eps) { return std::abs(a - b) <= eps; }
+bool
+Util::almostEqual(double a, double b, double eps)
+{
+    return std::abs(a - b) <= eps;
+}
 
 /*
     Handles case that only VPM is selected in combination with nearest column.
@@ -442,15 +568,21 @@ bool Util::almostEqual(double a, double b, double eps) { return std::abs(a - b) 
     @param selection The selection filter.
     @param networkProps The model data.
 */
-void Util::correctVPMSelectionFilter(SelectionFilter& filter, const NetworkProps& networkProps) {
-    if (filter.cellTypeIds.size() == 1) {
+void
+Util::correctVPMSelectionFilter(SelectionFilter& filter, const NetworkProps& networkProps)
+{
+    if (filter.cellTypeIds.size() == 1)
+    {
         int cellTypeId = filter.cellTypeIds[0];
-        if (networkProps.cellTypes.getName(cellTypeId) == "VPM") {
+        if (networkProps.cellTypes.getName(cellTypeId) == "VPM")
+        {
             filter.regionIds.clear();
-            for (int i = 0; i < filter.nearestColumnIds.size(); i++) {
+            for (int i = 0; i < filter.nearestColumnIds.size(); i++)
+            {
                 QString column = networkProps.regions.getName(filter.nearestColumnIds[i]);
                 column.append("_Barreloid");
-                if(networkProps.regions.nameExists(column)){
+                if (networkProps.regions.nameExists(column))
+                {
                     filter.regionIds.push_back(networkProps.regions.getId(column));
                 }
             }

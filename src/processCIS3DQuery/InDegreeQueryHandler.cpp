@@ -89,7 +89,7 @@ void InDegreeQueryHandler::reportUpdate(NetworkStatistic* stat) {
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
-    qDebug() << "Posting intermediate result:" << percent << "\%    (" << connectionsDone << "/"
+    qDebug() << "Posting intermediate result:" << percent << "\\%    (" << connectionsDone << "/"
              << numConnections << ")";
     QEventLoop loop;
     QNetworkReply* reply = mNetworkManager.put(putRequest, putData.toLocal8Bit());
@@ -100,17 +100,17 @@ void InDegreeQueryHandler::reportUpdate(NetworkStatistic* stat) {
 void InDegreeQueryHandler::reportComplete(NetworkStatistic* stat) {
     long long numConnections = stat->getNumConnections();
 
-    const QString motifASelId = mCurrentJsonData["motifASelectionId"].toString();
-    const QString motifBSelId = mCurrentJsonData["motifBSelectionId"].toString();
-    const QString motifCSelId = mCurrentJsonData["motifCSelectionId"].toString();
-    const QString key = QString("motif_%1_%2_%3_%4.csv")
+    const QString motifASelId = mCurrentJsonData["inDegreeASelectionId"].toString();
+    const QString motifBSelId = mCurrentJsonData["inDegreeBSelectionId"].toString();
+    const QString motifCSelId = mCurrentJsonData["inDegreeCSelectionId"].toString();
+    const QString key = QString("inDegree_%1_%2_%3_%4.csv")
                             .arg(mQueryId)
                             .arg(motifASelId)
                             .arg(motifBSelId)
                             .arg(motifCSelId);
-    const QString motifASelectionText = mCurrentJsonData["motifASelectionFilterAsText"].toString();
-    const QString motifBSelectionText = mCurrentJsonData["motifBSelectionFilterAsText"].toString();
-    const QString motifCSelectionText = mCurrentJsonData["motifCSelectionFilterAsText"].toString();
+    const QString motifASelectionText = mCurrentJsonData["inDegreeASelectionFilterAsText"].toString();
+    const QString motifBSelectionText = mCurrentJsonData["inDegreeBSelectionFilterAsText"].toString();
+    const QString motifCSelectionText = mCurrentJsonData["inDegreeCSelectionFilterAsText"].toString();
     const QString csvfile =
         stat->createCSVFile(key, motifASelectionText, motifBSelectionText, motifCSelectionText,
                             mConfig["WORKER_TMP_DIR"].toString());
@@ -137,7 +137,7 @@ void InDegreeQueryHandler::reportComplete(NetworkStatistic* stat) {
     putRequest.setUrl(mQueryUrl);
     putRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
     putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
-    putRequest.setAttribute(QNetworkRequest::User, QVariant("putMotifResult"));
+    putRequest.setAttribute(QNetworkRequest::User, QVariant("putInDegreeResult"));
     putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
@@ -153,7 +153,7 @@ void InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         !reply->request().attribute(QNetworkRequest::User).toString().contains("getQueryData")) {
         return;
     } else if (error == QNetworkReply::NoError) {
-        qDebug() << "[*] Starting computation of motif query";
+        qDebug() << "[*] Starting computation of In-Degree query";
 
         const QByteArray content = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
@@ -167,24 +167,24 @@ void InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForQuery();
 
-        QString motifASelString = jsonData["motifASelectionFilter"].toString();
-        QString motifBSelString = jsonData["motifBSelectionFilter"].toString();
-        QString motifCSelString = jsonData["motifCSelectionFilter"].toString();
+        QString motifASelString = jsonData["inDegreeASelectionFilter"].toString();
+        QString motifBSelString = jsonData["inDegreeBSelectionFilter"].toString();
+        QString motifCSelString = jsonData["inDegreeCSelectionFilter"].toString();
 
         NeuronSelection selection;
-        qDebug() << "[*] Determining triplet selection:" << motifASelString << motifBSelString
+        qDebug() << "[*] Determining In-Degree selection:" << motifASelString << motifBSelString
                  << motifCSelString;
         selection.setTripletSelection(motifASelString, motifBSelString, motifCSelString, mNetwork);
         selection.printMotifStats();
 
-        InDegreeStatistic statistic(mNetwork, 50, 200);
+        InDegreeStatistic statistic(mNetwork, 1000);
         connect(&statistic, SIGNAL(update(NetworkStatistic*)), this,
                 SLOT(reportUpdate(NetworkStatistic*)));
         connect(&statistic, SIGNAL(complete(NetworkStatistic*)), this,
                 SLOT(reportComplete(NetworkStatistic*)));
         statistic.calculate(selection);
     } else {
-        qDebug() << "[-] Error obtaining MotifQuery data:";
+        qDebug() << "[-] Error obtaining InDegreeQuery data:";
         qDebug() << reply->errorString();
         if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
             qDebug() << QString(reply->readAll().replace("\"", ""));
@@ -197,14 +197,14 @@ void InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
 void InDegreeQueryHandler::replyPutResultFinished(QNetworkReply* reply) {
     QNetworkReply::NetworkError error = reply->error();
     const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-    if (error == QNetworkReply::NoError && !(requestId == "putMotifResult")) {
+    if (error == QNetworkReply::NoError && !(requestId == "putInDegreeResult")) {
         return;
     } else if (error == QNetworkReply::NoError) {
-        qDebug() << "    Completed processing motif query" << mQueryId;
+        qDebug() << "    Completed processing inDegree query" << mQueryId;
         reply->deleteLater();
         logoutAndExit(0);
     } else {
-        qDebug() << "[-] Error putting Motif result (queryId" << mQueryId << "):";
+        qDebug() << "[-] Error putting inDegree result (queryId" << mQueryId << "):";
         qDebug() << reply->errorString();
         if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
             qDebug() << QString(reply->readAll().replace("\"", ""));
