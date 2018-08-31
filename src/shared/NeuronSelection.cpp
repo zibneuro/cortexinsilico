@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include "Util.h"
 #include "UtilIO.h"
+#include "Columns.h"
 
 /**
   Empty constructor.
@@ -17,7 +18,8 @@ NeuronSelection::NeuronSelection(){};
     @param postsynaptic The postsynaptic neuron IDs.
 */
 NeuronSelection::NeuronSelection(const IdList& presynaptic, const IdList& postsynaptic)
-    : mPresynaptic(presynaptic), mPostsynaptic(postsynaptic){};
+    : mPresynaptic(presynaptic)
+    , mPostsynaptic(postsynaptic){};
 
 /**
     Determines a innervation statistic selection from a specification file.
@@ -25,21 +27,28 @@ NeuronSelection::NeuronSelection(const IdList& presynaptic, const IdList& postsy
     @param networkProps the model data of the network.
     @param samplingFactor Sampling rate for selection (default: 1 = take all)
 */
-void NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor){    
+void
+NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor)
+{
     mPresynaptic.clear();
     mPostsynaptic.clear();
     IdList pre = UtilIO::getPreSynapticNeurons(spec, networkProps);
     IdList post = UtilIO::getPostSynapticNeuronIds(spec, networkProps);
-    if(samplingFactor == 1){
-        mPresynaptic.append(pre);        
+    if (samplingFactor == 1)
+    {
+        mPresynaptic.append(pre);
         mPostsynaptic.append(post);
-    } else {
+    }
+    else
+    {
         std::random_shuffle(pre.begin(), pre.end());
         std::random_shuffle(post.begin(), post.end());
-        for(int i=0; i<pre.size(); i+=samplingFactor){
+        for (int i = 0; i < pre.size(); i += samplingFactor)
+        {
             mPresynaptic.append(pre[i]);
         }
-        for(int i=0; i<post.size(); i+=samplingFactor){
+        for (int i = 0; i < post.size(); i += samplingFactor)
+        {
             mPostsynaptic.append(post[i]);
         }
     }
@@ -50,8 +59,10 @@ void NeuronSelection::setInnervationSelection(const QJsonObject& spec, const Net
     @param spec The spec file with the filter definition.
     @param networkProps the model data of the network.
 */
-void NeuronSelection::setTripletSelection(const QJsonObject& spec,
-                                          const NetworkProps& networkProps) {
+void
+NeuronSelection::setTripletSelection(const QJsonObject& spec,
+                                     const NetworkProps& networkProps)
+{
     QJsonObject tmpSpec;
 
     tmpSpec["NEURON_REGIONS"] = spec["MOTIF_A_REGIONS"];
@@ -81,10 +92,12 @@ void NeuronSelection::setTripletSelection(const QJsonObject& spec,
     @param motifASelString The third selection string.
     @param networkProps the model data of the network.
 */
-void NeuronSelection::setTripletSelection(const QString motifASelString,
-                                          const QString motifBSelString,
-                                          const QString motifCSelString,
-                                          const NetworkProps& networkProps) {
+void
+NeuronSelection::setTripletSelection(const QString motifASelString,
+                                     const QString motifBSelString,
+                                     const QString motifCSelString,
+                                     const NetworkProps& networkProps)
+{
     mMotifA.clear();
     mMotifA.append(getSelectedNeurons(motifASelString, networkProps));
     mMotifB.clear();
@@ -99,8 +112,10 @@ void NeuronSelection::setTripletSelection(const QString motifASelString,
     @param networkProps The model data of the network.
     @return A list of neuron IDs.
 */
-IdList NeuronSelection::getSelectedNeurons(const QString selectionString,
-                                           const NetworkProps& networkProps) {
+IdList
+NeuronSelection::getSelectedNeurons(const QString selectionString,
+                                    const NetworkProps& networkProps)
+{
     QJsonDocument doc = QJsonDocument::fromJson(selectionString.toLocal8Bit());
     QJsonArray arr = doc.array();
     SelectionFilter filter = Util::getSelectionFilterFromJson(arr, networkProps, CIS3D::BOTH_SIDES);
@@ -111,45 +126,117 @@ IdList NeuronSelection::getSelectedNeurons(const QString selectionString,
 /**
   Returns the presynaptic subselection.
 */
-IdList NeuronSelection::Presynaptic() const { return mPresynaptic; }
+IdList
+NeuronSelection::Presynaptic() const
+{
+    return mPresynaptic;
+}
 
 /**
   Returns the postynaptic subselection.
 */
-IdList NeuronSelection::Postsynaptic() const { return mPostsynaptic; }
+IdList
+NeuronSelection::Postsynaptic() const
+{
+    return mPostsynaptic;
+}
 
 /**
   Returns the first neuron subselection for motif statistics.
 */
-IdList NeuronSelection::MotifA() const { return mMotifA; }
+IdList
+NeuronSelection::MotifA() const
+{
+    return mMotifA;
+}
 
 /**
   Returns the second neuron subselection for motif statistics.
 */
-IdList NeuronSelection::MotifB() const { return mMotifB; }
+IdList
+NeuronSelection::MotifB() const
+{
+    return mMotifB;
+}
 
 /**
   Returns the third neuron subselection for motif statistics.
 */
-IdList NeuronSelection::MotifC() const { return mMotifC; }
+IdList
+NeuronSelection::MotifC() const
+{
+    return mMotifC;
+}
 
 /*
     Prints the number of selected neurons for motif statistics.
 */
-void NeuronSelection::printMotifStats() {
+void
+NeuronSelection::printMotifStats()
+{
     qDebug() << "[*] Number of selected neurons (motif A,B,C):" << mMotifA.size() << mMotifB.size()
              << mMotifC.size();
 }
 
-void NeuronSelection::setBBox(QVector<float> min, QVector<float> max){
+void
+NeuronSelection::setBBox(QVector<float> min, QVector<float> max)
+{
     mBBoxMin = min;
     mBBoxMax = max;
 }
 
-QVector<float> NeuronSelection::getBBoxMin(){
+QVector<float>
+NeuronSelection::getBBoxMin()
+{
     return mBBoxMin;
 }
 
-QVector<float> NeuronSelection::getBBoxMax(){
+QVector<float>
+NeuronSelection::getBBoxMax()
+{
     return mBBoxMax;
+}
+
+void
+NeuronSelection::setPiaSomaDistance(QVector<float> rangePre, QVector<float> rangePost, const NetworkProps& networkProps)
+{
+    qDebug() << rangePre << rangePost;
+    mPiaSomaDistancePre = rangePre;
+    mPiaSomaDistancePost = rangePost;
+    filterPiaSoma(mPresynaptic, rangePre, networkProps);
+    filterPiaSoma(mPostsynaptic, rangePost, networkProps);
+}
+
+void
+NeuronSelection::filterPiaSoma(IdList& neuronIds, QVector<float> range, const NetworkProps& networkProps)
+{
+    Columns columns;
+    if (range.size() == 2)
+    {
+        qDebug() << "[*] Filter pia soma distance" << range;
+        IdList pruned;
+        for (auto it = neuronIds.begin(); it != neuronIds.end(); ++it)
+        {
+            int regionId = networkProps.neurons.getRegionId(*it);
+            QString regionName = networkProps.regions.getName(regionId);
+            Vec3f soma = networkProps.neurons.getSomaPosition(*it);
+            if (columns.inRange(regionName, soma, range))
+            {
+                pruned.push_back(*it);
+            }
+        }
+        neuronIds = pruned;
+    }
+}
+
+QVector<float>
+NeuronSelection::getPiaSomaDistancePre()
+{
+    return mPiaSomaDistancePre;
+}
+
+QVector<float>
+NeuronSelection::getPiaSomaDistancePost()
+{
+    return mPiaSomaDistancePost;
 }

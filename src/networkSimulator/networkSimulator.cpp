@@ -130,6 +130,32 @@ extractBBoxMin(const QJsonObject spec)
 }
 
 QVector<float>
+extractPiaSomaDistancePre(const QJsonObject spec)
+{
+    QVector<float> range;
+    if (spec["PRE_PIA_DISTANCE"] != QJsonValue::Undefined)
+    {
+        QJsonArray parameters = spec["PRE_PIA_DISTANCE"].toArray();
+        range.append(float(parameters[0].toDouble()));
+        range.append(float(parameters[1].toDouble()));
+    }
+    return range;
+}
+
+QVector<float>
+extractPiaSomaDistancePost(const QJsonObject spec)
+{
+    QVector<float> range;
+    if (spec["POST_PIA_DISTANCE"] != QJsonValue::Undefined)
+    {
+        QJsonArray parameters = spec["POST_PIA_DISTANCE"].toArray();
+        range.append(float(parameters[0].toDouble()));
+        range.append(float(parameters[1].toDouble()));
+    }
+    return range;
+}
+
+QVector<float>
 extractBBoxMax(const QJsonObject spec)
 {
     QVector<float> max;
@@ -449,8 +475,11 @@ main(int argc, char** argv)
             int samplingFactor = extractSamplingFactor(spec);
             QVector<float> bboxMin = extractBBoxMin(spec);
             QVector<float> bboxMax = extractBBoxMax(spec);
+            QVector<float> rangePre = extractPiaSomaDistancePre(spec);
+            QVector<float> rangePost = extractPiaSomaDistancePost(spec);
             selection.setInnervationSelection(spec, networkProps, samplingFactor);
             selection.setBBox(bboxMin, bboxMax);
+            selection.setPiaSomaDistance(rangePre, rangePost, networkProps);
             featureProvider.preprocessFeatures(networkProps, selection, 0.0001);
             return 0;
         }

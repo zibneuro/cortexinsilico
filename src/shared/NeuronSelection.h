@@ -51,6 +51,10 @@ class NeuronSelection {
     void setTripletSelection(const QString motifASelString, const QString motifBSelString,
                              const QString motifCSelString, const NetworkProps& networkProps);
 
+    void setPiaSomaDistance(QVector<float> rangePre, QVector<float> rangePost, const NetworkProps& networkProps);
+
+    void filterPiaSoma(IdList& neuronIds, QVector<float> range, const NetworkProps& networkProps);
+
     /**
         Determines neuron IDs based on a selection string;
         @param selectionString The selection string.
@@ -95,6 +99,10 @@ class NeuronSelection {
 
     QVector<float> getBBoxMax();
 
+    QVector<float> getPiaSomaDistancePre();
+
+    QVector<float> getPiaSomaDistancePost();
+
    private:
     IdList mPresynaptic;
     IdList mPostsynaptic;
@@ -103,6 +111,8 @@ class NeuronSelection {
     IdList mMotifC;
     QVector<float> mBBoxMin;
     QVector<float> mBBoxMax;
+    QVector<float> mPiaSomaDistancePre;
+    QVector<float> mPiaSomaDistancePost;
 };
 
 #endif
