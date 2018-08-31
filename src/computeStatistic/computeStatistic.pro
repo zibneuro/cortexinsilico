@@ -50,6 +50,7 @@ SOURCES += \
     ../shared/MotifCombinations.cpp \
     ../shared/TripletStatistic.cpp \
     ../shared/NeuronSelection.cpp \
+    ../shared/Columns.cpp \
     ../shared/InnervationMatrix.cpp 
 
 HEADERS += \
@@ -77,4 +78,5 @@ HEADERS += \
     ../shared/MotifCombinations.h \
     ../shared/TripletStatistic.h \
     ../shared/NeuronSelection.h \
+    ../shared/Columns.h \
     ../shared/InnervationMatrix.h 

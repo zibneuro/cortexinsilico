@@ -174,6 +174,7 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         QJsonArray preArr = preDoc.array();
 
         SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork, CIS3D::PRESYNAPTIC);
+        Util::correctVPMSelectionFilter(preFilter, mNetwork);
         const IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
 
         QString postSelString = jsonData["postsynapticSelectionFilter"].toString();

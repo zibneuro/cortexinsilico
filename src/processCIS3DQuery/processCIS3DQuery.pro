@@ -51,6 +51,7 @@ SOURCES += \
     ../shared/UtilIO.cpp \
     ../shared/SparseVectorCache.cpp \
     ../shared/NeuronSelection.cpp \
+    ../shared/Columns.cpp \
     ../shared/InnervationMatrix.cpp \
     EvaluationQueryHandler.cpp \
     MotifQueryHandler.cpp \
@@ -84,6 +85,7 @@ HEADERS += \
     ../shared/UtilIO.h \
     ../shared/SparseVectorCache.h \
     ../shared/NeuronSelection.h \
+    ../shared/Columns.h \
     ../shared/InnervationMatrix.h \
     EvaluationQueryHandler.h \
     MotifQueryHandler.h \
