@@ -6,6 +6,7 @@ data/voxelSpecFileLocal.json
 src/computeStatistic/specLocal.json
 data/connectome
 .vscode/
+src/cudaVS/x64
 src/cudaVS/Simulator/x64
 src/networkSimulator/.qmake.stash
 .clang-format
