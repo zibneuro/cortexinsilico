@@ -84,7 +84,7 @@ void InDegreeQueryHandler::reportUpdate(NetworkStatistic* stat) {
     putRequest.setUrl(mQueryUrl);
     putRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
     putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
-    putRequest.setAttribute(QNetworkRequest::User, QVariant("putIntermediateMotifResult"));
+    putRequest.setAttribute(QNetworkRequest::User, QVariant("putIntermediateInDegreeResult"));
     putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
@@ -142,6 +142,8 @@ void InDegreeQueryHandler::reportComplete(NetworkStatistic* stat) {
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
+    qDebug() << "In degree signal finished";
+
     connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this,
             SLOT(replyPutResultFinished(QNetworkReply*)));
     mNetworkManager.put(putRequest, putData.toLocal8Bit());
@@ -174,7 +176,7 @@ void InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         NeuronSelection selection;
         qDebug() << "[*] Determining In-Degree selection:" << motifASelString << motifBSelString
                  << motifCSelString;
-        selection.setTripletSelection(motifASelString, motifBSelString, motifCSelString, mNetwork);
+        selection.setInDegreeSelection(motifASelString, motifBSelString, motifCSelString, mNetwork);
         selection.printMotifStats();
 
         InDegreeStatistic statistic(mNetwork, 1000);

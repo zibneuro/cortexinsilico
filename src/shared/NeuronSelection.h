@@ -48,8 +48,13 @@ class NeuronSelection {
         @param motifASelString The third selection string.
         @param networkProps the model data of the network.
     */
-    void setTripletSelection(const QString motifASelString, const QString motifBSelString,
-                             const QString motifCSelString, const NetworkProps& networkProps);
+    void setTripletSelection(const QString selAString, const QString selBString,
+                             const QString selCString, const NetworkProps& networkProps);
+    
+    void setInDegreeSelection(const QString selAString,
+                                     const QString selBSelString,
+                                     const QString selCSelString,
+                                     const NetworkProps& networkProps);
 
     void setPiaSomaDistance(QVector<float> rangePre, QVector<float> rangePost, const NetworkProps& networkProps);
 
@@ -61,7 +66,7 @@ class NeuronSelection {
         @param networkProps The model data of the network.
         @return A list of neuron IDs.      
     */
-    IdList getSelectedNeurons(const QString selectionString, const NetworkProps& networkProps);                             
+    IdList getSelectedNeurons(const QString selectionString, const NetworkProps& networkProps, CIS3D::SynapticSide synapticSide=CIS3D::BOTH_SIDES);                             
 
     /**
       Returns the presynaptic subselection.

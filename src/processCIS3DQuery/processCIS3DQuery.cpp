@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     const QJsonObject config = parseSpecFile(specFile);
 
     const QString queryType = app.arguments().at(2);
-    if (queryType != "evaluationQuery" && queryType != "motifQuery" &&
+    if (queryType != "evaluationQuery" && queryType != "motifQuery" && queryType != "inDegreeQuery" &&
         queryType != "selectionQuery" && queryType != "networkDataUpload") {
         qDebug() << "Invalid query type.";
         printUsage();
