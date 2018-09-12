@@ -127,7 +127,9 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
 
             mConnectionsDone++;
             calculateCorrelation();
-            reportUpdate();
+            if(mConnectionsDone % 20 == 0){
+                reportUpdate();
+            }
         }
 
         if (!fromCache)

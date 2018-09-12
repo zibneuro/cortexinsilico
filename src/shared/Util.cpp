@@ -590,3 +590,14 @@ Util::correctVPMSelectionFilter(SelectionFilter& filter, const NetworkProps& net
         }
     }
 }
+
+void
+Util::correctInterneuronSelectionFilter(SelectionFilter& filter, const NetworkProps& networkProps)
+{
+    if(filter.cellTypeIds.size() == 0){
+        QList<int> exc = networkProps.cellTypes.getAllCellTypeIds(true);
+        for(int i=0; i<exc.size(); i++){
+            filter.cellTypeIds.push_back(exc[i]);
+        }
+    }
+}

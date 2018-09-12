@@ -168,8 +168,21 @@ int CellTypes::getId(const QString& name) const {
     Retrieves all existing cell type IDs.
     @return The IDs.
 */
-QList<int> CellTypes::getAllCellTypeIds() const {
-    return mPropsMap.keys();
+QList<int> CellTypes::getAllCellTypeIds(bool excitatory) const {
+    if(!excitatory){
+        return mPropsMap.keys();
+    } else {
+        QList<int> tmp = mPropsMap.keys();
+        QList<int> result;
+        for(int i=0; i<tmp.size(); i++){
+            if(mPropsMap[tmp[i]].isExcitatory){
+                result.push_back(tmp[i]);
+            }
+        }
+        return result;
+    }
+    
+
 }
 
 /**

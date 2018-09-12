@@ -105,6 +105,8 @@ namespace Util
 */
     void correctVPMSelectionFilter(SelectionFilter& filter, const NetworkProps& networkProps);
 
+    void correctInterneuronSelectionFilter(SelectionFilter& filter, const NetworkProps& networkProps);
+
 } // namespace Util
 
 #endif // UTIL_H

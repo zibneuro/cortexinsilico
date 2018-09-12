@@ -231,6 +231,12 @@ UtilIO::getNeuronIds(const QJsonObject& spec,
             selectedCellTypes.append(cellTypeId);
         }
     }
+    if(selectedCellTypes.size() == 0){
+        QList<int> exc = networkProps.cellTypes.getAllCellTypeIds(true);
+        for(int i=0; i<exc.size(); i++){
+            selectedCellTypes.append(exc[i]);
+        }
+    }
 
     for (int r = 0; r < regions.size(); ++r)
     {

@@ -135,6 +135,7 @@ NeuronSelection::getSelectedNeurons(const QString selectionString,
     QJsonArray arr = doc.array();
     SelectionFilter filter = Util::getSelectionFilterFromJson(arr, networkProps, synapticSide);
     Util::correctVPMSelectionFilter(filter, networkProps);
+    Util::correctInterneuronSelectionFilter(filter, networkProps);
     return networkProps.neurons.getFilteredNeuronIds(filter);
 }
 
