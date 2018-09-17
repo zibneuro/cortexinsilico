@@ -120,14 +120,16 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
                 perPostBC.addSample(double(innervation));
             }
 
-            mStatisticsAC.addSample(perPostAC.getMean());
-            mValuesAC.push_back(perPostAC.getMean());
-            mStatisticsBC.addSample(perPostBC.getMean());
-            mValuesBC.push_back(perPostBC.getMean());
+            mStatisticsAC.addSample(perPostAC.getSum());
+            mValuesAC.push_back(perPostAC.getSum());
+            mStatisticsBC.addSample(perPostBC.getSum());
+            mValuesBC.push_back(perPostBC.getSum());
 
             mConnectionsDone++;
             calculateCorrelation();
-            reportUpdate();
+            if(mConnectionsDone % 20 == 0){
+                reportUpdate();
+            }
         }
 
         if (!fromCache)
@@ -163,6 +165,7 @@ InDegreeStatistic::calculateCorrelation()
     {
         sum += (mValuesAC[i] - meanAC) * (mValuesBC[i] - meanBC);
     }
+    sum /= mValuesAC.size();
     mCorrelation = sum / (stdAC * stdBC);
 }
 
@@ -203,5 +206,5 @@ InDegreeStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
         << mStatisticsBC.getMinimum() << sep << "Max" << sep
         << mStatisticsBC.getMaximum() << "\n";
 
-    out << "Correlation" << mCorrelation;
+    out << "Correlation" << sep << mCorrelation;
 }

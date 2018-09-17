@@ -106,6 +106,20 @@ NeuronSelection::setTripletSelection(const QString motifASelString,
     mMotifC.append(getSelectedNeurons(motifCSelString, networkProps));
 }
 
+void
+NeuronSelection::setInDegreeSelection(const QString selAString,
+                                     const QString selBString,
+                                     const QString selCString,
+                                     const NetworkProps& networkProps)
+{
+    mMotifA.clear();
+    mMotifA.append(getSelectedNeurons(selAString, networkProps, CIS3D::PRESYNAPTIC));
+    mMotifB.clear();
+    mMotifB.append(getSelectedNeurons(selBString, networkProps, CIS3D::PRESYNAPTIC));
+    mMotifC.clear();
+    mMotifC.append(getSelectedNeurons(selCString, networkProps, CIS3D::POSTSYNAPTIC));
+}
+
 /**
     Determines neuron IDs based on a selection string;
     @param selectionString The selection string.
@@ -114,12 +128,14 @@ NeuronSelection::setTripletSelection(const QString motifASelString,
 */
 IdList
 NeuronSelection::getSelectedNeurons(const QString selectionString,
-                                    const NetworkProps& networkProps)
+                                    const NetworkProps& networkProps,
+                                    CIS3D::SynapticSide synapticSide)
 {
     QJsonDocument doc = QJsonDocument::fromJson(selectionString.toLocal8Bit());
     QJsonArray arr = doc.array();
-    SelectionFilter filter = Util::getSelectionFilterFromJson(arr, networkProps, CIS3D::BOTH_SIDES);
+    SelectionFilter filter = Util::getSelectionFilterFromJson(arr, networkProps, synapticSide);
     Util::correctVPMSelectionFilter(filter, networkProps);
+    Util::correctInterneuronSelectionFilter(filter, networkProps);
     return networkProps.neurons.getFilteredNeuronIds(filter);
 }
 

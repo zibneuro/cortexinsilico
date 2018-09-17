@@ -91,7 +91,7 @@ public:
         Retrieves all existing cell type IDs.
         @return The IDs.
     */
-    QList<int> getAllCellTypeIds() const;
+    QList<int> getAllCellTypeIds(bool excitatory = false) const;
 
     /**
         Saves cell types to file.

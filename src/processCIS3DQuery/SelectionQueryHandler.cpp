@@ -17,18 +17,19 @@
 #include <stdexcept>
 #include <QFile>
 #include <QTextStream>
+#include <QDebug>
 
-
-
-QJsonObject createJsonResult(const IdsPerCellTypeRegion& idsPerCellTypeRegion,
-                             const NetworkProps& network,
-                             const QString& key,
-                             const qint64 fileSizeBytes)
+QJsonObject
+createJsonResult(const IdsPerCellTypeRegion& idsPerCellTypeRegion,
+                 const NetworkProps& network,
+                 const QString& key,
+                 const qint64 fileSizeBytes)
 {
     QJsonArray entries;
     int total = 0;
 
-    for (IdsPerCellTypeRegion::const_iterator it=idsPerCellTypeRegion.constBegin(); it!=idsPerCellTypeRegion.constEnd(); ++it) {
+    for (IdsPerCellTypeRegion::const_iterator it = idsPerCellTypeRegion.constBegin(); it != idsPerCellTypeRegion.constEnd(); ++it)
+    {
         const CellTypeRegion ctr = it.key();
         const int numNeurons = it.value().size();
         const QString cellType = network.cellTypes.getName(ctr.first);
@@ -58,18 +59,19 @@ QJsonObject createJsonResult(const IdsPerCellTypeRegion& idsPerCellTypeRegion,
     return result;
 }
 
-
-QString createGeometryJSON(const QString& zipFileName,
-                           const IdList& neurons,
-                           const NetworkProps& network,
-                           const QString& tmpDir)
+QString
+createGeometryJSON(const QString& zipFileName,
+                   const IdList& neurons,
+                   const NetworkProps& network,
+                   const QString& tmpDir)
 {
-    const QString zipFullPath  = QString("%1/%2").arg(tmpDir).arg(zipFileName);
-    const QString jsonFileName  = QString(zipFileName).remove(".zip");
-    const QString jsonFullPath  = QString(zipFullPath).remove(".zip");
+    const QString zipFullPath = QString("%1/%2").arg(tmpDir).arg(zipFileName);
+    const QString jsonFileName = QString(zipFileName).remove(".zip");
+    const QString jsonFullPath = QString(zipFullPath).remove(".zip");
 
     QFile jsonFile(jsonFullPath);
-    if (!jsonFile.open(QIODevice::WriteOnly)) {
+    if (!jsonFile.open(QIODevice::WriteOnly))
+    {
         const QString msg = QString("Cannot open file for saving json: %1").arg(jsonFullPath);
         throw std::runtime_error(qPrintable(msg));
     }
@@ -78,17 +80,23 @@ QString createGeometryJSON(const QString& zipFileName,
     QJsonArray cellTypeIds;
     QJsonArray regionIds;
 
-    for (int i=0; i<neurons.size(); ++i) {
+    const int vpmTypeId = network.cellTypes.getId("VPM");
+
+    for (int i = 0; i < neurons.size(); ++i)
+    {
         const int neuronId = neurons[i];
         const Vec3f somaPos = network.neurons.getSomaPosition(neuronId);
         const int cellTypeId = network.neurons.getCellTypeId(neuronId);
         const int regionId = network.neurons.getRegionId(neuronId);
 
-        positions.push_back(QJsonValue(somaPos.getX()));
-        positions.push_back(QJsonValue(somaPos.getY()));
-        positions.push_back(QJsonValue(somaPos.getZ()));
-        cellTypeIds.push_back(QJsonValue(cellTypeId));
-        regionIds.push_back(QJsonValue(regionId));
+        if (cellTypeId != vpmTypeId)
+        {
+            positions.push_back(QJsonValue(somaPos.getX()));
+            positions.push_back(QJsonValue(somaPos.getY()));
+            positions.push_back(QJsonValue(somaPos.getZ()));
+            cellTypeIds.push_back(QJsonValue(cellTypeId));
+            regionIds.push_back(QJsonValue(regionId));
+        }
     }
 
     QJsonObject metadata;
@@ -138,11 +146,13 @@ QString createGeometryJSON(const QString& zipFileName,
     qDebug() << "Arguments" << arguments;
     zip.start("zip", arguments);
 
-    if (!zip.waitForStarted()) {
+    if (!zip.waitForStarted())
+    {
         throw std::runtime_error("Error starting zip process");
     }
 
-    if (!zip.waitForFinished()) {
+    if (!zip.waitForFinished())
+    {
         throw std::runtime_error("Error completing zip process");
     }
     qDebug() << "[*] Completed zipping";
@@ -150,15 +160,14 @@ QString createGeometryJSON(const QString& zipFileName,
     return zipFullPath;
 }
 
-
 SelectionQueryHandler::SelectionQueryHandler(QObject* parent)
     : QObject(parent)
 {
 }
 
-
-void SelectionQueryHandler::process(const QString& selectionQueryId,
-                                    const QJsonObject& config)
+void
+SelectionQueryHandler::process(const QString& selectionQueryId,
+                               const QJsonObject& config)
 {
     mConfig = config;
     mQueryId = selectionQueryId;
@@ -168,16 +177,20 @@ void SelectionQueryHandler::process(const QString& selectionQueryId,
     const QString loginEndPoint = mConfig["METEOR_LOGIN_ENDPOINT"].toString();
     const QString logoutEndPoint = mConfig["METEOR_LOGOUT_ENDPOINT"].toString();
 
-    if (baseUrl.isEmpty()) {
+    if (baseUrl.isEmpty())
+    {
         throw std::runtime_error("SelectionQueryHandler: Cannot find METEOR_URL_CIS3D");
     }
-    if (queryEndPoint.isEmpty()) {
+    if (queryEndPoint.isEmpty())
+    {
         throw std::runtime_error("SelectionQueryHandler: Cannot find METEOR_SELECTIONQUERYFILTER_ENDPOINT");
     }
-    if (loginEndPoint.isEmpty()) {
+    if (loginEndPoint.isEmpty())
+    {
         throw std::runtime_error("SelectionQueryHandler: Cannot find METEOR_LOGIN_ENDPOINT");
     }
-    if (logoutEndPoint.isEmpty()) {
+    if (logoutEndPoint.isEmpty())
+    {
         throw std::runtime_error("SelectionQueryHandler: Cannot find METEOR_LOGOUT_ENDPOINT");
     }
 
@@ -200,18 +213,22 @@ void SelectionQueryHandler::process(const QString& selectionQueryId,
     mNetworkManager.get(request);
 }
 
-
-void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
+void
+SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
+{
     QNetworkReply::NetworkError error = reply->error();
-    if (error == QNetworkReply::NoError && !reply->request().attribute(QNetworkRequest::User).toString().contains("getSelectionQueryData")) {
+    if (error == QNetworkReply::NoError && !reply->request().attribute(QNetworkRequest::User).toString().contains("getSelectionQueryData"))
+    {
         return;
     }
-    else if (error == QNetworkReply::NoError) {
+    else if (error == QNetworkReply::NoError)
+    {
         const QByteArray content = reply->readAll();
         const QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
         const QString status = jsonResponse.object().value("status").toString();
 
-        if (status == "success") {
+        if (status == "success")
+        {
             QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
             QString selectionString = jsonResponse.object().value("data").toString();
             qDebug() << "    Starting computation:" << mQueryId << selectionString;
@@ -232,13 +249,16 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
 
             CIS3D::SynapticSide synapticSide = CIS3D::BOTH_SIDES;
             QString synapticSideString = jsonResponse.object().value("synapticSide").toString();
-            if (synapticSideString == "presynaptic") {
+            if (synapticSideString == "presynaptic")
+            {
                 synapticSide = CIS3D::PRESYNAPTIC;
             }
-            else if (synapticSideString == "postsynaptic") {
+            else if (synapticSideString == "postsynaptic")
+            {
                 synapticSide = CIS3D::POSTSYNAPTIC;
             }
-            else {
+            else
+            {
                 const QString msg = QString("[-] Invalid synaptic side string: %1").arg(synapticSideString);
                 std::runtime_error(qPrintable(msg));
             }
@@ -247,6 +267,7 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             QJsonArray selectionArr = selectionDoc.array();
             SelectionFilter filter = Util::getSelectionFilterFromJson(selectionArr, mNetwork, synapticSide);
             Util::correctVPMSelectionFilter(filter, mNetwork);
+            Util::correctInterneuronSelectionFilter(filter, mNetwork);
             const IdList neurons = mNetwork.neurons.getFilteredNeuronIds(filter);
 
             qDebug() << "    Start sorting " << neurons.size() << " neurons.";
@@ -255,16 +276,19 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
 
             const QString key = QString("neuronselection_%1.json.zip").arg(mQueryId);
             QString geometryFile;
-            try {
+            try
+            {
                 geometryFile = createGeometryJSON(key, neurons, mNetwork, mConfig["WORKER_TMP_DIR"].toString());
             }
-            catch (std::runtime_error& e) {
+            catch (std::runtime_error& e)
+            {
                 qDebug() << QString(e.what());
                 logoutAndExit(1);
             }
 
             const qint64 fileSizeBytes = QFileInfo(geometryFile).size();
-            if (QueryHelpers::uploadToS3(key, geometryFile, mConfig) != 0) {
+            if (QueryHelpers::uploadToS3(key, geometryFile, mConfig) != 0)
+            {
                 qDebug() << "Error uploading geometry json file to S3:" << geometryFile;
                 logoutAndExit(1);
             }
@@ -285,7 +309,8 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyPutResultFinished(QNetworkReply*)));
             mNetworkManager.put(putRequest, putData.toLocal8Bit());
         }
-        else {
+        else
+        {
             qDebug() << "[-] Error obtaining SelectionQuery data (invalid status):";
             qDebug() << reply->errorString();
             qDebug() << QString(reply->readAll().replace("\"", ""));
@@ -294,10 +319,12 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
             logoutAndExit(1);
         }
     }
-    else {
+    else
+    {
         qDebug() << "[-] Error obtaining SelectionQuery data (network error):";
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();
@@ -305,42 +332,47 @@ void SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
     }
 }
 
-
-void SelectionQueryHandler::replyPutResultFinished(QNetworkReply *reply) {
+void
+SelectionQueryHandler::replyPutResultFinished(QNetworkReply* reply)
+{
     QNetworkReply::NetworkError error = reply->error();
     const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-    if (error == QNetworkReply::NoError && !(requestId == "putSelectionResult")) {
+    if (error == QNetworkReply::NoError && !(requestId == "putSelectionResult"))
+    {
         return;
     }
-    else if (error == QNetworkReply::NoError) {
+    else if (error == QNetworkReply::NoError)
+    {
         qDebug() << "    Completed processing Selection query" << mQueryId;
         reply->deleteLater();
         logoutAndExit(0);
     }
-    else {
+    else
+    {
         qDebug() << "[-] Error putting Selection result (queryId" << mQueryId << "):";
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();
         logoutAndExit(1);
     }
-
 }
 
-
-void SelectionQueryHandler::logoutAndExit(const int exitCode)
+void
+SelectionQueryHandler::logoutAndExit(const int exitCode)
 {
-
     QueryHelpers::logout(mLogoutUrl,
                          mAuthInfo,
                          mNetworkManager);
 
-    if (exitCode == 0) {
+    if (exitCode == 0)
+    {
         emit completedProcessing();
     }
-    else {
+    else
+    {
         QCoreApplication::exit(exitCode);
     }
 }

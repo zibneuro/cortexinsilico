@@ -22,7 +22,7 @@ NetworkDataUploadHandler::NetworkDataUploadHandler(QObject* parent)
 QJsonArray getCellTypesAsJson(const NetworkProps& network) {
     QJsonArray arr;
 
-    const QList<int> ids = network.cellTypes.getAllCellTypeIds();
+    const QList<int> ids = network.cellTypes.getAllCellTypeIds(true);
     for (int i=0; i<ids.size(); ++i) {
         const int id = ids[i];
 

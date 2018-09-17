@@ -175,12 +175,14 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
 
         SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork, CIS3D::PRESYNAPTIC);
         Util::correctVPMSelectionFilter(preFilter, mNetwork);
+        Util::correctInterneuronSelectionFilter(preFilter, mNetwork);
         const IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
 
         QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
         QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
         QJsonArray postArr = postDoc.array();
         SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
+        Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
         const IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
 
         qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
