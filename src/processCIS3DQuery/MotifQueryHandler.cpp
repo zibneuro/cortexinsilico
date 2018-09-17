@@ -95,6 +95,19 @@ void MotifQueryHandler::reportUpdate(NetworkStatistic* stat) {
     QNetworkReply* reply = mNetworkManager.put(putRequest, putData.toLocal8Bit());
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     loop.exec();
+
+    QNetworkReply::NetworkError error = reply->error();
+    const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
+    if (error != QNetworkReply::NoError) {       
+        qDebug() << "[-] Error putting Evaluation result (queryId" << mQueryId << "):";
+        qDebug() << reply->errorString();
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+            qDebug() << QString(reply->readAll().replace("\"", ""));
+        }
+        reply->deleteLater();
+        logoutAndExit(1);
+        stat->abort();
+    }
 }
 
 void MotifQueryHandler::reportComplete(NetworkStatistic* stat) {

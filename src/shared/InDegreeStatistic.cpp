@@ -100,6 +100,11 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
 
         for (int post = 0; post < ids.size(); ++post)
         {
+            if (mAborted)
+            {
+                return;
+            }
+
             const int postId = ids[post];
 
             Statistics perPostAC;
@@ -127,7 +132,8 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
 
             mConnectionsDone++;
             calculateCorrelation();
-            if(mConnectionsDone % 20 == 0){
+            if (mConnectionsDone % 20 == 0)
+            {
                 reportUpdate();
             }
         }

@@ -9,6 +9,7 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, QObject* pa
     : QObject(parent), mNetwork(networkProps) {
     mCache = SparseVectorCache();
     mConnectome = new InnervationMatrix(networkProps);
+    mAborted = false;
 };
 
 /**
@@ -21,6 +22,7 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, const Spars
                                    QObject* parent)
     : QObject(parent), mNetwork(networkProps), mCache(cache) {
     mConnectome = new InnervationMatrix(networkProps);
+    mAborted = false;
 };
 
 /**
@@ -128,6 +130,10 @@ QString NetworkStatistic::createCSVFile(const QString& key, const QString& motif
     doCreateCSV(out, sep);
 
     return filename;
+}
+
+void NetworkStatistic::abort(){
+    mAborted = true;
 }
 
 /**

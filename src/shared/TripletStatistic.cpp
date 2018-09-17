@@ -138,6 +138,11 @@ void TripletStatistic::doCalculate(const NeuronSelection& selection) {
         combinations.initializeNonRedundantTripletMotifs();
 
     for (int i = 0; i < mIterations; i++) {
+
+        if(mAborted){
+            return;
+        }
+
         QList<CellTriplet> triplets = drawTriplets(selection);
         setInnervation(triplets);
         computeProbabilities(triplets, motifs);

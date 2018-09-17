@@ -23,6 +23,7 @@ signals:
 
 private slots:
     void replyGetQueryFinished(QNetworkReply *reply);
+    void replyPutResult(QNetworkReply *reply);
     void replyPutResultFinished(QNetworkReply *reply);
     void reportUpdate(NetworkStatistic* stat);
     void reportComplete(NetworkStatistic* stat);

@@ -75,6 +75,11 @@ void InnervationStatistic::doCalculate(const NeuronSelection& selection) {
     const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(selection.Postsynaptic(), mNetwork);
 
     for (IdsPerCellTypeRegion::ConstIterator it = idsPerCellTypeRegion.constBegin(); it != idsPerCellTypeRegion.constEnd(); ++it) {
+
+        if(mAborted){
+            return;
+        }
+
         const CellTypeRegion cellTypeRegion = it.key();
         const QString cellTypeName = mNetwork.cellTypes.getName(cellTypeRegion.first);
         const QString regionName = mNetwork.regions.getName(cellTypeRegion.second);

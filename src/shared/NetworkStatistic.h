@@ -104,6 +104,8 @@ class NetworkStatistic : public QObject {
     */
     long long getConnectionsDone() const;
 
+    void abort();
+
    signals:
     // Signals intermediate results are available
     //
@@ -172,6 +174,8 @@ class NetworkStatistic : public QObject {
         The innervation matrix.
     */
     InnervationMatrix* mConnectome;
+
+    bool mAborted;
 };
 
 #endif  // NETWORKSTATISTIC_H
