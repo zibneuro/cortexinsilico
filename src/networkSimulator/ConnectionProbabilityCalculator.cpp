@@ -258,6 +258,8 @@ ConnectionProbabilityCalculator::distributeSynapses(QVector<float> parameters)
         connectionProbabilities.addSample(probability);
     }
 
+    writeSynapseMatrix(contacts);
+
     double connProb = connectionProbabilities.getMean();
     qDebug() << QString("Distributed synapses [%1,%2,%3,%4]. Connection prob.: %5").arg(b0).arg(b1).arg(b2).arg(b3).arg(connProb);
     return connProb;
@@ -268,3 +270,35 @@ ConnectionProbabilityCalculator::calculateProbability(double innervationMean)
 {
     return 1 - exp(-1 * innervationMean);
 }
+
+void
+ConnectionProbabilityCalculator::writeSynapseMatrix(std::vector<std::vector<int> >& contacts)
+{
+    QString filename = "output_synapseMatrix";
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        const QString msg =
+            QString("Cannot open file %1 for writing.").arg(filename);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    QTextStream out(&file);
+    int numPre = contacts.size();
+    int numPost = contacts[0].size();
+    for (int i = 0; i < numPre; i++)
+    {
+        for (int j = 0; j < numPost; j++)
+        {
+            out << contacts[i][j];
+            if (j + 1 < numPost)
+            {
+                out << " ";
+            }
+        }
+        if (i + 1 < numPre)
+        {
+            out << "\n";
+        }
+    }
+}
+

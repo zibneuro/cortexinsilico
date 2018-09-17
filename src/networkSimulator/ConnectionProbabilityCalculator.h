@@ -42,6 +42,8 @@ public:
 
   double distributeSynapses(QVector<float> parameters);
 
+  void writeSynapseMatrix(std::vector<std::vector<int> >& contacts);
+
 private:
   double calculateProbability(double innervationMean);
 

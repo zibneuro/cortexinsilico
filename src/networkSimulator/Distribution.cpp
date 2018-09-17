@@ -1,5 +1,6 @@
 #include "Distribution.h"
 #include <algorithm>
+#include <QRandomGenerator>
 
 /*
     Constructor.
@@ -18,7 +19,7 @@ Distribution::Distribution() {
 int Distribution::drawSynapseCount(float mu) {
     if(mu > 0){
         std::poisson_distribution<> distribution(mu);
-        return distribution(mRandomGenerator);
+        return distribution(*QRandomGenerator::global());
     } else {
     return 0;
   }

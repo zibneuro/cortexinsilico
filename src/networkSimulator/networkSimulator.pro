@@ -14,6 +14,7 @@ INCLUDEPATH += ../shared
 
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
+
 QMAKE_LFLAGS += -fuse-ld=gold
 
 CONFIG(debug, debug|release) {
@@ -49,9 +50,7 @@ SOURCES += \
     ../shared/Util.cpp \
     ../shared/UtilIO.cpp \
     ../shared/CIS3DStatistics.cpp \
-    ../shared/NetworkStatistic.cpp \
     ../shared/Histogram.cpp \
-    ../shared/InnervationStatistic.cpp \
     ../shared/SparseFieldCalculator.cpp \
     ../shared/SparseVectorCache.cpp \
     ../shared/NeuronSelection.cpp \
@@ -81,9 +80,7 @@ HEADERS += \
     ../shared/Util.h \
     ../shared/UtilIO.h \
     ../shared/CIS3DStatistics.h \
-    ../shared/NetworkStatistic.h \
     ../shared/Histogram.h \
-    ../shared/InnervationStatistic.h \
     ../shared/SparseFieldCalculator.h \
     ../shared/SparseVectorCache.h \
     ../shared/NeuronSelection.h \
