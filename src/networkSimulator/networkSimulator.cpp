@@ -82,9 +82,10 @@ extractRuleParameters(const QJsonObject spec, bool addIntercept)
     QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
     if (addIntercept)
     {
-        if(parameters.size() != 4){
+        if (parameters.size() != 4)
+        {
             throw std::runtime_error("Invalid number of connectivity rule parameters, expected 4.");
-        }        
+        }
         theta.append((float)parameters[0].toDouble());
         theta.append((float)parameters[1].toDouble());
         theta.append((float)parameters[2].toDouble());
@@ -92,9 +93,10 @@ extractRuleParameters(const QJsonObject spec, bool addIntercept)
     }
     else
     {
-        if(parameters.size() != 3){
+        if (parameters.size() != 3)
+        {
             throw std::runtime_error("Invalid number of connectivity rule parameters, expected 3.");
-        }                
+        }
         theta.append((float)parameters[0].toDouble());
         theta.append((float)parameters[1].toDouble());
         theta.append((float)parameters[2].toDouble());
@@ -381,6 +383,19 @@ extractSamplingFactor(const QJsonObject spec)
     }
 }
 
+double
+extractInnervationBound(const QJsonObject spec)
+{
+    if (spec["INNERVATION_BOUND"] != QJsonValue::Undefined)
+    {
+        return spec["INNERVATION_BOUND"].toDouble();
+    }
+    else
+    {
+        return 1000;
+    }
+}
+
 void
 writeOutputFile(double connectionProbability)
 {
@@ -444,10 +459,11 @@ main(int argc, char** argv)
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
             bool addIntercept = extractAddIntercept(spec);
-            QVector<float> parameters = extractRuleParameters(spec, addIntercept);            
+            double maxInnervation = extractInnervationBound(spec);
+            QVector<float> parameters = extractRuleParameters(spec, addIntercept);
             FeatureProvider featureProvider;
             ConnectionProbabilityCalculator calculator(featureProvider);
-            calculator.calculate(parameters, addIntercept);
+            calculator.calculate(parameters, addIntercept, maxInnervation);
         }
     }
     else if (mode == "SUBCUBE")

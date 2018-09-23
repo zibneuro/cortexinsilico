@@ -26,8 +26,10 @@ ConnectionProbabilityCalculator::ConnectionProbabilityCalculator(
 }
 
 void
-ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIntercept)
+ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIntercept, double maxInnervation)
 {
+    float maxInnervationLog = log(maxInnervation);
+
     float b0, b1, b2, b3;
 
     if (addIntercept)
@@ -99,23 +101,17 @@ ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIn
                     if (neuron_postExc[postId].find(pre->first) != neuron_postExc[postId].end())
                     {
                         float preVal = pre->second;
-                        int maxSynapses = 1000;
                         float postVal = neuron_postExc[postId][pre->first];
                         float postAllVal = voxel_postAllExc[pre->first];
                         float arg = b0 + b1 * preVal + b2 * postVal + b3 * postAllVal;
-                        //qDebug() << k++ << arg << preVal << postVal << postAllVal;
+                        arg = std::min(maxInnervationLog, arg);
                         int synapses = 0;
-                        if (arg >= -7 && arg <= 7)
+                        if (arg >= -7)
                         {
                             float mu = exp(arg);
                             innervation[i][j] += mu;
-                            synapses = std::min(maxSynapses, poisson.drawSynapseCount(mu));
-                        }
-                        else if (arg > 7)
-                        {
-                            innervation[i][j] += exp(7);
-                            synapses = maxSynapses;
-                        }
+                            synapses = poisson.drawSynapseCount(mu);
+                        }                        
                         if (synapses > 0)
                         {
                             sufficientStat[0] += synapses;

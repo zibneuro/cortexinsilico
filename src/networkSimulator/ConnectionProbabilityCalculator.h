@@ -17,7 +17,7 @@ public:
 
     ConnectionProbabilityCalculator(FeatureProvider& featureProvider);
 
-    void calculate(QVector<float> parameters, bool addIntercept);
+    void calculate(QVector<float> parameters, bool addIntercept, double maxInnervation);
 
 private:
     double calculateProbability(double innervationMean);
