@@ -11,43 +11,21 @@
     Computes the connection probability according to generalized Peters'
     rule.
 */
-class ConnectionProbabilityCalculator {
+class ConnectionProbabilityCalculator
+{
 public:
 
-    struct Contact{
-        int pre;
-        int post;
-        float preVal;
-        float postVal;
-        float postAllVal;
-        float mu;
-        int count;
-    };
+    ConnectionProbabilityCalculator(FeatureProvider& featureProvider);
 
-  /*
-   Constructor.
-   @param featureProvider The features of the neuron selections.
-  */
-  ConnectionProbabilityCalculator(FeatureProvider &featureProvider);
-
-  /*
-      Calculates the connection probability for the specified
-      rule parameters.
-      @param The connectivity rule parameters.
-      @return The connection probability.
-  */
-  double calculate(QVector<float> parameters);
-
-  double calculateSynapse(QVector<float> parameters, bool matrix=false);
-
-  double distributeSynapses(QVector<float> parameters);
-
-  void writeSynapseMatrix(std::vector<std::vector<int> >& contacts);
+    void calculate(QVector<float> parameters, bool addIntercept);
 
 private:
-  double calculateProbability(double innervationMean);
+    double calculateProbability(double innervationMean);
+    void writeSynapseMatrix(std::vector<std::vector<int> >& contacts);
+    void writeInnervationMatrix(std::vector<std::vector<float> >& innervation);
+    void writeStatistics(double connectionProbability, std::vector<double> sufficientStat);
 
-  FeatureProvider &mFeatureProvider;
-  int mNumPre;
-  int mNumPost;
+    FeatureProvider& mFeatureProvider;
+    int mNumPre;
+    int mNumPost;
 };

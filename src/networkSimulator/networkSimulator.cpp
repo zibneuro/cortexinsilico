@@ -76,14 +76,29 @@ printUsage()
     @return A vector with the theta parameters.
 */
 QVector<float>
-extractRuleParameters(const QJsonObject spec)
+extractRuleParameters(const QJsonObject spec, bool addIntercept)
 {
     QVector<float> theta;
     QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
-    theta.append((float)parameters[0].toDouble());
-    theta.append((float)parameters[1].toDouble());
-    theta.append((float)parameters[2].toDouble());
-    theta.append((float)parameters[3].toDouble());
+    if (addIntercept)
+    {
+        if(parameters.size() != 4){
+            throw std::runtime_error("Invalid number of connectivity rule parameters, expected 4.");
+        }        
+        theta.append((float)parameters[0].toDouble());
+        theta.append((float)parameters[1].toDouble());
+        theta.append((float)parameters[2].toDouble());
+        theta.append((float)parameters[3].toDouble());
+    }
+    else
+    {
+        if(parameters.size() != 3){
+            throw std::runtime_error("Invalid number of connectivity rule parameters, expected 3.");
+        }                
+        theta.append((float)parameters[0].toDouble());
+        theta.append((float)parameters[1].toDouble());
+        theta.append((float)parameters[2].toDouble());
+    }
     return theta;
 }
 
@@ -324,6 +339,19 @@ extractCreateMatrix(const QJsonObject spec)
     }
 }
 
+bool
+extractAddIntercept(const QJsonObject spec)
+{
+    if (spec["ADD_INTERCEPT"] != QJsonValue::Undefined)
+    {
+        return spec["ADD_INTERCEPT"].toBool();
+    }
+    else
+    {
+        return true;
+    }
+}
+
 /*
     Reads the SAMPLING_FACTOR property from the specification file.
 
@@ -415,11 +443,11 @@ main(int argc, char** argv)
         {
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            QVector<float> parameters = extractRuleParameters(spec);
+            bool addIntercept = extractAddIntercept(spec);
+            QVector<float> parameters = extractRuleParameters(spec, addIntercept);            
             FeatureProvider featureProvider;
             ConnectionProbabilityCalculator calculator(featureProvider);
-            double probability = calculator.distributeSynapses(parameters);
-            writeOutputFile(probability);
+            calculator.calculate(parameters, addIntercept);
         }
     }
     else if (mode == "SUBCUBE")
