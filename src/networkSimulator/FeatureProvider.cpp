@@ -139,7 +139,9 @@ FeatureProvider::preprocess(NetworkProps& networkProps,
 void
 FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
                                     NeuronSelection& selection,
-                                    double eps)
+                                    double eps,
+                                    bool applyLog,
+                                    bool normalized)
 {
     // ########### INIT FIELDS ###########
     QDir modelDataDir = CIS3D::getModelDataDir(networkProps.dataRoot);
@@ -163,7 +165,7 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     SparseField* postAllExcField = SparseField::load(postAllExcFile);
     mGridOrigin = postAllExcField->getOrigin();
     mGridDimensions = postAllExcField->getDimensions();
-    voxel_postAllExc = postAllExcField->getModifiedCopy(1, eps);
+    voxel_postAllExc = postAllExcField->getModifiedCopy(1, eps, applyLog);
 
     // ########### POST ALL INH ###########
     qDebug() << "[*] Loading postsynaptic all inhibitory.";
@@ -171,7 +173,7 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
         CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::INHIBITORY);
     SparseField* postAllInhField = SparseField::load(postAllInhFile);
     assertGrid(postAllInhField);
-    voxel_postAllInh = postAllInhField->getModifiedCopy(1, eps);
+    voxel_postAllInh = postAllInhField->getModifiedCopy(1, eps, applyLog);
 
     // ########### PRE ###########
     qDebug() << "[*] Loading presynaptic.";
@@ -192,11 +194,11 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
         SparseField* preField = SparseField::load(filePath);
         assertGrid(preField);
 
-        neuron_pre[neuronId] = preField->getModifiedCopy(1, eps);
+        neuron_pre[neuronId] = preField->getModifiedCopy(1, eps, applyLog);
     }
 
     // ########### POST ###########
-    qDebug() << "[*] Loading postsynaptic.";
+    qDebug() << "[*] Loading postsynaptic. Mode:" << (normalized ? "normalized" : "unnormalized");
     for (int i = 0; i < selection.Postsynaptic().size(); i++)
     {
         int neuronId = selection.Postsynaptic()[i];
@@ -210,15 +212,31 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
         int funcType = networkProps.cellTypes.isExcitatory(cellTypeId) ? 0 : 1;
         neuron_funct[neuronId] = funcType;
 
-        QString filePathExc = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::EXCITATORY);
+        QString filePathExc;
+        if (normalized)
+        {
+            filePathExc = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::EXCITATORY);
+        }
+        else
+        {
+            filePathExc = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::EXCITATORY);
+        }
         SparseField* postFieldExc = SparseField::load(filePathExc);
         assertGrid(postFieldExc);
-        neuron_postExc[neuronId] = postFieldExc->getModifiedCopy(1, eps);
+        neuron_postExc[neuronId] = postFieldExc->getModifiedCopy(1, eps, applyLog);
 
-        QString filePathInh = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::INHIBITORY);
+        QString filePathInh;
+        if (normalized)
+        {
+            filePathInh = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::INHIBITORY);
+        }
+        else
+        {
+            filePathInh = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::INHIBITORY);
+        }
         SparseField* postFieldInh = SparseField::load(filePathInh);
         assertGrid(postFieldInh);
-        neuron_postInh[neuronId] = postFieldInh->getModifiedCopy(1, eps);
+        neuron_postInh[neuronId] = postFieldInh->getModifiedCopy(1, eps, applyLog);
     }
 
     // ########### PRUNE ###########

@@ -152,7 +152,7 @@ class SparseField {
     SparseField(const Vec3i& dims, const Locations& locations, const Field& field,
                 const Vec3f& origin = Vec3f(), const Vec3f& voxelSize = Vec3f(1.0f));
 
-    std::map<int,float> getModifiedCopy(float coefficient, float eps);
+    std::map<int,float> getModifiedCopy(float coefficient, float eps, bool applyLog);
 
     Vec3f getSpatialLocation(int voxelIndex);
 

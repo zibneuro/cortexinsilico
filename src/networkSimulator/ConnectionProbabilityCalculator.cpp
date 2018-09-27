@@ -26,28 +26,54 @@ ConnectionProbabilityCalculator::ConnectionProbabilityCalculator(
 }
 
 void
-ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIntercept, double maxInnervation)
+ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIntercept, double maxInnervation, QString mode)
 {
     float maxInnervationLog = log(maxInnervation);
-
     float b0, b1, b2, b3;
+    QString paramString;
 
-    if (addIntercept)
+    if (mode == "generalizedPeters")
     {
-        b0 = parameters[0];
-        b1 = parameters[1];
-        b2 = parameters[2];
-        b3 = parameters[3];
+        if (addIntercept)
+        {
+            b0 = parameters[0];
+            b1 = parameters[1];
+            b2 = parameters[2];
+            b3 = parameters[3];
+            paramString = QString("Simulating [%1,%2,%3,%4].").arg(b0).arg(b1).arg(b2).arg(b3);
+        }
+        else
+        {
+            b0 = 0;
+            b1 = parameters[0];
+            b2 = parameters[1];
+            b3 = parameters[2];
+            paramString = QString("Simulating [%1,%2,%3].").arg(b1).arg(b2).arg(b3);
+        }
+    }
+    else if (mode == "generalizedPeters2Param")
+    {
+        if (addIntercept)
+        {
+            b0 = parameters[0];
+            b1 = parameters[1];
+            b2 = parameters[2];
+            b3 = 0;
+            paramString = QString("Simulating [%1,%2,%3].").arg(b0).arg(b1).arg(b2);
+        }
+        else
+        {
+            b0 = 0;
+            b1 = parameters[0];
+            b2 = parameters[1];
+            b3 = 0;
+            paramString = QString("Simulating [%1,%2].").arg(b1).arg(b2);
+        }
     }
     else
     {
-        b0 = 0;
-        b1 = parameters[0];
-        b2 = parameters[1];
-        b3 = parameters[2];
+        throw std::runtime_error("Caclulator: Invalid simulation mode.");
     }
-
-    qDebug() << QString("Start distributing synapses [%1,%2,%3,%4].").arg(b0).arg(b1).arg(b2).arg(b3);
 
     std::map<int, std::map<int, float> > neuron_pre;
     std::map<int, std::map<int, float> > neuron_postExc;
@@ -85,6 +111,8 @@ ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIn
     sufficientStat.push_back(0);
     sufficientStat.push_back(0);
 
+    //qDebug() << "aaa";
+
     Distribution poisson;
 #pragma omp parallel for schedule(dynamic)
     for (unsigned int i = 0; i < preIndices.size(); i++)
@@ -103,7 +131,7 @@ ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIn
                         float preVal = pre->second;
                         float postVal = neuron_postExc[postId][pre->first];
                         float postAllVal = voxel_postAllExc[pre->first];
-                        float arg = b0 + b1 * preVal + b2 * postVal + b3 * postAllVal;
+                        float arg = b0 + b1 * (preVal + postVal) + b2 * postAllVal;
                         arg = std::min(maxInnervationLog, arg);
                         int synapses = 0;
                         if (arg >= -7)
@@ -111,7 +139,7 @@ ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIn
                             float mu = exp(arg);
                             innervation[i][j] += mu;
                             synapses = poisson.drawSynapseCount(mu);
-                        }                        
+                        }
                         if (synapses > 0)
                         {
                             sufficientStat[0] += synapses;
@@ -126,6 +154,8 @@ ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIn
         }
     }
 
+    //qDebug() << "bbb";
+
     Statistics connectionProbabilities;
     for (unsigned int i = 0; i < preIndices.size(); i++)
     {
@@ -139,22 +169,34 @@ ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIn
     }
     double connProb = connectionProbabilities.getMean();
 
+    //qDebug() << "ccc" << connProb;
+
     writeSynapseMatrix(contacts);
     writeInnervationMatrix(innervation);
+
+    //qDebug() << "mmmm";
 
     if (!addIntercept)
     {
         sufficientStat.erase(sufficientStat.begin());
     }
+    if (mode == "generalizedPeters2Param")
+    {
+        sufficientStat.pop_back();
+    }
 
     writeStatistics(connProb, sufficientStat);
 
-    qDebug() << QString("Distributed synapses [%1,%2,%3,%4]. Connection prob.: %5").arg(b0).arg(b1).arg(b2).arg(b3).arg(connProb);
+    qDebug() << paramString << QString("Connection prob.: %1").arg(connProb);
 }
 
 double
 ConnectionProbabilityCalculator::calculateProbability(double innervationMean)
 {
+    if (innervationMean < 0)
+    {
+        return 0;
+    }
     return 1 - exp(-1 * innervationMean);
 }
 
@@ -237,7 +279,10 @@ ConnectionProbabilityCalculator::writeStatistics(double connectionProbability, s
     out << "\"SUFFICIENT_STATISTIC\":[";
     out << sufficientStat[0];
     out << "," << sufficientStat[1];
-    out << "," << sufficientStat[2];
+    if (sufficientStat.size() == 3)
+    {
+        out << "," << sufficientStat[2];
+    }
     if (sufficientStat.size() == 4)
     {
         out << "," << sufficientStat[3];

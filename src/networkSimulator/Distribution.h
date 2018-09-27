@@ -19,6 +19,9 @@ public:
   */
   int drawSynapseCount(float mu);
 
+  double getRandomProbability();
+
+
 private:
   std::mt19937 mRandomGenerator;
   int mMaxSynapseCount = 1000;

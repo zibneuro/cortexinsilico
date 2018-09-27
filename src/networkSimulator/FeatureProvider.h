@@ -19,7 +19,7 @@ public:
 
     void preprocess(NetworkProps& networkProps, NeuronSelection& selection, bool duplicity = true);
 
-    void preprocessFeatures(NetworkProps& networkProps, NeuronSelection& selection, double eps);
+    void preprocessFeatures(NetworkProps& networkProps, NeuronSelection& selection, double eps, bool applyLog, bool normalized = false);
 
     void init();
 

@@ -69,6 +69,16 @@ printUsage()
              << "size of the subcube to be extracted from the model data.";
 }
 
+void
+checkNumParams(QJsonArray parameters, int expected)
+{
+    if (parameters.size() != expected)
+    {
+        QString msg = QString("Invalid number of connectivity rule parameters, expected %1 got %2.").arg(expected).arg(parameters.size());
+        throw std::runtime_error(qPrintable(msg));
+    }
+}
+
 /*
     Extracts the THETA parameters from the spec file.
 
@@ -76,31 +86,34 @@ printUsage()
     @return A vector with the theta parameters.
 */
 QVector<float>
-extractRuleParameters(const QJsonObject spec, bool addIntercept)
+extractRuleParameters(const QJsonObject spec, bool addIntercept, QString mode)
 {
-    QVector<float> theta;
-    QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
-    if (addIntercept)
+    int numParams;
+    if (mode == "generalizedPeters")
     {
-        if (parameters.size() != 4)
-        {
-            throw std::runtime_error("Invalid number of connectivity rule parameters, expected 4.");
-        }
-        theta.append((float)parameters[0].toDouble());
-        theta.append((float)parameters[1].toDouble());
-        theta.append((float)parameters[2].toDouble());
-        theta.append((float)parameters[3].toDouble());
+        numParams = addIntercept ? 4 : 3;
+    }
+    else if (mode == "generalizedPeters2Param")
+    {
+        numParams = addIntercept ? 3 : 2;
+    }
+    else if (mode == "weightedOverlap")
+    {
+        numParams = 2;
     }
     else
     {
-        if (parameters.size() != 3)
-        {
-            throw std::runtime_error("Invalid number of connectivity rule parameters, expected 3.");
-        }
-        theta.append((float)parameters[0].toDouble());
-        theta.append((float)parameters[1].toDouble());
-        theta.append((float)parameters[2].toDouble());
+        throw std::runtime_error("Invalid simulation mode");
     }
+
+    QVector<float> theta;
+    QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
+    checkNumParams(parameters, numParams);
+    for (int i = 0; i < parameters.size(); i++)
+    {
+        theta.append((float)parameters[i].toDouble());
+    }
+
     return theta;
 }
 
@@ -324,7 +337,7 @@ extractSimulationMode(const QJsonObject spec)
     }
     else
     {
-        return "innervationSum";
+        return "generalizedPeters";
     }
 }
 
@@ -460,10 +473,11 @@ main(int argc, char** argv)
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
             bool addIntercept = extractAddIntercept(spec);
             double maxInnervation = extractInnervationBound(spec);
-            QVector<float> parameters = extractRuleParameters(spec, addIntercept);
+            QString mode = extractSimulationMode(spec);
+            QVector<float> parameters = extractRuleParameters(spec, addIntercept, mode);
             FeatureProvider featureProvider;
             ConnectionProbabilityCalculator calculator(featureProvider);
-            calculator.calculate(parameters, addIntercept, maxInnervation);
+            calculator.calculate(parameters, addIntercept, maxInnervation, mode);
         }
     }
     else if (mode == "SUBCUBE")
@@ -521,10 +535,18 @@ main(int argc, char** argv)
             QVector<float> bboxMax = extractBBoxMax(spec);
             QVector<float> rangePre = extractPiaSomaDistancePre(spec);
             QVector<float> rangePost = extractPiaSomaDistancePost(spec);
+            QString mode = extractSimulationMode(spec);
             selection.setInnervationSelection(spec, networkProps, samplingFactor);
             selection.setBBox(bboxMin, bboxMax);
             selection.setPiaSomaDistance(rangePre, rangePost, networkProps);
-            featureProvider.preprocessFeatures(networkProps, selection, 0.0001);
+            if (mode == "generalizedPeters")
+            {
+                featureProvider.preprocessFeatures(networkProps, selection, 0.0001, true, false);
+            }
+            else if (mode == "generalizedPeters2Param")
+            {
+                featureProvider.preprocessFeatures(networkProps, selection, 0.0001, true, false);
+            }
             return 0;
         }
     }

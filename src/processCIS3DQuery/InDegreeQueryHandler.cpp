@@ -176,7 +176,7 @@ void InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         mCurrentJsonData = jsonData;
         reply->deleteLater();
 
-        const QString datasetShortName = "RBC";  // jsonData["network"].toString();
+        const QString datasetShortName = jsonData["network"].toString();
         mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
         qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
         mNetwork.setDataRoot(mDataRoot);

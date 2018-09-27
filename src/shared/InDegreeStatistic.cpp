@@ -16,6 +16,8 @@
 #include "InnervationStatistic.h"
 #include "Typedefs.h"
 #include "Util.h"
+#include <random>
+#include <algorithm>
 
 InDegreeStatistic::InDegreeStatistic(const NetworkProps& networkProps,
                                      int sampleSize)
@@ -55,7 +57,9 @@ InDegreeStatistic::samplePostIds(QList<int> selectionC)
     }
     else
     {
-        std::random_shuffle(selectionC.begin(), selectionC.end());
+        std::random_device rd;
+        std::mt19937 g(rd());
+        std::shuffle(selectionC.begin(), selectionC.end(), g);
         QList<int> postIds;
         for (int i = 0; i < mSampleSize; i++)
         {
