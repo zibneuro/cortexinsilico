@@ -31,8 +31,9 @@ class NeuronSelection {
         @param spec The spec file with the filter definition.
         @param networkProps the model data of the network.
         @param samplingFactor Sampling rate for selection (default: 1 = take all)
+        @param seed The random seed for the sampling (-1, to use random seed)
     */
-    void setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor = 1);
+    void setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor = 1, int seed =-1);
 
     /**
         Determines a triplet motif statistic selection from a specification file.

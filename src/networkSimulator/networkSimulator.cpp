@@ -13,7 +13,7 @@
 #include "CIS3DSparseField.h"
 #include "CIS3DSparseVectorSet.h"
 #include "CIS3DVec3.h"
-#include "ConnectionProbabilityCalculator.h"
+#include "Calculator.h"
 #include "FeatureExtractor.h"
 #include "FeatureProvider.h"
 #include "FeatureReader.h"
@@ -40,33 +40,29 @@
 void
 printUsage()
 {
-    qDebug() << "This tool provides three modes: INIT, SYNAPSE and SUBCUBE.";
+    qDebug() << "This tool provides three modes: INIT, SIMULATE and SUBCUBE.";
     qDebug() << "";
-    qDebug() << "In the SYNAPSE mode, the tool simulates connectivity formation"
+    qDebug() << "In the SIMULATE mode, the tool simulates connectivity formation"
              << "between neuron selections"
-             << "according to generalized Peters' rule, which is parametrized by"
-             << "theta. To do so,"
-             << "the tool requires that are provided in file"
-             << "init.csv, and which can be generated in the INIT mode.";
+             << "according to the parametrized Peters' rule. The features"
+             << "required for simulation are created in the INIT mode.";             
     qDebug() << "";
-    qDebug() << "In the SUBCUBE mode, the tool extracts individual features per"
-             << "voxel from a subcube of the compete model."
+    qDebug() << "Legacy: In the SUBCUBE mode, the tool extracts neuron features"
+             << "from a subcube of the compete model."
              << "The features are written to the files features.csv, "
              << "featuresSpatial.csv, voxels.csv and neurons.csv";
     qDebug() << "";
     qDebug() << "Usage:";
     qDebug() << "";
-    qDebug() << "./networkSimulator INIT    <initSpecFile>";
-    qDebug() << "./networkSimulator SYNAPSE <synapseSpecFile>";
-    qDebug() << "./networkSimulator SUBCUBE <voxelSpecFile>";
+    qDebug() << "./networkSimulator INIT        <initSpecFile>";
+    qDebug() << "./networkSimulator SIMULATE    <simulationSpecFile>";
+    qDebug() << "./networkSimulator SUBCUBE     <voxelSpecFile>";
     qDebug() << "";
     qDebug() << "The <initSpecFile> contains the neuron selection to be used for"
              << "simulation.";
-    qDebug() << "The <synapseSpecFile> contains the theta parameters for Peter's"
-             << "rule.";
+    qDebug() << "The <simulationSpecFile> contains the simulation parameters.";
     qDebug() << "The <voxelSpecFile> contains the model data directory and the "
-             << "origin and"
-             << "size of the subcube to be extracted from the model data.";
+             << "parameters of the subcube.";
 }
 
 void
@@ -79,6 +75,26 @@ checkNumParams(QJsonArray parameters, int expected)
     }
 }
 
+/**
+    Checks whether the mode is valid.
+*/
+void
+checkSimulationMode(QString mode)
+{
+    if (mode == "innervation")
+    {
+        return;
+    }
+    else if (mode == "synapse")
+    {
+        return;
+    }
+    else
+    {
+        throw std::runtime_error("Invalid simulation mode");
+    }
+}
+
 /*
     Extracts the THETA parameters from the spec file.
 
@@ -86,26 +102,9 @@ checkNumParams(QJsonArray parameters, int expected)
     @return A vector with the theta parameters.
 */
 QVector<float>
-extractRuleParameters(const QJsonObject spec, bool addIntercept, QString mode)
-{
-    int numParams;
-    if (mode == "generalizedPeters")
-    {
-        numParams = addIntercept ? 4 : 3;
-    }
-    else if (mode == "generalizedPeters2Param")
-    {
-        numParams = addIntercept ? 3 : 2;
-    }
-    else if (mode == "weightedOverlap")
-    {
-        numParams = 2;
-    }
-    else
-    {
-        throw std::runtime_error("Invalid simulation mode");
-    }
-
+extractRuleParameters(const QJsonObject spec, bool addIntercept)
+{    
+    int numParams = addIntercept ? 4 : 3;
     QVector<float> theta;
     QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
     checkNumParams(parameters, numParams);
@@ -183,6 +182,20 @@ extractPiaSomaDistancePost(const QJsonObject spec)
         range.append(float(parameters[1].toDouble()));
     }
     return range;
+}
+
+int
+extractRunIndex(const QJsonObject spec)
+{
+    QVector<float> range;
+    if (spec["RUN_INDEX"] != QJsonValue::Undefined)
+    {
+        return spec["RUN_INDEX"].toInt();
+    }
+    else
+    {
+        return 0;
+    }
 }
 
 QVector<float>
@@ -337,7 +350,7 @@ extractSimulationMode(const QJsonObject spec)
     }
     else
     {
-        return "generalizedPeters";
+        return "innervation";
     }
 }
 
@@ -393,6 +406,26 @@ extractSamplingFactor(const QJsonObject spec)
     else
     {
         return 1;
+    }
+}
+
+/*
+    Reads the RANDOM_SEED property from the specification file. 
+
+    @param spec The specification file as json object.
+    @return The RANDOM_SEED, -1 by default.
+*/
+int
+extractRandomSeed(const QJsonObject spec)
+{
+    if (spec["RANDOM_SEED"] != QJsonValue::Undefined)
+    {
+        int seed = spec["RANDOM_SEED"].toInt();
+        return seed;
+    }
+    else
+    {
+        return -1;
     }
 }
 
@@ -460,7 +493,7 @@ main(int argc, char** argv)
 
     const QString mode = argv[1];
 
-    if (mode == "SYNAPSE")
+    if (mode == "SIMULATE")
     {
         if (argc != 3)
         {
@@ -474,10 +507,15 @@ main(int argc, char** argv)
             bool addIntercept = extractAddIntercept(spec);
             double maxInnervation = extractInnervationBound(spec);
             QString mode = extractSimulationMode(spec);
-            QVector<float> parameters = extractRuleParameters(spec, addIntercept, mode);
+            checkSimulationMode(mode);
+            int seed = extractRandomSeed(spec);
+            int runIndex = extractRunIndex(spec);
+            RandomGenerator randomGenerator(seed);
+            QVector<float> parameters = extractRuleParameters(spec, addIntercept);
             FeatureProvider featureProvider;
-            ConnectionProbabilityCalculator calculator(featureProvider);
+            Calculator calculator(featureProvider, randomGenerator, runIndex);
             calculator.calculate(parameters, addIntercept, maxInnervation, mode);
+            //qDebug() << "finish";
         }
     }
     else if (mode == "SUBCUBE")
@@ -531,22 +569,17 @@ main(int argc, char** argv)
             FeatureProvider featureProvider;
             NeuronSelection selection;
             int samplingFactor = extractSamplingFactor(spec);
+            int seed = extractRandomSeed(spec);
             QVector<float> bboxMin = extractBBoxMin(spec);
             QVector<float> bboxMax = extractBBoxMax(spec);
             QVector<float> rangePre = extractPiaSomaDistancePre(spec);
             QVector<float> rangePost = extractPiaSomaDistancePost(spec);
             QString mode = extractSimulationMode(spec);
-            selection.setInnervationSelection(spec, networkProps, samplingFactor);
+            selection.setInnervationSelection(spec, networkProps, samplingFactor, seed);
             selection.setBBox(bboxMin, bboxMax);
             selection.setPiaSomaDistance(rangePre, rangePost, networkProps);
-            if (mode == "generalizedPeters")
-            {
-                featureProvider.preprocessFeatures(networkProps, selection, 0.0001, true, false);
-            }
-            else if (mode == "generalizedPeters2Param")
-            {
-                featureProvider.preprocessFeatures(networkProps, selection, 0.0001, true, false);
-            }
+            featureProvider.preprocessFeatures(networkProps, selection, 0.0001, true, false);
+            UtilIO::makeDir("output");
             return 0;
         }
     }

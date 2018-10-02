@@ -51,6 +51,7 @@ SOURCES += \
     ../shared/TripletStatistic.cpp \
     ../shared/NeuronSelection.cpp \
     ../shared/Columns.cpp \
+    ../shared/RandomGenerator.cpp \
     ../shared/InnervationMatrix.cpp 
 
 HEADERS += \
@@ -79,4 +80,5 @@ HEADERS += \
     ../shared/TripletStatistic.h \
     ../shared/NeuronSelection.h \
     ../shared/Columns.h \
+    ../shared/RandomGenerator.h \
     ../shared/InnervationMatrix.h 

@@ -1,4 +1,4 @@
-#include "ConnectionProbabilityCalculator.h"
+#include "Calculator.h"
 #include "CIS3DConstantsHelpers.h"
 #include "CIS3DSparseField.h"
 #include "CIS3DSparseVectorSet.h"
@@ -12,68 +12,52 @@
 #include <iomanip>
 #include <mutex>
 #include <omp.h>
+#include <ctime>
 
 /*
     Constructor.
     @param featureProvider The features of the neuron selections.
+    @param randomGenerator The random generator for synapse counts.
+    @param runIndex A postfix for output files.
 */
-ConnectionProbabilityCalculator::ConnectionProbabilityCalculator(
-    FeatureProvider& featureProvider)
+Calculator::Calculator(
+    FeatureProvider& featureProvider, RandomGenerator& randomGenerator, int runIndex)
     : mFeatureProvider(featureProvider)
+    , mRandomGenerator(randomGenerator)
+    , mRunIndex(runIndex)
 {
-    mNumPre = mFeatureProvider.getNumPre();
-    mNumPost = mFeatureProvider.getNumPost();
 }
 
 void
-ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIntercept, double maxInnervation, QString mode)
+Calculator::calculate(QVector<float> parameters, bool addIntercept, double maxInnervation, QString /*mode*/)
 {
+    double zeroTime = std::clock();
+    bool parallelLoop = !mRandomGenerator.hasUserSeed();
+
+    // ###################### SET PARAMETERS ######################
+
     float maxInnervationLog = log(maxInnervation);
     float b0, b1, b2, b3;
     QString paramString;
 
-    if (mode == "generalizedPeters")
+    if (addIntercept)
     {
-        if (addIntercept)
-        {
-            b0 = parameters[0];
-            b1 = parameters[1];
-            b2 = parameters[2];
-            b3 = parameters[3];
-            paramString = QString("Simulating [%1,%2,%3,%4].").arg(b0).arg(b1).arg(b2).arg(b3);
-        }
-        else
-        {
-            b0 = 0;
-            b1 = parameters[0];
-            b2 = parameters[1];
-            b3 = parameters[2];
-            paramString = QString("Simulating [%1,%2,%3].").arg(b1).arg(b2).arg(b3);
-        }
-    }
-    else if (mode == "generalizedPeters2Param")
-    {
-        if (addIntercept)
-        {
-            b0 = parameters[0];
-            b1 = parameters[1];
-            b2 = parameters[2];
-            b3 = 0;
-            paramString = QString("Simulating [%1,%2,%3].").arg(b0).arg(b1).arg(b2);
-        }
-        else
-        {
-            b0 = 0;
-            b1 = parameters[0];
-            b2 = parameters[1];
-            b3 = 0;
-            paramString = QString("Simulating [%1,%2].").arg(b1).arg(b2);
-        }
+        b0 = parameters[0];
+        b1 = parameters[1];
+        b2 = parameters[2];
+        b3 = parameters[3];
+        paramString = QString("Simulating [%1,%2,%3,%4].").arg(b0).arg(b1).arg(b2).arg(b3);
     }
     else
     {
-        throw std::runtime_error("Caclulator: Invalid simulation mode.");
+        b0 = 0;
+        b1 = parameters[0];
+        b2 = parameters[1];
+        b3 = parameters[2];
+        paramString = QString("Simulating [%1,%2,%3].").arg(b1).arg(b2).arg(b3);
     }
+
+    // ###################### LOAD FEATURES ######################
 
     std::map<int, std::map<int, float> > neuron_pre;
     std::map<int, std::map<int, float> > neuron_postExc;
@@ -100,6 +84,10 @@ ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIn
         postIndices.push_back(it->first);
     }
 
+    double featureLoadTime = std::clock();
+
+    // ###################### INIT OUTPUT FIELDS ######################
+
     std::vector<int> empty(postIndices.size(), 0);
     std::vector<float> emptyFloat(postIndices.size(), 0);
     std::vector<std::vector<int> > contacts(preIndices.size(), empty);
@@ -111,17 +99,20 @@ ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIn
     sufficientStat.push_back(0);
     sufficientStat.push_back(0);
 
-    //qDebug() << "aaa";
+    Statistics connProbSynapse;
+    Statistics connProbInnervation;
 
-    Distribution poisson;
-#pragma omp parallel for schedule(dynamic)
+    // ###################### LOOP OVER NEURONS ######################
+
+#pragma omp parallel if(parallelLoop)
+{ 
+    #pragma omp for
     for (unsigned int i = 0; i < preIndices.size(); i++)
     {
         int preId = preIndices[i];
         for (unsigned int j = 0; j < postIndices.size(); j++)
         {
             int postId = postIndices[j];
-            //qDebug() << i << j << preId << postId;
             if (preId != postId)
             {
                 for (auto pre = neuron_pre[preId].begin(); pre != neuron_pre[preId].end(); ++pre)
@@ -131,67 +122,74 @@ ConnectionProbabilityCalculator::calculate(QVector<float> parameters, bool addIn
                         float preVal = pre->second;
                         float postVal = neuron_postExc[postId][pre->first];
                         float postAllVal = voxel_postAllExc[pre->first];
-                        float arg = b0 + b1 * (preVal + postVal) + b2 * postAllVal;
+                        float arg = b0 + b1 * preVal + b2 * postVal + b3 * postAllVal;
                         arg = std::min(maxInnervationLog, arg);
                         int synapses = 0;
                         if (arg >= -7)
                         {
                             float mu = exp(arg);
                             innervation[i][j] += mu;
-                            synapses = poisson.drawSynapseCount(mu);
-                        }
-                        if (synapses > 0)
-                        {
-                            sufficientStat[0] += synapses;
-                            sufficientStat[1] += preVal * synapses;
-                            sufficientStat[2] += postVal * synapses;
-                            sufficientStat[3] += postAllVal * synapses;
-                            contacts[i][j] += synapses;
+                            synapses = mRandomGenerator.drawPoisson(mu);
+                            if (synapses > 0)
+                            {
+                                sufficientStat[0] += synapses;
+                                sufficientStat[1] += preVal * synapses;
+                                sufficientStat[2] += postVal * synapses;
+                                sufficientStat[3] += postAllVal * synapses;
+                                contacts[i][j] += synapses;
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
+    double loopTime = std::clock();
 
-    //qDebug() << "bbb";
-
-    Statistics connectionProbabilities;
+    // ###################### DETERMINE STATISTICS ######################
+    
     for (unsigned int i = 0; i < preIndices.size(); i++)
     {
         int realizedConnections = 0;
         for (unsigned int j = 0; j < postIndices.size(); j++)
         {
+            connProbInnervation.addSample(calculateProbability(innervation[i][j]));
             realizedConnections += contacts[i][j] > 0 ? 1 : 0;
         }
         double probability = (double)realizedConnections / (double)postIndices.size();
-        connectionProbabilities.addSample(probability);
+        connProbSynapse.addSample(probability);
     }
-    double connProb = connectionProbabilities.getMean();
-
-    //qDebug() << "ccc" << connProb;
-
-    writeSynapseMatrix(contacts);
-    writeInnervationMatrix(innervation);
-
-    //qDebug() << "mmmm";
 
     if (!addIntercept)
     {
         sufficientStat.erase(sufficientStat.begin());
     }
-    if (mode == "generalizedPeters2Param")
-    {
-        sufficientStat.pop_back();
-    }
+    
+    double statisticsTime = std::clock();
 
-    writeStatistics(connProb, sufficientStat);
+    // ###################### WRITE OUTPUT ######################
 
-    qDebug() << paramString << QString("Connection prob.: %1").arg(connProb);
+    writeSynapseMatrix(contacts);
+    writeInnervationMatrix(innervation);
+    writeStatistics(connProbSynapse.getMean(), connProbInnervation.getMean(), sufficientStat);
+
+    double outputTime = std::clock();
+
+    // ###################### WRITE CONSOLE ######################
+
+    outputTime = (outputTime - statisticsTime) / (double)CLOCKS_PER_SEC;
+    statisticsTime = (statisticsTime - loopTime) / (double)CLOCKS_PER_SEC;
+    loopTime = (loopTime - featureLoadTime) / (double)CLOCKS_PER_SEC;
+    featureLoadTime = (featureLoadTime - zeroTime) / (double)CLOCKS_PER_SEC;
+    QString timeCost = QString("Features %1, Loop %2, Statistics %3, Output %4").arg(featureLoadTime).arg(loopTime).arg(statisticsTime).arg(outputTime);
+    
+    qDebug() << mRunIndex << paramString << QString("Connection prob.: %1").arg(connProbInnervation.getMean());
+    qDebug() << mRunIndex << "Time" << timeCost;
 }
 
 double
-ConnectionProbabilityCalculator::calculateProbability(double innervationMean)
+Calculator::calculateProbability(double innervationMean)
 {
     if (innervationMean < 0)
     {
@@ -201,14 +199,16 @@ ConnectionProbabilityCalculator::calculateProbability(double innervationMean)
 }
 
 void
-ConnectionProbabilityCalculator::writeSynapseMatrix(std::vector<std::vector<int> >& contacts)
+Calculator::writeSynapseMatrix(std::vector<std::vector<int> >& contacts)
 {
-    QString filename = "output_synapseMatrix";
-    QFile file(filename);
+    QString fileName = QString("synapseMatrix_%1.dat").arg(mRunIndex);
+    QString filePath = QDir("output").filePath(fileName);
+
+    QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly))
     {
         const QString msg =
-            QString("Cannot open file %1 for writing.").arg(filename);
+            QString("Cannot open file %1 for writing.").arg(filePath);
         throw std::runtime_error(qPrintable(msg));
     }
     QTextStream out(&file);
@@ -232,14 +232,16 @@ ConnectionProbabilityCalculator::writeSynapseMatrix(std::vector<std::vector<int>
 }
 
 void
-ConnectionProbabilityCalculator::writeInnervationMatrix(std::vector<std::vector<float> >& innervation)
+Calculator::writeInnervationMatrix(std::vector<std::vector<float> >& innervation)
 {
-    QString filename = "output_innervationMatrix";
-    QFile file(filename);
+    QString fileName = QString("innervationMatrix_%1.dat").arg(mRunIndex);
+    QString filePath = QDir("output").filePath(fileName);
+
+    QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly))
     {
         const QString msg =
-            QString("Cannot open file %1 for writing.").arg(filename);
+            QString("Cannot open file %1 for writing.").arg(filePath);
         throw std::runtime_error(qPrintable(msg));
     }
     QTextStream out(&file);
@@ -263,19 +265,22 @@ ConnectionProbabilityCalculator::writeInnervationMatrix(std::vector<std::vector<
 }
 
 void
-ConnectionProbabilityCalculator::writeStatistics(double connectionProbability, std::vector<double> sufficientStat)
+Calculator::writeStatistics(double connectionProbability, double connectionProbabilityInnervation, std::vector<double> sufficientStat)
 {
-    QString fileName = "output.json";
-    QFile json(fileName);
+    QString fileName = QString("statistics_%1.json").arg(mRunIndex);
+    QString filePath = QDir("output").filePath(fileName);
+
+    QFile json(filePath);
     if (!json.open(QIODevice::WriteOnly))
     {
         const QString msg =
-            QString("Cannot open file %1 for writing.").arg(fileName);
+            QString("Cannot open file %1 for writing.").arg(filePath);
         throw std::runtime_error(qPrintable(msg));
     }
 
     QTextStream out(&json);
-    out << "{\"CONNECTION_PROBABILITY\":" << connectionProbability << ",";
+    out << "{\"CONNECTION_PROBABILITY_SYNAPSE\":" << connectionProbability << ",";
+    out << "\"CONNECTION_PROBABILITY_INNERVATION\":" << connectionProbabilityInnervation << ",";
     out << "\"SUFFICIENT_STATISTIC\":[";
     out << sufficientStat[0];
     out << "," << sufficientStat[1];

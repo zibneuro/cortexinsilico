@@ -53,6 +53,7 @@ SOURCES += \
     ../shared/NeuronSelection.cpp \
     ../shared/Columns.cpp \
     ../shared/InnervationMatrix.cpp \
+    ../shared/RandomGenerator.cpp \
     EvaluationQueryHandler.cpp \
     MotifQueryHandler.cpp \
     InDegreeQueryHandler.cpp \
@@ -87,6 +88,7 @@ HEADERS += \
     ../shared/NeuronSelection.h \
     ../shared/Columns.h \
     ../shared/InnervationMatrix.h \
+    ../shared/RandomGenerator.h \
     EvaluationQueryHandler.h \
     MotifQueryHandler.h \
     InDegreeQueryHandler.h \

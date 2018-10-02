@@ -30,7 +30,7 @@ MOC_DIR = $$DESTDIR/.moc
 SOURCES += \
     networkSimulator.cpp \
     FeatureProvider.cpp \
-    ConnectionProbabilityCalculator.cpp \
+    Calculator.cpp \
     Distribution.cpp \
     FeatureExtractor.cpp \
     FeatureReader.cpp \
@@ -54,13 +54,14 @@ SOURCES += \
     ../shared/SparseFieldCalculator.cpp \
     ../shared/SparseVectorCache.cpp \
     ../shared/NeuronSelection.cpp \
-    ../shared/InnervationMatrix.cpp \ 
+    ../shared/InnervationMatrix.cpp \
+    ../shared/RandomGenerator.cpp \ 
     ../shared/Columns.cpp
 
 HEADERS += \
     FeatureExtractor.h \
     FeatureProvider.h \
-    ConnectionProbabilityCalculator.h \
+    Calculator.h \
     Distribution.h \
     FeatureReader.h \
     SynapseDistributor.h \
@@ -85,4 +86,5 @@ HEADERS += \
     ../shared/SparseVectorCache.h \
     ../shared/NeuronSelection.h \
     ../shared/InnervationMatrix.h \ 
+    ../shared/RandomGenerator.h \ 
     ../shared/Columns.h

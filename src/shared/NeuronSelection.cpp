@@ -5,6 +5,7 @@
 #include "Util.h"
 #include "UtilIO.h"
 #include "Columns.h"
+#include "RandomGenerator.h"
 
 /**
   Empty constructor.
@@ -26,9 +27,10 @@ NeuronSelection::NeuronSelection(const IdList& presynaptic, const IdList& postsy
     @param spec The spec file with the filter definition.
     @param networkProps the model data of the network.
     @param samplingFactor Sampling rate for selection (default: 1 = take all)
+    @param seed The random seed for the sampling (-1, to use random seed)
 */
 void
-NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor)
+NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor, int seed)
 {
     mPresynaptic.clear();
     mPostsynaptic.clear();
@@ -41,8 +43,9 @@ NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkP
     }
     else
     {
-        std::random_shuffle(pre.begin(), pre.end());
-        std::random_shuffle(post.begin(), post.end());
+        RandomGenerator randomGenerator(seed);
+        randomGenerator.shuffleList(pre);
+        randomGenerator.shuffleList(post);
         for (int i = 0; i < pre.size(); i += samplingFactor)
         {
             mPresynaptic.append(pre[i]);
@@ -216,7 +219,7 @@ NeuronSelection::getBBoxMax()
 void
 NeuronSelection::setPiaSomaDistance(QVector<float> rangePre, QVector<float> rangePost, const NetworkProps& networkProps)
 {
-    qDebug() << rangePre << rangePost;
+    //qDebug() << rangePre << rangePost;
     mPiaSomaDistancePre = rangePre;
     mPiaSomaDistancePost = rangePost;
     filterPiaSoma(mPresynaptic, rangePre, networkProps);
