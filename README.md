@@ -27,7 +27,7 @@ python3 install/CompileCppMinimalSuse.py
 
 Note that in order to work with the simulator, you need to download the original model data from the ZIB website:
 
-1) Got to the [download page](https://visual.zib.de/2018/IXDtH2G8/) (Password on request).
+1) Go to the [download page](https://visual.zib.de/2018/IXDtH2G8/) (Password on request).
 
 2) Navigate to *realization-entireRBC_2015-10-07*.
 
