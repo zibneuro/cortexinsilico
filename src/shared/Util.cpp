@@ -7,6 +7,7 @@
 #include "CIS3DStatistics.h"
 #include "Histogram.h"
 #include "Typedefs.h"
+#include <cmath>
 
 /**
     Checks whether two neurons overlap based on their bounding box.
@@ -559,7 +560,7 @@ Util::createJsonHistogram(const Histogram& histogram)
 bool
 Util::almostEqual(double a, double b, double eps)
 {
-    return std::abs(a - b) <= eps;
+    return std::fabs(a - b) <= eps;
 }
 
 /*
