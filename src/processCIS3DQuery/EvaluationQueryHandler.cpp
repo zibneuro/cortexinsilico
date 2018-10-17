@@ -182,7 +182,8 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForQuery();
-
+        
+        QString connProbFormula = jsonData["connProbFormula"].toString();
 
         QString preSelString = jsonData["presynapticSelectionFilter"].toString();
         QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
@@ -202,6 +203,8 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
 
         qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
         InnervationStatistic innervation(mNetwork);
+        innervation.setExpression(connProbFormula);
+        
         connect(&innervation, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
         NeuronSelection selection(preNeurons, postNeurons);
