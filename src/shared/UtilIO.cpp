@@ -58,7 +58,7 @@ UtilIO::getPostSynapticNeurons(const QJsonObject& spec,
     const QString dataRoot = spec["DATA_ROOT"].toString();
 
     QDir rootDir(dataRoot);
-    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir);
+    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir,networkProps.useLegacyPath);
 
     QList<int> selectedNeuronIds = getPostSynapticNeuronIds(spec, networkProps);
 
@@ -179,7 +179,7 @@ UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec,
         throw std::runtime_error("Invalid data root in specification");
     }
 
-    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir);
+    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir,networkProps.useLegacyPath);
     const QDir pstDir = CIS3D::getNormalizedPSTRootDir(modelDataDir);
     if (!pstDir.exists())
     {
@@ -314,7 +314,7 @@ UtilIO::getPreSynapticNeurons(const QJsonObject& spec,
         throw std::runtime_error("Invalid data root in specification");
     }
 
-    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir);
+    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir,networkProps.useLegacyPath);
     const QDir boutonDir = CIS3D::getBoutonsRootDir(modelDataDir);
     if (!boutonDir.exists())
     {

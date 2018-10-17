@@ -16,6 +16,9 @@
 class NetworkProps {
 
 public:
+
+    NetworkProps(bool legacyPath = false);
+
     /**
         Sets the root directory in which all the model data is located.
         @param dataRoot The directory path.
@@ -95,6 +98,8 @@ public:
         The postsynaptic target density values based on cell type.
     */
     PSTDensities densities;
+
+    bool useLegacyPath;
 
 private:
     bool mFilesForComputationLoaded;

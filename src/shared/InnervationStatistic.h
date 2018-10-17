@@ -3,6 +3,11 @@
 
 #include "NetworkStatistic.h"
 #include "Histogram.h"
+#include "FormulaParser.h"
+
+typedef exprtk::symbol_table<float> symbol_table_t;
+typedef exprtk::expression<float> expression_t;
+typedef exprtk::parser<float> parser_t;
 
 class SparseVectorCache;
 
@@ -12,7 +17,6 @@ class SparseVectorCache;
 */
 class InnervationStatistic : public NetworkStatistic
 {
-
 public:
     /**
         Constructor.
@@ -21,8 +25,8 @@ public:
         @param conProbBinSize Bin size of the connectionProbability histogram.
     */
     InnervationStatistic(const NetworkProps& networkProps,
-        const float innervationBinSize = 0.1f,
-        const float connProbBinSize = 0.05f);
+                         const float innervationBinSize = 0.1f,
+                         const float connProbBinSize = 0.05f);
 
     /**
         Constructor.
@@ -32,9 +36,11 @@ public:
         @param cache Cache of preloaded innervation values.
     */
     InnervationStatistic(const NetworkProps& networkProps,
-        const SparseVectorCache& cache,
-        const float innervationBinSize = 0.1f,
-        const float connProbBinSize = 0.05f);
+                         const SparseVectorCache& cache,
+                         const float innervationBinSize = 0.1f,
+                         const float connProbBinSize = 0.05f);
+
+    void setExpression(QString expression);
 
 protected:
     /**
@@ -47,15 +53,14 @@ protected:
         Adds the result values to a JSON object
         @param obj: JSON object to which the values are appended
     */
-    void  doCreateJson(QJsonObject& obj) const override;
+    void doCreateJson(QJsonObject& obj) const override;
 
     /**
         Writes the result values to file stream (CSV).
         @param out The file stream to which the values are written.
         @param sep The separator between parameter name and value.
     */
-    void  doCreateCSV(QTextStream& out, const QChar sep) const override;
-
+    void doCreateCSV(QTextStream& out, const QChar sep) const override;
 
 private:
     Histogram innervationHisto;
@@ -77,6 +82,7 @@ private:
     int numPreNeurons;
     int numPostNeurons;
     int numPreNeuronsUnique;
+    std::string mExpression;
 };
 
 #endif // INNERVATION_H

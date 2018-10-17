@@ -1,4 +1,9 @@
 #include "CIS3DNetworkProps.h"
+#include "QDebug"
+
+NetworkProps::NetworkProps(bool legacyPath){
+    useLegacyPath = legacyPath;
+}
 
 /**
     Sets the root directory in which all the model data is located.
@@ -24,7 +29,8 @@ void NetworkProps::setDataRoot(const QString& dataRoot, const bool resetCache) {
 void NetworkProps::loadFilesForSynapseComputation()
 {
     if(!mFilesForComputationLoaded){
-        const QDir modelDataDir = CIS3D::getModelDataDir(dataRootDir);
+        const QDir modelDataDir = CIS3D::getModelDataDir(dataRootDir,useLegacyPath);
+        
 
         const QString cellTypesFile = CIS3D::getCellTypesFileName(modelDataDir);
         cellTypes.loadCSV(cellTypesFile);
@@ -40,6 +46,8 @@ void NetworkProps::loadFilesForSynapseComputation()
 
         const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(modelDataDir);
         axonRedundancyMap.loadBinary(redundancyFile);
+
+        qDebug() << "[*] Finished loading network props." << modelDataDir;
 
         mFilesForComputationLoaded = true;
     }

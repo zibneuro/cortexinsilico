@@ -110,7 +110,7 @@ namespace CIS3D {
         Get the directory containing the model data, relative to the data root
         @param dataRootDir The data root directory
     */
-    QDir getModelDataDir(const QDir& dataRootDir);
+    QDir getModelDataDir(const QDir& dataRootDir, bool legacyPath = false);
 
     /**
         Get the directory containing the innervation data, relative to the data root

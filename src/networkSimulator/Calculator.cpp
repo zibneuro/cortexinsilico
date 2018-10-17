@@ -284,7 +284,7 @@ Calculator::writeStatistics(double connectionProbability, double connectionProba
     out << "\"SUFFICIENT_STATISTIC\":[";
     out << sufficientStat[0];
     out << "," << sufficientStat[1];
-    if (sufficientStat.size() == 3)
+    if (sufficientStat.size() >= 3)
     {
         out << "," << sufficientStat[2];
     }

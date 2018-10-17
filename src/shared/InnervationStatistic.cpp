@@ -8,6 +8,7 @@
 #include <QTime>
 #include <math.h>
 
+
 /**
     Constructor.
     @param networkProps The model data of the network.
@@ -23,6 +24,7 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
     numPreNeurons = 0;
     numPostNeurons = 0;
     numPreNeuronsUnique = 0;
+    mExpression = "";
 }
 
 /**
@@ -42,6 +44,11 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
     numPreNeurons = 0;
     numPostNeurons = 0;
     numPreNeuronsUnique = 0;
+    mExpression = "";
+}
+
+void InnervationStatistic::setExpression(QString expression){
+    mExpression = expression.toStdString();
 }
 
 /**
@@ -309,3 +316,4 @@ void InnervationStatistic::doCreateJson(QJsonObject& obj) const {
     obj.insert("innervationPerPost",          Util::createJsonStatistic(innervationPerPost));
     obj.insert("convergence",                 Util::createJsonStatistic(convergence));
 }
+

@@ -89,6 +89,7 @@ HEADERS += \
     ../shared/Columns.h \
     ../shared/InnervationMatrix.h \
     ../shared/RandomGenerator.h \
+    ../shared/FormulaParser.h \
     EvaluationQueryHandler.h \
     MotifQueryHandler.h \
     InDegreeQueryHandler.h \

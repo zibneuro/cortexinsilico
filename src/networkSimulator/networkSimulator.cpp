@@ -563,7 +563,7 @@ main(int argc, char** argv)
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
             const QString dataRoot = spec["DATA_ROOT"].toString();
-            NetworkProps networkProps;
+            NetworkProps networkProps(true);
             networkProps.setDataRoot(dataRoot);
             networkProps.loadFilesForSynapseComputation();
             FeatureProvider featureProvider;

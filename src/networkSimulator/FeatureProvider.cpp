@@ -28,7 +28,8 @@ FeatureProvider::preprocess(NetworkProps& networkProps,
                             NeuronSelection& selection,
                             bool duplicity)
 {
-    QDir modelDataDir = CIS3D::getModelDataDir(networkProps.dataRoot);
+    QDir modelDataDir = CIS3D::getModelDataDir(networkProps.dataRoot, true);
+    qDebug() << "preprocess" << modelDataDir;
 
     QString postAllExcFile;
     QList<QString> postExcFiles;
@@ -143,8 +144,12 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
                                     bool applyLog,
                                     bool normalized)
 {
+
     // ########### INIT FIELDS ###########
-    QDir modelDataDir = CIS3D::getModelDataDir(networkProps.dataRoot);
+    QDir modelDataDir = CIS3D::getModelDataDir(networkProps.dataRoot,true);
+    qDebug() << "preprocessFeatures" << modelDataDir;
+
+
     std::set<int> voxel;
     std::map<int, int> neuron_funct;
     std::map<int, int> neuron_morph;
