@@ -18,6 +18,8 @@ Under linux, the relevant sources can be compiled as follows:
 
 2) Run: 
 ```
+python3 install/CompileNetworkSimulatorUnix.py
+or
 python3 install/CompileCppMinimalSuse.py
 ```
 
