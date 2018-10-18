@@ -169,6 +169,7 @@ void
 SelectionQueryHandler::process(const QString& selectionQueryId,
                                const QJsonObject& config)
 {
+    qDebug() << "Process selection query" << selectionQueryId;
     mConfig = config;
     mQueryId = selectionQueryId;
 
@@ -234,6 +235,14 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             qDebug() << "    Starting computation:" << mQueryId << selectionString;
 
             const QString datasetShortName = jsonResponse.object().value("network").toString();
+
+            // EXTRACT SLICE PARAMETERS
+            const double tissueLow = jsonResponse.object().value("tissueLow").toDouble();
+            const double tissueHigh = jsonResponse.object().value("tissueHigh").toDouble();
+            const double sliceRef = jsonResponse.object().value("sliceRef").toDouble();
+            const bool isSlice = sliceRef != -9999;
+            qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLow << tissueHigh;
+
             mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
             qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
 
@@ -249,18 +258,23 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
             CIS3D::SynapticSide synapticSide = CIS3D::BOTH_SIDES;
             QString synapticSideString = jsonResponse.object().value("synapticSide").toString();
-            if (synapticSideString == "presynaptic")
+            qDebug() << "SYNAPTIC SIDE" << synapticSideString;
+            if (!isSlice && synapticSideString == "presynaptic")
             {
                 synapticSide = CIS3D::PRESYNAPTIC;
             }
-            else if (synapticSideString == "postsynaptic")
+            else if (!isSlice && synapticSideString == "postsynaptic")
             {
                 synapticSide = CIS3D::POSTSYNAPTIC;
+            }
+            else if (isSlice || synapticSideString == "both")
+            {
+                synapticSide = CIS3D::BOTH_SIDES;
             }
             else
             {
                 const QString msg = QString("[-] Invalid synaptic side string: %1").arg(synapticSideString);
-                std::runtime_error(qPrintable(msg));
+                throw std::runtime_error(qPrintable(msg));
             }
 
             QJsonDocument selectionDoc = QJsonDocument::fromJson(selectionString.toLocal8Bit());
@@ -268,8 +282,10 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             SelectionFilter filter = Util::getSelectionFilterFromJson(selectionArr, mNetwork, synapticSide);
             Util::correctVPMSelectionFilter(filter, mNetwork);
             Util::correctInterneuronSelectionFilter(filter, mNetwork);
-            const IdList neurons = mNetwork.neurons.getFilteredNeuronIds(filter);
+            IdList neurons = mNetwork.neurons.getFilteredNeuronIds(filter);
 
+            neurons = NeuronSelection::filterTissueDepth(mNetwork, neurons, sliceRef, tissueLow, tissueHigh);
+            
             qDebug() << "    Start sorting " << neurons.size() << " neurons.";
 
             stream << neurons.size() << "\n";

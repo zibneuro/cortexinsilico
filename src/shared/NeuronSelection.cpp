@@ -22,6 +22,39 @@ NeuronSelection::NeuronSelection(const IdList& presynaptic, const IdList& postsy
     : mPresynaptic(presynaptic)
     , mPostsynaptic(postsynaptic){};
 
+IdList
+NeuronSelection::filterTissueDepth(const NetworkProps& networkProps, IdList& neuronIds, double sliceRef, double low, double high, CIS3D::SliceBand band)
+{
+    if (sliceRef == -9999)
+    {
+        return neuronIds;
+    }
+
+    IdList pruned;
+
+    for (auto it = neuronIds.begin(); it != neuronIds.end(); ++it)
+    {
+        Vec3f soma = networkProps.neurons.getSomaPosition(*it);
+        double somaX = (double)soma.getX();
+        bool first;
+        bool second;
+        inSliceRange(somaX, sliceRef, low, high, first, second);
+        if (band == CIS3D::SliceBand::FIRST && first)
+        {
+            pruned.push_back(*it);
+        }
+        else if (band == CIS3D::SliceBand::SECOND && second)
+        {
+            pruned.push_back(*it);
+        }
+        else if (band == CIS3D::SliceBand::BOTH && (first || second))
+        {
+            pruned.push_back(*it);
+        }
+    }
+    return pruned;
+}
+
 /**
     Determines a innervation statistic selection from a specification file.
     @param spec The spec file with the filter definition.
@@ -111,9 +144,9 @@ NeuronSelection::setTripletSelection(const QString motifASelString,
 
 void
 NeuronSelection::setInDegreeSelection(const QString selAString,
-                                     const QString selBString,
-                                     const QString selCString,
-                                     const NetworkProps& networkProps)
+                                      const QString selBString,
+                                      const QString selCString,
+                                      const NetworkProps& networkProps)
 {
     mMotifA.clear();
     mMotifA.append(getSelectedNeurons(selAString, networkProps, CIS3D::PRESYNAPTIC));
@@ -258,4 +291,18 @@ QVector<float>
 NeuronSelection::getPiaSomaDistancePost()
 {
     return mPiaSomaDistancePost;
+}
+
+bool
+NeuronSelection::inSliceBand(double somaX, double min, double max)
+{
+    return somaX >= min && somaX <= max;
+}
+
+void
+NeuronSelection::inSliceRange(double somaX, double sliceRef, double low, double high, bool& first, bool& second)
+{
+    double sliceWidth = 300;
+    first = inSliceBand(somaX, sliceRef + low, sliceRef + high);
+    second = inSliceBand(somaX, sliceRef + sliceWidth - high, sliceRef + sliceWidth - low);
 }

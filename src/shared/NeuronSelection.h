@@ -3,6 +3,7 @@
 #include <QVector>
 #include "CIS3DNetworkProps.h"
 #include "Typedefs.h"
+#include "CIS3DConstantsHelpers.h"
 
 #ifndef NEURONSELECTION_H
 #define NEURONSELECTION_H
@@ -11,8 +12,9 @@
     Encapsulates the selected neuron subppulations that
     are part of an analytic query.
 */
-class NeuronSelection {
-   public:
+class NeuronSelection
+{
+public:
     /**
       Empty constructor.
     */
@@ -27,13 +29,19 @@ class NeuronSelection {
     NeuronSelection(const IdList& presynaptic, const IdList& postsynaptic);
 
     /**
+      Filters neurons in a slice model based on tissue depth.
+      param side: 0 left band, 1 right band, 2 any band
+    */
+    static IdList filterTissueDepth(const NetworkProps& networkProps, IdList& preFiltered, double sliceRef, double low, double high, CIS3D::SliceBand band = CIS3D::SliceBand::BOTH);
+
+    /**
         Determines a innervation statistic selection from a specification file.
         @param spec The spec file with the filter definition.
         @param networkProps the model data of the network.
         @param samplingFactor Sampling rate for selection (default: 1 = take all)
         @param seed The random seed for the sampling (-1, to use random seed)
     */
-    void setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor = 1, int seed =-1);
+    void setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor = 1, int seed = -1);
 
     /**
         Determines a triplet motif statistic selection from a specification file.
@@ -49,13 +57,12 @@ class NeuronSelection {
         @param motifASelString The third selection string.
         @param networkProps the model data of the network.
     */
-    void setTripletSelection(const QString selAString, const QString selBString,
-                             const QString selCString, const NetworkProps& networkProps);
-    
+    void setTripletSelection(const QString selAString, const QString selBString, const QString selCString, const NetworkProps& networkProps);
+
     void setInDegreeSelection(const QString selAString,
-                                     const QString selBSelString,
-                                     const QString selCSelString,
-                                     const NetworkProps& networkProps);
+                              const QString selBSelString,
+                              const QString selCSelString,
+                              const NetworkProps& networkProps);
 
     void setPiaSomaDistance(QVector<float> rangePre, QVector<float> rangePost, const NetworkProps& networkProps);
 
@@ -67,7 +74,7 @@ class NeuronSelection {
         @param networkProps The model data of the network.
         @return A list of neuron IDs.      
     */
-    IdList getSelectedNeurons(const QString selectionString, const NetworkProps& networkProps, CIS3D::SynapticSide synapticSide=CIS3D::BOTH_SIDES);                             
+    IdList getSelectedNeurons(const QString selectionString, const NetworkProps& networkProps, CIS3D::SynapticSide synapticSide = CIS3D::BOTH_SIDES);
 
     /**
       Returns the presynaptic subselection.
@@ -109,7 +116,11 @@ class NeuronSelection {
 
     QVector<float> getPiaSomaDistancePost();
 
-   private:
+private:
+    static bool inSliceBand(double somaX, double min, double max);
+
+    static void inSliceRange(double somaX, double sliceRef, double low, double high, bool& first, bool& second);
+
     IdList mPresynaptic;
     IdList mPostsynaptic;
     IdList mMotifA;

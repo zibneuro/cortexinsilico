@@ -21,60 +21,88 @@
                                  ...
 */
 
-namespace CIS3D {
-
+namespace CIS3D
+{
     /**
         Number of digits to use for a neuron ID (pad with zeros in front)
     */
     extern const int NeuronIdNumDigits;
 
+    enum SliceBand
+    {
+        NONE,
+        FIRST,
+        SECOND,
+        BOTH
+    };
+
     /**
         Categorization of neurons based on exc. vs. inh. property.
     */
-    enum NeuronType { EXCITATORY, INHIBITORY, EXC_OR_INH };
+    enum NeuronType
+    {
+        EXCITATORY,
+        INHIBITORY,
+        EXC_OR_INH
+    };
 
     /**
         Categorization of neurons based on synaptic side.
     */
-    enum SynapticSide { PRESYNAPTIC = 0, POSTSYNAPTIC = 1, BOTH_SIDES = 2};
+    enum SynapticSide
+    {
+        PRESYNAPTIC = 0,
+        POSTSYNAPTIC = 1,
+        BOTH_SIDES = 2
+    };
 
     /**
         Neuron location with respect to layers.
     */
-    enum LaminarLocation { UNKNOWN_LL = 0,
-                           INFRAGRANULAR = 1,
-                           GRANULAR = 2,
-                           SUPRAGRANULAR = 3 };
+    enum LaminarLocation
+    {
+        UNKNOWN_LL = 0,
+        INFRAGRANULAR = 1,
+        GRANULAR = 2,
+        SUPRAGRANULAR = 3
+    };
 
-   /**
+    /**
        Structural feature of the neuron.
    */
-    enum Structure { UNKNOWN = 0,
-                     SOMA = 1,
-                     AXON = 2,
-                     DEND = 3,
-                     APICAL = 4 };
+    enum Structure
+    {
+        UNKNOWN = 0,
+        SOMA = 1,
+        AXON = 2,
+        DEND = 3,
+        APICAL = 4
+    };
 
-     /**
+    /**
          Neuron location with respect to rat vS1.
      */
-    enum S1Location { UNKNOWN_S1 = 0,
-                      INSIDE_S1,
-                      OUTSIDE_S1 };
+    enum S1Location
+    {
+        UNKNOWN_S1 = 0,
+        INSIDE_S1,
+        OUTSIDE_S1
+    };
 
     /**
         Represents explicit synapse location.
     */
-    struct Synapse {
+    struct Synapse
+    {
         unsigned long id;
-        unsigned int  preNeuronId;
-        Vec3f         pos;
-        float         euclideanDistanceToSomaPre;
-        float         distanceToSomaPost;
-        int           sectionID;
-        QString       sectionName;
-        float         sectionX;
-        Structure     structure;
+        unsigned int preNeuronId;
+        Vec3f pos;
+        float euclideanDistanceToSomaPre;
+        float distanceToSomaPost;
+        int sectionID;
+        QString sectionName;
+        float sectionX;
+        Structure structure;
     };
 
     /*
@@ -104,7 +132,7 @@ namespace CIS3D {
     /**
         A tuple of cell type ID and region ID
     */
-    typedef QPair<int, int>  CellTypeRegion;
+    typedef QPair<int, int> CellTypeRegion;
 
     /**
         Get the directory containing the model data, relative to the data root
@@ -142,7 +170,7 @@ namespace CIS3D {
         @param modelDataDir The model data directory.
         @return The bouton root directory.
     */
-    QDir    getBoutonsRootDir(const QDir& modelDataDir);
+    QDir getBoutonsRootDir(const QDir& modelDataDir);
 
     /**
         Determines the directory with all bouton files for the
@@ -151,8 +179,8 @@ namespace CIS3D {
         @param cellTypeName The cell type.
         @return The bouton directory.
     */
-    QDir    getBoutonsDir(const QDir& modelDataDir,
-                          const QString& cellTypeName);
+    QDir getBoutonsDir(const QDir& modelDataDir,
+                       const QString& cellTypeName);
 
     /**
         Determines the bouton file for the specified neuron.
@@ -165,7 +193,7 @@ namespace CIS3D {
                                    const QString& cellTypeName,
                                    const int neuronId);
 
-   /**
+    /**
         Determines the name of the file with the PST density
         for the the specified neuron.
         @param neuronId The neuron ID.
@@ -188,14 +216,14 @@ namespace CIS3D {
         @param modelDataDir The model data directory.
         @return The PST directory.
     */
-    QDir    getPSTRootDir(const QDir& modelDataDir);
+    QDir getPSTRootDir(const QDir& modelDataDir);
 
     /**
         Determines the directory containing the normalized PST subdirs.
         @param modelDataDir The model data directory.
         @return The normalized PST root directory.
     */
-    QDir    getNormalizedPSTRootDir(const QDir& modelDataDir);
+    QDir getNormalizedPSTRootDir(const QDir& modelDataDir);
 
     /**
         Determines the directory containing the PST densities for
@@ -205,9 +233,9 @@ namespace CIS3D {
         @param cellTypeName The name of the cell type.
         @return The PST directory.
     */
-    QDir    getPSTDir(const QDir& modelDataDir,
-                      const QString& regionName,
-                      const QString& cellTypeName);
+    QDir getPSTDir(const QDir& modelDataDir,
+                   const QString& regionName,
+                   const QString& cellTypeName);
 
     /**
         Determines the directory containing the normalized PST densities
@@ -217,9 +245,9 @@ namespace CIS3D {
         @param cellTypeName The name of the cell type.
         @return The PST directory.
     */
-    QDir    getNormalizedPSTDir(const QDir& modelDataDir,
-                                const QString& regionName,
-                                const QString& cellTypeName);
+    QDir getNormalizedPSTDir(const QDir& modelDataDir,
+                             const QString& regionName,
+                             const QString& cellTypeName);
 
     /**
         Determines PST file path for the specified neuron.
@@ -235,7 +263,7 @@ namespace CIS3D {
                                const QString& cellTypeName,
                                const int neuronId,
                                const NeuronType presynapticNeuronType);
-   /**
+    /**
        Determines normalized PST file path for the specified neuron.
        @param modelDataDir The model data directory.
        @param regionName The name of the region.
@@ -338,7 +366,6 @@ namespace CIS3D {
         @return The structure as text string.
     */
     QString getStructureName(const Structure structure);
-}
-
+} // namespace CIS3D
 
 #endif // CIS3DCONSTANTSHELPERS_H

@@ -19,15 +19,14 @@
 #include <QtNetwork/QNetworkReply>
 #include <stdexcept>
 
-
 EvaluationQueryHandler::EvaluationQueryHandler(QObject* parent)
     : QObject(parent)
 {
 }
 
-
-void EvaluationQueryHandler::process(const QString& evaluationQueryId,
-                                     const QJsonObject& config)
+void
+EvaluationQueryHandler::process(const QString& evaluationQueryId,
+                                const QJsonObject& config)
 {
     mConfig = config;
     mQueryId = evaluationQueryId;
@@ -37,16 +36,20 @@ void EvaluationQueryHandler::process(const QString& evaluationQueryId,
     const QString loginEndPoint = mConfig["METEOR_LOGIN_ENDPOINT"].toString();
     const QString logoutEndPoint = mConfig["METEOR_LOGOUT_ENDPOINT"].toString();
 
-    if (baseUrl.isEmpty()) {
+    if (baseUrl.isEmpty())
+    {
         throw std::runtime_error("EvaluationQueryHandler: Cannot find METEOR_URL_CIS3D");
     }
-    if (queryEndPoint.isEmpty()) {
+    if (queryEndPoint.isEmpty())
+    {
         throw std::runtime_error("EvaluationQueryHandler: Cannot find METEOR_EVALUATIONQUERY_ENDPOINT");
     }
-    if (loginEndPoint.isEmpty()) {
+    if (loginEndPoint.isEmpty())
+    {
         throw std::runtime_error("EvaluationQueryHandler: Cannot find METEOR_LOGIN_ENDPOINT");
     }
-    if (logoutEndPoint.isEmpty()) {
+    if (logoutEndPoint.isEmpty())
+    {
         throw std::runtime_error("EvaluationQueryHandler: Cannot find METEOR_LOGOUT_ENDPOINT");
     }
 
@@ -69,9 +72,9 @@ void EvaluationQueryHandler::process(const QString& evaluationQueryId,
     mNetworkManager.get(request);
 }
 
-
-void EvaluationQueryHandler::reportUpdate(NetworkStatistic* stat){
-
+void
+EvaluationQueryHandler::reportUpdate(NetworkStatistic* stat)
+{
     long long numConnections = stat->getNumConnections();
     long long connectionsDone = stat->getConnectionsDone();
 
@@ -79,7 +82,7 @@ void EvaluationQueryHandler::reportUpdate(NetworkStatistic* stat){
     QJsonObject progress;
     progress.insert("completed", connectionsDone);
     progress.insert("total", numConnections);
-    const double percent = double(connectionsDone)*100.0/double(numConnections);
+    const double percent = double(connectionsDone) * 100.0 / double(numConnections);
     progress.insert("percent", percent);
     QJsonObject jobStatus;
     jobStatus.insert("status", "running");
@@ -98,8 +101,8 @@ void EvaluationQueryHandler::reportUpdate(NetworkStatistic* stat){
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
-    qDebug() << "Posting intermediate result:" << percent << "\%    (" << connectionsDone << "/" << numConnections << ")";    
-    
+    qDebug() << "Posting intermediate result:" << percent << "\%    (" << connectionsDone << "/" << numConnections << ")";
+
     QEventLoop loop;
     QNetworkReply* reply = mNetworkManager.put(putRequest, putData.toLocal8Bit());
     connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
@@ -107,21 +110,23 @@ void EvaluationQueryHandler::reportUpdate(NetworkStatistic* stat){
 
     QNetworkReply::NetworkError error = reply->error();
     const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-    if (error != QNetworkReply::NoError) {       
+    if (error != QNetworkReply::NoError)
+    {
         qDebug() << "[-] Error putting Evaluation result (queryId" << mQueryId << "):";
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();
         logoutAndExit(1);
         stat->abort();
     }
-
 }
 
-void EvaluationQueryHandler::reportComplete(NetworkStatistic* stat){
-
+void
+EvaluationQueryHandler::reportComplete(NetworkStatistic* stat)
+{
     long long numConnections = stat->getNumConnections();
 
     const QString preSelId = mCurrentJsonData["presynapticSelectionId"].toString();
@@ -129,10 +134,10 @@ void EvaluationQueryHandler::reportComplete(NetworkStatistic* stat){
     const QString key = QString("innervation_%1_%2_%3.csv").arg(mQueryId).arg(preSelId).arg(postSelId);
     const QString presynSelectionText = mCurrentJsonData["presynapticSelectionFilterAsText"].toString();
     const QString postsynSelectionText = mCurrentJsonData["postsynapticSelectionFilterAsText"].toString();
-    const QString csvfile = stat->createCSVFile(key, presynSelectionText, postsynSelectionText,
-                                          mConfig["WORKER_TMP_DIR"].toString());
+    const QString csvfile = stat->createCSVFile(key, presynSelectionText, postsynSelectionText, mConfig["WORKER_TMP_DIR"].toString());
     const qint64 fileSizeBytes = QFileInfo(csvfile).size();
-    if (QueryHelpers::uploadToS3(key, csvfile, mConfig) != 0) {
+    if (QueryHelpers::uploadToS3(key, csvfile, mConfig) != 0)
+    {
         qDebug() << "Error uploading csv file to S3:" << csvfile;
         logoutAndExit(1);
     }
@@ -163,12 +168,16 @@ void EvaluationQueryHandler::reportComplete(NetworkStatistic* stat){
     mNetworkManager.put(putRequest, putData.toLocal8Bit());
 };
 
-void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
+void
+EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
+{
     QNetworkReply::NetworkError error = reply->error();
-    if (error == QNetworkReply::NoError && !reply->request().attribute(QNetworkRequest::User).toString().contains("getQueryData")) {
+    if (error == QNetworkReply::NoError && !reply->request().attribute(QNetworkRequest::User).toString().contains("getQueryData"))
+    {
         return;
     }
-    else if (error == QNetworkReply::NoError) {
+    else if (error == QNetworkReply::NoError)
+    {
         qDebug() << "[*] Starting computation of innervation query";
 
         const QByteArray content = reply->readAll();
@@ -182,8 +191,18 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForQuery();
-        
+
+        // EXTRACT CONNECTION PROBABILITY FORMULA
         QString connProbFormula = jsonData["connProbFormula"].toString();
+
+        // EXTRACT SLICE PARAMETERS
+        const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
+        const double tissueHighPre = jsonData["tissueHighPre"].toDouble();
+        const double tissueLowPost = jsonData["tissueLowPost"].toDouble();
+        const double tissueHighPost = jsonData["tissueHighPost"].toDouble();
+        const double sliceRef = jsonData["sliceRef"].toDouble();
+        //const bool isSlice = sliceRef != -9999;
+        qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueLowPost << tissueHighPost;
 
         QString preSelString = jsonData["presynapticSelectionFilter"].toString();
         QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
@@ -192,28 +211,32 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork, CIS3D::PRESYNAPTIC);
         Util::correctVPMSelectionFilter(preFilter, mNetwork);
         Util::correctInterneuronSelectionFilter(preFilter, mNetwork);
-        const IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
+        IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
+        preNeurons = NeuronSelection::filterTissueDepth(mNetwork, preNeurons, sliceRef, tissueLowPre, tissueHighPre, CIS3D::SliceBand::FIRST);
 
         QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
         QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
         QJsonArray postArr = postDoc.array();
         SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
         Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
-        const IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
+        IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
+        postNeurons = NeuronSelection::filterTissueDepth(mNetwork, postNeurons, sliceRef, tissueLowPost, tissueHighPost, CIS3D::SliceBand::FIRST);
 
         qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
         InnervationStatistic innervation(mNetwork);
         innervation.setExpression(connProbFormula);
-        
+
         connect(&innervation, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
         NeuronSelection selection(preNeurons, postNeurons);
         innervation.calculate(selection);
     }
-    else {
+    else
+    {
         qDebug() << "[-] Error obtaining EvaluationQuery data:";
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();
@@ -221,19 +244,25 @@ void EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
     }
 }
 
-void EvaluationQueryHandler::replyPutResult(QNetworkReply *reply){
+void
+EvaluationQueryHandler::replyPutResult(QNetworkReply* reply)
+{
     QNetworkReply::NetworkError error = reply->error();
     const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-    if (error == QNetworkReply::NoError && !(requestId == "putEvaluationResult")) {
+    if (error == QNetworkReply::NoError && !(requestId == "putEvaluationResult"))
+    {
         return;
     }
-    else if (error == QNetworkReply::NoError) {
+    else if (error == QNetworkReply::NoError)
+    {
         return;
     }
-    else {
+    else
+    {
         qDebug() << "[-] Error putting Evaluation result (queryId" << mQueryId << "):";
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();
@@ -241,22 +270,27 @@ void EvaluationQueryHandler::replyPutResult(QNetworkReply *reply){
     }
 }
 
-
-void EvaluationQueryHandler::replyPutResultFinished(QNetworkReply *reply) {
+void
+EvaluationQueryHandler::replyPutResultFinished(QNetworkReply* reply)
+{
     QNetworkReply::NetworkError error = reply->error();
     const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-    if (error == QNetworkReply::NoError && !(requestId == "putEvaluationResult")) {
+    if (error == QNetworkReply::NoError && !(requestId == "putEvaluationResult"))
+    {
         return;
     }
-    else if (error == QNetworkReply::NoError) {
+    else if (error == QNetworkReply::NoError)
+    {
         qDebug() << "    Completed processing evaluation query" << mQueryId;
         reply->deleteLater();
         logoutAndExit(0);
     }
-    else {
+    else
+    {
         qDebug() << "[-] Error putting Evaluation result (queryId" << mQueryId << "):";
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();
@@ -264,18 +298,19 @@ void EvaluationQueryHandler::replyPutResultFinished(QNetworkReply *reply) {
     }
 }
 
-
-void EvaluationQueryHandler::logoutAndExit(const int exitCode)
+void
+EvaluationQueryHandler::logoutAndExit(const int exitCode)
 {
-
     QueryHelpers::logout(mLogoutUrl,
                          mAuthInfo,
                          mNetworkManager);
 
-    if (exitCode == 0) {
+    if (exitCode == 0)
+    {
         emit completedProcessing();
     }
-    else {
+    else
+    {
         QCoreApplication::exit(exitCode);
     }
 }
