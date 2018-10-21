@@ -15,9 +15,9 @@ class FeatureProvider
 public:
     FeatureProvider();
 
-    ~FeatureProvider();
+    FeatureProvider(QString metaFolder, bool writeAll);
 
-    void preprocess(NetworkProps& networkProps, NeuronSelection& selection, bool duplicity = true);
+    ~FeatureProvider();
 
     void preprocessFeatures(NetworkProps& networkProps, NeuronSelection& selection, double eps, bool applyLog, bool normalized = false);
 
@@ -48,6 +48,8 @@ public:
               std::map<int, std::set<int> >& voxel_neuronsPostExc,
               std::map<int, std::set<int> >& voxel_neuronsPostInh);
 
+    void loadVoxelPositions(std::vector<float>& x, std::vector<float>& y, std::vector<float>& z);
+
 private:
     void saveInitFile(QString fileName);
     void loadInitFile(QString fileName);
@@ -75,4 +77,6 @@ private:
     QList<SparseField*> mPostExc;
 
     const QString mInitFileName = "init.csv";
+    QString mMetaFolder;
+    bool mWriteAll;
 };

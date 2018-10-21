@@ -5,6 +5,7 @@
 #include "InDegreeQueryHandler.h"
 #include "NetworkDataUploadHandler.h"
 #include "SelectionQueryHandler.h"
+#include "SpatialInnervationQueryHandler.h"
 
 QJsonObject parseSpecFile(const QString &fileName) {
     QFile jsonFile(fileName);
@@ -42,8 +43,8 @@ int main(int argc, char *argv[]) {
 
     const QString queryType = app.arguments().at(2);
     if (queryType != "evaluationQuery" && queryType != "motifQuery" && queryType != "inDegreeQuery" &&
-        queryType != "selectionQuery" && queryType != "networkDataUpload") {
-        qDebug() << "Invalid query type.";
+        queryType != "selectionQuery" && queryType != "networkDataUpload" && queryType != "spatialInnervationQuery") {
+        qDebug() << "Invalid query type." << queryType;
         printUsage();
         return 1;
     }
@@ -92,7 +93,11 @@ int main(int argc, char *argv[]) {
         QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()),
                          Qt::QueuedConnection);
         handler->process(config);
+    } else if (queryType == "spatialInnervationQuery") {        
+        SpatialInnervationQueryHandler *handler = new SpatialInnervationQueryHandler();
+        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()),
+                         Qt::QueuedConnection);
+        handler->process(queryId,config);
     }
-
     return app.exec();
 }

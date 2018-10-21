@@ -54,11 +54,13 @@ SOURCES += \
     ../shared/Columns.cpp \
     ../shared/InnervationMatrix.cpp \
     ../shared/RandomGenerator.cpp \
+    ../shared/FeatureProvider.cpp \
     EvaluationQueryHandler.cpp \
     MotifQueryHandler.cpp \
     InDegreeQueryHandler.cpp \
     SelectionQueryHandler.cpp \
     NetworkDataUploadHandler.cpp \
+    SpatialInnervationQueryHandler.cpp \
     QueryHelpers.cpp
 
 HEADERS += \
@@ -90,9 +92,11 @@ HEADERS += \
     ../shared/InnervationMatrix.h \
     ../shared/RandomGenerator.h \
     ../shared/FormulaParser.h \
+    ../shared/FeatureProvider.h \
     EvaluationQueryHandler.h \
     MotifQueryHandler.h \
     InDegreeQueryHandler.h \
     SelectionQueryHandler.h \
     NetworkDataUploadHandler.h \
+    SpatialInnervationQueryHandler.h \
     QueryHelpers.h

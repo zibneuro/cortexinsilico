@@ -4,6 +4,7 @@
 #include "CIS3DNetworkProps.h"
 #include "Typedefs.h"
 #include "CIS3DConstantsHelpers.h"
+#include "RandomGenerator.h"
 
 #ifndef NEURONSELECTION_H
 #define NEURONSELECTION_H
@@ -116,10 +117,14 @@ public:
 
     QVector<float> getPiaSomaDistancePost();
 
+    void sampleDown(int maxSize, int seed);
+
 private:
     static bool inSliceBand(double somaX, double min, double max);
 
     static void inSliceRange(double somaX, double sliceRef, double low, double high, bool& first, bool& second);
+
+    IdList getDownsampled(IdList& original, int maxSize, RandomGenerator& randomGenerator);
 
     IdList mPresynaptic;
     IdList mPostsynaptic;

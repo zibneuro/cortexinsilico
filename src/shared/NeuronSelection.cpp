@@ -5,7 +5,6 @@
 #include "Util.h"
 #include "UtilIO.h"
 #include "Columns.h"
-#include "RandomGenerator.h"
 
 /**
   Empty constructor.
@@ -291,6 +290,36 @@ QVector<float>
 NeuronSelection::getPiaSomaDistancePost()
 {
     return mPiaSomaDistancePost;
+}
+
+void
+NeuronSelection::sampleDown(int maxSize, int seed)
+{
+    RandomGenerator randomGenerator(seed);
+    mPresynaptic = getDownsampled(mPresynaptic, maxSize, randomGenerator);
+    mPostsynaptic = getDownsampled(mPostsynaptic, maxSize, randomGenerator);
+    mMotifA = getDownsampled(mMotifA, maxSize, randomGenerator);
+    mMotifB = getDownsampled(mMotifB, maxSize, randomGenerator);
+    mMotifC = getDownsampled(mMotifC, maxSize, randomGenerator);
+}
+
+IdList
+NeuronSelection::getDownsampled(IdList& original, int maxSize, RandomGenerator& randomGenerator)
+{
+    if (original.size() <= maxSize)
+    {
+        return original;
+    }
+    else
+    {
+        randomGenerator.shuffleList(original);
+        IdList pruned;
+        for (int i = 0; i < maxSize; i++)
+        {
+            pruned.append(original[i]);
+        }
+        return pruned;
+    }
 }
 
 bool
