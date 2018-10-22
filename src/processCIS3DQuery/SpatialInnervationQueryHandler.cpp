@@ -78,6 +78,8 @@ createGeometryJSON(const QString& zipFileName,
         throw std::runtime_error(qPrintable(msg));
     }
 
+    // ###################### LOAD NONEMPTY VOXELS ######################
+
     std::vector<float> x;
     std::vector<float> y;
     std::vector<float> z;
@@ -87,17 +89,101 @@ createGeometryJSON(const QString& zipFileName,
     qDebug() << "Size" << x.size();
 
     QJsonArray positions;
-    //QJsonArray cellTypeIds;
-    //QJsonArray regionIds;
 
     for (unsigned int i = 0; i < x.size(); ++i)
     {
         positions.push_back(QJsonValue(x[i]));
         positions.push_back(QJsonValue(y[i]));
         positions.push_back(QJsonValue(z[i]));
-        //cellTypeIds.push_back(QJsonValue(cellTypeId));
-        //regionIds.push_back(QJsonValue(regionId));
     }
+
+    // ###################### LOAD FEATURES ######################
+
+    std::map<int, std::map<int, float> > neuron_pre;
+    std::map<int, std::map<int, float> > neuron_postExc;
+    std::map<int, std::map<int, float> > neuron_postInh;
+    std::map<int, float> voxel_postAllExc;
+    std::map<int, float> voxel_postAllInh;
+    std::map<int, int> neuron_funct;
+    std::map<int, std::set<int> > voxel_neuronsPre;
+    std::map<int, std::set<int> > voxel_neuronsPostExc;
+    std::map<int, std::set<int> > voxel_neuronsPostInh;
+    std::vector<int> voxel;
+
+    featureProvider.load(neuron_pre, 1, neuron_postExc, 1, neuron_postInh, voxel_postAllExc, 1, voxel_postAllInh, neuron_funct, voxel_neuronsPre, voxel_neuronsPostExc, voxel_neuronsPostInh);
+
+    std::vector<int> preIndices;
+    for (auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it)
+    {
+        preIndices.push_back(it->first);
+    }
+
+    std::vector<int> postIndices;
+    for (auto it = neuron_postExc.begin(); it != neuron_postExc.end(); ++it)
+    {
+        postIndices.push_back(it->first);
+    }
+
+    // ###################### INIT OUTPUT FIELDS ######################
+
+    std::vector<int> empty(postIndices.size(), 0);
+    std::vector<float> emptyFloat(postIndices.size(), 0);
+    std::vector<std::vector<int> > contacts(preIndices.size(), empty);
+    std::vector<std::vector<float> > innervation(preIndices.size(), emptyFloat);
+
+    std::vector<double> sufficientStat;
+    sufficientStat.push_back(0);
+    sufficientStat.push_back(0);
+    sufficientStat.push_back(0);
+    sufficientStat.push_back(0);
+
+    Statistics connProbSynapse;
+    Statistics connProbInnervation;
+
+    // ###################### LOOP OVER NEURONS ######################
+
+
+    for (unsigned int i = 0; i < preIndices.size(); i++)
+    {
+        std::map<int, std::map<int, float>> innervationPerPre;
+        int preId = preIndices[i];
+        for (unsigned int j = 0; j < postIndices.size(); j++)
+        {
+            int postId = postIndices[j];
+            if (preId != postId)
+            {
+                std::map<int, float> innervationPerVoxel;
+                for (auto pre = neuron_pre[preId].begin(); pre != neuron_pre[preId].end(); ++pre)
+                {
+                    if (neuron_postExc[postId].find(pre->first) != neuron_postExc[postId].end())
+                    {
+                        float preVal = pre->second;
+                        float postVal = neuron_postExc[postId][pre->first];
+                        float arg = preVal * postVal;
+                        innervationPerVoxel[pre->first] = arg;
+                    }
+                }
+                innervationPerPre[postId] = innervationPerVoxel;
+            }
+        }
+    }
+
+    // ###################### DETERMINE STATISTICS ######################
+
+    /*
+    for (unsigned int i = 0; i < preIndices.size(); i++)
+    {
+        int realizedConnections = 0;
+        for (unsigned int j = 0; j < postIndices.size(); j++)
+        {
+            connProbInnervation.addSample(calculateProbability(innervation[i][j]));
+            realizedConnections += contacts[i][j] > 0 ? 1 : 0;
+        }
+        double probability = (double)realizedConnections / (double)postIndices.size();
+        connProbSynapse.addSample(probability);
+    }*/
+
+    // ###################### WRITE OUTPUT ######################
 
     QJsonObject metadata;
     metadata.insert("version", 1);
