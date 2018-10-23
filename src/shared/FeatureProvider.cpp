@@ -367,7 +367,7 @@ FeatureProvider::load(std::map<int, std::map<int, float> >& neuron_pre,
 }
 
 void
-FeatureProvider::loadVoxelPositions(std::vector<float>& x, std::vector<float>& y, std::vector<float>& z)
+FeatureProvider::loadVoxelPositions(std::vector<int> voxelIds, std::vector<float>& x, std::vector<float>& y, std::vector<float>& z)
 {
     QString fileName = QDir(mMetaFolder).filePath("voxel_pos.dat");
     QFile file(fileName);
@@ -383,6 +383,7 @@ FeatureProvider::loadVoxelPositions(std::vector<float>& x, std::vector<float>& y
     while (!line.isNull())
     {
         QStringList parts = line.split(' ');
+        voxelIds.push_back(parts[0].toInt());
         x.push_back(parts[1].toFloat());
         y.push_back(parts[2].toFloat());
         z.push_back(parts[3].toFloat());

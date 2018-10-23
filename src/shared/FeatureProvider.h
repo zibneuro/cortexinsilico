@@ -48,7 +48,7 @@ public:
               std::map<int, std::set<int> >& voxel_neuronsPostExc,
               std::map<int, std::set<int> >& voxel_neuronsPostInh);
 
-    void loadVoxelPositions(std::vector<float>& x, std::vector<float>& y, std::vector<float>& z);
+    void loadVoxelPositions(std::vector<int> voxelIds, std::vector<float>& x, std::vector<float>& y, std::vector<float>& z);
 
 private:
     void saveInitFile(QString fileName);

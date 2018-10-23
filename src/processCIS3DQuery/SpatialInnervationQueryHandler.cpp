@@ -80,22 +80,19 @@ createGeometryJSON(const QString& zipFileName,
 
     // ###################### LOAD NONEMPTY VOXELS ######################
 
+    std::vector<int> voxelIds;
     std::vector<float> x;
     std::vector<float> y;
     std::vector<float> z;
 
-    featureProvider.loadVoxelPositions(x, y, z);
+    featureProvider.loadVoxelPositions(voxelIds, x, y, z);
 
     qDebug() << "Size" << x.size();
 
     QJsonArray positions;
+    QJsonArray innervationPerVoxelValues;
 
-    for (unsigned int i = 0; i < x.size(); ++i)
-    {
-        positions.push_back(QJsonValue(x[i]));
-        positions.push_back(QJsonValue(y[i]));
-        positions.push_back(QJsonValue(z[i]));
-    }
+
 
     // ###################### LOAD FEATURES ######################
 
@@ -142,6 +139,11 @@ createGeometryJSON(const QString& zipFileName,
 
     // ###################### LOOP OVER NEURONS ######################
 
+    std::set<QString> fileNames;
+    std::map<int, float> innervationSum;
+    for(auto it=voxelIds.begin(); it != voxelIds.end(); ++it){
+        innervationSum[*it] = 0;
+    }
 
     for (unsigned int i = 0; i < preIndices.size(); i++)
     {
@@ -161,9 +163,29 @@ createGeometryJSON(const QString& zipFileName,
                         float postVal = neuron_postExc[postId][pre->first];
                         float arg = preVal * postVal;
                         innervationPerVoxel[pre->first] = arg;
+                        innervationSum[pre->first] += arg;
                     }
                 }
                 innervationPerPre[postId] = innervationPerVoxel;
+            }
+        }
+
+        QString fileName = QDir(tmpDir).filePath(QString::number(preId));
+        fileNames.insert(fileName);
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly))
+        {
+            const QString msg =
+                QString("Cannot open file %1 for writing.").arg(fileName);
+            throw std::runtime_error(qPrintable(msg));
+        }
+        QTextStream stream(&file);
+
+        for (auto itPost = innervationPerPre.begin(); itPost != innervationPerPre.end(); ++itPost)
+        {
+            stream << "Postneuron" << " " << itPost->first << "\n";
+            for(auto itVoxel = itPost->second.begin(); itVoxel != itPost->second.end(); ++itVoxel){
+                stream << itVoxel->first << " " << itVoxel->second << "\n";
             }
         }
     }
@@ -183,6 +205,16 @@ createGeometryJSON(const QString& zipFileName,
         connProbSynapse.addSample(probability);
     }*/
 
+    for (unsigned int i = 0; i < x.size(); ++i)
+    {
+        positions.push_back(QJsonValue(x[i]));
+        positions.push_back(QJsonValue(y[i]));
+        positions.push_back(QJsonValue(z[i]));
+        int voxelId = voxelIds[i];
+        float innervation = innervationSum[voxelId];
+        innervationPerVoxelValues.push_back(QJsonValue(innervation));
+    }
+
     // ###################### WRITE OUTPUT ######################
 
     QJsonObject metadata;
@@ -195,22 +227,14 @@ createGeometryJSON(const QString& zipFileName,
     position.insert("type", "Float32Array");
     position.insert("array", positions);
 
-    /*
-    QJsonObject cellTypeID;
-    cellTypeID.insert("itemSize", 1);
-    cellTypeID.insert("type", "Uint8Array");
-    cellTypeID.insert("array", cellTypeIds);
-
-    QJsonObject regionID;
-    regionID.insert("itemSize", 1);
-    regionID.insert("type", "Uint8Array");
-    regionID.insert("array", regionIds);
-    */
+    QJsonObject innervationPerVoxelJson;
+    innervationPerVoxelJson.insert("itemSize", 1);
+    innervationPerVoxelJson.insert("type", "Float32Array");
+    innervationPerVoxelJson.insert("array", innervationPerVoxelValues);
 
     QJsonObject attributes;
     attributes.insert("position", position);
-    //attributes.insert("cellTypeID", cellTypeID);
-    //attributes.insert("regionID", regionID);
+    attributes.insert("innervationPerVoxel", innervationPerVoxelJson);
 
     QJsonObject data;
     data.insert("attributes", attributes);
@@ -231,6 +255,9 @@ createGeometryJSON(const QString& zipFileName,
     QStringList arguments;
     arguments.append(zipFileName);
     arguments.append(jsonFileName);
+    for(auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile){
+        arguments.append(*itFile);
+    }
     qDebug() << "Arguments" << arguments;
     zip.start("zip", arguments);
 
