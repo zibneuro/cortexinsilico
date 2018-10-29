@@ -1,0 +1,1 @@
+set server localhostset sockChan [socket $server 7175]
