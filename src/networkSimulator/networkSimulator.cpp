@@ -117,6 +117,49 @@ extractRuleParameters(const QJsonObject spec, bool addIntercept)
 }
 
 /*
+    Extracts the THETA parameters from the spec file in batch mode.
+
+    @param spec The specification file as json object.
+    @return A vector of parameters.
+*/
+std::vector<QVector<float> >
+extractRuleParametersBatch(const QJsonObject spec, bool addIntercept)
+{
+    std::vector<QVector<float> > result;
+    int numParams = addIntercept ? 4 : 3;
+    QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS_BATCH"].toArray();
+    for (int i = 0; i < parameters.size(); i++)
+    {
+        QJsonArray parameterValues = parameters[i].toArray();
+        checkNumParams(parameterValues, numParams);
+        QVector<float> theta;
+        for(int j=0; j<numParams; j++){
+            theta.append((float)parameterValues[j].toDouble());
+        }
+        result.push_back(theta);
+    }
+    return result;
+}
+
+/*
+    Extracts the run indices from the spec file in batch mode.
+
+    @param spec The specification file as json object.
+    @return A vector of run indices.
+*/
+std::vector<int>
+extractRunIndicesBatch(const QJsonObject spec)
+{
+    std::vector<int> result;
+    QJsonArray runIndices = spec["RUN_INDICES_BATCH"].toArray();
+    for (int i = 0; i < runIndices.size(); i++)
+    {
+        result.push_back(runIndices[i].toInt());
+    }
+    return result;
+}
+
+/*
     Reads the VOXEL_ORIGIN property from the specification file.
 
     @param spec The specification file as json object.
@@ -515,6 +558,32 @@ main(int argc, char** argv)
             FeatureProvider featureProvider;
             Calculator calculator(featureProvider, randomGenerator, runIndex);
             calculator.calculate(parameters, addIntercept, maxInnervation, mode);
+            //qDebug() << "finish";
+        }
+    }
+    else if (mode == "SIMULATE_BATCH")
+    {
+        if (argc != 3)
+        {
+            printUsage();
+            return 1;
+        }
+        else
+        {
+            const QString specFile = argv[2];
+            QJsonObject spec = UtilIO::parseSpecFile(specFile);
+            bool addIntercept = extractAddIntercept(spec);
+            double maxInnervation = extractInnervationBound(spec);
+            QString mode = extractSimulationMode(spec);
+            checkSimulationMode(mode);
+            int seed = extractRandomSeed(spec);
+            std::vector<int> runIndices = extractRunIndicesBatch(spec);
+            qDebug() << "BATCH-SIZE:" << runIndices.size();
+            RandomGenerator randomGenerator(seed);
+            std::vector<QVector<float> > parameters = extractRuleParametersBatch(spec, addIntercept);
+            FeatureProvider featureProvider;
+            Calculator calculator(featureProvider, randomGenerator, runIndices);
+            calculator.calculateBatch(parameters, addIntercept, maxInnervation, mode);
             //qDebug() << "finish";
         }
     }

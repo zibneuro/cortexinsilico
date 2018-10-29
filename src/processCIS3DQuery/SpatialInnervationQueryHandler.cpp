@@ -222,6 +222,9 @@ createGeometryJSON(const QString& zipFileName,
     metadata.insert("type", "BufferGeometry");
     metadata.insert("generator", "CortexInSilico3D");
 
+    QJsonObject voxelIdsJson;
+    voxelIdsJson.insert("array",voxelIds);
+
     QJsonObject position;
     position.insert("itemSize", 3);
     position.insert("type", "Float32Array");
