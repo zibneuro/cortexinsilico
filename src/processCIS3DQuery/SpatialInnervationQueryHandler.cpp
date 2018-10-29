@@ -90,9 +90,13 @@ createGeometryJSON(const QString& zipFileName,
     qDebug() << "Size" << x.size();
 
     QJsonArray positions;
+    QJsonArray voxelIdsJson;
     QJsonArray innervationPerVoxelValues;
 
-
+    for (auto it = voxelIds.begin(); it != voxelIds.end(); ++it)
+    {
+        voxelIdsJson.push_back(QJsonValue(*it));
+    }
 
     // ###################### LOAD FEATURES ######################
 
@@ -141,13 +145,14 @@ createGeometryJSON(const QString& zipFileName,
 
     std::set<QString> fileNames;
     std::map<int, float> innervationSum;
-    for(auto it=voxelIds.begin(); it != voxelIds.end(); ++it){
+    for (auto it = voxelIds.begin(); it != voxelIds.end(); ++it)
+    {
         innervationSum[*it] = 0;
     }
 
     for (unsigned int i = 0; i < preIndices.size(); i++)
     {
-        std::map<int, std::map<int, float>> innervationPerPre;
+        std::map<int, std::map<int, float> > innervationPerPre;
         int preId = preIndices[i];
         for (unsigned int j = 0; j < postIndices.size(); j++)
         {
@@ -183,8 +188,10 @@ createGeometryJSON(const QString& zipFileName,
 
         for (auto itPost = innervationPerPre.begin(); itPost != innervationPerPre.end(); ++itPost)
         {
-            stream << "Postneuron" << " " << itPost->first << "\n";
-            for(auto itVoxel = itPost->second.begin(); itVoxel != itPost->second.end(); ++itVoxel){
+            stream << "Postneuron"
+                   << " " << itPost->first << "\n";
+            for (auto itVoxel = itPost->second.begin(); itVoxel != itPost->second.end(); ++itVoxel)
+            {
                 stream << itVoxel->first << " " << itVoxel->second << "\n";
             }
         }
@@ -222,8 +229,8 @@ createGeometryJSON(const QString& zipFileName,
     metadata.insert("type", "BufferGeometry");
     metadata.insert("generator", "CortexInSilico3D");
 
-    QJsonObject voxelIdsJson;
-    voxelIdsJson.insert("array",voxelIds);
+    QJsonObject voxelIdsField;
+    voxelIdsField.insert("array", voxelIdsJson);
 
     QJsonObject position;
     position.insert("itemSize", 3);
@@ -238,6 +245,7 @@ createGeometryJSON(const QString& zipFileName,
     QJsonObject attributes;
     attributes.insert("position", position);
     attributes.insert("innervationPerVoxel", innervationPerVoxelJson);
+    attributes.insert("voxelIds", voxelIdsField);
 
     QJsonObject data;
     data.insert("attributes", attributes);
@@ -258,7 +266,8 @@ createGeometryJSON(const QString& zipFileName,
     QStringList arguments;
     arguments.append(zipFileName);
     arguments.append(jsonFileName);
-    for(auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile){
+    for (auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile)
+    {
         arguments.append(*itFile);
     }
     qDebug() << "Arguments" << arguments;

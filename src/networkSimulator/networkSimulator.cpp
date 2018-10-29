@@ -45,7 +45,7 @@ printUsage()
     qDebug() << "In the SIMULATE mode, the tool simulates connectivity formation"
              << "between neuron selections"
              << "according to the parametrized Peters' rule. The features"
-             << "required for simulation are created in the INIT mode.";             
+             << "required for simulation are created in the INIT mode.";
     qDebug() << "";
     qDebug() << "Legacy: In the SUBCUBE mode, the tool extracts neuron features"
              << "from a subcube of the compete model."
@@ -103,7 +103,7 @@ checkSimulationMode(QString mode)
 */
 QVector<float>
 extractRuleParameters(const QJsonObject spec, bool addIntercept)
-{    
+{
     int numParams = addIntercept ? 4 : 3;
     QVector<float> theta;
     QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
@@ -133,7 +133,8 @@ extractRuleParametersBatch(const QJsonObject spec, bool addIntercept)
         QJsonArray parameterValues = parameters[i].toArray();
         checkNumParams(parameterValues, numParams);
         QVector<float> theta;
-        for(int j=0; j<numParams; j++){
+        for (int j = 0; j < numParams; j++)
+        {
             theta.append((float)parameterValues[j].toDouble());
         }
         result.push_back(theta);
