@@ -18,12 +18,18 @@
 FeatureProvider::FeatureProvider()
 {
     mMetaFolder = "features_meta";
+    mPreFolder = "features_pre";
+    mPostFolder = "features_post";
     mWriteAll = true;
+    mUniquePre = false;
 }
 
-FeatureProvider::FeatureProvider(QString metaFolder, bool writeAll)
-    : mMetaFolder(metaFolder)
+FeatureProvider::FeatureProvider(QString metaFolder, QString preFolder, QString postFolder, bool writeAll, bool uniquePre)
+    : mMetaFolder(metaFolder)    
+    , mPreFolder(preFolder)
+    , mPostFolder(postFolder)
     , mWriteAll(writeAll)
+    , mUniquePre(uniquePre)
 {
 }
 
@@ -87,10 +93,12 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
         neuron_regio[neuronId] = regionId;
 
         int mappedId = networkProps.axonRedundancyMap.getNeuronIdToUse(neuronId);
+        if(mUniquePre && (mappedId != neuronId)){
+            continue;
+        }
         QString filePath = CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, mappedId);
         SparseField* preField = SparseField::load(filePath);
         assertGrid(preField);
-
         neuron_pre[neuronId] = preField->getModifiedCopy(1, eps, applyLog);
     }
 
@@ -174,23 +182,23 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     */
     // ########### WRITE TO FILE ###########
     UtilIO::makeDir(mMetaFolder);
-    UtilIO::makeDir("features_pre");
-    UtilIO::makeDir("features_postExc");
+    UtilIO::makeDir(mPreFolder);
+    UtilIO::makeDir(mPostFolder);
     UtilIO::makeDir("features_postInh");
     UtilIO::makeDir("features_postAll");
 
+    qDebug() << "[*] Write presynaptic.";
+    for (auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it)
+    {
+        writeMapFloat(it->second, voxel, mPreFolder, QString("%1.dat").arg(it->first));
+    }
+    qDebug() << "[*] Write postsynaptic excitatory.";
+    for (auto it = neuron_postExc.begin(); it != neuron_postExc.end(); ++it)
+    {
+        writeMapFloat(it->second, voxel, mPostFolder, QString("%1.dat").arg(it->first));
+    }
     if (mWriteAll)
     {
-        qDebug() << "[*] Write presynaptic.";
-        for (auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it)
-        {
-            writeMapFloat(it->second, voxel, "features_pre", QString("%1.dat").arg(it->first));
-        }
-        qDebug() << "[*] Write postsynaptic excitatory.";
-        for (auto it = neuron_postExc.begin(); it != neuron_postExc.end(); ++it)
-        {
-            writeMapFloat(it->second, voxel, "features_postExc", QString("%1.dat").arg(it->first));
-        }
         qDebug() << "[*] Write postsynaptic inhibitory.";
         for (auto it = neuron_postInh.begin(); it != neuron_postInh.end(); ++it)
         {
@@ -367,7 +375,40 @@ FeatureProvider::load(std::map<int, std::map<int, float> >& neuron_pre,
 }
 
 void
-FeatureProvider::loadVoxelPositions(std::vector<int> voxelIds, std::vector<float>& x, std::vector<float>& y, std::vector<float>& z)
+FeatureProvider::loadCIS3D(std::map<int, std::map<int, float> >& neuron_pre,
+                           std::map<int, std::map<int, float> >& neuron_postExc)
+{
+    QDirIterator it_pre(mPreFolder);
+    while (it_pre.hasNext())
+    {
+        QString file = it_pre.next();
+        if (file.contains(".dat"))
+        {
+            QFileInfo fileInfo(file);
+            int neuron = fileInfo.baseName().toInt();
+            std::map<int, float> foo;
+            readMapFloat(foo, "", file, 1.0);
+            neuron_pre[neuron] = foo;
+        }
+    }
+
+    QDirIterator it_postExc(mPostFolder);
+    while (it_postExc.hasNext())
+    {
+        QString file = it_postExc.next();
+        if (file.contains(".dat"))
+        {
+            QFileInfo fileInfo(file);
+            int neuron = fileInfo.baseName().toInt();
+            std::map<int, float> foo;
+            readMapFloat(foo, "", file, 1.0);
+            neuron_postExc[neuron] = foo;
+        }
+    }
+}
+
+void
+FeatureProvider::loadVoxelPositions(std::vector<int>& voxelIds, std::vector<float>& x, std::vector<float>& y, std::vector<float>& z)
 {
     QString fileName = QDir(mMetaFolder).filePath("voxel_pos.dat");
     QFile file(fileName);

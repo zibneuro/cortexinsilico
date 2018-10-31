@@ -107,6 +107,8 @@ namespace Util
 
     void correctInterneuronSelectionFilter(SelectionFilter& filter, const NetworkProps& networkProps);
 
+    std::vector<double> getHeatMap(double value, double min, double max);
+
 } // namespace Util
 
 #endif // UTIL_H

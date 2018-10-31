@@ -2,7 +2,9 @@
 #define SPATIALINNERVATIONQUERYHANDLER_H
 
 #include "CIS3DNetworkProps.h"
+#include "CIS3DStatistics.h"
 #include "QueryHelpers.h"
+#include "FeatureProvider.h"
 #include <QJsonObject>
 #include <QObject>
 #include <QString>
@@ -26,6 +28,10 @@ private slots:
     void replyPutResultFinished(QNetworkReply* reply);
 
 private:
+    QString createGeometryJSON(const QString& zipFileName,
+                       FeatureProvider& featureProvider,
+                       const QString& tmpDir);
+
     QString mQueryId;
     QJsonObject mConfig;
     QString mDataRoot;
@@ -36,6 +42,7 @@ private:
     QString mQueryUrl;
     AuthInfo mAuthInfo;
     QJsonObject mCurrentJsonData;
+    Statistics mStatistics;
 
     void logoutAndExit(const int exitCode);
 };

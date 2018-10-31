@@ -595,10 +595,35 @@ Util::correctVPMSelectionFilter(SelectionFilter& filter, const NetworkProps& net
 void
 Util::correctInterneuronSelectionFilter(SelectionFilter& filter, const NetworkProps& networkProps)
 {
-    if(filter.cellTypeIds.size() == 0){
+    if (filter.cellTypeIds.size() == 0)
+    {
         QList<int> exc = networkProps.cellTypes.getAllCellTypeIds(true);
-        for(int i=0; i<exc.size(); i++){
+        for (int i = 0; i < exc.size(); i++)
+        {
             filter.cellTypeIds.push_back(exc[i]);
         }
     }
+}
+
+std::vector<double>
+Util::getHeatMap(double value, double min, double max)
+{
+    std::vector<double> result;
+    double range = max - min;
+    if (range <= 0)
+    {
+        result.push_back(0);
+        result.push_back(0);
+        result.push_back(0);
+        return result;
+    }
+    double relValue = value / max;
+
+    double red = 1 * relValue;
+    double blue = 1 - relValue * 1;
+
+    result.push_back(red);
+    result.push_back(0);
+    result.push_back(blue);
+    return result;
 }

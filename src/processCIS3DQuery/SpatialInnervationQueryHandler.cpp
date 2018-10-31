@@ -18,7 +18,6 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
-#include "FeatureProvider.h"
 #include "NeuronSelection.h"
 
 QJsonObject
@@ -63,9 +62,9 @@ createJsonResult(/*const IdsPerCellTypeRegion& idsPerCellTypeRegion,
 }
 
 QString
-createGeometryJSON(const QString& zipFileName,
-                   FeatureProvider& featureProvider,
-                   const QString& tmpDir)
+SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
+                                                   FeatureProvider& featureProvider,
+                                                   const QString& tmpDir)
 {
     const QString zipFullPath = QString("%1/%2").arg(tmpDir).arg(zipFileName);
     const QString jsonFileName = QString(zipFileName).remove(".zip");
@@ -91,7 +90,7 @@ createGeometryJSON(const QString& zipFileName,
 
     QJsonArray positions;
     QJsonArray voxelIdsJson;
-    QJsonArray innervationPerVoxelValues;
+    QJsonArray colors;
 
     for (auto it = voxelIds.begin(); it != voxelIds.end(); ++it)
     {
@@ -102,16 +101,8 @@ createGeometryJSON(const QString& zipFileName,
 
     std::map<int, std::map<int, float> > neuron_pre;
     std::map<int, std::map<int, float> > neuron_postExc;
-    std::map<int, std::map<int, float> > neuron_postInh;
-    std::map<int, float> voxel_postAllExc;
-    std::map<int, float> voxel_postAllInh;
-    std::map<int, int> neuron_funct;
-    std::map<int, std::set<int> > voxel_neuronsPre;
-    std::map<int, std::set<int> > voxel_neuronsPostExc;
-    std::map<int, std::set<int> > voxel_neuronsPostInh;
-    std::vector<int> voxel;
 
-    featureProvider.load(neuron_pre, 1, neuron_postExc, 1, neuron_postInh, voxel_postAllExc, 1, voxel_postAllInh, neuron_funct, voxel_neuronsPre, voxel_neuronsPostExc, voxel_neuronsPostInh);
+    featureProvider.loadCIS3D(neuron_pre, neuron_postExc);
 
     std::vector<int> preIndices;
     for (auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it)
@@ -132,14 +123,10 @@ createGeometryJSON(const QString& zipFileName,
     std::vector<std::vector<int> > contacts(preIndices.size(), empty);
     std::vector<std::vector<float> > innervation(preIndices.size(), emptyFloat);
 
-    std::vector<double> sufficientStat;
-    sufficientStat.push_back(0);
-    sufficientStat.push_back(0);
-    sufficientStat.push_back(0);
-    sufficientStat.push_back(0);
-
     Statistics connProbSynapse;
     Statistics connProbInnervation;
+
+    qDebug() << "loop" << preIndices.size() << postIndices.size();
 
     // ###################### LOOP OVER NEURONS ######################
 
@@ -174,8 +161,7 @@ createGeometryJSON(const QString& zipFileName,
                 innervationPerPre[postId] = innervationPerVoxel;
             }
         }
-
-        QString fileName = QDir(tmpDir).filePath(QString::number(preId));
+        QString fileName = QDir(tmpDir).filePath("preNeuronID_" + QString::number(preId));
         fileNames.insert(fileName);
         QFile file(fileName);
         if (!file.open(QIODevice::WriteOnly))
@@ -188,8 +174,11 @@ createGeometryJSON(const QString& zipFileName,
 
         for (auto itPost = innervationPerPre.begin(); itPost != innervationPerPre.end(); ++itPost)
         {
-            stream << "Postneuron"
-                   << " " << itPost->first << "\n";
+            if (itPost->second.begin() != itPost->second.end())
+            {
+                stream << "postNeuronID"
+                       << " " << itPost->first << "\n";
+            }
             for (auto itVoxel = itPost->second.begin(); itVoxel != itPost->second.end(); ++itVoxel)
             {
                 stream << itVoxel->first << " " << itVoxel->second << "\n";
@@ -199,18 +188,10 @@ createGeometryJSON(const QString& zipFileName,
 
     // ###################### DETERMINE STATISTICS ######################
 
-    /*
-    for (unsigned int i = 0; i < preIndices.size(); i++)
+    for (auto it = innervationSum.begin(); it != innervationSum.end(); it++)
     {
-        int realizedConnections = 0;
-        for (unsigned int j = 0; j < postIndices.size(); j++)
-        {
-            connProbInnervation.addSample(calculateProbability(innervation[i][j]));
-            realizedConnections += contacts[i][j] > 0 ? 1 : 0;
-        }
-        double probability = (double)realizedConnections / (double)postIndices.size();
-        connProbSynapse.addSample(probability);
-    }*/
+        mStatistics.addSample(it->second);
+    }
 
     for (unsigned int i = 0; i < x.size(); ++i)
     {
@@ -218,11 +199,30 @@ createGeometryJSON(const QString& zipFileName,
         positions.push_back(QJsonValue(y[i]));
         positions.push_back(QJsonValue(z[i]));
         int voxelId = voxelIds[i];
-        float innervation = innervationSum[voxelId];
-        innervationPerVoxelValues.push_back(QJsonValue(innervation));
+        double innervation = (double)innervationSum[voxelId];
+        std::vector<double> rgb = Util::getHeatMap(innervation, mStatistics.getMinimum(), mStatistics.getMaximum());
+
+        colors.push_back(QJsonValue(rgb[0]));
+        colors.push_back(QJsonValue(rgb[1]));
+        colors.push_back(QJsonValue(rgb[2]));
     }
 
     // ###################### WRITE OUTPUT ######################
+
+    QString voxelFileName = QDir(tmpDir).filePath("voxelPositions");
+    QFile voxelFile(voxelFileName);
+    if (!voxelFile.open(QIODevice::WriteOnly))
+    {
+        const QString msg =
+            QString("Cannot open file %1 for writing.").arg(voxelFileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    QTextStream stream(&voxelFile);
+    for (unsigned int i = 0; i < voxelIds.size(); i++)
+    {
+        stream << voxelIds[i] << " " << x[i] << " " << y[i] << " " << z[i] << "\n";
+    }
+    fileNames.insert(voxelFileName);
 
     QJsonObject metadata;
     metadata.insert("version", 1);
@@ -237,15 +237,14 @@ createGeometryJSON(const QString& zipFileName,
     position.insert("type", "Float32Array");
     position.insert("array", positions);
 
-    QJsonObject innervationPerVoxelJson;
-    innervationPerVoxelJson.insert("itemSize", 1);
-    innervationPerVoxelJson.insert("type", "Float32Array");
-    innervationPerVoxelJson.insert("array", innervationPerVoxelValues);
+    QJsonObject color;
+    color.insert("itemSize", 3);
+    color.insert("type", "Float32Array");
+    color.insert("array", colors);
 
     QJsonObject attributes;
     attributes.insert("position", position);
-    attributes.insert("innervationPerVoxel", innervationPerVoxelJson);
-    attributes.insert("voxelIds", voxelIdsField);
+    attributes.insert("color", color);
 
     QJsonObject data;
     data.insert("attributes", attributes);
@@ -264,8 +263,10 @@ createGeometryJSON(const QString& zipFileName,
     zip.setWorkingDirectory(tmpDir);
 
     QStringList arguments;
+    arguments.append("-j");
     arguments.append(zipFileName);
     arguments.append(jsonFileName);
+    qDebug() << fileNames.size();
     for (auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile)
     {
         arguments.append(*itFile);
@@ -410,8 +411,11 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         selection.sampleDown(10000, -1);
         selection.setBBox(bbmin, bbmax);
 
-        QString workingFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId);
-        FeatureProvider featureProvider(workingFolder, false);
+        QString metaFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId);
+        QString preFolder = metaFolder.append("_pre");
+        QString postFolder = metaFolder.append("_post");
+        metaFolder.append("_meta");
+        FeatureProvider featureProvider(metaFolder, preFolder, postFolder, false, true);
         featureProvider.preprocessFeatures(mNetwork, selection, 0.00000000000000001, false, true);
 
         const QString key = QString("spatialInnervation_%1.json.zip").arg(mQueryId);

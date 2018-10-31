@@ -15,7 +15,7 @@ class FeatureProvider
 public:
     FeatureProvider();
 
-    FeatureProvider(QString metaFolder, bool writeAll);
+    FeatureProvider(QString metaFolder, QString preFolder, QString postFolder, bool writeAll, bool uniquePre);
 
     ~FeatureProvider();
 
@@ -48,7 +48,10 @@ public:
               std::map<int, std::set<int> >& voxel_neuronsPostExc,
               std::map<int, std::set<int> >& voxel_neuronsPostInh);
 
-    void loadVoxelPositions(std::vector<int> voxelIds, std::vector<float>& x, std::vector<float>& y, std::vector<float>& z);
+    void loadCIS3D(std::map<int, std::map<int, float> >& neuron_pre,
+                 std::map<int, std::map<int, float> >& neuron_postExc);
+
+    void loadVoxelPositions(std::vector<int>& voxelIds, std::vector<float>& x, std::vector<float>& y, std::vector<float>& z);
 
 private:
     void saveInitFile(QString fileName);
@@ -78,5 +81,8 @@ private:
 
     const QString mInitFileName = "init.csv";
     QString mMetaFolder;
+    QString mPreFolder;
+    QString mPostFolder;
     bool mWriteAll;
+    bool mUniquePre;
 };
