@@ -19,7 +19,7 @@ FeatureProvider::FeatureProvider()
 {
     mMetaFolder = "features_meta";
     mPreFolder = "features_pre";
-    mPostFolder = "features_post";
+    mPostFolder = "features_postExc";
     mWriteAll = true;
     mUniquePre = false;
 }
@@ -335,7 +335,7 @@ FeatureProvider::load(std::map<int, std::map<int, float> >& neuron_pre,
     }
     //qDebug() << neuron_pre.size();
 
-    QDirIterator it_postExc("features_postExc");
+    QDirIterator it_postExc(mPostFolder);
     while (it_postExc.hasNext())
     {
         QString file = it_postExc.next();
