@@ -408,7 +408,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         bbmax.append(10000);
         bbmax.append(10000);
 
-        selection.sampleDown(10000, -1);
+        selection.sampleDown(40000, -1);
         selection.setBBox(bbmin, bbmax);
 
         QString metaFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId);
