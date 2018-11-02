@@ -28,9 +28,16 @@ private slots:
     void replyPutResultFinished(QNetworkReply* reply);
 
 private:
-    QString createGeometryJSON(const QString& zipFileName,
-                       FeatureProvider& featureProvider,
-                       const QString& tmpDir);
+    QJsonObject
+    createJsonResult(
+        const QString& keyView,
+        const qint64 fileSizeBytes1,
+        const QString& keyData,
+        const qint64 fileSizeBytes2);
+    QVector<QString> createGeometryJSON(const QString& zipFileName,
+                                        const QString& dataZipFileName,
+                                        FeatureProvider& featureProvider,
+                                        const QString& tmpDir);
 
     QString mQueryId;
     QJsonObject mConfig;

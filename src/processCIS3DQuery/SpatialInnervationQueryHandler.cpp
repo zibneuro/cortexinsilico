@@ -21,54 +21,39 @@
 #include "NeuronSelection.h"
 
 QJsonObject
-createJsonResult(/*const IdsPerCellTypeRegion& idsPerCellTypeRegion,
-                 const NetworkProps& network,*/
-                 const QString& key,
-                 const qint64 fileSizeBytes)
+SpatialInnervationQueryHandler::createJsonResult(
+    const QString& keyView,
+    const qint64 fileSizeBytes1,
+    const QString& keyData,
+    const qint64 fileSizeBytes2)
 {
-    /*
-    QJsonArray entries;
-    int total = 0;
-
-    for (IdsPerCellTypeRegion::const_iterator it = idsPerCellTypeRegion.constBegin(); it != idsPerCellTypeRegion.constEnd(); ++it)
-    {
-        const CellTypeRegion ctr = it.key();
-        const int numNeurons = it.value().size();
-        const QString cellType = network.cellTypes.getName(ctr.first);
-        const QString region = network.regions.getName(ctr.second);
-
-        QJsonObject obj;
-        obj["cellType"] = cellType;
-        obj["column"] = region;
-        obj["count"] = numNeurons;
-
-        entries.append(obj);
-        total += numNeurons;
-    }
-
-    QJsonObject selection;
-    selection.insert("CountsPerCellTypeColumn", entries);
-    selection.insert("Total", total);
-
-    QJsonObject tables;
-    tables.insert("selection", selection);
-*/
     QJsonObject result;
-    //result.insert("tables", tables);
-    result.insert("voxelS3key", key);
-    result.insert("voxelFileSize", fileSizeBytes);
-
+    result.insert("voxelS3key", keyView);
+    result.insert("voxelFileSize", fileSizeBytes1);
+    result.insert("voxelCount", (int)mStatistics.getNumberOfSamples());
+    result.insert("dataS3key", keyData);
+    result.insert("dataFileSize", fileSizeBytes2);
     return result;
 }
 
-QString
+QVector<QString>
 SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
+                                                   const QString& dataZipFileName,
                                                    FeatureProvider& featureProvider,
                                                    const QString& tmpDir)
 {
-    const QString zipFullPath = QString("%1/%2").arg(tmpDir).arg(zipFileName);
+    const QString zipFullPath = QString("%1/%2").arg(tmpDir).arg(zipFileName);    
     const QString jsonFileName = QString(zipFileName).remove(".zip");
     const QString jsonFullPath = QString(zipFullPath).remove(".zip");
+
+    const QString dataZipFullPath = QString("%1/%2").arg(tmpDir).arg(dataZipFileName);
+    const QString dataFileName = QString(dataZipFileName).remove(".zip");
+    const QString dataFullPath = QString(dataZipFullPath).remove(".zip");
+
+    QVector<QString> resultFiles;
+    resultFiles.append(zipFullPath);
+    resultFiles.append(dataZipFullPath);
+
 
     QFile jsonFile(jsonFullPath);
     if (!jsonFile.open(QIODevice::WriteOnly))
@@ -258,7 +243,9 @@ SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
     out << doc.toJson(QJsonDocument::Compact);
     jsonFile.close();
 
-    qDebug() << "[*] Zipping geometry file:" << jsonFullPath;
+    // ###################### ZIP FILES ######################
+
+    qDebug() << "[*] Zipping view file:" << jsonFullPath;
     QProcess zip;
     zip.setWorkingDirectory(tmpDir);
 
@@ -266,11 +253,7 @@ SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
     arguments.append("-j");
     arguments.append(zipFileName);
     arguments.append(jsonFileName);
-    qDebug() << fileNames.size();
-    for (auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile)
-    {
-        arguments.append(*itFile);
-    }
+   
     qDebug() << "Arguments" << arguments;
     zip.start("zip", arguments);
 
@@ -283,9 +266,36 @@ SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
     {
         throw std::runtime_error("Error completing zip process");
     }
+
+    qDebug() << "[*] Zipping data file:" << dataFullPath;
+    QProcess zip2;
+    zip2.setWorkingDirectory(tmpDir);
+
+    QStringList arguments2;
+    arguments2.append("-j");
+    arguments2.append(dataFileName); 
+    
+    for (auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile)
+    {
+        arguments2.append(*itFile);
+    }
+   
+
+    zip2.start("zip", arguments2);
+
+    if (!zip2.waitForStarted())
+    {
+        throw std::runtime_error("Error starting zip process");
+    }
+
+    if (!zip2.waitForFinished())
+    {
+        throw std::runtime_error("Error completing zip process");
+    }
+
     qDebug() << "[*] Completed zipping";
 
-    return zipFullPath;
+    return resultFiles;
 }
 
 SpatialInnervationQueryHandler::SpatialInnervationQueryHandler(QObject* parent)
@@ -418,11 +428,12 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         FeatureProvider featureProvider(metaFolder, preFolder, postFolder, false, true);
         featureProvider.preprocessFeatures(mNetwork, selection, 0.00000000000000001, false, true);
 
-        const QString key = QString("spatialInnervation_%1.json.zip").arg(mQueryId);
-        QString geometryFile;
+        const QString keyView = QString("spatialInnervation_%1.json.zip").arg(mQueryId);
+        const QString keyData = QString("spatialInnervation_%1.zip").arg(mQueryId);
+        QVector<QString> filePaths;
         try
         {
-            geometryFile = createGeometryJSON(key, featureProvider, mConfig["WORKER_TMP_DIR"].toString());
+            filePaths = createGeometryJSON(keyView, keyData, featureProvider, mConfig["WORKER_TMP_DIR"].toString());
         }
         catch (std::runtime_error& e)
         {
@@ -430,14 +441,25 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             logoutAndExit(1);
         }
 
-        const qint64 fileSizeBytes = QFileInfo(geometryFile).size();
-        if (QueryHelpers::uploadToS3(key, geometryFile, mConfig) != 0)
+        const qint64 fileSizeBytes1 = QFileInfo(filePaths[0]).size();
+        int upload1 = QueryHelpers::uploadToS3(keyView, filePaths[0], mConfig);
+        const qint64 fileSizeBytes2 = QFileInfo(filePaths[1]).size();
+        int upload2 = QueryHelpers::uploadToS3(keyData, filePaths[1], mConfig);
+
+        if (upload1 != 0)
         {
-            qDebug() << "Error uploading geometry json file to S3:" << geometryFile;
+            qDebug() << "Error uploading geometry json file to S3:" << filePaths[0];
+        }
+        if (upload2 != 0)
+        {
+            qDebug() << "Error uploading geometry json file to S3:" << filePaths[1];
+        }
+        if (upload1 != 0 || upload2 != 0)
+        {
             logoutAndExit(1);
         }
 
-        const QJsonObject result = createJsonResult(key, fileSizeBytes);
+        const QJsonObject result = createJsonResult(keyView, fileSizeBytes1, keyData, fileSizeBytes2);
         reply->deleteLater();
 
         QNetworkRequest putRequest;
