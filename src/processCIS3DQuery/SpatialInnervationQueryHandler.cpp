@@ -185,11 +185,11 @@ SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
         positions.push_back(QJsonValue(z[i]));
         int voxelId = voxelIds[i];
         double innervation = (double)innervationSum[voxelId];
-        std::vector<double> rgb = Util::getHeatMap(innervation, mStatistics.getMinimum(), mStatistics.getMaximum());
+        //std::vector<double> rgb = Util::getHeatMap(innervation, mStatistics.getMinimum(), mStatistics.getMaximum());
 
-        colors.push_back(QJsonValue(rgb[0]));
-        colors.push_back(QJsonValue(rgb[1]));
-        colors.push_back(QJsonValue(rgb[2]));
+        colors.push_back(QJsonValue(innervation));
+        colors.push_back(QJsonValue(innervation));
+        colors.push_back(QJsonValue(innervation));
     }
 
     // ###################### WRITE OUTPUT ######################
