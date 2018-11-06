@@ -42,7 +42,7 @@ SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
                                                    FeatureProvider& featureProvider,
                                                    const QString& tmpDir)
 {
-    const QString zipFullPath = QString("%1/%2").arg(tmpDir).arg(zipFileName);    
+    const QString zipFullPath = QString("%1/%2").arg(tmpDir).arg(zipFileName);
     const QString jsonFileName = QString(zipFileName).remove(".zip");
     const QString jsonFullPath = QString(zipFullPath).remove(".zip");
 
@@ -53,7 +53,6 @@ SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
     QVector<QString> resultFiles;
     resultFiles.append(zipFullPath);
     resultFiles.append(dataZipFullPath);
-
 
     QFile jsonFile(jsonFullPath);
     if (!jsonFile.open(QIODevice::WriteOnly))
@@ -253,7 +252,7 @@ SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
     arguments.append("-j");
     arguments.append(zipFileName);
     arguments.append(jsonFileName);
-   
+
     qDebug() << "Arguments" << arguments;
     zip.start("zip", arguments);
 
@@ -272,14 +271,15 @@ SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
     zip2.setWorkingDirectory(tmpDir);
 
     QStringList arguments2;
+    QStringList rmArgs;
     arguments2.append("-j");
-    arguments2.append(dataFileName); 
-    
+    arguments2.append(dataFileName);
+
     for (auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile)
     {
         arguments2.append(*itFile);
+        rmArgs.append(*itFile);
     }
-   
 
     zip2.start("zip", arguments2);
 
@@ -294,6 +294,14 @@ SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
     }
 
     qDebug() << "[*] Completed zipping";
+
+    QProcess rm;
+    rm.setWorkingDirectory(tmpDir);
+    rm.start("rm", rmArgs);
+    rm.waitForStarted();
+    rm.waitForFinished();
+
+    qDebug() << "[*] Removed original files";
 
     return resultFiles;
 }
@@ -418,13 +426,12 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         bbmax.append(10000);
         bbmax.append(10000);
 
-        selection.sampleDown(40000, -1);
+        selection.sampleDown(10000, -1);
         selection.setBBox(bbmin, bbmax);
 
-        QString metaFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId);
-        QString preFolder = metaFolder.append("_pre");
-        QString postFolder = metaFolder.append("_post");
-        metaFolder.append("_meta");
+        QString metaFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId + "_meta");
+        QString preFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId + "_pre");
+        QString postFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId + "_post");
         FeatureProvider featureProvider(metaFolder, preFolder, postFolder, false, true);
         featureProvider.preprocessFeatures(mNetwork, selection, 0.00000000000000001, false, true);
 
@@ -457,6 +464,27 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         if (upload1 != 0 || upload2 != 0)
         {
             logoutAndExit(1);
+        }
+
+        QProcess removeFiles;
+        QStringList arguments;
+        arguments.append("-rf");
+        arguments.append(filePaths[0]);
+        arguments.append(filePaths[1]);
+        arguments.append(preFolder);
+        arguments.append(postFolder);
+        arguments.append(metaFolder);
+
+        removeFiles.start("rm", arguments);
+
+        if (!removeFiles.waitForStarted())
+        {
+            throw std::runtime_error("Error starting remove file process");
+        }
+
+        if (!removeFiles.waitForFinished())
+        {
+            throw std::runtime_error("Error completing file removal process");
         }
 
         const QJsonObject result = createJsonResult(keyView, fileSizeBytes1, keyData, fileSizeBytes2);
