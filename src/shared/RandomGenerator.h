@@ -40,6 +40,11 @@ public:
     */
     bool hasUserSeed();
 
+    /*
+        Prints first random value for specified seed.
+    */
+    static void testMersenne(int seed);
+
 private:
 
     unsigned int getRandomSeed();

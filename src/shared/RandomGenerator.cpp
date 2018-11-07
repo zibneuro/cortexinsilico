@@ -19,7 +19,8 @@ RandomGenerator::RandomGenerator(int userSeed)
     mRandomGenerator = std::mt19937(seed);
 }
 
-RandomGenerator::~RandomGenerator(){
+RandomGenerator::~RandomGenerator()
+{
     //qDebug() << "destroy random generator";
 }
 
@@ -55,4 +56,9 @@ RandomGenerator::getRandomSeed()
     //std::time(nullptr)
     std::random_device rd;
     return rd();
+}
+
+void RandomGenerator::testMersenne(int seed){
+    std::mt19937 generator(seed);
+    qDebug() << generator();
 }
