@@ -240,8 +240,9 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             const double tissueLow = jsonResponse.object().value("tissueLow").toDouble();
             const double tissueHigh = jsonResponse.object().value("tissueHigh").toDouble();
             const double sliceRef = jsonResponse.object().value("sliceRef").toDouble();
+            QString mode = jsonResponse.object().value("tissueMode").toString();
             const bool isSlice = sliceRef != -9999;
-            qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLow << tissueHigh;
+            qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLow << tissueHigh << mode;
 
             mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
             qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
@@ -277,8 +278,11 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             Util::correctInterneuronSelectionFilter(filter, mNetwork);
             IdList neurons = mNetwork.neurons.getFilteredNeuronIds(filter);
 
-            neurons = NeuronSelection::filterTissueDepth(mNetwork, neurons, sliceRef, tissueLow, tissueHigh);
-            
+            if (isSlice)
+            {
+                CIS3D::SliceBand band = mode == "twoSided" ? CIS3D::SliceBand::BOTH : CIS3D::SliceBand::FIRST; 
+                neurons = NeuronSelection::filterTissueDepth(mNetwork, neurons, sliceRef, tissueLow, tissueHigh, band);
+            }
             qDebug() << "    Start sorting " << neurons.size() << " neurons.";
 
             const QString key = QString("neuronselection_%1.json.zip").arg(mQueryId);
