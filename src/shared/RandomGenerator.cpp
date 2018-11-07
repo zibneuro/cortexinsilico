@@ -62,3 +62,7 @@ void RandomGenerator::testMersenne(int seed){
     std::mt19937 generator(seed);
     qDebug() << generator();
 }
+
+int RandomGenerator::drawNumber(){
+    return mRandomGenerator();
+}

@@ -6,7 +6,7 @@
 /*
     Utility class for random values and functions 
     based on the mt19937 pseudo random generator.
-*/  
+*/
 class RandomGenerator
 {
 public:
@@ -45,8 +45,12 @@ public:
     */
     static void testMersenne(int seed);
 
-private:
+    /*
+        Returns a random number.
+    */
+    int drawNumber();
 
+private:
     unsigned int getRandomSeed();
 
     std::mt19937 mRandomGenerator;
