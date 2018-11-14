@@ -371,6 +371,102 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, bool ad
     }
 }
 
+void
+Calculator::calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc)
+{
+    QString tmpDir = "output";
+    UtilIO::makeDir(tmpDir);
+
+    std::vector<int> preIndices;
+    for (auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it)
+    {
+        preIndices.push_back(it->first);
+    }
+
+    std::vector<int> postIndices;
+    for (auto it = neuron_postExc.begin(); it != neuron_postExc.end(); ++it)
+    {
+        postIndices.push_back(it->first);
+    }
+
+    // ###################### INIT OUTPUT FIELDS ######################
+
+    /*
+    std::vector<int> empty(postIndices.size(), 0);
+    std::vector<float> emptyFloat(postIndices.size(), 0);
+    std::vector<std::vector<int> > contacts(preIndices.size(), empty);
+    std::vector<std::vector<float> > innervation(preIndices.size(), emptyFloat);
+
+    Statistics connProbSynapse;
+    Statistics connProbInnervation;
+
+    qDebug() << "loop" << preIndices.size() << postIndices.size();
+    */
+    // ###################### LOOP OVER NEURONS ######################
+
+    std::set<QString> fileNames;
+    /*
+    std::map<int, float> innervationSum;
+    for (auto it = voxelIds.begin(); it != voxelIds.end(); ++it)
+    {
+        innervationSum[*it] = 0;
+    }
+    */
+#pragma omp parallel
+    {
+#pragma omp for
+        for (unsigned int i = 0; i < preIndices.size(); i++)
+        {
+            qDebug() << i;
+            std::map<int, std::map<int, float> > innervationPerPre;
+            int preId = preIndices[i];
+            for (unsigned int j = 0; j < postIndices.size(); j++)
+            {
+                int postId = postIndices[j];
+                if (preId != postId)
+                {
+                    std::map<int, float> innervationPerVoxel;
+                    for (auto pre = neuron_pre[preId].begin(); pre != neuron_pre[preId].end(); ++pre)
+                    {
+                        if (neuron_postExc[postId].find(pre->first) != neuron_postExc[postId].end())
+                        {
+                            float preVal = pre->second;
+                            float postVal = neuron_postExc[postId][pre->first];
+                            float arg = preVal * postVal;
+                            innervationPerVoxel[pre->first] = arg;
+                            //innervationSum[pre->first] += arg;
+                        }
+                    }
+                    innervationPerPre[postId] = innervationPerVoxel;
+                }
+            }
+            QString fileName = QDir(tmpDir).filePath("preNeuronID_" + QString::number(preId));
+            fileNames.insert(fileName);
+            QFile file(fileName);
+            if (!file.open(QIODevice::WriteOnly))
+            {
+                const QString msg =
+                    QString("Cannot open file %1 for writing.").arg(fileName);
+                throw std::runtime_error(qPrintable(msg));
+            }
+            QTextStream stream(&file);
+
+            for (auto itPost = innervationPerPre.begin(); itPost != innervationPerPre.end(); ++itPost)
+            {
+                if (itPost->second.begin() != itPost->second.end())
+                {
+                    stream << "postNeuronID"
+                           << " " << itPost->first << "\n";
+                }
+                for (auto itVoxel = itPost->second.begin(); itVoxel != itPost->second.end(); ++itVoxel)
+                {
+                    stream << itVoxel->first << " " << itVoxel->second << "\n";
+                }
+            }
+        }
+    }
+}
+
 double
 Calculator::calculateProbability(double innervationMean)
 {

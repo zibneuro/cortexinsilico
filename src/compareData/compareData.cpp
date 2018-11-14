@@ -18,6 +18,7 @@
 #include "CIS3DSparseVectorSet.h"
 
 
+
 void printUsage() {
     qDebug() << "Usage: ./compareData <sparseVectorSet_ref> <sparseVectorSet_cmp> <epsilon>";
 }

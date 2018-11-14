@@ -25,7 +25,7 @@ FeatureProvider::FeatureProvider()
 }
 
 FeatureProvider::FeatureProvider(QString metaFolder, QString preFolder, QString postFolder, bool writeAll, bool uniquePre)
-    : mMetaFolder(metaFolder)    
+    : mMetaFolder(metaFolder)
     , mPreFolder(preFolder)
     , mPostFolder(postFolder)
     , mWriteAll(writeAll)
@@ -93,7 +93,8 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
         neuron_regio[neuronId] = regionId;
 
         int mappedId = networkProps.axonRedundancyMap.getNeuronIdToUse(neuronId);
-        if(mUniquePre && (mappedId != neuronId)){
+        if (mUniquePre && (mappedId != neuronId))
+        {
             continue;
         }
         QString filePath = CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, mappedId);
@@ -220,6 +221,97 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
     }
     writeVoxels(postAllExcField, voxel, mMetaFolder, "voxel_pos.dat");
     qDebug() << "[*] Finished writing features.";
+}
+
+void
+FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
+{
+    NeuronSelection selection;
+    selection.setFullModel(networkProps);
+
+    qDebug() << "[*] Extracting full model" << selection.Presynaptic().size() << selection.Postsynaptic().size();
+
+    // ########### INIT FIELDS ###########
+    QDir modelDataDir = CIS3D::getModelDataDir(networkProps.dataRoot, networkProps.useLegacyPath);
+
+    UtilIO::makeDir(mMetaFolder);
+    UtilIO::makeDir(mPreFolder);
+    UtilIO::makeDir(mPostFolder);
+
+    std::set<int> voxel;
+    std::map<int, float > voxel_postAllExc;
+    std::map<int, std::set<int> > voxel_neuronsPre;
+    std::map<int, std::set<int> > voxel_neuronsPost;
+
+    std::map<int, int> neuron_funct;
+    std::map<int, int> neuron_morph;
+    std::map<int, int> neuron_regio;
+
+    // ########### VOXEL IDS ###########
+    qDebug() << "[*] Loading postsynaptic all excitatory.";
+    QString postAllExcFile =
+        CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
+    SparseField* postAllExcField = SparseField::load(postAllExcFile);
+    mGridOrigin = postAllExcField->getOrigin();
+    mGridDimensions = postAllExcField->getDimensions();
+    voxel_postAllExc = postAllExcField->getModifiedCopy(1, 0, false);
+    for(auto it = voxel_postAllExc.begin(); it != voxel_postAllExc.end(); it++){
+        voxel.insert(it->first);
+    }
+    writeVoxels(postAllExcField, voxel, mMetaFolder, "voxel_pos.dat");
+    
+    // ########### PRE ###########
+    qDebug() << "[*] Loading presynaptic.";
+    for (int i = 0; i < selection.Presynaptic().size(); i++)
+    {
+        int neuronId = selection.Presynaptic()[i];
+        int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
+        neuron_morph[neuronId] = cellTypeId;
+        QString cellType = networkProps.cellTypes.getName(cellTypeId);
+        int funcType = networkProps.cellTypes.isExcitatory(cellTypeId) ? 0 : 1;
+        neuron_funct[neuronId] = funcType;
+        int regionId = networkProps.neurons.getRegionId(neuronId);
+        neuron_regio[neuronId] = regionId;
+
+        QString filePath = CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, neuronId);
+        SparseField* preField = SparseField::load(filePath);
+        assertGrid(preField);
+        std::map<int, float> field = preField->getModifiedCopy(1, 0, false);
+        for (auto it = field.begin(); it != field.end(); it++)
+        {
+            voxel.insert(it->first);
+        }
+
+        writeMapFloat(field, voxel, mPreFolder, QString("%1.dat").arg(neuronId));
+    }
+
+    // ########### POST ###########
+    qDebug() << "[*] Loading postsynaptic";
+    for (int i = 0; i < selection.Postsynaptic().size(); i++)
+    {
+        int neuronId = selection.Postsynaptic()[i];
+
+        int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
+        neuron_morph[neuronId] = cellTypeId;
+        QString cellType = networkProps.cellTypes.getName(cellTypeId);
+        int regionId = networkProps.neurons.getRegionId(neuronId);
+        neuron_regio[neuronId] = regionId;
+        QString region = networkProps.regions.getName(regionId);
+        int funcType = networkProps.cellTypes.isExcitatory(cellTypeId) ? 0 : 1;
+        neuron_funct[neuronId] = funcType;
+
+        QString filePathExc = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::EXCITATORY);
+
+        SparseField* postFieldExc = SparseField::load(filePathExc);
+        assertGrid(postFieldExc);
+        std::map<int, float> field = postFieldExc->getModifiedCopy(1, 0, false);
+        for (auto it = field.begin(); it != field.end(); it++)
+        {
+            voxel.insert(it->first);
+        }
+
+        writeMapFloat(field, voxel, mPostFolder, QString("%1.dat").arg(neuronId));
+    }
 }
 
 void

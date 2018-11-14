@@ -36,10 +36,10 @@ SOURCES += \
     ../shared/CIS3DRegions.cpp \
     ../shared/CIS3DSparseField.cpp \
     ../shared/CIS3DSparseVectorSet.cpp \
+    ../shared/CIS3DStatistics.cpp \
     ../shared/CIS3DVec3.cpp \
     ../shared/Util.cpp \
     ../shared/UtilIO.cpp \
-    ../shared/CIS3DStatistics.cpp \
     ../shared/Histogram.cpp \
     ../shared/SparseFieldCalculator.cpp \
     ../shared/SparseVectorCache.cpp \
@@ -60,6 +60,7 @@ HEADERS += \
     ../shared/CIS3DRegions.h \
     ../shared/CIS3DSparseField.h \
     ../shared/CIS3DSparseVectorSet.h \
+    ../shared/CIS3DStatistics.h \
     ../shared/CIS3DVec3.h \
     ../shared/Typedefs.h\
     ../shared/Util.h \

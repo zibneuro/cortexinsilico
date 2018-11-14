@@ -7,6 +7,7 @@
 #include "CIS3DConstantsHelpers.h"
 #include "CIS3DSparseVectorSet.h"
 #include "Util.h"
+#include "UtilIO.h"
 #include <QDir>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -25,285 +26,16 @@ SpatialInnervationQueryHandler::createJsonResult(
     const QString& keyView,
     const qint64 fileSizeBytes1,
     const QString& keyData,
-    const qint64 fileSizeBytes2)
+    const qint64 fileSizeBytes2,
+    int nVoxels)
 {
     QJsonObject result;
     result.insert("voxelS3key", keyView);
     result.insert("voxelFileSize", fileSizeBytes1);
-    result.insert("voxelCount", (int)mStatistics.getNumberOfSamples());
+    result.insert("voxelCount", nVoxels);
     result.insert("dataS3key", keyData);
     result.insert("dataFileSize", fileSizeBytes2);
     return result;
-}
-
-QVector<QString>
-SpatialInnervationQueryHandler::createGeometryJSON(const QString& zipFileName,
-                                                   const QString& dataZipFileName,
-                                                   FeatureProvider& featureProvider,
-                                                   const QString& tmpDir)
-{
-    const QString zipFullPath = QString("%1/%2").arg(tmpDir).arg(zipFileName);
-    const QString jsonFileName = QString(zipFileName).remove(".zip");
-    const QString jsonFullPath = QString(zipFullPath).remove(".zip");
-
-    const QString dataZipFullPath = QString("%1/%2").arg(tmpDir).arg(dataZipFileName);
-    const QString dataFileName = QString(dataZipFileName).remove(".zip");
-    const QString dataFullPath = QString(dataZipFullPath).remove(".zip");
-
-    QVector<QString> resultFiles;
-    resultFiles.append(zipFullPath);
-    resultFiles.append(dataZipFullPath);
-
-    QFile jsonFile(jsonFullPath);
-    if (!jsonFile.open(QIODevice::WriteOnly))
-    {
-        const QString msg = QString("Cannot open file for saving json: %1").arg(jsonFullPath);
-        throw std::runtime_error(qPrintable(msg));
-    }
-
-    // ###################### LOAD NONEMPTY VOXELS ######################
-
-    std::vector<int> voxelIds;
-    std::vector<float> x;
-    std::vector<float> y;
-    std::vector<float> z;
-
-    featureProvider.loadVoxelPositions(voxelIds, x, y, z);
-
-    qDebug() << "Size" << x.size();
-
-    QJsonArray positions;
-    QJsonArray voxelIdsJson;
-    QJsonArray colors;
-
-    for (auto it = voxelIds.begin(); it != voxelIds.end(); ++it)
-    {
-        voxelIdsJson.push_back(QJsonValue(*it));
-    }
-
-    // ###################### LOAD FEATURES ######################
-
-    std::map<int, std::map<int, float> > neuron_pre;
-    std::map<int, std::map<int, float> > neuron_postExc;
-
-    featureProvider.loadCIS3D(neuron_pre, neuron_postExc);
-
-    std::vector<int> preIndices;
-    for (auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it)
-    {
-        preIndices.push_back(it->first);
-    }
-
-    std::vector<int> postIndices;
-    for (auto it = neuron_postExc.begin(); it != neuron_postExc.end(); ++it)
-    {
-        postIndices.push_back(it->first);
-    }
-
-    // ###################### INIT OUTPUT FIELDS ######################
-
-    std::vector<int> empty(postIndices.size(), 0);
-    std::vector<float> emptyFloat(postIndices.size(), 0);
-    std::vector<std::vector<int> > contacts(preIndices.size(), empty);
-    std::vector<std::vector<float> > innervation(preIndices.size(), emptyFloat);
-
-    Statistics connProbSynapse;
-    Statistics connProbInnervation;
-
-    qDebug() << "loop" << preIndices.size() << postIndices.size();
-
-    // ###################### LOOP OVER NEURONS ######################
-
-    std::set<QString> fileNames;
-    std::map<int, float> innervationSum;
-    for (auto it = voxelIds.begin(); it != voxelIds.end(); ++it)
-    {
-        innervationSum[*it] = 0;
-    }
-
-    for (unsigned int i = 0; i < preIndices.size(); i++)
-    {
-        std::map<int, std::map<int, float> > innervationPerPre;
-        int preId = preIndices[i];
-        for (unsigned int j = 0; j < postIndices.size(); j++)
-        {
-            int postId = postIndices[j];
-            if (preId != postId)
-            {
-                std::map<int, float> innervationPerVoxel;
-                for (auto pre = neuron_pre[preId].begin(); pre != neuron_pre[preId].end(); ++pre)
-                {
-                    if (neuron_postExc[postId].find(pre->first) != neuron_postExc[postId].end())
-                    {
-                        float preVal = pre->second;
-                        float postVal = neuron_postExc[postId][pre->first];
-                        float arg = preVal * postVal;
-                        innervationPerVoxel[pre->first] = arg;
-                        innervationSum[pre->first] += arg;
-                    }
-                }
-                innervationPerPre[postId] = innervationPerVoxel;
-            }
-        }
-        QString fileName = QDir(tmpDir).filePath("preNeuronID_" + QString::number(preId));
-        fileNames.insert(fileName);
-        QFile file(fileName);
-        if (!file.open(QIODevice::WriteOnly))
-        {
-            const QString msg =
-                QString("Cannot open file %1 for writing.").arg(fileName);
-            throw std::runtime_error(qPrintable(msg));
-        }
-        QTextStream stream(&file);
-
-        for (auto itPost = innervationPerPre.begin(); itPost != innervationPerPre.end(); ++itPost)
-        {
-            if (itPost->second.begin() != itPost->second.end())
-            {
-                stream << "postNeuronID"
-                       << " " << itPost->first << "\n";
-            }
-            for (auto itVoxel = itPost->second.begin(); itVoxel != itPost->second.end(); ++itVoxel)
-            {
-                stream << itVoxel->first << " " << itVoxel->second << "\n";
-            }
-        }
-    }
-
-    // ###################### DETERMINE STATISTICS ######################
-
-    for (auto it = innervationSum.begin(); it != innervationSum.end(); it++)
-    {
-        mStatistics.addSample(it->second);
-    }
-
-    for (unsigned int i = 0; i < x.size(); ++i)
-    {
-        positions.push_back(QJsonValue(x[i]));
-        positions.push_back(QJsonValue(y[i]));
-        positions.push_back(QJsonValue(z[i]));
-        int voxelId = voxelIds[i];
-        double innervation = (double)innervationSum[voxelId];
-        //std::vector<double> rgb = Util::getHeatMap(innervation, mStatistics.getMinimum(), mStatistics.getMaximum());
-
-        colors.push_back(QJsonValue(innervation));
-        colors.push_back(QJsonValue(innervation));
-        colors.push_back(QJsonValue(innervation));
-    }
-
-    // ###################### WRITE OUTPUT ######################
-
-    QString voxelFileName = QDir(tmpDir).filePath("voxelPositions");
-    QFile voxelFile(voxelFileName);
-    if (!voxelFile.open(QIODevice::WriteOnly))
-    {
-        const QString msg =
-            QString("Cannot open file %1 for writing.").arg(voxelFileName);
-        throw std::runtime_error(qPrintable(msg));
-    }
-    QTextStream stream(&voxelFile);
-    for (unsigned int i = 0; i < voxelIds.size(); i++)
-    {
-        stream << voxelIds[i] << " " << x[i] << " " << y[i] << " " << z[i] << "\n";
-    }
-    fileNames.insert(voxelFileName);
-
-    QJsonObject metadata;
-    metadata.insert("version", 1);
-    metadata.insert("type", "BufferGeometry");
-    metadata.insert("generator", "CortexInSilico3D");
-
-    QJsonObject voxelIdsField;
-    voxelIdsField.insert("array", voxelIdsJson);
-
-    QJsonObject position;
-    position.insert("itemSize", 3);
-    position.insert("type", "Float32Array");
-    position.insert("array", positions);
-
-    QJsonObject color;
-    color.insert("itemSize", 3);
-    color.insert("type", "Float32Array");
-    color.insert("array", colors);
-
-    QJsonObject attributes;
-    attributes.insert("position", position);
-    attributes.insert("color", color);
-
-    QJsonObject data;
-    data.insert("attributes", attributes);
-
-    QJsonObject result;
-    result.insert("metadata", metadata);
-    result.insert("data", data);
-
-    QJsonDocument doc(result);
-    QTextStream out(&jsonFile);
-    out << doc.toJson(QJsonDocument::Compact);
-    jsonFile.close();
-
-    // ###################### ZIP FILES ######################
-
-    qDebug() << "[*] Zipping view file:" << jsonFullPath;
-    QProcess zip;
-    zip.setWorkingDirectory(tmpDir);
-
-    QStringList arguments;
-    arguments.append("-j");
-    arguments.append(zipFileName);
-    arguments.append(jsonFileName);
-
-    qDebug() << "Arguments" << arguments;
-    zip.start("zip", arguments);
-
-    if (!zip.waitForStarted())
-    {
-        throw std::runtime_error("Error starting zip process");
-    }
-
-    if (!zip.waitForFinished())
-    {
-        throw std::runtime_error("Error completing zip process");
-    }
-
-    qDebug() << "[*] Zipping data file:" << dataFullPath;
-    QProcess zip2;
-    zip2.setWorkingDirectory(tmpDir);
-
-    QStringList arguments2;
-    QStringList rmArgs;
-    arguments2.append("-j");
-    arguments2.append(dataFileName);
-
-    for (auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile)
-    {
-        arguments2.append(*itFile);
-        rmArgs.append(*itFile);
-    }
-
-    zip2.start("zip", arguments2);
-
-    if (!zip2.waitForStarted())
-    {
-        throw std::runtime_error("Error starting zip process");
-    }
-
-    if (!zip2.waitForFinished())
-    {
-        throw std::runtime_error("Error completing zip process");
-    }
-
-    qDebug() << "[*] Completed zipping";
-
-    QProcess rm;
-    rm.setWorkingDirectory(tmpDir);
-    rm.start("rm", rmArgs);
-    rm.waitForStarted();
-    rm.waitForFinished();
-
-    qDebug() << "[*] Removed original files";
-
-    return resultFiles;
 }
 
 SpatialInnervationQueryHandler::SpatialInnervationQueryHandler(QObject* parent)
@@ -318,6 +50,9 @@ SpatialInnervationQueryHandler::process(const QString& selectionQueryId,
     qDebug() << "Process spatial innervation query" << selectionQueryId;
     mConfig = config;
     mQueryId = selectionQueryId;
+
+    mTempFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId);
+    UtilIO::makeDir(mTempFolder);
 
     const QString baseUrl = mConfig["METEOR_URL_CIS3D"].toString();
     const QString queryEndPoint = mConfig["METEOR_SPATIALINNERVATIONQUERY_ENDPOINT"].toString();
@@ -363,7 +98,6 @@ SpatialInnervationQueryHandler::process(const QString& selectionQueryId,
 void
 SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 {
-    qDebug() << "SPATIAL response";
     QNetworkReply::NetworkError error = reply->error();
     if (error == QNetworkReply::NoError && !reply->request().attribute(QNetworkRequest::User).toString().contains("getSpatialInnervationQueryData"))
     {
@@ -371,8 +105,6 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
     }
     else if (error == QNetworkReply::NoError)
     {
-        qDebug() << "[*] SPATIAL PROCESSING";
-
         const QByteArray content = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
         QJsonObject jsonData = jsonResponse.object().value("data").toObject();
@@ -385,8 +117,8 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForSynapseComputation();
 
-        // EXTRACT CONNECTION PROBABILITY FORMULA
-        // QString connProbFormula = jsonData["connProbFormula"].toString();
+        QString dataFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "innervation");
+        QString voxelFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_meta");
 
         // EXTRACT SLICE PARAMETERS
         const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
@@ -415,7 +147,6 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
         postNeurons = NeuronSelection::filterTissueDepth(mNetwork, postNeurons, sliceRef, tissueLowPost, tissueHighPost, CIS3D::SliceBand::FIRST);
 
-        qDebug() << "[*] SPATIAL QUERY " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
         NeuronSelection selection(preNeurons, postNeurons);
         QVector<float> bbmin;
         QVector<float> bbmax;
@@ -426,81 +157,364 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         bbmax.append(10000);
         bbmax.append(10000);
 
-        selection.sampleDown(10000, -1);
+        selection.filterUniquePre(mNetwork);
         selection.setBBox(bbmin, bbmax);
+        IdList preIds = selection.Presynaptic();
+        IdList postIds = selection.Postsynaptic();
 
-        QString metaFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId + "_meta");
-        QString preFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId + "_pre");
-        QString postFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() + QDir::separator() + mQueryId + "_post");
-        FeatureProvider featureProvider(metaFolder, preFolder, postFolder, false, true);
-        featureProvider.preprocessFeatures(mNetwork, selection, 0.00000000000000001, false, true);
+        qDebug() << "[*] SPATIAL QUERY " << preIds.size() << " presynaptic and " << postIds.size() << " postsynaptic neurons.";
 
-        const QString keyView = QString("spatialInnervation_%1.json.zip").arg(mQueryId);
-        const QString keyData = QString("spatialInnervation_%1.zip").arg(mQueryId);
-        QVector<QString> filePaths;
-        try
+        const QString zipFileName = QString("spatialInnervation_%1.json.zip").arg(mQueryId);
+        const QString zipFullPath = QString("%1/%2").arg(mTempFolder).arg(zipFileName);
+        const QString jsonFileName = QString(zipFileName).remove(".zip");
+        const QString jsonFullPath = QString(zipFullPath).remove(".zip");
+
+        const QString dataZipFileName = QString("spatialInnervation_%1.zip").arg(mQueryId);
+        const QString dataZipFullPath = QString("%1/%2").arg(mTempFolder).arg(dataZipFileName);
+        const QString dataFileName = QString(dataZipFileName).remove(".zip");
+        const QString dataFullPath = QString(dataZipFullPath).remove(".zip");
+
+        // ###################### LOOP OVER NEURONS ######################
+
+        std::map<int, float> innervationPerVoxel;
+        QVector<QString> fileNames;
+
+        mAborted = false;
+        for (int i = 0; i < preIds.size(); i++)
         {
-            filePaths = createGeometryJSON(keyView, keyData, featureProvider, mConfig["WORKER_TMP_DIR"].toString());
+            if (mAborted)
+            {
+                break;
+            }
+
+            QString dataFileName = QDir(dataFolder).filePath("preNeuronID_" + QString::number(preIds[i]));
+            QString tempFileName = QDir(mTempFolder).filePath("preNeuronID_" + QString::number(preIds[i]));
+            fileNames.append(tempFileName);
+
+            QFile dataFile(dataFileName);
+            if (!dataFile.open(QIODevice::ReadOnly))
+            {
+                const QString msg =
+                    QString("Cannot open file %1 for writing.").arg(dataFileName);
+                throw std::runtime_error(qPrintable(msg));
+            }
+            QTextStream inStream(&dataFile);
+
+            QFile tempFile(tempFileName);
+            if (!tempFile.open(QIODevice::WriteOnly))
+            {
+                const QString msg =
+                    QString("Cannot open file %1 for writing.").arg(tempFileName);
+                throw std::runtime_error(qPrintable(msg));
+            }
+            QTextStream outStream(&tempFile);
+
+            QString line = inStream.readLine();
+            int currentPostId;
+            while (!line.isNull())
+            {
+                QStringList parts = line.split(' ');
+                bool isVoxelId;
+                int voxelId = parts[0].toInt(&isVoxelId);
+                if (isVoxelId)
+                {
+                    if (postIds.contains(currentPostId))
+                    {
+                        outStream << line << "\n";
+
+                        float innervation = parts[1].toFloat();
+                        auto it = innervationPerVoxel.find(voxelId);
+                        if (it == innervationPerVoxel.end())
+                        {
+                            innervationPerVoxel[voxelId] = innervation;
+                        }
+                        else
+                        {
+                            innervationPerVoxel[voxelId] += innervation;
+                        }
+                    }
+                }
+                else
+                {
+                    currentPostId = parts[1].toInt();
+                }
+
+                line = inStream.readLine();
+            }
+
+            // ###################### REPORT UPDATE ######################
+
+            QJsonObject progress;
+            progress.insert("completed", i + 1);
+            progress.insert("total", preIds.size());
+            const double percent = double(i + 1) * 100.0 / double(preIds.size());
+            progress.insert("percent", percent);
+            QJsonObject jobStatus;
+            jobStatus.insert("status", "running");
+            jobStatus.insert("progress", progress);
+
+            QJsonObject payload;
+            payload.insert("jobStatus", jobStatus);
+
+            QNetworkRequest putRequest;
+            putRequest.setUrl(mQueryUrl);
+            putRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
+            putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
+            putRequest.setAttribute(QNetworkRequest::User, QVariant("putSpatialInnervationResult"));
+            putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+            QJsonDocument putDoc(payload);
+            QString putData(putDoc.toJson());
+
+            qDebug() << "[*] Posting intermediate result:" << percent << "\%    (" << i + 1 << "/" << preIds.size() << ")";
+
+            QEventLoop loop;
+            QNetworkReply* reply = mNetworkManager.put(putRequest, putData.toLocal8Bit());
+            connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+            loop.exec();
+
+            QNetworkReply::NetworkError error = reply->error();
+            const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
+            if (error != QNetworkReply::NoError)
+            {
+                qDebug() << "[-] Error putting Evaluation result (queryId" << mQueryId << "):";
+                qDebug() << reply->errorString();
+                mAborted = true;
+            }
         }
-        catch (std::runtime_error& e)
+
+        if (!mAborted)
         {
-            qDebug() << QString(e.what());
+            // ###################### PROCESS VOXELS ######################
+
+            std::vector<int> voxelIds;
+            std::vector<float> x;
+            std::vector<float> y;
+            std::vector<float> z;
+
+            QJsonArray positionsJson;
+            QJsonArray voxelIdsJson;
+            QJsonArray colorsJson;
+
+            QString fileName = QDir(voxelFolder).filePath("voxel_pos.dat");
+            QFile file(fileName);
+            if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+            {
+                const QString msg =
+                    QString("Error reading features file. Could not open file %1").arg(fileName);
+                throw std::runtime_error(qPrintable(msg));
+            }
+
+            QTextStream in(&file);
+            QString line = in.readLine();
+            while (!line.isNull())
+            {
+                QStringList parts = line.split(' ');
+                int voxelId = parts[0].toInt();
+                auto it = innervationPerVoxel.find(voxelId);
+                if (it != innervationPerVoxel.end())
+                {
+                    voxelIds.push_back(it->first);
+                    x.push_back(parts[1].toFloat());
+                    y.push_back(parts[2].toFloat());
+                    z.push_back(parts[3].toFloat());
+                    positionsJson.push_back(QJsonValue(parts[1].toFloat()));
+                    positionsJson.push_back(QJsonValue(parts[2].toFloat()));
+                    positionsJson.push_back(QJsonValue(parts[3].toFloat()));
+                    voxelIdsJson.push_back(QJsonValue(it->first));
+                    colorsJson.push_back(it->second);
+                    colorsJson.push_back(it->second);
+                    colorsJson.push_back(it->second);
+                }
+                line = in.readLine();
+            }
+
+            QString voxelFileName = QDir(mTempFolder).filePath("voxelPositions");
+            fileNames.append(voxelFileName);
+            QFile voxelFile(voxelFileName);
+            if (!voxelFile.open(QIODevice::WriteOnly))
+            {
+                const QString msg =
+                    QString("Cannot open file %1 for writing.").arg(voxelFileName);
+                throw std::runtime_error(qPrintable(msg));
+            }
+            QTextStream stream(&voxelFile);
+            for (unsigned int i = 0; i < voxelIds.size(); i++)
+            {
+                stream << voxelIds[i] << " " << x[i] << " " << y[i] << " " << z[i] << "\n";
+            }
+
+            QJsonObject metadata;
+            metadata.insert("version", 1);
+            metadata.insert("type", "BufferGeometry");
+            metadata.insert("generator", "CortexInSilico3D");
+
+            QJsonObject voxelIdsField;
+            voxelIdsField.insert("array", voxelIdsJson);
+
+            QJsonObject position;
+            position.insert("itemSize", 3);
+            position.insert("type", "Float32Array");
+            position.insert("array", positionsJson);
+
+            QJsonObject color;
+            color.insert("itemSize", 3);
+            color.insert("type", "Float32Array");
+            color.insert("array", colorsJson);
+
+            QJsonObject attributes;
+            attributes.insert("position", position);
+            attributes.insert("color", color);
+
+            QJsonObject data;
+            data.insert("attributes", attributes);
+
+            QJsonObject result;
+            result.insert("metadata", metadata);
+            result.insert("data", data);
+
+            QFile jsonFile(jsonFullPath);
+            if (!jsonFile.open(QIODevice::WriteOnly))
+            {
+                const QString msg = QString("Cannot open file for saving json: %1").arg(jsonFullPath);
+                throw std::runtime_error(qPrintable(msg));
+            }
+
+            QJsonDocument doc(result);
+            QTextStream out(&jsonFile);
+            out << doc.toJson(QJsonDocument::Compact);
+            jsonFile.close();
+        }
+
+        qint64 fileSizeBytes1 = 0;
+        qint64 fileSizeBytes2 = 0;
+
+        if (mAborted)
+        {
             logoutAndExit(1);
         }
-
-        const qint64 fileSizeBytes1 = QFileInfo(filePaths[0]).size();
-        int upload1 = QueryHelpers::uploadToS3(keyView, filePaths[0], mConfig);
-        const qint64 fileSizeBytes2 = QFileInfo(filePaths[1]).size();
-        int upload2 = QueryHelpers::uploadToS3(keyData, filePaths[1], mConfig);
-
-        if (upload1 != 0)
+        else
         {
-            qDebug() << "Error uploading geometry json file to S3:" << filePaths[0];
+            // ###################### ZIP FILES ######################
+
+            qDebug() << "[*] Zipping view file:" << jsonFullPath;
+            QProcess zip;
+            zip.setWorkingDirectory(mTempFolder);
+
+            QStringList arguments;
+            arguments.append("-j");
+            arguments.append(zipFileName);
+            arguments.append(jsonFileName);
+
+            qDebug() << "Arguments" << arguments;
+            zip.start("zip", arguments);
+
+            if (!zip.waitForStarted())
+            {
+                throw std::runtime_error("Error starting zip process");
+            }
+
+            if (!zip.waitForFinished())
+            {
+                throw std::runtime_error("Error completing zip process");
+            }
+
+            qDebug() << "[*] Zipping data file:" << dataFullPath;
+            QProcess zip2;
+            zip2.setWorkingDirectory(mTempFolder);
+
+            QStringList arguments2;
+            QStringList rmArgs;
+            arguments2.append("-j");
+            arguments2.append(dataFileName);
+
+            for (auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile)
+            {
+                arguments2.append(*itFile);
+            }
+
+            zip2.start("zip", arguments2);
+
+            if (!zip2.waitForStarted())
+            {
+                throw std::runtime_error("Error starting zip process");
+            }
+
+            if (!zip2.waitForFinished())
+            {
+                throw std::runtime_error("Error completing zip process");
+            }
+
+            qDebug() << "[*] Completed zipping";
+
+            // ###################### UPLOAD FILES ######################
+
+            fileSizeBytes1 = QFileInfo(zipFullPath).size();
+            int upload1 = QueryHelpers::uploadToS3(zipFileName, zipFullPath, mConfig);
+            fileSizeBytes2 = QFileInfo(dataZipFullPath).size();
+            int upload2 = QueryHelpers::uploadToS3(dataZipFileName, dataZipFullPath, mConfig);
+
+            if (upload1 != 0)
+            {
+                qDebug() << "Error uploading geometry json file to S3:" << zipFullPath;
+            }
+            if (upload2 != 0)
+            {
+                qDebug() << "Error uploading geometry json file to S3:" << dataZipFullPath;
+            }
+            if (upload1 != 0 || upload2 != 0)
+            {
+                mAborted = true;
+            }
         }
-        if (upload2 != 0)
-        {
-            qDebug() << "Error uploading geometry json file to S3:" << filePaths[1];
-        }
-        if (upload1 != 0 || upload2 != 0)
+
+        // ###################### CLEAN FILES ######################
+
+        QProcess rm;
+        QStringList rmArgs;
+        rmArgs << "-rf" << mTempFolder;
+        rm.start("rm", rmArgs);
+        rm.waitForStarted();
+        rm.waitForFinished();
+
+        qDebug() << "[*] Removed original files";
+
+        if (mAborted)
         {
             logoutAndExit(1);
         }
-
-        QProcess removeFiles;
-        QStringList arguments;
-        arguments.append("-rf");
-        arguments.append(filePaths[0]);
-        arguments.append(filePaths[1]);
-        arguments.append(preFolder);
-        arguments.append(postFolder);
-        arguments.append(metaFolder);
-
-        removeFiles.start("rm", arguments);
-
-        if (!removeFiles.waitForStarted())
+        else
         {
-            throw std::runtime_error("Error starting remove file process");
+            // ###################### SIGNAL COMPLETION ######################
+
+            int nVoxel = (int)innervationPerVoxel.size();
+            const QJsonObject result = createJsonResult(zipFileName, fileSizeBytes1, dataZipFileName, fileSizeBytes2, nVoxel);
+
+            QJsonObject progress;
+            progress.insert("completed", preIds.size());
+            progress.insert("total", preIds.size());
+            progress.insert("percent", 100);
+            QJsonObject jobStatus;
+            jobStatus.insert("status", "completed");
+            jobStatus.insert("progress", progress);
+
+            QJsonObject payload;
+            payload.insert("result", result);
+            payload.insert("jobStatus", jobStatus);
+
+            reply->deleteLater();
+
+            QNetworkRequest putRequest;
+            putRequest.setUrl(mQueryUrl);
+            putRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
+            putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
+            putRequest.setAttribute(QNetworkRequest::User, QVariant("putSpatialInnervationResult"));
+            putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+            QJsonDocument putDoc(payload);
+            QString putData(putDoc.toJson());
+
+            connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyPutResultFinished(QNetworkReply*)));
+            mNetworkManager.put(putRequest, putData.toLocal8Bit());
         }
-
-        if (!removeFiles.waitForFinished())
-        {
-            throw std::runtime_error("Error completing file removal process");
-        }
-
-        const QJsonObject result = createJsonResult(keyView, fileSizeBytes1, keyData, fileSizeBytes2);
-        reply->deleteLater();
-
-        QNetworkRequest putRequest;
-        putRequest.setUrl(mQueryUrl);
-        putRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
-        putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
-        putRequest.setAttribute(QNetworkRequest::User, QVariant("putSpatialInnervationResult"));
-        putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-        QJsonDocument putDoc(result);
-        QString putData(putDoc.toJson());
-
-        connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyPutResultFinished(QNetworkReply*)));
-        mNetworkManager.put(putRequest, putData.toLocal8Bit());
     }
     else
     {

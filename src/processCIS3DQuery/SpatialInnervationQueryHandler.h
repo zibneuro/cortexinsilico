@@ -33,11 +33,8 @@ private:
         const QString& keyView,
         const qint64 fileSizeBytes1,
         const QString& keyData,
-        const qint64 fileSizeBytes2);
-    QVector<QString> createGeometryJSON(const QString& zipFileName,
-                                        const QString& dataZipFileName,
-                                        FeatureProvider& featureProvider,
-                                        const QString& tmpDir);
+        const qint64 fileSizeBytes2,
+        int nVoxels);
 
     QString mQueryId;
     QJsonObject mConfig;
@@ -50,6 +47,8 @@ private:
     AuthInfo mAuthInfo;
     QJsonObject mCurrentJsonData;
     Statistics mStatistics;
+    QString mTempFolder;
+    bool mAborted;
 
     void logoutAndExit(const int exitCode);
 };

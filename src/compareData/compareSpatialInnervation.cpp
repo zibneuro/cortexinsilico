@@ -10,7 +10,9 @@
 #include "CIS3DSparseVectorSet.h"
 #include "CIS3DConstantsHelpers.h"
 #include "CIS3DSparseField.h"
+#include "CIS3DStatistics.h"
 #include "SparseVectorCache.h"
+#include "Histogram.h"
 #include "Typedefs.h"
 #include "UtilIO.h"
 #include <QChar>
@@ -26,13 +28,13 @@
 void
 printUsage()
 {
-    qDebug() << "Usage: ./compareSpatialInnervation <innervationFile> <modelFolder> <epsilon>";
+    qDebug() << "Usage: ./compareSpatialInnervation <innervationFile> <modelFolder>";
 }
 
 int
 main(int argc, char* argv[])
 {
-    if (argc != 4)
+    if (argc != 3)
     {
         printUsage();
         return 1;
@@ -40,7 +42,7 @@ main(int argc, char* argv[])
 
     const QString innervationFile = argv[1];
     const QString modelFolder = argv[2];
-    const float eps = atof(argv[3]);
+    //const float eps = atof(argv[3]);
 
     QFile file(innervationFile);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -72,13 +74,24 @@ main(int argc, char* argv[])
     QDir innervationDataDir = CIS3D::getInnervationDataDir(modelFolder);
     SparseVectorCache cache;
 
-    bool deviation = false;
+    Statistics deviation;
+    Histogram hist(0.001);
 
+    qDebug() << "[*] Connected neuron pairs" << pairs.size();
+    int count = 0;
+    int lastPre = -1;
     for (auto it = pairs.begin(); it != pairs.end(); it++)
     {
         int preId = it->first.first;
         int postId = it->first.second;
         float innervation = it->second;
+
+        if (lastPre != preId)
+        {
+            lastPre = preId;
+            count++;
+            qDebug() << count;
+        }
 
         int cellTypeId = networkProps.neurons.getCellTypeId(postId);
         int regionId = networkProps.neurons.getRegionId(postId);
@@ -90,10 +103,6 @@ main(int argc, char* argv[])
         QString preCellTypeName = networkProps.cellTypes.getName(preCellTypeId);
         QString preRegionName = networkProps.regions.getName(preRegionId);
 
-        if(preId == 16996){
-            qDebug() << preCellTypeName << preRegionName << cellTypeName << regionName;
-        }
-
         QString postFile = CIS3D::getInnervationPostFileName(innervationDataDir,
                                                              regionName,
                                                              cellTypeName);
@@ -104,16 +113,11 @@ main(int argc, char* argv[])
         }
         SparseVectorSet* vectorSet = cache.get(postFile);
         float refInnervation = vectorSet->getValue(postId, preId);
-        float dev = std::fabs(innervation-refInnervation);
-        if(dev > eps){
-            deviation = true;
-            qDebug() << preId << postId << innervation << refInnervation << dev;
-        } /*else {
-            qDebug() << "OK" << dev;
-        }*/
+        deviation.addSample(std::fabs(innervation - refInnervation));
+        hist.addValue(std::fabs(innervation - refInnervation));
     }
 
-    if (!deviation)
-        qDebug() << "identical";
+    qDebug() << deviation.getMean() << deviation.getStandardDeviation() << deviation.getMinimum() << deviation.getMaximum();
+    qDebug() << hist.createJson();
     return 0;
 }

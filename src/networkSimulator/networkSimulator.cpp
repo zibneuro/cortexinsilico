@@ -54,15 +54,18 @@ printUsage()
     qDebug() << "";
     qDebug() << "Usage:";
     qDebug() << "";
-    qDebug() << "./networkSimulator INIT        <initSpecFile>";
-    qDebug() << "./networkSimulator SIMULATE    <simulationSpecFile>";
-    qDebug() << "./networkSimulator SUBCUBE     <voxelSpecFile>";
+    qDebug() << "./networkSimulator INIT            <initSpecFile>";
+    qDebug() << "./networkSimulator SIMULATE        <simulationSpecFile>";
+    qDebug() << "./networkSimulator SIMULATE_BATCH  <simulationSpecFile>";
+    qDebug() << "./networkSimulator SUBCUBE         <voxelSpecFile>";
+    qDebug() << "./networkSimulator EXTRACT_ALL     <modelDataDir>";
     qDebug() << "";
     qDebug() << "The <initSpecFile> contains the neuron selection to be used for"
              << "simulation.";
     qDebug() << "The <simulationSpecFile> contains the simulation parameters.";
     qDebug() << "The <voxelSpecFile> contains the model data directory and the "
              << "parameters of the subcube.";
+    qDebug() << "The <modelDataDir> is the direct path to the model data directory.";
 }
 
 void
@@ -650,6 +653,42 @@ main(int argc, char** argv)
             selection.setPiaSomaDistance(rangePre, rangePost, networkProps);
             featureProvider.preprocessFeatures(networkProps, selection, 0.0001, true, false);
             UtilIO::makeDir("output");
+            return 0;
+        }
+    }
+    else if (mode == "EXTRACT_ALL")
+    {
+        if (argc != 3)
+        {
+            printUsage();
+            return 1;
+        }
+        else
+        {
+            const QString dataRoot = argv[2];
+            NetworkProps networkProps(true);
+            networkProps.setDataRoot(dataRoot);
+            networkProps.loadFilesForSynapseComputation();
+            FeatureProvider featureProvider;
+            featureProvider.preprocessFullModel(networkProps);
+            return 0;
+        }
+    }
+    else if (mode == "COMPUTE_SPATIAL_ALL")
+    {
+        if (argc != 2)
+        {
+            printUsage();
+            return 1;
+        }
+        else
+        {
+            std::map<int, std::map<int, float> > neurons_pre;
+            std::map<int, std::map<int, float> > neurons_post;
+            FeatureProvider featureProvider;
+            featureProvider.loadCIS3D(neurons_pre, neurons_post);
+            qDebug() << neurons_pre.size() << neurons_post.size();
+            Calculator::calculateSpatial(neurons_pre, neurons_post);
             return 0;
         }
     }

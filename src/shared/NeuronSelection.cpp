@@ -259,6 +259,35 @@ NeuronSelection::setPiaSomaDistance(QVector<float> rangePre, QVector<float> rang
 }
 
 void
+NeuronSelection::setFullModel(const NetworkProps& networkProps)
+{
+    SelectionFilter preFilter;
+    preFilter.synapticSide = CIS3D::PRESYNAPTIC;
+    IdList preNeurons = networkProps.neurons.getFilteredNeuronIds(preFilter);
+    for (int i = 0; i < preNeurons.size(); i++)
+    {
+        int cellTypeId = networkProps.neurons.getCellTypeId(preNeurons[i]);
+        if (networkProps.cellTypes.isExcitatory(cellTypeId))
+        {
+            mPresynaptic.append(preNeurons[i]);
+        }
+    }
+    filterUniquePre(networkProps);
+
+    SelectionFilter postFilter;
+    postFilter.synapticSide = CIS3D::POSTSYNAPTIC;
+    IdList postNeurons = networkProps.neurons.getFilteredNeuronIds(postFilter);
+    for (int i = 0; i < postNeurons.size(); i++)
+    {
+        int cellTypeId = networkProps.neurons.getCellTypeId(postNeurons[i]);
+        if (networkProps.cellTypes.isExcitatory(cellTypeId))
+        {
+            mPostsynaptic.append(postNeurons[i]);
+        }
+    }
+}
+
+void
 NeuronSelection::filterPiaSoma(IdList& neuronIds, QVector<float> range, const NetworkProps& networkProps)
 {
     Columns columns;
@@ -301,6 +330,21 @@ NeuronSelection::sampleDown(int maxSize, int seed)
     mMotifA = getDownsampled(mMotifA, maxSize, randomGenerator);
     mMotifB = getDownsampled(mMotifB, maxSize, randomGenerator);
     mMotifC = getDownsampled(mMotifC, maxSize, randomGenerator);
+}
+
+void
+NeuronSelection::filterUniquePre(const NetworkProps& networkProps)
+{
+    IdList pruned;
+    for (int i = 0; i < mPresynaptic.size(); i++)
+    {
+        int id = mPresynaptic[i];
+        if (id == networkProps.axonRedundancyMap.getNeuronIdToUse(id))
+        {
+            pruned.append(id);
+        }
+    }
+    mPresynaptic = pruned;
 }
 
 IdList

@@ -67,6 +67,8 @@ public:
 
     void setPiaSomaDistance(QVector<float> rangePre, QVector<float> rangePost, const NetworkProps& networkProps);
 
+    void setFullModel(const NetworkProps& networkProps);
+
     void filterPiaSoma(IdList& neuronIds, QVector<float> range, const NetworkProps& networkProps);
 
     /**
@@ -116,6 +118,8 @@ public:
     QVector<float> getPiaSomaDistancePre();
 
     QVector<float> getPiaSomaDistancePost();
+
+    void filterUniquePre(const NetworkProps& networkProps);
 
     void sampleDown(int maxSize, int seed);
 

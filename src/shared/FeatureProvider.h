@@ -21,6 +21,8 @@ public:
 
     void preprocessFeatures(NetworkProps& networkProps, NeuronSelection& selection, double eps, bool applyLog, bool normalized = false);
 
+    void preprocessFullModel(NetworkProps& networkProps);
+
     void init();
 
     int getNumPre();

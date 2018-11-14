@@ -18,6 +18,8 @@ refDir = sys.argv[1]
 
 neuronToNeuronInnervation = []
 
+resultFile = open("neuronToNeuronInnervation","w")
+
 for root, dirs, files in os.walk(refDir):
     for file in files:
         if "preNeuronID" in file:
@@ -31,19 +33,17 @@ for root, dirs, files in os.walk(refDir):
                     first = line.split(" ")[0]
                     second = line.split(" ")[1]
                     if "postNeuronID" in first: 
-                        if postID != -1:
-                            neuronToNeuronInnervation.append([preID,postID,innervation])
+                        if postID != -1:                            
+                            resultFile.write(str(preID))
+                            resultFile.write(" ")
+                            resultFile.write(str(postID))
+                            resultFile.write(" ")
+                            resultFile.write(str(innervation))
+                            resultFile.write("\n")
                         innervation = 0
                         postID = int(second)
                     else:
                         innervation += float(second)
-resultFile = open("neuronToNeuronInnervation","w")
-for entry in neuronToNeuronInnervation:
-    resultFile.write(str(entry[0]))
-    resultFile.write(" ")
-    resultFile.write(str(entry[1]))
-    resultFile.write(" ")
-    resultFile.write(str(entry[2]))
-    resultFile.write("\n")
+
 resultFile.close()
 

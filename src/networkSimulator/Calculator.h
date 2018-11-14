@@ -31,7 +31,9 @@ public:
 
     void calculate(QVector<float> parameters, bool addIntercept, double maxInnervation, QString mode);
 
-    void calculateBatch(std::vector<QVector<float> > parametersBatch, bool addIntercept, double maxInnervation, QString /*mode*/);
+    void calculateBatch(std::vector<QVector<float> > parametersBatch, bool addIntercept, double maxInnervation, QString /*mode*/);   
+
+    static void calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc); 
 
 private:
     double calculateProbability(double innervationMean);
