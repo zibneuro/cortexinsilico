@@ -242,6 +242,37 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                 line = inStream.readLine();
             }
 
+            tempFile.close();
+
+            qDebug() << "[*] Updating zip file:" << dataFullPath;
+            QProcess zip2;
+            zip2.setWorkingDirectory(mTempFolder);
+
+            QStringList arguments2;
+            QStringList rmArgs;
+            if (i == 0)
+            {
+                arguments2.append("-j");
+            } else {
+                arguments2.append("-ju");
+            }
+            arguments2.append(dataZipFullPath);
+            arguments2.append(fileNames[i]);
+
+            zip2.start("zip", arguments2);
+
+            if (!zip2.waitForStarted())
+            {
+                throw std::runtime_error("Error starting zip process");
+            }
+
+            if (!zip2.waitForFinished())
+            {
+                throw std::runtime_error("Error completing zip process");
+            }
+
+            qDebug() << "[*] Completed zipping";
+
             // ###################### REPORT UPDATE ######################
 
             QJsonObject progress;
@@ -418,34 +449,6 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                 throw std::runtime_error("Error completing zip process");
             }
 
-            qDebug() << "[*] Zipping data file:" << dataFullPath;
-            QProcess zip2;
-            zip2.setWorkingDirectory(mTempFolder);
-
-            QStringList arguments2;
-            QStringList rmArgs;
-            arguments2.append("-j");
-            arguments2.append(dataFileName);
-
-            for (auto itFile = fileNames.begin(); itFile != fileNames.end(); ++itFile)
-            {
-                arguments2.append(*itFile);
-            }
-
-            zip2.start("zip", arguments2);
-
-            if (!zip2.waitForStarted())
-            {
-                throw std::runtime_error("Error starting zip process");
-            }
-
-            if (!zip2.waitForFinished())
-            {
-                throw std::runtime_error("Error completing zip process");
-            }
-
-            qDebug() << "[*] Completed zipping";
-
             // ###################### UPLOAD FILES ######################
 
             fileSizeBytes1 = QFileInfo(zipFullPath).size();
@@ -469,6 +472,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
         // ###################### CLEAN FILES ######################
 
+        
         QProcess rm;
         QStringList rmArgs;
         rmArgs << "-rf" << mTempFolder;
@@ -477,7 +481,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         rm.waitForFinished();
 
         qDebug() << "[*] Removed original files";
-
+        
         if (mAborted)
         {
             logoutAndExit(1);
