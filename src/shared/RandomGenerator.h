@@ -28,6 +28,8 @@ public:
     */
     void shuffleList(QList<int>& list);
 
+    int getRandomEntry(QList<int> list);
+
     /*
         Draws a count from a Poisson distribution.
         @param mu. The mean value of the Poisson distribution.

@@ -71,6 +71,18 @@ public:
 
     void filterPiaSoma(IdList& neuronIds, QVector<float> range, const NetworkProps& networkProps);
 
+    void filterTripletSlice(const NetworkProps& networkProps,
+                            double sliceRef,
+                            double tissueLowMotifA,
+                            double tissueHighMotifA,
+                            QString tissueModeMotifA,
+                            double tissueLowMotifB,
+                            double tissueHighMotifB,
+                            QString tissueModeMotifB,
+                            double tissueLowMotifC,
+                            double tissueHighMotifC,
+                            QString tissueModeMotifC);
+
     /**
         Determines neuron IDs based on a selection string;
         @param selectionString The selection string.
@@ -104,6 +116,12 @@ public:
     */
     IdList MotifC() const;
 
+    CIS3D::SliceBand getMotifABand(int id) const;
+
+    CIS3D::SliceBand getMotifBBand(int id) const;
+
+    CIS3D::SliceBand getMotifCBand(int id) const;
+
     /*
       Prints the number of selected neurons for motif statistics.
     */
@@ -123,6 +141,8 @@ public:
 
     void sampleDown(int maxSize, int seed);
 
+    static IdList filterPreOrBoth(const NetworkProps& networkProps, IdList ids);
+
 private:
     static bool inSliceBand(double somaX, double min, double max);
 
@@ -139,6 +159,9 @@ private:
     QVector<float> mBBoxMax;
     QVector<float> mPiaSomaDistancePre;
     QVector<float> mPiaSomaDistancePost;
+    std::map<int, CIS3D::SliceBand> mMotifABand;
+    std::map<int, CIS3D::SliceBand> mMotifBBand;
+    std::map<int, CIS3D::SliceBand> mMotifCBand;
 };
 
 #endif

@@ -30,6 +30,15 @@ RandomGenerator::shuffleList(QList<int>& list)
     std::shuffle(list.begin(), list.end(), mRandomGenerator);
 }
 
+int RandomGenerator::getRandomEntry(QList<int> list){
+    if(list.size() == 0){
+        return -1;
+    } else {
+        shuffleList(list);
+        return list[0];
+    }
+}
+
 int
 RandomGenerator::drawPoisson(float mu)
 {

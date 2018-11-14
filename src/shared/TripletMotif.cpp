@@ -127,7 +127,7 @@ void CellTriplet::setInnervation(InnervationMatrix* connectome) {
             } else {
                 int preId = preCellIndex[ii];
                 int postId = postCellIndex[jj];
-                this->innervation[ii].push_back(connectome->getValue(preId, postId));
+                this->innervation[ii].push_back(connectome->getValue(preId, postId, ii));
             }
         }
     }

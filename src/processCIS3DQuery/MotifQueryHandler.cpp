@@ -19,9 +19,14 @@
 #include "TripletStatistic.h"
 #include "Util.h"
 
-MotifQueryHandler::MotifQueryHandler(QObject* parent) : QObject(parent) {}
+MotifQueryHandler::MotifQueryHandler(QObject* parent)
+    : QObject(parent)
+{
+}
 
-void MotifQueryHandler::process(const QString& motifQueryId, const QJsonObject& config) {
+void
+MotifQueryHandler::process(const QString& motifQueryId, const QJsonObject& config)
+{
     mConfig = config;
     mQueryId = motifQueryId;
 
@@ -30,17 +35,21 @@ void MotifQueryHandler::process(const QString& motifQueryId, const QJsonObject& 
     const QString loginEndPoint = mConfig["METEOR_LOGIN_ENDPOINT"].toString();
     const QString logoutEndPoint = mConfig["METEOR_LOGOUT_ENDPOINT"].toString();
 
-    if (baseUrl.isEmpty()) {
+    if (baseUrl.isEmpty())
+    {
         throw std::runtime_error("MotifQueryHandler: Cannot find METEOR_URL_CIS3D");
     }
-    if (queryEndPoint.isEmpty()) {
+    if (queryEndPoint.isEmpty())
+    {
         throw std::runtime_error(
             "MotifQueryHandler: Cannot find METEOR_MOTIFQUERY_ENDPOINT");
     }
-    if (loginEndPoint.isEmpty()) {
+    if (loginEndPoint.isEmpty())
+    {
         throw std::runtime_error("MotifQueryHandler: Cannot find METEOR_LOGIN_ENDPOINT");
     }
-    if (logoutEndPoint.isEmpty()) {
+    if (logoutEndPoint.isEmpty())
+    {
         throw std::runtime_error("MotifQueryHandler: Cannot find METEOR_LOGOUT_ENDPOINT");
     }
 
@@ -48,8 +57,7 @@ void MotifQueryHandler::process(const QString& motifQueryId, const QJsonObject& 
     mLoginUrl = baseUrl + loginEndPoint;
     mLogoutUrl = baseUrl + logoutEndPoint;
 
-    mAuthInfo = QueryHelpers::login(mLoginUrl, mConfig["WORKER_USERNAME"].toString(),
-                                    mConfig["WORKER_PASSWORD"].toString(), mNetworkManager);
+    mAuthInfo = QueryHelpers::login(mLoginUrl, mConfig["WORKER_USERNAME"].toString(), mConfig["WORKER_PASSWORD"].toString(), mNetworkManager);
 
     QNetworkRequest request;
     request.setUrl(mQueryUrl);
@@ -57,12 +65,13 @@ void MotifQueryHandler::process(const QString& motifQueryId, const QJsonObject& 
     request.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     request.setAttribute(QNetworkRequest::User, QVariant("getQueryData"));
 
-    connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this,
-            SLOT(replyGetQueryFinished(QNetworkReply*)));
+    connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
     mNetworkManager.get(request);
 }
 
-void MotifQueryHandler::reportUpdate(NetworkStatistic* stat) {
+void
+MotifQueryHandler::reportUpdate(NetworkStatistic* stat)
+{
     long long numConnections = stat->getNumConnections();
     long long connectionsDone = stat->getConnectionsDone();
 
@@ -98,10 +107,12 @@ void MotifQueryHandler::reportUpdate(NetworkStatistic* stat) {
 
     QNetworkReply::NetworkError error = reply->error();
     const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-    if (error != QNetworkReply::NoError) {       
+    if (error != QNetworkReply::NoError)
+    {
         qDebug() << "[-] Error putting Evaluation result (queryId" << mQueryId << "):";
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();
@@ -110,7 +121,9 @@ void MotifQueryHandler::reportUpdate(NetworkStatistic* stat) {
     }
 }
 
-void MotifQueryHandler::reportComplete(NetworkStatistic* stat) {
+void
+MotifQueryHandler::reportComplete(NetworkStatistic* stat)
+{
     long long numConnections = stat->getNumConnections();
 
     const QString motifASelId = mCurrentJsonData["motifASelectionId"].toString();
@@ -125,10 +138,10 @@ void MotifQueryHandler::reportComplete(NetworkStatistic* stat) {
     const QString motifBSelectionText = mCurrentJsonData["motifBSelectionFilterAsText"].toString();
     const QString motifCSelectionText = mCurrentJsonData["motifCSelectionFilterAsText"].toString();
     const QString csvfile =
-        stat->createCSVFile(key, motifASelectionText, motifBSelectionText, motifCSelectionText,
-                            mConfig["WORKER_TMP_DIR"].toString());
+        stat->createCSVFile(key, motifASelectionText, motifBSelectionText, motifCSelectionText, mConfig["WORKER_TMP_DIR"].toString());
     const qint64 fileSizeBytes = QFileInfo(csvfile).size();
-    if (QueryHelpers::uploadToS3(key, csvfile, mConfig) != 0) {
+    if (QueryHelpers::uploadToS3(key, csvfile, mConfig) != 0)
+    {
         qDebug() << "Error uploading csv file to S3:" << csvfile;
         logoutAndExit(1);
     }
@@ -155,17 +168,21 @@ void MotifQueryHandler::reportComplete(NetworkStatistic* stat) {
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
-    connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this,
-            SLOT(replyPutResultFinished(QNetworkReply*)));
+    connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyPutResultFinished(QNetworkReply*)));
     mNetworkManager.put(putRequest, putData.toLocal8Bit());
 };
 
-void MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
+void
+MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
+{
     QNetworkReply::NetworkError error = reply->error();
     if (error == QNetworkReply::NoError &&
-        !reply->request().attribute(QNetworkRequest::User).toString().contains("getQueryData")) {
+        !reply->request().attribute(QNetworkRequest::User).toString().contains("getQueryData"))
+    {
         return;
-    } else if (error == QNetworkReply::NoError) {
+    }
+    else if (error == QNetworkReply::NoError)
+    {
         qDebug() << "[*] Starting computation of motif query";
 
         const QByteArray content = reply->readAll();
@@ -184,22 +201,60 @@ void MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
         QString motifBSelString = jsonData["motifBSelectionFilter"].toString();
         QString motifCSelString = jsonData["motifCSelectionFilter"].toString();
 
+        // EXTRACT SLICE PARAMETERS
+        const double tissueLowMotifA = jsonData["tissueLowMotifA"].toDouble();
+        const double tissueHighMotifA = jsonData["tissueHighMotifA"].toDouble();
+        const QString tissueModeMotifA = jsonData["tissueModeMotifA"].toString();
+        const double tissueLowMotifB = jsonData["tissueLowMotifB"].toDouble();
+        const double tissueHighMotifB = jsonData["tissueHighMotifB"].toDouble();
+        const QString tissueModeMotifB = jsonData["tissueModeMotifB"].toString();
+        const double tissueLowMotifC = jsonData["tissueLowMotifC"].toDouble();
+        const double tissueHighMotifC = jsonData["tissueHighMotifC"].toDouble();
+        const QString tissueModeMotifC = jsonData["tissueModeMotifC"].toString();
+        const double sliceRef = jsonData["sliceRef"].toDouble();
+        const bool isSlice = sliceRef != -9999;        
+
         NeuronSelection selection;
         qDebug() << "[*] Determining triplet selection:" << motifASelString << motifBSelString
                  << motifCSelString;
         selection.setTripletSelection(motifASelString, motifBSelString, motifCSelString, mNetwork);
+        //selection.printMotifStats();
+        
+        if (isSlice)
+        {
+            selection.filterTripletSlice(mNetwork,
+                                         sliceRef,
+                                         tissueLowMotifA,
+                                         tissueHighMotifA,
+                                         tissueModeMotifA,
+                                         tissueLowMotifB,
+                                         tissueHighMotifB,
+                                         tissueModeMotifB,
+                                         tissueLowMotifC,
+                                         tissueHighMotifC,
+                                         tissueModeMotifC);
+        }
         selection.printMotifStats();
 
         TripletStatistic statistic(mNetwork, 50, 200);
-        connect(&statistic, SIGNAL(update(NetworkStatistic*)), this,
-                SLOT(reportUpdate(NetworkStatistic*)));
-        connect(&statistic, SIGNAL(complete(NetworkStatistic*)), this,
-                SLOT(reportComplete(NetworkStatistic*)));
+
+        if (isSlice)
+        {
+            statistic.setOriginalPreIds(NeuronSelection::filterPreOrBoth(mNetwork, selection.MotifA()),
+                                        NeuronSelection::filterPreOrBoth(mNetwork, selection.MotifB()),
+                                        NeuronSelection::filterPreOrBoth(mNetwork, selection.MotifC()));
+        }
+
+        connect(&statistic, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
+        connect(&statistic, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
         statistic.calculate(selection);
-    } else {
+    }
+    else
+    {
         qDebug() << "[-] Error obtaining MotifQuery data:";
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();
@@ -207,19 +262,27 @@ void MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply) {
     }
 }
 
-void MotifQueryHandler::replyPutResultFinished(QNetworkReply* reply) {
+void
+MotifQueryHandler::replyPutResultFinished(QNetworkReply* reply)
+{
     QNetworkReply::NetworkError error = reply->error();
     const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-    if (error == QNetworkReply::NoError && !(requestId == "putMotifResult")) {
+    if (error == QNetworkReply::NoError && !(requestId == "putMotifResult"))
+    {
         return;
-    } else if (error == QNetworkReply::NoError) {
+    }
+    else if (error == QNetworkReply::NoError)
+    {
         qDebug() << "    Completed processing motif query" << mQueryId;
         reply->deleteLater();
         logoutAndExit(0);
-    } else {
+    }
+    else
+    {
         qDebug() << "[-] Error putting Motif result (queryId" << mQueryId << "):";
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();
@@ -227,12 +290,17 @@ void MotifQueryHandler::replyPutResultFinished(QNetworkReply* reply) {
     }
 }
 
-void MotifQueryHandler::logoutAndExit(const int exitCode) {
+void
+MotifQueryHandler::logoutAndExit(const int exitCode)
+{
     QueryHelpers::logout(mLogoutUrl, mAuthInfo, mNetworkManager);
 
-    if (exitCode == 0) {
+    if (exitCode == 0)
+    {
         emit completedProcessing();
-    } else {
+    }
+    else
+    {
         QCoreApplication::exit(exitCode);
     }
 }

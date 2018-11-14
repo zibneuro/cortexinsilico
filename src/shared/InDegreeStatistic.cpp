@@ -110,6 +110,7 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
             }
 
             const int postId = ids[post];
+            CIS3D::SliceBand postSliceBand = selection.getMotifCBand(postId);
 
             Statistics perPostAC;
             Statistics perPostBC;
@@ -117,16 +118,22 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
             for (int pre = 0; pre < preIdListA.size(); ++pre)
             {
                 const int preId = preIdListA[pre];
-                const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
-                const float innervation = vectorSet->getValue(postId, mappedPreId);
-                perPostAC.addSample(double(innervation));
+                if (selection.getMotifABand(preId) == postSliceBand)
+                {
+                    const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
+                    const float innervation = vectorSet->getValue(postId, mappedPreId);
+                    perPostAC.addSample(double(innervation));
+                }
             }
             for (int pre = 0; pre < preIdListB.size(); ++pre)
             {
                 const int preId = preIdListB[pre];
-                const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
-                const float innervation = vectorSet->getValue(postId, mappedPreId);
-                perPostBC.addSample(double(innervation));
+                if (selection.getMotifBBand(preId) == postSliceBand)
+                {
+                    const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
+                    const float innervation = vectorSet->getValue(postId, mappedPreId);
+                    perPostBC.addSample(double(innervation));
+                }
             }
 
             mStatisticsAC.addSample(perPostAC.getSum());

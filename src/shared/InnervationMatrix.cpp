@@ -6,12 +6,17 @@
     Constructor.
     @param networkProps The model data.
 */
-InnervationMatrix::InnervationMatrix(const NetworkProps& networkProps) : mNetwork(networkProps){};
+InnervationMatrix::InnervationMatrix(const NetworkProps& networkProps)
+    : mNetwork(networkProps)
+    , mRandomGenerator(-1){};
 
 /**
     Destructor.
 */
-InnervationMatrix::~InnervationMatrix() { mCache.clear(); }
+InnervationMatrix::~InnervationMatrix()
+{
+    mCache.clear();
+}
 
 /**
     Retrieves innervation between the specified neurons.
@@ -19,11 +24,25 @@ InnervationMatrix::~InnervationMatrix() { mCache.clear(); }
     @param post The postsynaptic neuron ID.
     @return The innervation from presynaptic to postsynaptic neuron.
 */
-float InnervationMatrix::getValue(int preId, int postId) {
+float
+InnervationMatrix::getValue(int preId, int postId, int selectionIndex)
+{
     CIS3D::SynapticSide preSide = mNetwork.neurons.getSynapticSide(preId);
     CIS3D::SynapticSide postSide = mNetwork.neurons.getSynapticSide(postId);
-    if (preSide == CIS3D::SynapticSide::POSTSYNAPTIC ||
-        postSide == CIS3D::SynapticSide::PRESYNAPTIC) {
+    if (preSide == CIS3D::SynapticSide::POSTSYNAPTIC)
+    {
+        int mappedId = getRandomDuplicatedPreId(selectionIndex);
+        if (mappedId != -1)
+        {
+            preId = mappedId;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    if (postSide == CIS3D::SynapticSide::PRESYNAPTIC)
+    {
         return 0;
     }
 
@@ -36,9 +55,12 @@ float InnervationMatrix::getValue(int preId, int postId) {
         CIS3D::getInnervationPostFileName(innervationDir, regionName, cellTypeName);
 
     SparseVectorSet* vectorSet;
-    if (mCache.contains(innervationFile)) {
+    if (mCache.contains(innervationFile))
+    {
         vectorSet = mCache.get(innervationFile);
-    } else {
+    }
+    else
+    {
         vectorSet = SparseVectorSet::load(innervationFile);
         mCache.add(innervationFile, vectorSet);
     }
@@ -46,4 +68,30 @@ float InnervationMatrix::getValue(int preId, int postId) {
     const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
     float innervation = vectorSet->getValue(postId, mappedPreId);
     return innervation;
+}
+
+int
+InnervationMatrix::getRandomDuplicatedPreId(int selectionIndex)
+{
+    if (selectionIndex == 0)
+    {
+        return mRandomGenerator.getRandomEntry(mOriginalPreIdsA);
+    }
+    else if (selectionIndex == 1)
+    {
+        return mRandomGenerator.getRandomEntry(mOriginalPreIdsB);
+    }
+    else
+    {
+        return mRandomGenerator.getRandomEntry(mOriginalPreIdsC);
+    }
+}
+
+void
+InnervationMatrix::setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC)
+{
+    mOriginalPreIdsA = preIdsA;
+    mOriginalPreIdsB = preIdsB;
+    mOriginalPreIdsC = preIdsC;
+    mRandomGenerator = RandomGenerator(-1);
 }

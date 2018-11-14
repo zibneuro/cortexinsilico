@@ -82,7 +82,7 @@ class TripletStatistic : public NetworkStatistic {
         @param postsynapticNeuronId The ID of the postsynaptic neuron.
         @return  The convergence to the postsynaptic neuron.
     */
-    double calculateConvergence(IdList& presynapticNeurons, int postsynapticNeuronId);
+    double calculateConvergence(IdList& presynapticNeurons, int postsynapticNeuronId, int selectionIndex);
 
     /**
         Calculates the average convergence to for all combinations by

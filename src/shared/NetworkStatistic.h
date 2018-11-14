@@ -106,6 +106,8 @@ class NetworkStatistic : public QObject {
 
     void abort();
 
+    void setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC);
+
    signals:
     // Signals intermediate results are available
     //
