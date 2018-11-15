@@ -59,6 +59,7 @@ printUsage()
     qDebug() << "./networkSimulator SIMULATE_BATCH  <simulationSpecFile>";
     qDebug() << "./networkSimulator SUBCUBE         <voxelSpecFile>";
     qDebug() << "./networkSimulator EXTRACT_ALL     <modelDataDir>";
+    qDebug() << "./networkSimulator COMPUTE_SPATIAL_ALL";
     qDebug() << "";
     qDebug() << "The <initSpecFile> contains the neuron selection to be used for"
              << "simulation.";

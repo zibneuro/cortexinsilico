@@ -239,7 +239,7 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
     UtilIO::makeDir(mPostFolder);
 
     std::set<int> voxel;
-    std::map<int, float > voxel_postAllExc;
+    std::map<int, float> voxel_postAllExc;
     std::map<int, std::set<int> > voxel_neuronsPre;
     std::map<int, std::set<int> > voxel_neuronsPost;
 
@@ -248,6 +248,7 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
     std::map<int, int> neuron_regio;
 
     // ########### VOXEL IDS ###########
+    /*
     qDebug() << "[*] Loading postsynaptic all excitatory.";
     QString postAllExcFile =
         CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
@@ -259,8 +260,12 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
         voxel.insert(it->first);
     }
     writeVoxels(postAllExcField, voxel, mMetaFolder, "voxel_pos.dat");
-    
+    */
+
     // ########### PRE ###########
+
+    std::map<int, Vec3f> voxelPositions;
+
     qDebug() << "[*] Loading presynaptic.";
     for (int i = 0; i < selection.Presynaptic().size(); i++)
     {
@@ -275,10 +280,23 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
 
         QString filePath = CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, neuronId);
         SparseField* preField = SparseField::load(filePath);
-        assertGrid(preField);
+        if (i == 0)
+        {
+            mGridOrigin = preField->getOrigin();
+            mGridDimensions = preField->getDimensions();
+        }
+        else
+        {
+            assertGrid(preField);
+        }
         std::map<int, float> field = preField->getModifiedCopy(1, 0, false);
         for (auto it = field.begin(); it != field.end(); it++)
         {
+            if (voxelPositions.find(it->first) == voxelPositions.end())
+            {
+                Vec3f position = preField->getSpatialLocation(it->first);
+                voxelPositions[it->first] = position;
+            }
             voxel.insert(it->first);
         }
 
@@ -307,11 +325,18 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
         std::map<int, float> field = postFieldExc->getModifiedCopy(1, 0, false);
         for (auto it = field.begin(); it != field.end(); it++)
         {
+            if (voxelPositions.find(it->first) == voxelPositions.end())
+            {
+                Vec3f position = postFieldExc->getSpatialLocation(it->first);
+                voxelPositions[it->first] = position;
+            }
             voxel.insert(it->first);
         }
 
         writeMapFloat(field, voxel, mPostFolder, QString("%1.dat").arg(neuronId));
     }
+
+    writeVoxels(voxelPositions, mMetaFolder, "voxel_pos.dat");
 }
 
 void
@@ -655,6 +680,28 @@ FeatureProvider::writeVoxels(SparseField* postAllExc, std::set<int>& voxelIds, Q
     {
         Vec3f position = postAllExc->getSpatialLocation(*it);
         stream << *it << " " << position[0] << " " << position[1] << " " << position[2] << " "
+               << "\n";
+    }
+}
+
+void
+FeatureProvider::writeVoxels(std::map<int, Vec3f> voxels, QString folder, QString fileName)
+{
+    if (folder != "")
+    {
+        fileName = QDir(folder).filePath(fileName);
+    }
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        const QString msg =
+            QString("Cannot open file %1 for writing.").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    QTextStream stream(&file);
+    for (auto it = voxels.begin(); it != voxels.end(); ++it)
+    {
+        stream << it->first << " " << it->second[0] << " " << it->second[1] << " " << it->second[2] << " "
                << "\n";
     }
 }

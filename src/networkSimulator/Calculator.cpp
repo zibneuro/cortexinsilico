@@ -374,7 +374,7 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, bool ad
 void
 Calculator::calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc)
 {
-    QString tmpDir = "output";
+    QString tmpDir = "innervation";
     UtilIO::makeDir(tmpDir);
 
     std::vector<int> preIndices;

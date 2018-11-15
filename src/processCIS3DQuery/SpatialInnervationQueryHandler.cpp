@@ -253,7 +253,9 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             if (i == 0)
             {
                 arguments2.append("-j");
-            } else {
+            }
+            else
+            {
                 arguments2.append("-ju");
             }
             arguments2.append(dataZipFullPath);
@@ -371,7 +373,32 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             QTextStream stream(&voxelFile);
             for (unsigned int i = 0; i < voxelIds.size(); i++)
             {
+                //qDebug() << i;
                 stream << voxelIds[i] << " " << x[i] << " " << y[i] << " " << z[i] << "\n";
+            }
+            voxelFile.close();
+
+            qDebug() << "[*] Add voxel positions to zip file:" << dataFullPath;
+            QProcess zip3;
+            zip3.setWorkingDirectory(mTempFolder);
+
+            QStringList arguments3;
+
+            arguments3.append("-ju");
+
+            arguments3.append(dataZipFullPath);
+            arguments3.append(voxelFileName);
+
+            zip3.start("zip", arguments3);
+
+            if (!zip3.waitForStarted())
+            {
+                throw std::runtime_error("Error starting zip process");
+            }
+
+            if (!zip3.waitForFinished())
+            {
+                throw std::runtime_error("Error completing zip process");
             }
 
             QJsonObject metadata;
@@ -472,7 +499,6 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
         // ###################### CLEAN FILES ######################
 
-        
         QProcess rm;
         QStringList rmArgs;
         rmArgs << "-rf" << mTempFolder;
@@ -481,7 +507,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         rm.waitForFinished();
 
         qDebug() << "[*] Removed original files";
-        
+
         if (mAborted)
         {
             logoutAndExit(1);

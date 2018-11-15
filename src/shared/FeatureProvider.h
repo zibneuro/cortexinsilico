@@ -69,6 +69,7 @@ private:
     void registerVoxelIds(std::set<int>& voxelIds, std::map<int, float>& field);
     void buildIndex(std::map<int, std::set<int> >& index, std::set<int>& voxelIds, std::map<int, std::map<int, float> >& fields);
     void writeVoxels(SparseField* postAllExc, std::set<int>& voxelIds, QString folder, QString fileName);
+    void writeVoxels(std::map<int, Vec3f> voxels, QString folder, QString fileName);
     bool inRange(SparseField* postAllExc, QVector<float>& bbMin, QVector<float>& bbMax, int voxelId);
     void intersectSets(std::set<int>& a, std::set<int>& b, bool recurse = true);
     std::set<int> createUnion(std::map<int, std::map<int, float> > fields);
