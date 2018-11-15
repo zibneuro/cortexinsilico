@@ -198,11 +198,13 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         // EXTRACT SLICE PARAMETERS
         const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
         const double tissueHighPre = jsonData["tissueHighPre"].toDouble();
+        QString tissueModePre = jsonData["tissueModePre"].toString();
         const double tissueLowPost = jsonData["tissueLowPost"].toDouble();
         const double tissueHighPost = jsonData["tissueHighPost"].toDouble();
+        QString tissueModePost = jsonData["tissueModePost"].toString();
         const double sliceRef = jsonData["sliceRef"].toDouble();
         //const bool isSlice = sliceRef != -9999;
-        qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueLowPost << tissueHighPost;
+        qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
 
         QString preSelString = jsonData["presynapticSelectionFilter"].toString();
         QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
@@ -212,7 +214,6 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         Util::correctVPMSelectionFilter(preFilter, mNetwork);
         Util::correctInterneuronSelectionFilter(preFilter, mNetwork);
         IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
-        preNeurons = NeuronSelection::filterTissueDepth(mNetwork, preNeurons, sliceRef, tissueLowPre, tissueHighPre, CIS3D::SliceBand::FIRST);
 
         QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
         QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
@@ -220,7 +221,6 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
         Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
         IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
-        postNeurons = NeuronSelection::filterTissueDepth(mNetwork, postNeurons, sliceRef, tissueLowPost, tissueHighPost, CIS3D::SliceBand::FIRST);
 
         qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
         InnervationStatistic innervation(mNetwork);
@@ -229,6 +229,7 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         connect(&innervation, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
         NeuronSelection selection(preNeurons, postNeurons);
+        selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
         innervation.calculate(selection);
     }
     else

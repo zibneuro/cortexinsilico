@@ -266,6 +266,34 @@ NeuronSelection::getMotifCBand(int id) const
     }
 }
 
+CIS3D::SliceBand
+NeuronSelection::getPresynapticBand(int id) const
+{
+    auto it = mPresynapticBand.find(id);
+    if (it != mPresynapticBand.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        return CIS3D::SliceBand::FIRST;
+    }
+}
+
+CIS3D::SliceBand
+NeuronSelection::getPostsynapticBand(int id) const
+{
+    auto it = mPostsynapticBand.find(id);
+    if (it != mPostsynapticBand.end())
+    {
+        return it->second;
+    }
+    else
+    {
+        return CIS3D::SliceBand::FIRST;
+    }
+}
+
 /*
     Prints the number of selected neurons for motif statistics.
 */
@@ -424,9 +452,23 @@ NeuronSelection::filterTripletSlice(const NetworkProps& networkProps,
                                     double tissueHighMotifC,
                                     QString tissueModeMotifC)
 {
-    applyTissueDepthFilter(mMotifA, mMotifABand, networkProps, sliceRef, tissueLowMotifA, tissueHighMotifA, tissueModeMotifA);    
+    applyTissueDepthFilter(mMotifA, mMotifABand, networkProps, sliceRef, tissueLowMotifA, tissueHighMotifA, tissueModeMotifA);
     applyTissueDepthFilter(mMotifB, mMotifBBand, networkProps, sliceRef, tissueLowMotifB, tissueHighMotifB, tissueModeMotifB);
     applyTissueDepthFilter(mMotifC, mMotifCBand, networkProps, sliceRef, tissueLowMotifC, tissueHighMotifC, tissueModeMotifC);
+}
+
+void
+NeuronSelection::filterInnervationSlice(const NetworkProps& networkProps,
+                                        double sliceRef,
+                                        double tissueLowPre,
+                                        double tissueHighPre,
+                                        QString tissueModePre,
+                                        double tissueLowPost,
+                                        double tissueHighPost,
+                                        QString tissueModePost)
+{
+    applyTissueDepthFilter(mPresynaptic, mPresynapticBand, networkProps, sliceRef, tissueLowPre, tissueHighPre, tissueModePre);
+    applyTissueDepthFilter(mPostsynaptic, mPostsynapticBand, networkProps, sliceRef, tissueLowPost, tissueHighPost, tissueModePost);
 }
 
 QVector<float>
@@ -458,7 +500,8 @@ NeuronSelection::filterPreOrBoth(const NetworkProps& networkProps, IdList ids)
     IdList pruned;
     for (auto it = ids.begin(); it != ids.end(); it++)
     {
-        if(networkProps.neurons.getSynapticSide(*it) != CIS3D::POSTSYNAPTIC){
+        if (networkProps.neurons.getSynapticSide(*it) != CIS3D::POSTSYNAPTIC)
+        {
             pruned.append(*it);
         }
     }

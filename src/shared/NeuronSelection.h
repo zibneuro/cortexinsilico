@@ -83,6 +83,15 @@ public:
                             double tissueHighMotifC,
                             QString tissueModeMotifC);
 
+    void filterInnervationSlice(const NetworkProps& networkProps,
+                                double sliceRef,
+                                double tissueLowPre,
+                                double tissueHighPre,
+                                QString tissueModePre,
+                                double tissueLowPost,
+                                double tissueHighPost,
+                                QString tissueModePost);
+
     /**
         Determines neuron IDs based on a selection string;
         @param selectionString The selection string.
@@ -121,6 +130,10 @@ public:
     CIS3D::SliceBand getMotifBBand(int id) const;
 
     CIS3D::SliceBand getMotifCBand(int id) const;
+
+    CIS3D::SliceBand getPresynapticBand(int id) const;
+
+    CIS3D::SliceBand getPostsynapticBand(int id) const;
 
     /*
       Prints the number of selected neurons for motif statistics.
@@ -162,6 +175,8 @@ private:
     std::map<int, CIS3D::SliceBand> mMotifABand;
     std::map<int, CIS3D::SliceBand> mMotifBBand;
     std::map<int, CIS3D::SliceBand> mMotifCBand;
+    std::map<int, CIS3D::SliceBand> mPresynapticBand;
+    std::map<int, CIS3D::SliceBand> mPostsynapticBand;
 };
 
 #endif

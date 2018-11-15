@@ -144,6 +144,11 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
             for (int pre = 0; pre < preIdList.size(); ++pre)
             {
                 const int preId = preIdList[pre];
+
+                if(selection.getPostsynapticBand(preId) != selection.getPostsynapticBand(preId)){
+                    continue;
+                }
+
                 const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
                 const float innervation = vectorSet->getValue(postId, mappedPreId);
                 x = innervation;
