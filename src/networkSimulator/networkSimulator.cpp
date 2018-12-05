@@ -60,6 +60,7 @@ printUsage()
     qDebug() << "./networkSimulator SUBCUBE         <voxelSpecFile>";
     qDebug() << "./networkSimulator EXTRACT_ALL     <modelDataDir>";
     qDebug() << "./networkSimulator COMPUTE_SPATIAL_ALL";
+    qDebug() << "./networkSimulator SHOW_DIMENSIONS <sparseField>";
     qDebug() << "";
     qDebug() << "The <initSpecFile> contains the neuron selection to be used for"
              << "simulation.";
@@ -690,6 +691,21 @@ main(int argc, char** argv)
             featureProvider.loadCIS3D(neurons_pre, neurons_post);
             qDebug() << neurons_pre.size() << neurons_post.size();
             Calculator::calculateSpatial(neurons_pre, neurons_post);
+            return 0;
+        }
+    }
+    else if (mode == "SHOW_DIMENSIONS")
+    {
+        if (argc != 3)
+        {
+            printUsage();
+            return 1;
+        }
+        else
+        {
+            const QString filePath = argv[2];
+            SparseField* field = SparseField::load(filePath);
+            field->getCoordinates().print();
             return 0;
         }
     }

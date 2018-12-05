@@ -145,7 +145,7 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
             {
                 const int preId = preIdList[pre];
 
-                if(selection.getPostsynapticBand(preId) != selection.getPostsynapticBand(preId)){
+                if(selection.getPresynapticBand(preId) != selection.getPostsynapticBand(postId)){
                     continue;
                 }
 
