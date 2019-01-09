@@ -237,6 +237,8 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
     UtilIO::makeDir(mMetaFolder);
     UtilIO::makeDir(mPreFolder);
     UtilIO::makeDir(mPostFolder);
+    UtilIO::makeDir("features_postAll");
+
 
     std::set<int> voxel;
     std::map<int, float> voxel_postAllExc;
@@ -335,6 +337,15 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
 
         writeMapFloat(field, voxel, mPostFolder, QString("%1.dat").arg(neuronId));
     }
+
+    // ########### POST ALL EXC ###########
+    qDebug() << "[*] Loading postsynaptic all excitatory.";
+    QString postAllExcFile =
+        CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
+    SparseField* postAllExcField = SparseField::load(postAllExcFile);
+    voxel_postAllExc = postAllExcField->getModifiedCopy(1, 0, false);
+    writeMapFloat(voxel_postAllExc, voxel, "features_postAll", "voxel_postAllExc.dat");
+
 
     writeVoxels(voxelPositions, mMetaFolder, "voxel_pos.dat");
 }
