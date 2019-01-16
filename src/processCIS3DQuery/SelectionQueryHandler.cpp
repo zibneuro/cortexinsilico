@@ -202,13 +202,15 @@ SelectionQueryHandler::process(const QString& selectionQueryId,
     mAuthInfo = QueryHelpers::login(mLoginUrl,
                                     mConfig["WORKER_USERNAME"].toString(),
                                     mConfig["WORKER_PASSWORD"].toString(),
-                                    mNetworkManager);
+                                    mNetworkManager,
+                                    mConfig);
 
     QNetworkRequest request;
     request.setUrl(mQueryUrl);
     request.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
     request.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     request.setAttribute(QNetworkRequest::User, QVariant("getSelectionQueryData"));
+    QueryHelpers::setAuthorization(mConfig, request);
 
     connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
     mNetworkManager.get(request);
@@ -280,7 +282,7 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
             if (isSlice)
             {
-                CIS3D::SliceBand band = mode == "twoSided" ? CIS3D::SliceBand::BOTH : CIS3D::SliceBand::FIRST; 
+                CIS3D::SliceBand band = mode == "twoSided" ? CIS3D::SliceBand::BOTH : CIS3D::SliceBand::FIRST;
                 neurons = NeuronSelection::filterTissueDepth(mNetwork, neurons, sliceRef, tissueLow, tissueHigh, band);
             }
             qDebug() << "    Start sorting " << neurons.size() << " neurons.";
@@ -314,6 +316,8 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
             putRequest.setAttribute(QNetworkRequest::User, QVariant("putSelectionResult"));
             putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+            QueryHelpers::setAuthorization(mConfig, putRequest);
+
             QJsonDocument putDoc(result);
             QString putData(putDoc.toJson());
 
@@ -376,7 +380,8 @@ SelectionQueryHandler::logoutAndExit(const int exitCode)
 {
     QueryHelpers::logout(mLogoutUrl,
                          mAuthInfo,
-                         mNetworkManager);
+                         mNetworkManager,
+                         mConfig);
 
     if (exitCode == 0)
     {

@@ -60,13 +60,15 @@ EvaluationQueryHandler::process(const QString& evaluationQueryId,
     mAuthInfo = QueryHelpers::login(mLoginUrl,
                                     mConfig["WORKER_USERNAME"].toString(),
                                     mConfig["WORKER_PASSWORD"].toString(),
-                                    mNetworkManager);
+                                    mNetworkManager,
+                                    mConfig);
 
     QNetworkRequest request;
     request.setUrl(mQueryUrl);
     request.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
     request.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     request.setAttribute(QNetworkRequest::User, QVariant("getQueryData"));
+    QueryHelpers::setAuthorization(mConfig, request);
 
     connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
     mNetworkManager.get(request);
@@ -98,6 +100,7 @@ EvaluationQueryHandler::reportUpdate(NetworkStatistic* stat)
     putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     putRequest.setAttribute(QNetworkRequest::User, QVariant("putIntermediateEvaluationResult"));
     putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, putRequest);
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
@@ -161,6 +164,7 @@ EvaluationQueryHandler::reportComplete(NetworkStatistic* stat)
     putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     putRequest.setAttribute(QNetworkRequest::User, QVariant("putEvaluationResult"));
     putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, putRequest);
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
@@ -304,7 +308,8 @@ EvaluationQueryHandler::logoutAndExit(const int exitCode)
 {
     QueryHelpers::logout(mLogoutUrl,
                          mAuthInfo,
-                         mNetworkManager);
+                         mNetworkManager,
+                         mConfig);
 
     if (exitCode == 0)
     {

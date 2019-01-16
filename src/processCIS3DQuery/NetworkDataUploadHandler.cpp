@@ -12,18 +12,19 @@
 #include <QtNetwork/QNetworkReply>
 #include <stdexcept>
 
-
 NetworkDataUploadHandler::NetworkDataUploadHandler(QObject* parent)
     : QObject(parent)
 {
 }
 
-
-QJsonArray getCellTypesAsJson(const NetworkProps& network) {
+QJsonArray
+getCellTypesAsJson(const NetworkProps& network)
+{
     QJsonArray arr;
 
     const QList<int> ids = network.cellTypes.getAllCellTypeIds(true);
-    for (int i=0; i<ids.size(); ++i) {
+    for (int i = 0; i < ids.size(); ++i)
+    {
         const int id = ids[i];
 
         const Vec3f dendCol = network.cellTypes.getDendriteColor(id);
@@ -45,8 +46,9 @@ QJsonArray getCellTypesAsJson(const NetworkProps& network) {
     return arr;
 }
 
-
-QJsonArray getColumnsAsJson(const NetworkProps& network) {
+QJsonArray
+getColumnsAsJson(const NetworkProps& network)
+{
     QJsonArray arr;
 
     QList<int> columnRegionIds;
@@ -75,7 +77,8 @@ QJsonArray getColumnsAsJson(const NetworkProps& network) {
     columnRegionIds.append(network.regions.getId("Gamma"));
     columnRegionIds.append(network.regions.getId("Delta"));
 
-    for (int i=0; i<columnRegionIds.size(); ++i) {
+    for (int i = 0; i < columnRegionIds.size(); ++i)
+    {
         const int id = columnRegionIds[i];
         QJsonObject obj;
         obj.insert("ID", id);
@@ -86,12 +89,14 @@ QJsonArray getColumnsAsJson(const NetworkProps& network) {
     return arr;
 }
 
-
-QJsonArray getRegionsAsJson(const NetworkProps& network) {
+QJsonArray
+getRegionsAsJson(const NetworkProps& network)
+{
     QJsonArray arr;
 
     const QList<int> ids = network.regions.getAllRegionIds();
-    for (int i=0; i<ids.size(); ++i) {
+    for (int i = 0; i < ids.size(); ++i)
+    {
         const int id = ids[i];
         QJsonObject obj;
         obj.insert("ID", id);
@@ -102,8 +107,9 @@ QJsonArray getRegionsAsJson(const NetworkProps& network) {
     return arr;
 }
 
-
-QJsonArray getLaminarLocationsAsJson() {
+QJsonArray
+getLaminarLocationsAsJson()
+{
     QJsonArray arr;
 
     QJsonObject supraObj;
@@ -124,8 +130,8 @@ QJsonArray getLaminarLocationsAsJson() {
     return arr;
 }
 
-
-void NetworkDataUploadHandler::process(const QJsonObject& config)
+void
+NetworkDataUploadHandler::process(const QJsonObject& config)
 {
     mConfig = config;
 
@@ -139,7 +145,7 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     const QString laminarLocationsEndPoint = mConfig["METEOR_LAMINARLOCATIONS_ENDPOINT"].toString();
     const QString networksEndPoint = mConfig["METEOR_NETWORKS_ENDPOINT"].toString();
 
-    mLoginUrl  = baseUrl + loginEndPoint;
+    mLoginUrl = baseUrl + loginEndPoint;
     mLogoutUrl = baseUrl + logoutEndPoint;
     const QString cellTypesUrl = baseUrl + cellTypesEndPoint;
     const QString columnsUrl = baseUrl + columnsEndPoint;
@@ -154,7 +160,8 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     mAuthInfo = QueryHelpers::login(mLoginUrl,
                                     mConfig["WORKER_USERNAME"].toString(),
                                     mConfig["WORKER_PASSWORD"].toString(),
-                                    mNetworkManager);
+                                    mNetworkManager,
+                                    mConfig);
 
     mPendingRequestIds.append("CellTypes");
     mPendingRequestIds.append("Columns");
@@ -168,6 +175,7 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     ctRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     ctRequest.setAttribute(QNetworkRequest::User, QVariant("CellTypes"));
     ctRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, ctRequest);
     QJsonArray ctData = getCellTypesAsJson(mNetwork);
     QJsonDocument ctDoc(ctData);
     QString ctPostData(ctDoc.toJson());
@@ -178,6 +186,7 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     colRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     colRequest.setAttribute(QNetworkRequest::User, QVariant("Columns"));
     colRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, colRequest);
     QJsonArray colData = getColumnsAsJson(mNetwork);
     QJsonDocument colDoc(colData);
     QString colPostData(colDoc.toJson());
@@ -188,6 +197,7 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     regRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     regRequest.setAttribute(QNetworkRequest::User, QVariant("Regions"));
     regRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, regRequest);
     QJsonArray regData = getRegionsAsJson(mNetwork);
     QJsonDocument regDoc(regData);
     QString regPostData(regDoc.toJson());
@@ -198,6 +208,7 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     locRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     locRequest.setAttribute(QNetworkRequest::User, QVariant("LaminarLocations"));
     locRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, locRequest);
     QJsonArray locData = getLaminarLocationsAsJson();
     QJsonDocument locDoc(locData);
     QString locPostData(locDoc.toJson());
@@ -208,23 +219,26 @@ void NetworkDataUploadHandler::process(const QJsonObject& config)
     networksRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     networksRequest.setAttribute(QNetworkRequest::User, QVariant("Networks"));
     networksRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, networksRequest);
     QJsonArray networksData = QueryHelpers::getDatasetsAsJson(config);
     QJsonDocument networksDoc(networksData);
     QString networksPostData(networksDoc.toJson());
 
     connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
-    mNetworkManager.put(ctRequest,  ctPostData.toLocal8Bit());
+    mNetworkManager.put(ctRequest, ctPostData.toLocal8Bit());
     mNetworkManager.put(colRequest, colPostData.toLocal8Bit());
     mNetworkManager.put(regRequest, regPostData.toLocal8Bit());
     mNetworkManager.put(locRequest, locPostData.toLocal8Bit());
     mNetworkManager.put(networksRequest, networksPostData.toLocal8Bit());
 }
 
-
-void NetworkDataUploadHandler::replyGetQueryFinished(QNetworkReply* reply) {
+void
+NetworkDataUploadHandler::replyGetQueryFinished(QNetworkReply* reply)
+{
     QNetworkReply::NetworkError error = reply->error();
     const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-    if (error == QNetworkReply::NoError) {
+    if (error == QNetworkReply::NoError)
+    {
         if (requestId == "CellTypes" ||
             requestId == "Columns" ||
             requestId == "Regions" ||
@@ -234,21 +248,26 @@ void NetworkDataUploadHandler::replyGetQueryFinished(QNetworkReply* reply) {
             qDebug() << "[*] Successful upload of" << requestId;
             reply->deleteLater();
             mPendingRequestIds.removeOne(requestId);
-            if (mPendingRequestIds.isEmpty()) {
+            if (mPendingRequestIds.isEmpty())
+            {
                 QueryHelpers::logout(mLogoutUrl,
                                      mAuthInfo,
-                                     mNetworkManager);
+                                     mNetworkManager,
+                                     mConfig);
                 emit completedProcessing();
             }
         }
-        else {
+        else
+        {
             return;
         }
     }
-    else {
+    else
+    {
         qDebug() << "[-] Error uploading data:" << requestId;
         qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404) {
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
+        {
             qDebug() << QString(reply->readAll().replace("\"", ""));
         }
         reply->deleteLater();

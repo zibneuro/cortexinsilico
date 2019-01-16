@@ -57,13 +57,14 @@ InDegreeQueryHandler::process(const QString& inDegreeQueryId, const QJsonObject&
     mLoginUrl = baseUrl + loginEndPoint;
     mLogoutUrl = baseUrl + logoutEndPoint;
 
-    mAuthInfo = QueryHelpers::login(mLoginUrl, mConfig["WORKER_USERNAME"].toString(), mConfig["WORKER_PASSWORD"].toString(), mNetworkManager);
+    mAuthInfo = QueryHelpers::login(mLoginUrl, mConfig["WORKER_USERNAME"].toString(), mConfig["WORKER_PASSWORD"].toString(), mNetworkManager, mConfig);
 
     QNetworkRequest request;
     request.setUrl(mQueryUrl);
     request.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
     request.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     request.setAttribute(QNetworkRequest::User, QVariant("getQueryData"));
+    QueryHelpers::setAuthorization(mConfig, request);
 
     connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
     mNetworkManager.get(request);
@@ -95,6 +96,8 @@ InDegreeQueryHandler::reportUpdate(NetworkStatistic* stat)
     putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     putRequest.setAttribute(QNetworkRequest::User, QVariant("putIntermediateInDegreeResult"));
     putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, putRequest);
+
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
@@ -165,6 +168,8 @@ InDegreeQueryHandler::reportComplete(NetworkStatistic* stat)
     putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     putRequest.setAttribute(QNetworkRequest::User, QVariant("putInDegreeResult"));
     putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, putRequest);
+
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
@@ -286,7 +291,7 @@ InDegreeQueryHandler::replyPutResultFinished(QNetworkReply* reply)
 void
 InDegreeQueryHandler::logoutAndExit(const int exitCode)
 {
-    QueryHelpers::logout(mLogoutUrl, mAuthInfo, mNetworkManager);
+    QueryHelpers::logout(mLogoutUrl, mAuthInfo, mNetworkManager, mConfig);
 
     if (exitCode == 0)
     {

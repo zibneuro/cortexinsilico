@@ -10,23 +10,24 @@
 #include <QJsonArray>
 #include <QNetworkAccessManager>
 
-
-struct AuthInfo {
+struct AuthInfo
+{
     QString userId;
     QString authToken;
 };
 
-
-namespace QueryHelpers {
-
+namespace QueryHelpers
+{
     AuthInfo login(const QString url,
                    const QString& username,
                    const QString& password,
-                   QNetworkAccessManager& networkManager);
+                   QNetworkAccessManager& networkManager,
+                   const QJsonObject& config);
 
     void logout(const QString& url,
                 const AuthInfo& authInfo,
-                QNetworkAccessManager& networkManager);
+                QNetworkAccessManager& networkManager,
+                const QJsonObject& config);
 
     int uploadToS3(const QString& key,
                    const QString& filename,
@@ -38,6 +39,8 @@ namespace QueryHelpers {
     QString getPrimaryDatasetRoot(const QJsonObject& config);
 
     QJsonArray getDatasetsAsJson(const QJsonObject& config);
-}
+
+    void setAuthorization(const QJsonObject& config, QNetworkRequest& request);
+} // namespace QueryHelpers
 
 #endif // QUERYHELPERS_H

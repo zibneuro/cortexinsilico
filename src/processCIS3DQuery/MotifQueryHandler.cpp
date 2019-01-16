@@ -57,13 +57,14 @@ MotifQueryHandler::process(const QString& motifQueryId, const QJsonObject& confi
     mLoginUrl = baseUrl + loginEndPoint;
     mLogoutUrl = baseUrl + logoutEndPoint;
 
-    mAuthInfo = QueryHelpers::login(mLoginUrl, mConfig["WORKER_USERNAME"].toString(), mConfig["WORKER_PASSWORD"].toString(), mNetworkManager);
+    mAuthInfo = QueryHelpers::login(mLoginUrl, mConfig["WORKER_USERNAME"].toString(), mConfig["WORKER_PASSWORD"].toString(), mNetworkManager, mConfig);
 
     QNetworkRequest request;
     request.setUrl(mQueryUrl);
     request.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
     request.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     request.setAttribute(QNetworkRequest::User, QVariant("getQueryData"));
+    QueryHelpers::setAuthorization(mConfig, request);
 
     connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
     mNetworkManager.get(request);
@@ -95,6 +96,8 @@ MotifQueryHandler::reportUpdate(NetworkStatistic* stat)
     putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     putRequest.setAttribute(QNetworkRequest::User, QVariant("putIntermediateMotifResult"));
     putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, putRequest);
+
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
@@ -165,6 +168,8 @@ MotifQueryHandler::reportComplete(NetworkStatistic* stat)
     putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     putRequest.setAttribute(QNetworkRequest::User, QVariant("putMotifResult"));
     putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, putRequest);
+
     QJsonDocument putDoc(payload);
     QString putData(putDoc.toJson());
 
@@ -212,14 +217,14 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         const double tissueHighMotifC = jsonData["tissueHighMotifC"].toDouble();
         const QString tissueModeMotifC = jsonData["tissueModeMotifC"].toString();
         const double sliceRef = jsonData["sliceRef"].toDouble();
-        const bool isSlice = sliceRef != -9999;        
+        const bool isSlice = sliceRef != -9999;
 
         NeuronSelection selection;
         qDebug() << "[*] Determining triplet selection:" << motifASelString << motifBSelString
                  << motifCSelString;
         selection.setTripletSelection(motifASelString, motifBSelString, motifCSelString, mNetwork);
         //selection.printMotifStats();
-        
+
         if (isSlice)
         {
             selection.filterTripletSlice(mNetwork,
@@ -293,7 +298,7 @@ MotifQueryHandler::replyPutResultFinished(QNetworkReply* reply)
 void
 MotifQueryHandler::logoutAndExit(const int exitCode)
 {
-    QueryHelpers::logout(mLogoutUrl, mAuthInfo, mNetworkManager);
+    QueryHelpers::logout(mLogoutUrl, mAuthInfo, mNetworkManager, mConfig);
 
     if (exitCode == 0)
     {

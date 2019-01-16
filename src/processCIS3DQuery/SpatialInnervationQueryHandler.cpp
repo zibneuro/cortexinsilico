@@ -83,13 +83,15 @@ SpatialInnervationQueryHandler::process(const QString& selectionQueryId,
     mAuthInfo = QueryHelpers::login(mLoginUrl,
                                     mConfig["WORKER_USERNAME"].toString(),
                                     mConfig["WORKER_PASSWORD"].toString(),
-                                    mNetworkManager);
+                                    mNetworkManager,
+                                    mConfig);
 
     QNetworkRequest request;
     request.setUrl(mQueryUrl);
     request.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
     request.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
     request.setAttribute(QNetworkRequest::User, QVariant("getSpatialInnervationQueryData"));
+    QueryHelpers::setAuthorization(mConfig, request);
 
     connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
     mNetworkManager.get(request);
@@ -299,6 +301,8 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
             putRequest.setAttribute(QNetworkRequest::User, QVariant("putSpatialInnervationResult"));
             putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+            QueryHelpers::setAuthorization(mConfig, putRequest);
+
             QJsonDocument putDoc(payload);
             QString putData(putDoc.toJson());
 
@@ -543,6 +547,8 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
             putRequest.setAttribute(QNetworkRequest::User, QVariant("putSpatialInnervationResult"));
             putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+            QueryHelpers::setAuthorization(mConfig, putRequest);
+
             QJsonDocument putDoc(payload);
             QString putData(putDoc.toJson());
 
@@ -596,7 +602,8 @@ SpatialInnervationQueryHandler::logoutAndExit(const int exitCode)
 {
     QueryHelpers::logout(mLogoutUrl,
                          mAuthInfo,
-                         mNetworkManager);
+                         mNetworkManager,
+                         mConfig);
 
     if (exitCode == 0)
     {
