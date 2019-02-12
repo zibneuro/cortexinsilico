@@ -109,6 +109,8 @@ namespace Util
 
     std::vector<double> getHeatMap(double value, double min, double max);
 
+    void getMinMedMax(std::vector<float> in, float& min, float& med, float& max);
+
 } // namespace Util
 
 #endif // UTIL_H

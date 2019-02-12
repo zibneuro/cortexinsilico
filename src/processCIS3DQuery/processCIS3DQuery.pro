@@ -61,6 +61,7 @@ SOURCES += \
     SelectionQueryHandler.cpp \
     NetworkDataUploadHandler.cpp \
     SpatialInnervationQueryHandler.cpp \
+    VoxelQueryHandler.cpp \
     QueryHelpers.cpp
 
 HEADERS += \
@@ -99,4 +100,5 @@ HEADERS += \
     SelectionQueryHandler.h \
     NetworkDataUploadHandler.h \
     SpatialInnervationQueryHandler.h \
+    VoxelQueryHandler.h \
     QueryHelpers.h

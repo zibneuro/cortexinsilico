@@ -627,3 +627,41 @@ Util::getHeatMap(double value, double min, double max)
     result.push_back(blue);
     return result;
 }
+
+void
+Util::getMinMedMax(std::vector<float> in, float& min, float& med, float& max)
+{
+    if (in.size() == 0)
+    {
+        min = 0;
+        med = 0;
+        max = 0;
+        return;
+    }
+    else if (in.size() == 1)
+    {
+        min = in[0];
+        med = in[0];
+        max = in[0];
+        return;
+    }
+
+    std::sort(in.begin(), in.end());
+    unsigned int iLast = in.size() - 1;
+    min = in[0];
+    max = in[iLast];
+
+    bool even = in.size() % 2 == 0;
+    if (even)
+    {
+        int half = in.size() / 2;
+        float a = in[half - 1];
+        float b = in[half];
+        med = (a + b) / 2;
+    }
+    else
+    {
+        int half = (in.size() - 1) / 2;
+        med = in[half];
+    }
+}

@@ -22,10 +22,17 @@ public:
     Histogram(const double binSize);
 
     /**
-        Adds a sampe value to the histogram.
+        Adds a sample value to the histogram.
         @param v The sample value.
     */
     void addValue(const double v);
+
+    /**
+        Adds the same sample value to the histogram k times.
+        @param v The sample value.
+        @param k The multiplicity.
+    */
+    void addValues(const double v, const int k);
 
     /**
         Retrieves the number of bins covering all current samples.

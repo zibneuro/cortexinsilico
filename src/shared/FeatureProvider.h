@@ -55,6 +55,8 @@ public:
 
     void loadVoxelPositions(std::vector<int>& voxelIds, std::vector<float>& x, std::vector<float>& y, std::vector<float>& z);
 
+    static void readMapFloat(std::map<int, float>& mapping, QString folder, QString fileName, float coefficient = 1);
+
 private:
     void saveInitFile(QString fileName);
     void loadInitFile(QString fileName);
@@ -62,8 +64,7 @@ private:
     void writeMapFloat(std::map<int, float>& mapping, std::set<int>& voxelIds, QString folder, QString file);
     void writeMapInt(std::map<int, int>& mapping, QString folder, QString file);
     void writeIndex(std::map<int, std::set<int> >& index, QString folder, QString file);
-    void loadIndex(std::map<int, std::set<int> >& index, QString folder, QString fileName);
-    void readMapFloat(std::map<int, float>& mapping, QString folder, QString fileName, float coefficient = 1);
+    void loadIndex(std::map<int, std::set<int> >& index, QString folder, QString fileName);    
     void readMapInt(std::map<int, int>& mapping, QString folder, QString fileName);
     void readIndex(std::map<int, std::set<int> >& index, QString folder, QString file);
     void registerVoxelIds(std::set<int>& voxelIds, std::map<int, float>& field);

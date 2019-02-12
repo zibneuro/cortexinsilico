@@ -67,6 +67,41 @@ void Histogram::addValue(const double v)
 }
 
 /**
+    Adds the same sample value to the histogram k times.
+    @param v The sample value.
+    @param k The multiplicity.
+*/
+void Histogram::addValues(const double v, const int k){
+    if (v < 0.0) {
+        throw std::runtime_error("Histogram: No negative values allowed");
+    }
+
+    if (v < 0.00001) {
+        mNumZeros += k;
+    }
+    else {
+        const int binNum = int(floor(v / mBinSize));
+
+        while (binNum >= mBins.size()) {
+            mBins.append(0);
+        }
+
+        mBins[binNum] += k;
+    }
+
+    mTotalValue += k*v;
+    mTotalSquaredValue += k*(v*v);
+    mNumValues += k;
+
+    if (v < mMinValue) {
+        mMinValue = v;
+    }
+    if (v > mMaxValue) {
+        mMaxValue = v;
+    }
+}
+
+/**
     Retrieves the number of bins covering all current samples.
     @returns Number of bins.
 */
