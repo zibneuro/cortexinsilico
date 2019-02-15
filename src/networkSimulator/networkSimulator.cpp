@@ -82,21 +82,32 @@ checkNumParams(QJsonArray parameters, int expected)
 
 /**
     Checks whether the mode is valid.
+    @return The number of required parameters.
 */
-void
+int
 checkSimulationMode(QString mode)
 {
-    if (mode == "innervation")
+    if (mode == "h0_intercept_pre_pst_pstAll")
     {
-        return;
+        return 4;
     }
-    else if (mode == "synapse")
+    else if (mode == "h0_pre_pst_pstAll")
     {
-        return;
+        return 3;
+    }
+    else if (mode == "h0_intercept_pre_pstNorm")
+    {
+        return 3;
+    }
+    else if (mode == "h0_pre_pstNorm")
+    {
+        return 2;
     }
     else
     {
-        throw std::runtime_error("Invalid simulation mode");
+        const QString msg =
+            QString("Invalid simulation mode: %1").arg(mode);
+        throw std::runtime_error(qPrintable(msg));
     }
 }
 
@@ -104,12 +115,12 @@ checkSimulationMode(QString mode)
     Extracts the THETA parameters from the spec file.
 
     @param spec The specification file as json object.
+    @param numParams The expected number of parameters.
     @return A vector with the theta parameters.
 */
 QVector<float>
-extractRuleParameters(const QJsonObject spec, bool addIntercept)
-{
-    int numParams = addIntercept ? 4 : 3;
+extractRuleParameters(const QJsonObject spec, int numParams)
+{    
     QVector<float> theta;
     QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
     checkNumParams(parameters, numParams);
@@ -125,13 +136,13 @@ extractRuleParameters(const QJsonObject spec, bool addIntercept)
     Extracts the THETA parameters from the spec file in batch mode.
 
     @param spec The specification file as json object.
+    @param numParams The expected number of parameters.
     @return A vector of parameters.
 */
 std::vector<QVector<float> >
-extractRuleParametersBatch(const QJsonObject spec, bool addIntercept)
+extractRuleParametersBatch(const QJsonObject spec, int numParams)
 {
     std::vector<QVector<float> > result;
-    int numParams = addIntercept ? 4 : 3;
     QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS_BATCH"].toArray();
     for (int i = 0; i < parameters.size(); i++)
     {
@@ -416,19 +427,6 @@ extractCreateMatrix(const QJsonObject spec)
     }
 }
 
-bool
-extractAddIntercept(const QJsonObject spec)
-{
-    if (spec["ADD_INTERCEPT"] != QJsonValue::Undefined)
-    {
-        return spec["ADD_INTERCEPT"].toBool();
-    }
-    else
-    {
-        return true;
-    }
-}
-
 /*
     Reads the SAMPLING_FACTOR property from the specification file.
 
@@ -553,18 +551,18 @@ main(int argc, char** argv)
         {
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            bool addIntercept = extractAddIntercept(spec);
             double maxInnervation = extractInnervationBound(spec);
             QString mode = extractSimulationMode(spec);
-            checkSimulationMode(mode);
+            int numParameters = checkSimulationMode(mode);
             int seed = extractRandomSeed(spec);
-            int runIndex = extractRunIndex(spec);
+            std::vector<int> runIndices;
+            runIndices.push_back(extractRunIndex(spec));
             RandomGenerator randomGenerator(seed);
-            QVector<float> parameters = extractRuleParameters(spec, addIntercept);
+            std::vector<QVector<float> > parameters;
+            parameters.push_back(extractRuleParameters(spec, numParameters));
             FeatureProvider featureProvider;
-            Calculator calculator(featureProvider, randomGenerator, runIndex);
-            calculator.calculate(parameters, addIntercept, maxInnervation, mode);
-            //qDebug() << "finish";
+            Calculator calculator(featureProvider, randomGenerator, runIndices);
+            calculator.calculateBatch(parameters, maxInnervation, mode);
         }
     }
     else if (mode == "SIMULATE_BATCH")
@@ -578,19 +576,17 @@ main(int argc, char** argv)
         {
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            bool addIntercept = extractAddIntercept(spec);
             double maxInnervation = extractInnervationBound(spec);
             QString mode = extractSimulationMode(spec);
-            checkSimulationMode(mode);
+            int numParameters = checkSimulationMode(mode);
             int seed = extractRandomSeed(spec);
             std::vector<int> runIndices = extractRunIndicesBatch(spec);
             qDebug() << "BATCH-SIZE:" << runIndices.size();
             RandomGenerator randomGenerator(seed);
-            std::vector<QVector<float> > parameters = extractRuleParametersBatch(spec, addIntercept);
+            std::vector<QVector<float> > parameters = extractRuleParametersBatch(spec, numParameters);
             FeatureProvider featureProvider;
             Calculator calculator(featureProvider, randomGenerator, runIndices);
-            calculator.calculateBatch(parameters, addIntercept, maxInnervation, mode);
-            //qDebug() << "finish";
+            calculator.calculateBatch(parameters, maxInnervation, mode);
         }
     }
     else if (mode == "SUBCUBE")
