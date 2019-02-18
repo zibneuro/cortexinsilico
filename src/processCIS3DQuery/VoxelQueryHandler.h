@@ -66,7 +66,9 @@ private:
     std::map<int, int> mMapPreCellsPerVoxel;
     std::map<int, float> mMapPostsynapticSitesPerVoxel;
     std::map<int, int> mMapPostCellsPerVoxel;
-    std::set<int> mInnervatedVoxels;
+    std::set<int> mSelectedVoxels;
+    std::set<int> mPreInnervatedVoxels;
+    std::set<int> mPostInnervatedVoxels;
     std::map<int, float> mSynapsesPerVoxel;    
     Statistics mSynapsesPerConnection;
     std::map<int, std::map<int, int> > mSynapsesPerConnectionOccurrences;

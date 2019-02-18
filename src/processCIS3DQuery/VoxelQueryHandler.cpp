@@ -33,7 +33,8 @@ VoxelQueryHandler::createStatistics(std::map<int, T>& values,
     {
         stat.addSample(it->second);
     }
-    double binSize = stat.getMean() / 15;
+    double binSize = stat.getMaximum() / 29;
+    binSize = binSize == 0 ? 1 : binSize;
     histogram = Histogram(binSize);
     for (auto it = values.begin(); it != values.end(); it++)
     {
@@ -58,11 +59,11 @@ VoxelQueryHandler::createJsonResult()
 
     Statistics postsynapticSitesPerVoxel;
     Histogram postsynapticSitesPerVoxelH(500);
-    createStatistics(mMapPostsynapticSitesPerVoxel, postsynapticSitesPerVoxel, postsynapticSitesPerVoxelH);    
+    createStatistics(mMapPostsynapticSitesPerVoxel, postsynapticSitesPerVoxel, postsynapticSitesPerVoxelH);
 
     Statistics synapsesPerVoxel;
     Histogram synapsesPerVoxelH(100);
-    createStatistics(mSynapsesPerVoxel, synapsesPerVoxel, synapsesPerVoxelH);    
+    createStatistics(mSynapsesPerVoxel, synapsesPerVoxel, synapsesPerVoxelH);
 
     // Synapses per connection
     Histogram synapsesPerConnectionMinH(1);
@@ -91,8 +92,9 @@ VoxelQueryHandler::createJsonResult()
     //qDebug() << synapsesPerVoxel.getMinimum();
 
     QJsonObject result;
-    result.insert("numberInnervatedVoxels", (int)mInnervatedVoxels.size());
-    result.insert("numberTotalVoxels", 0);
+    result.insert("numberSelectedVoxels", (int)mSelectedVoxels.size());
+    result.insert("numberPreInnervatedVoxels", (int)mPreInnervatedVoxels.size());
+    result.insert("numberPostInnervatedVoxels", (int)mPostInnervatedVoxels.size());
     result.insert("presynapticCellsPerVoxel", Util::createJsonStatistic(preCellsPerVoxel));
     result.insert("presynapticCellsPerVoxelHisto", Util::createJsonHistogram(preCellsPerVoxelH));
     result.insert("postsynapticCellsPerVoxel", Util::createJsonStatistic(postCellsPerVoxel));
@@ -115,6 +117,7 @@ VoxelQueryHandler::createJsonResult()
 VoxelQueryHandler::VoxelQueryHandler(QObject* parent)
     : QObject(parent)
 {
+    mAborted = false;
 }
 
 void
@@ -172,53 +175,6 @@ VoxelQueryHandler::process(const QString& selectionQueryId,
 }
 
 void
-VoxelQueryHandler::readIndex(QString indexFile,
-                             std::vector<double> origin,
-                             std::vector<int> dimensions,
-                             std::set<int>& voxelIds,
-                             std::set<int>& neuronIds)
-{
-    double minX = origin[0];
-    double minY = origin[1];
-    double minZ = origin[2];
-    double maxX = origin[0] + 50 * dimensions[0];
-    double maxY = origin[1] + 50 * dimensions[1];
-    double maxZ = origin[2] + 50 * dimensions[2];
-    QFile inputFile(indexFile);
-    if (inputFile.open(QIODevice::ReadOnly))
-    {
-        QTextStream in(&inputFile);
-        while (!in.atEnd())
-        {
-            QString line = in.readLine();
-            line = line.trimmed();
-            QStringList parts = line.split(" ");
-            int voxelId = parts[0].toInt();
-            double voxelX = parts[1].toDouble();
-            double voxelY = parts[2].toDouble();
-            double voxelZ = parts[3].toDouble();
-
-            if (voxelX >= minX && voxelX <= maxX)
-            {
-                if (voxelY >= minY && voxelY <= maxY)
-                {
-                    if (voxelZ >= minZ && voxelZ <= maxZ)
-                    {
-                        voxelIds.insert(voxelId);
-                        for (int i = 4; i < parts.size(); i++)
-                        {
-                            int neuronId = parts[i].toInt();
-                            neuronIds.insert(neuronId);
-                        }
-                    }
-                }
-            }
-        }
-        inputFile.close();
-    }
-}
-
-void
 VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 {
     QNetworkReply::NetworkError error = reply->error();
@@ -238,12 +194,24 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         QString mode = voxelFilter["mode"].toString();
         std::vector<double> voxelOrigin;
         std::vector<int> voxelDimensions;
-        voxelOrigin.push_back(voxelFilter["originX"].toDouble());
-        voxelOrigin.push_back(voxelFilter["originY"].toDouble());
-        voxelOrigin.push_back(voxelFilter["originZ"].toDouble());
-        voxelDimensions.push_back(voxelFilter["dimX"].toInt(1));
-        voxelDimensions.push_back(voxelFilter["dimY"].toInt(1));
-        voxelDimensions.push_back(voxelFilter["dimZ"].toInt(1));
+        if (mode == "voxel" || mode == "prePostVoxel")
+        {
+            voxelOrigin.push_back(voxelFilter["originX"].toDouble());
+            voxelOrigin.push_back(voxelFilter["originY"].toDouble());
+            voxelOrigin.push_back(voxelFilter["originZ"].toDouble());
+            voxelDimensions.push_back(voxelFilter["dimX"].toInt(1));
+            voxelDimensions.push_back(voxelFilter["dimY"].toInt(1));
+            voxelDimensions.push_back(voxelFilter["dimZ"].toInt(1));
+        }
+        else
+        {
+            voxelOrigin.push_back(-5000);
+            voxelOrigin.push_back(-5000);
+            voxelOrigin.push_back(-5000);
+            voxelDimensions.push_back(500);
+            voxelDimensions.push_back(500);
+            voxelDimensions.push_back(500);
+        }
 
         qDebug() << "[*] Voxel query: " << mode << voxelOrigin[0] << voxelOrigin[1] << voxelOrigin[2] << voxelDimensions[0] << voxelDimensions[1] << voxelDimensions[2];
 
@@ -257,72 +225,249 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         QString postFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_postExc");
         QString postAllFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_postAll");
         QString metaFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_meta");
-        QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() + "voxel_index.dat");
+        QString voxelPosFile = QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos.dat");
+        QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() + "voxel_indexL.dat");
         QString innervationFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "innervation");
 
-        // EXTRACT SLICE PARAMETERS
-        const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
-        const double tissueHighPre = jsonData["tissueHighPre"].toDouble();
-        QString tissueModePre = jsonData["tissueModePre"].toString();
-        const double tissueLowPost = jsonData["tissueLowPost"].toDouble();
-        const double tissueHighPost = jsonData["tissueHighPost"].toDouble();
-        QString tissueModePost = jsonData["tissueModePost"].toString();
-        const double sliceRef = jsonData["sliceRef"].toDouble();
-        const bool isSlice = sliceRef != -9999;
-        qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
+        // ################# DETERMINE NEURON IDS #################
 
-        QString preSelString = jsonData["presynapticSelectionFilter"].toString();
-        QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
-        QJsonArray preArr = preDoc.array();
-
-        SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork, CIS3D::PRESYNAPTIC);
-        Util::correctVPMSelectionFilter(preFilter, mNetwork);
-        Util::correctInterneuronSelectionFilter(preFilter, mNetwork);
-        IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
-
-        QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
-        QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
-        QJsonArray postArr = postDoc.array();
-        SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
-        Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
-        IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
-
-        NeuronSelection selection(preNeurons, postNeurons);
-        QVector<float> bbmin;
-        QVector<float> bbmax;
-        bbmin.append(-10000);
-        bbmin.append(-10000);
-        bbmin.append(-10000);
-        bbmax.append(10000);
-        bbmax.append(10000);
-        bbmax.append(10000);
-
-        RandomGenerator generator(50000);
-
-        //selection.filterUniquePre(mNetwork);
-        selection.setBBox(bbmin, bbmax);
-        if (isSlice)
+        NeuronSelection selection;
+        if (mode == "prePost" || mode == "prePostVoxel")
         {
-            selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
-        }
+            // EXTRACT SLICE PARAMETERS
+            const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
+            const double tissueHighPre = jsonData["tissueHighPre"].toDouble();
+            QString tissueModePre = jsonData["tissueModePre"].toString();
+            const double tissueLowPost = jsonData["tissueLowPost"].toDouble();
+            const double tissueHighPost = jsonData["tissueHighPost"].toDouble();
+            QString tissueModePost = jsonData["tissueModePost"].toString();
+            const double sliceRef = jsonData["sliceRef"].toDouble();
+            const bool isSlice = sliceRef != -9999;
+            qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
 
-        if (mode == "voxel")
+            QString preSelString = jsonData["presynapticSelectionFilter"].toString();
+            QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
+            QJsonArray preArr = preDoc.array();
+
+            SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork, CIS3D::PRESYNAPTIC);
+            Util::correctVPMSelectionFilter(preFilter, mNetwork);
+            Util::correctInterneuronSelectionFilter(preFilter, mNetwork);
+            IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
+
+            QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
+            QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
+            QJsonArray postArr = postDoc.array();
+            SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
+            Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
+            IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
+
+            selection = NeuronSelection(preNeurons, postNeurons);
+            QVector<float> bbmin;
+            QVector<float> bbmax;
+            bbmin.append(-10000);
+            bbmin.append(-10000);
+            bbmin.append(-10000);
+            bbmax.append(10000);
+            bbmax.append(10000);
+            bbmax.append(10000);
+            selection.setBBox(bbmin, bbmax);
+            if (isSlice)
+            {
+                selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
+            }
+        }
+        else
         {
             selection.setFullModel(mNetwork, false);
-        }
-
-        std::set<int> voxelIds;
-        std::set<int> neuronIdsVoxel;
-        if (mode == "voxel" || mode == "prePostVoxel")
-        {
-            readIndex(indexFile, voxelOrigin, voxelDimensions, voxelIds, neuronIdsVoxel);
-            //qDebug() << voxelIds.size() << neuronIdsVoxel.size();
         }
 
         IdList preIds = selection.Presynaptic();
         IdList postIds = selection.Postsynaptic();
 
-        //qDebug() << "[*] VOXEL QUERY " << preIds.size() << " presynaptic and " << postIds.size() << " postsynaptic neurons.";
+        qDebug() << preIds.size() << postIds.size();
+
+        std::set<int> mappedPreIds;
+        std::set<int> prunedPostIds;
+        std::map<int, int> preMultiplicity;
+
+        for (int i = 0; i < preIds.size(); i++)
+        {
+            int mappedId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preIds[i]);
+            if (preMultiplicity.find(mappedId) == preMultiplicity.end())
+            {
+                mappedPreIds.insert(mappedId);
+                preMultiplicity[mappedId] = 1;
+            }
+            else
+            {
+                preMultiplicity[mappedId] += 1;
+            }
+        }
+
+        for (int i = 0; i < postIds.size(); i++)
+        {
+            int postId = postIds[i];
+            prunedPostIds.insert(postId);
+        }
+
+        // Read post all
+        std::map<int, float> postAllField;
+        FeatureProvider::readMapFloat(postAllField, postAllFolder, "voxel_postAllExc.dat");
+
+        // ################# LOOP OVER VOXELS #################
+
+        int voxelCount = -1;
+        int totalVoxelCount = 0;
+
+        double minX = voxelOrigin[0];
+        double minY = voxelOrigin[1];
+        double minZ = voxelOrigin[2];
+        double maxX = voxelOrigin[0] + 50 * voxelDimensions[0];
+        double maxY = voxelOrigin[1] + 50 * voxelDimensions[1];
+        double maxZ = voxelOrigin[2] + 50 * voxelDimensions[2];
+
+        std::set<int> filteredVoxels;
+        QFile posFile(voxelPosFile);
+        if (posFile.open(QIODevice::ReadOnly))
+        {
+            QTextStream in(&posFile);
+            while (!in.atEnd())
+            {
+                totalVoxelCount++;
+
+                QString line = in.readLine();
+                line = line.trimmed();
+                QStringList parts = line.split(" ");
+
+                int voxelId = parts[0].toInt();
+                double voxelX = parts[1].toDouble();
+                double voxelY = parts[2].toDouble();
+                double voxelZ = parts[3].toDouble();
+
+                if (voxelX >= minX && voxelX <= maxX)
+                {
+                    if (voxelY >= minY && voxelY <= maxY)
+                    {
+                        if (voxelZ >= minZ && voxelZ <= maxZ)
+                        {
+                            mSelectedVoxels.insert(voxelId);
+                            filteredVoxels.insert(voxelId);
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            const QString msg =
+                QString("Error reading index file. Could not open file %1").arg(voxelPosFile);
+            throw std::runtime_error(qPrintable(msg));
+        }
+
+        totalVoxelCount = filteredVoxels.size();
+
+        QFile inputFile(indexFile);
+        if (inputFile.open(QIODevice::ReadOnly))
+        {
+            QTextStream in(&inputFile);
+            while (!in.atEnd() && !mAborted)
+            {
+                QString line = in.readLine();
+                line = line.trimmed();
+                QStringList parts = line.split(" ");
+                int voxelId = parts[0].toInt();
+
+                if (filteredVoxels.find(voxelId) != filteredVoxels.end())
+                {
+                    voxelCount++;
+                    // ################ PROCESS SINGLE VOXEL ################
+
+                    std::map<int, float> pre;
+                    std::map<int, float> post;
+
+                    float postAll = postAllField[voxelId];
+
+                    mMapPostCellsPerVoxel[voxelId] = 0;
+                    mMapPreCellsPerVoxel[voxelId] = 0;
+                    mMapBoutonsPerVoxel[voxelId] = 0;
+                    mMapPostsynapticSitesPerVoxel[voxelId] = 0;
+
+                    for (int i = 4; i < parts.size(); i += 2)
+                    {
+                        int neuronId = parts[i].toInt();
+                        if (neuronId > 0 && (mappedPreIds.find(neuronId) != mappedPreIds.end()))
+                        {
+                            mMapPreCellsPerVoxel[voxelId] += preMultiplicity[neuronId];
+                            float boutons = preMultiplicity[neuronId] * parts[i + 1].toFloat();
+                            mMapBoutonsPerVoxel[voxelId] += boutons;
+                            pre[neuronId] = boutons;
+                            mPreInnervatedVoxels.insert(voxelId);
+                        }
+                        else if (prunedPostIds.find(-neuronId) != prunedPostIds.end())
+                        {
+                            mMapPostCellsPerVoxel[voxelId] += 1;
+                            float pst = parts[i + 1].toFloat();
+                            post[-neuronId] = pst;
+                            mMapPostsynapticSitesPerVoxel[voxelId] += postAll * pst;
+                            mPostInnervatedVoxels.insert(voxelId);
+                        }
+                    }
+                }
+
+                // ################ REPORT UPDATE ################
+                int updateRate = totalVoxelCount  / 20;
+                if (voxelCount % updateRate == 0)
+                {
+                    const QJsonObject result = createJsonResult();
+                    QJsonObject progress;
+                    progress.insert("completed", voxelCount + 1);
+                    progress.insert("total", totalVoxelCount);
+                    const double percent = double(voxelCount + 1) * 100 / (double)totalVoxelCount;
+                    progress.insert("percent", percent);
+                    QJsonObject jobStatus;
+                    jobStatus.insert("status", "running");
+                    jobStatus.insert("progress", progress);
+
+                    QJsonObject payload;
+                    payload.insert("jobStatus", jobStatus);
+                    payload.insert("result", result);
+
+                    QNetworkRequest putRequest;
+                    putRequest.setUrl(mQueryUrl);
+                    putRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
+                    putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
+                    putRequest.setAttribute(QNetworkRequest::User, QVariant("putSpatialInnervationResult"));
+                    putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+                    QueryHelpers::setAuthorization(mConfig, putRequest);
+
+                    QJsonDocument putDoc(payload);
+                    QString putData(putDoc.toJson());
+
+                    //qDebug() << "[*] Posting intermediate result:" << percent << "\%    (" << i + 1 << "/" << preIds.size() << ")";
+
+                    QEventLoop loop;
+                    QNetworkReply* reply = mNetworkManager.put(putRequest, putData.toLocal8Bit());
+                    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+                    loop.exec();
+
+                    QNetworkReply::NetworkError error = reply->error();
+                    const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
+                    if (error != QNetworkReply::NoError)
+                    {
+                        qDebug() << "[-] Error putting Evaluation result (queryId" << mQueryId << "):";
+                        qDebug() << reply->errorString();
+                        mAborted = true;
+                    }
+                }
+            }
+            inputFile.close();
+        }
+        else
+        {
+            const QString msg =
+                QString("Error reading index file. Could not open file %1").arg(indexFile);
+            throw std::runtime_error(qPrintable(msg));
+        }
 
         const QString zipFileName = QString("spatialInnervation_%1.json.zip").arg(mQueryId);
         const QString zipFullPath = QString("%1/%2").arg(mTempFolder).arg(zipFileName);
@@ -333,293 +478,6 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         const QString dataZipFullPath = QString("%1/%2").arg(mTempFolder).arg(dataZipFileName);
         const QString dataFileName = QString(dataZipFileName).remove(".zip");
         const QString dataFullPath = QString(dataZipFullPath).remove(".zip");
-
-        // ###################### LOOP OVER NEURONS ######################
-
-        std::vector<int> mappedIds;
-        std::vector<int> prunedPostIds;
-        std::map<int, int> preMultiplicity;
-        bool filterVoxel = mode == "voxel" || mode == "prePostVoxel";
-
-        for (int i = 0; i < preIds.size(); i++)
-        {
-            int q = mNetwork.axonRedundancyMap.getNeuronIdToUse(preIds[i]);
-            if (filterVoxel)
-            {
-                if (neuronIdsVoxel.find(q) == neuronIdsVoxel.end())
-                {
-                    continue;
-                }
-            }
-            if (preMultiplicity.find(q) == preMultiplicity.end())
-            {
-                mappedIds.push_back(q);
-                preMultiplicity[q] = 1;
-            }
-            else
-            {
-                preMultiplicity[q] += 1;
-            }
-        }
-
-        for (int i = 0; i < postIds.size(); i++)
-        {
-            int postId = postIds[i];
-            if (filterVoxel)
-            {
-                if (neuronIdsVoxel.find(postId) == neuronIdsVoxel.end())
-                {
-                    continue;
-                }
-            }
-            prunedPostIds.push_back(postId);
-        }
-
-        int maxIndex = mappedIds.size() > prunedPostIds.size() ? mappedIds.size() : prunedPostIds.size();
-
-        qDebug() << mappedIds.size() << prunedPostIds.size() << maxIndex;
-
-        // Read post all
-        std::map<int, float> postAll;
-        FeatureProvider::readMapFloat(postAll, postAllFolder, "voxel_postAllExc.dat");
-
-        mAborted = false;
-        for (int i = 0; i < maxIndex; i++)
-        {
-            qDebug() << "loop" << i;
-
-            if (mAborted)
-            {
-                break;
-            }
-
-            if (i < (int)mappedIds.size())
-            {
-                qDebug() << "pre" << i;
-                int mappedPreId = mappedIds[i];
-                int multiplicity = preMultiplicity[mappedPreId];
-                QString dataFileName = QDir(preFolder).filePath(QString::number(mappedPreId) + ".dat");
-                QString innervationFileName = QDir(innervationFolder).filePath("preNeuronID_" + QString::number(mappedPreId));
-
-                QFile dataFile(dataFileName);
-                if (!dataFile.open(QIODevice::ReadOnly))
-                {
-                    const QString msg =
-                        QString("Cannot open file %1 for reading.").arg(dataFileName);
-                    throw std::runtime_error(qPrintable(msg));
-                }
-                QTextStream inStream(&dataFile);
-
-                QString line = inStream.readLine();
-                while (!line.isNull())
-                {
-                    QStringList parts = line.split(' ');
-                    bool isVoxelId;
-                    int voxelId = parts[0].toInt(&isVoxelId);
-                    float boutons = parts[1].toFloat();
-
-                    if (!filterVoxel || (voxelIds.find(voxelId) != voxelIds.end()))
-                    {
-                        if (mMapPreCellsPerVoxel.find(voxelId) == mMapPreCellsPerVoxel.end())
-                        {
-                            mMapPreCellsPerVoxel[voxelId] = multiplicity;
-                            mInnervatedVoxels.insert(voxelId);
-                        }
-                        else
-                        {
-                            mMapPreCellsPerVoxel[voxelId] += multiplicity;
-                        }
-
-                        if (mMapBoutonsPerVoxel.find(voxelId) == mMapBoutonsPerVoxel.end())
-                        {
-                            mMapBoutonsPerVoxel[voxelId] = multiplicity * boutons;
-                        }
-                        else
-                        {
-                            mMapBoutonsPerVoxel[voxelId] += multiplicity * boutons;
-                        }
-                    }
-
-                    line = inStream.readLine();
-                }
-
-                // Synapses per voxel
-                QFile dataFile2(innervationFileName);
-                if (!dataFile2.open(QIODevice::ReadOnly))
-                {
-                    const QString msg =
-                        QString("Cannot open file %1 for writing.").arg(innervationFileName);
-                    throw std::runtime_error(qPrintable(msg));
-                }
-                QTextStream inStream2(&dataFile2);
-
-                /*
-                qDebug() << "pre innervation" << i;                
-
-                QString line2 = inStream2.readLine();
-                std::map<int, float> synapsesVoxel;
-                int currentPostId = -1;
-                while (!line2.isNull())
-                {
-                    QStringList parts = line2.split(' ');
-                    bool isVoxelId;
-                    int voxelId = parts[0].toInt(&isVoxelId);
-                    if (isVoxelId && currentPostId != -1)
-                    {
-                        if (!filterVoxel || (voxelIds.find(voxelId) != voxelIds.end()))
-                        {
-                            float innervation = multiplicity * parts[1].toFloat();
-                            if (mSynapsesPerVoxel.find(voxelId) == mSynapsesPerVoxel.end())
-                            {
-                                mSynapsesPerVoxel[voxelId] = innervation;
-                            }
-                            else
-                            {
-                                mSynapsesPerVoxel[voxelId] += innervation;
-                            }
-                            //synapsesVoxel[voxelId] += innervation;                            
-                                for (int k = 0; k < multiplicity; k++)
-                                {
-                                    float synapses = calculateSynapse(generator, innervation);
-                                    if (synapses > 0)
-                                    {
-                                        int count = (int)synapses;
-                                        if (mSynapsesPerConnectionOccurrences.find(count) == mSynapsesPerConnectionOccurrences.end())
-                                        {
-                                            std::map<int, int> foo;
-                                            mSynapsesPerConnectionOccurrences[count] = foo;
-                                        }
-                                        auto occ = mSynapsesPerConnectionOccurrences.find(count);
-                                        if (occ->second.find(voxelId) == occ->second.end())
-                                        {
-                                            occ->second[voxelId] = 1;
-                                        }
-                                        else
-                                        {
-                                            occ->second[voxelId] += 1;
-                                        }
-
-                                        mSynapsesPerConnection.addSample(synapses);
-                                    }
-                                    if (synapsesVoxel.find(voxelId) == synapsesVoxel.end())
-                                    {
-                                        synapsesVoxel[voxelId] = synapses;
-                                    }
-                                    else
-                                    {
-                                        synapsesVoxel[voxelId] += synapses;
-                                    }
-                                }                                
-                        }
-                    }
-                    else
-                    {
-                        currentPostId = parts[1].toInt();
-                        if (!postIds.contains(currentPostId))
-                        {
-                            currentPostId = -1;
-                        }
-                    }
-                    line2 = inStream2.readLine();
-                }
-                */
-            }
-
-            if (i < (int)prunedPostIds.size())
-            {
-                qDebug() << "post" << i;
-                int postId = prunedPostIds[i];
-                QString dataFileName = QDir(postFolder).filePath(QString::number(postId) + ".dat");
-
-                QFile dataFile(dataFileName);
-                if (!dataFile.open(QIODevice::ReadOnly))
-                {
-                    const QString msg =
-                        QString("Cannot open file %1 for reading.").arg(dataFileName);
-                    throw std::runtime_error(qPrintable(msg));
-                }
-                QTextStream inStream(&dataFile);
-
-                QString line = inStream.readLine();
-                while (!line.isNull())
-                {
-                    QStringList parts = line.split(' ');
-                    bool isVoxelId;
-                    int voxelId = parts[0].toInt(&isVoxelId);
-
-                    if (!filterVoxel || (voxelIds.find(voxelId) != voxelIds.end()))
-                    {
-                        float pstNorm = parts[1].toFloat();
-                        float pst = postAll[voxelId] * pstNorm;
-
-                        if (mMapPostCellsPerVoxel.find(voxelId) == mMapPostCellsPerVoxel.end())
-                        {
-                            mMapPostCellsPerVoxel[voxelId] = 1;
-                            mInnervatedVoxels.insert(voxelId);
-                        }
-                        else
-                        {
-                            mMapPostCellsPerVoxel[voxelId] += 1;
-                        }
-
-                        if (mMapPostsynapticSitesPerVoxel.find(voxelId) == mMapPostsynapticSitesPerVoxel.end())
-                        {
-                            mMapPostsynapticSitesPerVoxel[voxelId] = pst;
-                        }
-                        else
-                        {
-                            mMapPostsynapticSitesPerVoxel[voxelId] += pst;
-                        }
-                    }
-
-                    line = inStream.readLine();
-                }
-            }
-
-            if (i % 10 == 0)
-            {
-                const QJsonObject result = createJsonResult();
-                QJsonObject progress;
-                progress.insert("completed", i + 1);
-                progress.insert("total", maxIndex);
-                const double percent = double(i + 1) * 100.0 / (double)maxIndex;
-                progress.insert("percent", percent);
-                QJsonObject jobStatus;
-                jobStatus.insert("status", "running");
-                jobStatus.insert("progress", progress);
-
-                QJsonObject payload;
-                payload.insert("jobStatus", jobStatus);
-                payload.insert("result", result);
-
-                QNetworkRequest putRequest;
-                putRequest.setUrl(mQueryUrl);
-                putRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
-                putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
-                putRequest.setAttribute(QNetworkRequest::User, QVariant("putSpatialInnervationResult"));
-                putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-                QueryHelpers::setAuthorization(mConfig, putRequest);
-
-                QJsonDocument putDoc(payload);
-                QString putData(putDoc.toJson());
-
-                //qDebug() << "[*] Posting intermediate result:" << percent << "\%    (" << i + 1 << "/" << preIds.size() << ")";
-
-                QEventLoop loop;
-                QNetworkReply* reply = mNetworkManager.put(putRequest, putData.toLocal8Bit());
-                connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-                loop.exec();
-
-                QNetworkReply::NetworkError error = reply->error();
-                const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-                if (error != QNetworkReply::NoError)
-                {
-                    qDebug() << "[-] Error putting Evaluation result (queryId" << mQueryId << "):";
-                    qDebug() << reply->errorString();
-                    mAborted = true;
-                }
-            }
-        }
 
         /*
         if (!mAborted)
@@ -833,8 +691,8 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             const QJsonObject result = createJsonResult();
 
             QJsonObject progress;
-            progress.insert("completed", maxIndex);
-            progress.insert("total", maxIndex);
+            progress.insert("completed", voxelCount);
+            progress.insert("total", totalVoxelCount);
             progress.insert("percent", 100);
             QJsonObject jobStatus;
             jobStatus.insert("status", "completed");
