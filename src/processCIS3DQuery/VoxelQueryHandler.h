@@ -33,6 +33,10 @@ private:
     QJsonObject
     createJsonResult();
     float calculateSynapse(RandomGenerator& generator, float innervation);
+    void readIndex(QString indexFile, std::vector<double> origin, std::vector<int> dimensions, std::set<int>& voxelIds, std::set<int>& neuronIds);
+    template <typename T>
+    void createStatistics(std::map<int, T>& values, Statistics& stat, Histogram& histogram);
+
 
     QString mQueryId;
     QJsonObject mConfig;

@@ -183,7 +183,7 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
                                 }
                                 else if (mode == "h0_intercept_pre_pstNorm" || mode == "h0_pre_pstNorm")
                                 {
-                                    float postNorm = postVal - postAllVal;
+                                    float postNorm = postVal - postAllVal; // ln(a/b) = ln(a)-ln(b)
                                     float arg = b0 + b1 * preVal + b2 * postNorm;
                                     arg = std::min(maxInnervationLog, arg);
                                     int synapses = 0;

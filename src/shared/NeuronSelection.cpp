@@ -334,8 +334,11 @@ NeuronSelection::setPiaSomaDistance(QVector<float> rangePre, QVector<float> rang
 }
 
 void
-NeuronSelection::setFullModel(const NetworkProps& networkProps)
+NeuronSelection::setFullModel(const NetworkProps& networkProps, bool uniquePre)
 {
+    mPresynaptic.clear();
+    mPostsynaptic.clear();
+    
     SelectionFilter preFilter;
     preFilter.synapticSide = CIS3D::PRESYNAPTIC;
     IdList preNeurons = networkProps.neurons.getFilteredNeuronIds(preFilter);
@@ -347,8 +350,10 @@ NeuronSelection::setFullModel(const NetworkProps& networkProps)
             mPresynaptic.append(preNeurons[i]);
         }
     }
-    filterUniquePre(networkProps);
-
+    if(uniquePre){
+        filterUniquePre(networkProps);
+    }
+    
     SelectionFilter postFilter;
     postFilter.synapticSide = CIS3D::POSTSYNAPTIC;
     IdList postNeurons = networkProps.neurons.getFilteredNeuronIds(postFilter);
