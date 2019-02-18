@@ -32,7 +32,7 @@ private slots:
 private:
     QJsonObject
     createJsonResult();
-    float calculateSynapse(RandomGenerator& generator, float innervation);
+    float calculateSynapseProbability(float innervation, int k);
     void readIndex(QString indexFile, std::vector<double> origin, std::vector<int> dimensions, std::set<int>& voxelIds, std::set<int>& neuronIds);
     template <typename T>
     void createStatistics(std::map<int, T>& values, Statistics& stat, Histogram& histogram);
@@ -71,7 +71,7 @@ private:
     std::set<int> mPostInnervatedVoxels;
     std::map<int, float> mSynapsesPerVoxel;    
     Statistics mSynapsesPerConnection;
-    std::map<int, std::map<int, int> > mSynapsesPerConnectionOccurrences;
+    std::map<int, std::vector<float> > mSynapsesPerConnectionOccurrences;
     
     bool mAborted;
 

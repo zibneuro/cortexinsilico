@@ -80,6 +80,9 @@ double Statistics::getVariance() const {
     if (mNumberOfSamples > 0) {
         const double v = mSum / double(mNumberOfSamples);
         const double variance = (mSumSquared / double(mNumberOfSamples)) - (v * v);
+        if(variance != variance){
+            return 0;
+        }
         return variance;
     } else {
         return 0.0;
