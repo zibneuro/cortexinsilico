@@ -12,7 +12,7 @@ Histogram::Histogram()
     , mNumZeros(0)
     , mTotalValue(0.0)
     , mTotalSquaredValue(0.0)
-    , mMinValue( std::numeric_limits<float>::infinity())
+    , mMinValue(std::numeric_limits<float>::infinity())
     , mMaxValue(-std::numeric_limits<float>::infinity())
 {
 }
@@ -26,7 +26,7 @@ Histogram::Histogram(const double binSize)
     , mNumZeros(0)
     , mTotalValue(0.0)
     , mTotalSquaredValue(0.0)
-    , mMinValue( std::numeric_limits<float>::infinity())
+    , mMinValue(std::numeric_limits<float>::infinity())
     , mMaxValue(-std::numeric_limits<float>::infinity())
 {
 }
@@ -35,19 +35,24 @@ Histogram::Histogram(const double binSize)
     Adds a sampe value to the histogram.
     @param v The sample value.
 */
-void Histogram::addValue(const double v)
+void
+Histogram::addValue(const double v)
 {
-    if (v < 0.0) {
+    if (v < 0.0)
+    {
         throw std::runtime_error("Histogram: No negative values allowed");
     }
 
-    if (v < 0.00001) {
+    if (v < 0.00001)
+    {
         ++mNumZeros;
     }
-    else {
+    else
+    {
         const int binNum = int(floor(v / mBinSize));
 
-        while (binNum >= mBins.size()) {
+        while (binNum >= mBins.size())
+        {
             mBins.append(0);
         }
 
@@ -55,13 +60,15 @@ void Histogram::addValue(const double v)
     }
 
     mTotalValue += v;
-    mTotalSquaredValue += (v*v);
+    mTotalSquaredValue += (v * v);
     mNumValues += 1;
 
-    if (v < mMinValue) {
+    if (v < mMinValue)
+    {
         mMinValue = v;
     }
-    if (v > mMaxValue) {
+    if (v > mMaxValue)
+    {
         mMaxValue = v;
     }
 }
@@ -71,32 +78,39 @@ void Histogram::addValue(const double v)
     @param v The sample value.
     @param k The multiplicity.
 */
-void Histogram::addValues(const double v, const int k){
-    if (v < 0.0) {
+void
+Histogram::addValues(const double v, const int k)
+{
+    if (v < 0.0)
+    {
         throw std::runtime_error("Histogram: No negative values allowed");
     }
 
-    if (v < 0.00001) {
+    if (v < 0.00001)
+    {
         mNumZeros += k;
     }
-    else {
-        const int binNum = int(floor(v / mBinSize));
+    //else {
+    const int binNum = int(floor(v / mBinSize));
 
-        while (binNum >= mBins.size()) {
-            mBins.append(0);
-        }
-
-        mBins[binNum] += k;
+    while (binNum >= mBins.size())
+    {
+        mBins.append(0);
     }
 
-    mTotalValue += k*v;
-    mTotalSquaredValue += k*(v*v);
+    mBins[binNum] += k;
+    //}
+
+    mTotalValue += k * v;
+    mTotalSquaredValue += k * (v * v);
     mNumValues += k;
 
-    if (v < mMinValue) {
+    if (v < mMinValue)
+    {
         mMinValue = v;
     }
-    if (v > mMaxValue) {
+    if (v > mMaxValue)
+    {
         mMaxValue = v;
     }
 }
@@ -105,7 +119,9 @@ void Histogram::addValues(const double v, const int k){
     Retrieves the number of bins covering all current samples.
     @returns Number of bins.
 */
-int Histogram::getNumberOfBins() const {
+int
+Histogram::getNumberOfBins() const
+{
     return mBins.size();
 }
 
@@ -114,7 +130,9 @@ int Histogram::getNumberOfBins() const {
     @param binNum Id of the bin.
     @returns Number of samples in the bin.
 */
-long long int Histogram::getBinValue(const int binNum) const {
+long long int
+Histogram::getBinValue(const int binNum) const
+{
     return mBins.at(binNum);
 }
 
@@ -123,7 +141,9 @@ long long int Histogram::getBinValue(const int binNum) const {
     @param binNum Id of the bin.
     @returns Lower end of value range.
 */
-double Histogram::getBinStart(const int binNum) const {
+double
+Histogram::getBinStart(const int binNum) const
+{
     return binNum * mBinSize;
 }
 
@@ -132,15 +152,19 @@ double Histogram::getBinStart(const int binNum) const {
     @param binNum Id of the bin.
     @returns Upper end of value range.
 */
-double Histogram::getBinEnd(const int binNum) const {
-    return (binNum+1) * mBinSize;
+double
+Histogram::getBinEnd(const int binNum) const
+{
+    return (binNum + 1) * mBinSize;
 }
 
 /**
     Retrieves total number of samples.
     @returns Number of samples.
 */
-long long int Histogram::getNumberOfValues() const {
+long long int
+Histogram::getNumberOfValues() const
+{
     return mNumValues;
 }
 
@@ -148,7 +172,9 @@ long long int Histogram::getNumberOfValues() const {
     Retrieves number of samples with value zero.
     @returns Number of samples.
 */
-long long Histogram::getNumberOfZeros() const {
+long long
+Histogram::getNumberOfZeros() const
+{
     return mNumZeros;
 }
 
@@ -156,11 +182,15 @@ long long Histogram::getNumberOfZeros() const {
     Determines average value of samples.
     @returns Average value.
 */
-double Histogram::getAverage() const {
-    if (mNumValues > 0) {
-        return mTotalValue/mNumValues;
+double
+Histogram::getAverage() const
+{
+    if (mNumValues > 0)
+    {
+        return mTotalValue / mNumValues;
     }
-    else {
+    else
+    {
         return 0.0;
     }
 }
@@ -169,13 +199,17 @@ double Histogram::getAverage() const {
     Determines variance of samples.
     @returns Variance.
 */
-double Histogram::getVariance() const {
-    if (mNumValues > 0) {
-        const double v = mTotalValue/double(mNumValues);
-        const double variance = (mTotalSquaredValue/double(mNumValues)) - (v*v);
+double
+Histogram::getVariance() const
+{
+    if (mNumValues > 0)
+    {
+        const double v = mTotalValue / double(mNumValues);
+        const double variance = (mTotalSquaredValue / double(mNumValues)) - (v * v);
         return variance;
     }
-    else {
+    else
+    {
         return 0.0;
     }
 }
@@ -184,7 +218,9 @@ double Histogram::getVariance() const {
     Determines standard deviation of samples.
     @returns Standard deviation.
 */
-double Histogram::getStandardDeviation() const {
+double
+Histogram::getStandardDeviation() const
+{
     return sqrt(getVariance());
 }
 
@@ -192,14 +228,18 @@ double Histogram::getStandardDeviation() const {
     Retrieves minimum sample value.
     @returns Minimum value.
 */
-double Histogram::getMinValue() const {
+double
+Histogram::getMinValue() const
+{
     return mMinValue;
 }
 /**
     Retrieves highest sample value.
     @returns Maximum value.
 */
-double Histogram::getMaxValue() const {
+double
+Histogram::getMaxValue() const
+{
     return mMaxValue;
 }
 
@@ -207,9 +247,12 @@ double Histogram::getMaxValue() const {
     Creates a json representation of the histogram.
     @returns Histogram as json object.
 */
-QJsonObject Histogram::createJson() const {
+QJsonObject
+Histogram::createJson() const
+{
     QJsonArray histArr = QJsonArray();
-    for (int b=0; b<getNumberOfBins(); ++b) {
+    for (int b = 0; b < getNumberOfBins(); ++b)
+    {
         QJsonObject binObj;
         binObj["BinNumber"] = b;
         binObj["BinStart"] = getBinStart(b);
@@ -219,14 +262,16 @@ QJsonObject Histogram::createJson() const {
     }
 
     QJsonObject histObj;
-    if (getNumberOfValues() == 0) {
+    if (getNumberOfValues() == 0)
+    {
         histObj.insert("numberOfValues", 0);
         histObj.insert("numberOfZeros", 0);
         histObj.insert("minValue", 0);
         histObj.insert("maxValue", 0);
         histObj.insert("histogram", histArr);
     }
-    else {
+    else
+    {
         histObj.insert("numberOfValues", getNumberOfValues());
         histObj.insert("numberOfZeros", getNumberOfZeros());
         histObj.insert("minValue", getMinValue());

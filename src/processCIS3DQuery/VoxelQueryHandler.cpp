@@ -64,6 +64,7 @@ VoxelQueryHandler::createJsonResult()
     Statistics synapsesPerVoxel;
     Histogram synapsesPerVoxelH(100);
     createStatistics(mSynapsesPerVoxel, synapsesPerVoxel, synapsesPerVoxelH);
+    qDebug() << synapsesPerVoxel.getMaximum() << synapsesPerVoxel.getMean() << synapsesPerVoxelH.getNumberOfBins();
 
     // Synapses per connection
     Histogram synapsesPerConnectionMinH(1);
@@ -384,6 +385,8 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
                     std::map<int, float> pre;
                     std::map<int, float> post;
+                    float boutonSum = 0;
+                    float postSum = 0;
 
                     float postAll = postAllField[voxelId];
 
@@ -399,6 +402,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                         {
                             mMapPreCellsPerVoxel[voxelId] += preMultiplicity[neuronId];
                             float boutons = preMultiplicity[neuronId] * parts[i + 1].toFloat();
+                            boutonSum += boutons;
                             mMapBoutonsPerVoxel[voxelId] += boutons;
                             pre[neuronId] = boutons;
                             mPreInnervatedVoxels.insert(voxelId);
@@ -407,11 +411,15 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                         {
                             mMapPostCellsPerVoxel[voxelId] += 1;
                             float pst = parts[i + 1].toFloat();
+                            postSum += pst;
                             post[-neuronId] = pst;
                             mMapPostsynapticSitesPerVoxel[voxelId] += postAll * pst;
                             mPostInnervatedVoxels.insert(voxelId);
                         }
                     }
+
+                    float synapses = boutonSum * postSum;
+                    mSynapsesPerVoxel[voxelId] = synapses;
                 }
 
                 // ################ REPORT UPDATE ################
