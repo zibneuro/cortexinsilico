@@ -29,10 +29,12 @@ Calculator::Calculator(
 }
 
 void
-Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double maxInnervation, QString mode)
+Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double maxInnervation, QString mode, double boutonPSTRatio, bool checkProb, double maxFailedRatio)
 {
     //double zeroTime = std::clock();
     bool parallelLoop = !mRandomGenerator.hasUserSeed();
+    bool checkBounds = boutonPSTRatio != -1 || checkProb;
+    bool checkOrderMagnitude = boutonPSTRatio != -1;
 
     // ###################### LOAD FEATURES ######################
 
@@ -65,6 +67,9 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
 
     for (unsigned int run = 0; run < mRunIndices.size(); run++)
     {
+        int failedBounds = 0;
+        int validBounds = 0;
+        bool failed = false;
         int runIndex = mRunIndices[run];
         //qDebug() << "BATCH" << runIndex << parametersBatch.size();
         QVector<float> parameters = parametersBatch[run];
@@ -155,6 +160,25 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
                                 if (mode == "h0_intercept_pre_pst_pstAll" || mode == "h0_pre_pst_pstAll")
                                 {
                                     float arg = b0 + b1 * preVal + b2 * postVal + b3 * postAllVal;
+                                    if (checkBounds)
+                                    {
+                                        float boundArg1 = b1 * preVal - b2 * postVal - b3 * postAllVal;
+                                        //boundArg1 = boundArg1 < 0 ? -boundArg1 : boundArg1;
+                                        float boundArg2 = b2 * postVal + b3 * postAllVal;
+
+                                        bool orderOfMagnitudeBoundViolated = checkOrderMagnitude && (boundArg1 < boutonPSTRatio);
+                                        bool probabilityConstraintViolated = checkProb && (boundArg2 > 0);
+
+                                        if (orderOfMagnitudeBoundViolated || probabilityConstraintViolated)
+                                        {
+                                            failedBounds++;
+                                        }
+                                        else
+                                        {
+                                            validBounds++;
+                                        }
+                                        //qDebug() << preVal << postNorm << boundArg << boundsViolated;
+                                    }
                                     arg = std::min(maxInnervationLog, arg);
                                     int synapses = 0;
                                     if (arg >= -7)
@@ -185,6 +209,25 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
                                 {
                                     float postNorm = postVal - postAllVal; // ln(a/b) = ln(a)-ln(b)
                                     float arg = b0 + b1 * preVal + b2 * postNorm;
+                                    if (checkBounds)
+                                    {
+                                        float boundArg1 = b1 * preVal - b2 * postNorm;
+                                        //boundArg1 = boundArg1 < 0 ? -boundArg1 : boundArg1;
+                                        float boundArg2 = b2 * postNorm;
+
+                                        bool orderOfMagnitudeBoundViolated = checkOrderMagnitude && (boundArg1 < boutonPSTRatio);
+                                        bool probabilityConstraintViolated = checkProb && (boundArg2 > 0);
+
+                                        if (orderOfMagnitudeBoundViolated || probabilityConstraintViolated)
+                                        {
+                                            failedBounds++;
+                                        }
+                                        else
+                                        {
+                                            validBounds++;
+                                        }
+                                        //qDebug() << preVal << postNorm << boundArg << boundsViolated;
+                                    }
                                     arg = std::min(maxInnervationLog, arg);
                                     int synapses = 0;
                                     if (arg >= -7)
@@ -234,10 +277,15 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
         //double statisticsTime = std::clock();
 
         // ###################### WRITE OUTPUT ######################
+        int total = failedBounds + validBounds;
+        if (total != 0)
+        {
+            failed = ((double)failedBounds / (double)(total)) > maxFailedRatio;
+        }
 
         writeSynapseMatrix(runIndex, contacts);
         writeInnervationMatrix(runIndex, innervation);
-        writeStatistics(runIndex, connProbSynapse.getMean(), connProbInnervation.getMean(), sufficientStat);
+        writeStatistics(runIndex, connProbSynapse.getMean(), connProbInnervation.getMean(), sufficientStat, failed);
 
         //double outputTime = std::clock();
 
@@ -250,7 +298,17 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
     featureLoadTime = (featureLoadTime - zeroTime) / (double)CLOCKS_PER_SEC;
     QString timeCost = QString("Features %1, Loop %2, Statistics %3, Output %4").arg(featureLoadTime).arg(loopTime).arg(statisticsTime).arg(outputTime);
     */
-        qDebug() << "RUN: " << runIndex << paramString << QString("Connection prob.: %1").arg(connProbInnervation.getMean());
+        QString boundString = "";
+        if (checkBounds && failed)
+        {
+            boundString = "FAILED";
+        }
+        else if (checkBounds && !failed)
+        {
+            boundString = "OK";
+        }
+
+        qDebug() << "RUN: " << runIndex << paramString << QString("Connection prob.: %1").arg(connProbInnervation.getMean()) << boundString;
         //qDebug() << runIndex << "Time" << timeCost;
     }
 }
@@ -428,7 +486,11 @@ Calculator::writeInnervationMatrix(int runIndex, std::vector<std::vector<float> 
 }
 
 void
-Calculator::writeStatistics(int runIndex, double connectionProbability, double connectionProbabilityInnervation, std::vector<double> sufficientStat)
+Calculator::writeStatistics(int runIndex,
+                            double connectionProbability,
+                            double connectionProbabilityInnervation,
+                            std::vector<double> sufficientStat,
+                            bool failed)
 {
     QString fileName = QString("statistics_%1.json").arg(runIndex);
     QString filePath = QDir("output").filePath(fileName);
@@ -455,5 +517,14 @@ Calculator::writeStatistics(int runIndex, double connectionProbability, double c
     {
         out << "," << sufficientStat[3];
     }
-    out << "]}";
+    out << "],";
+    if (failed)
+    {
+        out << "\"STATUS\": \"FAILED\"";
+    }
+    else
+    {
+        out << "\"STATUS\": \"OK\"";
+    }
+    out << "}";
 }

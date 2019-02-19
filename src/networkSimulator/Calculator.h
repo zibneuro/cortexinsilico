@@ -21,15 +21,19 @@ public:
     */
     Calculator(FeatureProvider& featureProvider, RandomGenerator& randomGenerator, std::vector<int> runIndices);
 
-    void calculateBatch(std::vector<QVector<float> > parametersBatch, double maxInnervation, QString mode);   
+    void calculateBatch(std::vector<QVector<float> > parametersBatch, double maxInnervation, QString mode, double boutonPSTRatio, bool checkProb, double maxFailedRatio);
 
-    static void calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc); 
+    static void calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc);
 
 private:
     double calculateProbability(double innervationMean);
     void writeSynapseMatrix(int runIndex, std::vector<std::vector<int> >& contacts);
     void writeInnervationMatrix(int runIndex, std::vector<std::vector<float> >& innervation);
-    void writeStatistics(int runIndex, double connectionProbability, double connectionProbabilityInnervation, std::vector<double> sufficientStat);
+    void writeStatistics(int runIndex,
+                         double connectionProbability,
+                         double connectionProbabilityInnervation,
+                         std::vector<double> sufficientStat,
+                         bool failed);
 
     FeatureProvider& mFeatureProvider;
     RandomGenerator& mRandomGenerator;

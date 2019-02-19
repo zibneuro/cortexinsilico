@@ -120,7 +120,7 @@ checkSimulationMode(QString mode)
 */
 QVector<float>
 extractRuleParameters(const QJsonObject spec, int numParams)
-{    
+{
     QVector<float> theta;
     QJsonArray parameters = spec["CONNECTIVITY_RULE_PARAMETERS"].toArray();
     checkNumParams(parameters, numParams);
@@ -216,6 +216,32 @@ extractBBoxMin(const QJsonObject spec)
         min.append((float)parameters[2].toDouble());
     }
     return min;
+}
+
+double
+extractBoutonPSTRatio(const QJsonObject spec)
+{
+    if (spec["BOUTON_PST_RATIO"] != QJsonValue::Undefined)
+    {
+        return spec["BOUTON_PST_RATIO"].toDouble();
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+double
+extractMaxFailedConstraintRatio(const QJsonObject spec)
+{
+    if (spec["MAX_FAILED_CONSTRAINT_RATIO"] != QJsonValue::Undefined)
+    {
+        return spec["MAX_FAILED_CONSTRAINT_RATIO"].toDouble();
+    }
+    else
+    {
+        return 1;
+    }
 }
 
 QVector<float>
@@ -415,6 +441,20 @@ extractSimulationMode(const QJsonObject spec)
 }
 
 bool
+extractCheckProbabilityConstraint(const QJsonObject spec)
+{
+    if (spec["CHECK_PROBABILITY_CONSTRAINT"] != QJsonValue::Undefined)
+    {
+        bool isActive = 1 == spec["CHECK_PROBABILITY_CONSTRAINT"].toInt();        
+        return isActive;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool
 extractCreateMatrix(const QJsonObject spec)
 {
     if (spec["CREATE_MATRIX"] != QJsonValue::Undefined)
@@ -555,6 +595,9 @@ main(int argc, char** argv)
             QString mode = extractSimulationMode(spec);
             int numParameters = checkSimulationMode(mode);
             int seed = extractRandomSeed(spec);
+            double boutonPSTRatio = extractBoutonPSTRatio(spec);
+            bool checkProb = extractCheckProbabilityConstraint(spec);
+            double maxFailedRatio = extractMaxFailedConstraintRatio(spec);
             std::vector<int> runIndices;
             runIndices.push_back(extractRunIndex(spec));
             RandomGenerator randomGenerator(seed);
@@ -562,7 +605,7 @@ main(int argc, char** argv)
             parameters.push_back(extractRuleParameters(spec, numParameters));
             FeatureProvider featureProvider;
             Calculator calculator(featureProvider, randomGenerator, runIndices);
-            calculator.calculateBatch(parameters, maxInnervation, mode);
+            calculator.calculateBatch(parameters, maxInnervation, mode, boutonPSTRatio, checkProb, maxFailedRatio);
         }
     }
     else if (mode == "SIMULATE_BATCH")
@@ -581,12 +624,15 @@ main(int argc, char** argv)
             int numParameters = checkSimulationMode(mode);
             int seed = extractRandomSeed(spec);
             std::vector<int> runIndices = extractRunIndicesBatch(spec);
+            double boutonPSTRatio = extractBoutonPSTRatio(spec);
+            bool checkProb = extractCheckProbabilityConstraint(spec);
+            double maxFailedRatio = extractMaxFailedConstraintRatio(spec);
             qDebug() << "BATCH-SIZE:" << runIndices.size();
             RandomGenerator randomGenerator(seed);
             std::vector<QVector<float> > parameters = extractRuleParametersBatch(spec, numParameters);
             FeatureProvider featureProvider;
             Calculator calculator(featureProvider, randomGenerator, runIndices);
-            calculator.calculateBatch(parameters, maxInnervation, mode);
+            calculator.calculateBatch(parameters, maxInnervation, mode, boutonPSTRatio, checkProb, maxFailedRatio);
         }
     }
     else if (mode == "SUBCUBE")
