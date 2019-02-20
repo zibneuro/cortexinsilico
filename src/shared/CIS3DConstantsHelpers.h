@@ -211,6 +211,10 @@ namespace CIS3D
     */
     QString getNormalizedPSTFileName(const int neuronId, const NeuronType presynapticNeuronType);
 
+    QString getNormalizedApicalPSTFileName(const int neuronId, const NeuronType presynapticNeuronType);
+
+    QString getNormalizedBasalPSTFileName(const int neuronId, const NeuronType presynapticNeuronType);
+
     /**
         Determines directory with all PST subdirs.
         @param modelDataDir The model data directory.
@@ -224,6 +228,10 @@ namespace CIS3D
         @return The normalized PST root directory.
     */
     QDir getNormalizedPSTRootDir(const QDir& modelDataDir);
+
+    QDir getNormalizedApicalPSTRootDir(const QDir& modelDataDir);
+
+    QDir getNormalizedBasalPSTRootDir(const QDir& modelDataDir);
 
     /**
         Determines the directory containing the PST densities for
@@ -249,6 +257,13 @@ namespace CIS3D
                              const QString& regionName,
                              const QString& cellTypeName);
 
+    QDir getNormalizedApicalPSTDir(const QDir& modelDataDir,
+                                   const QString& regionName,
+                                   const QString& cellTypeName);
+
+    QDir getNormalizedBasalPSTDir(const QDir& modelDataDir,
+                                  const QString& regionName,
+                                  const QString& cellTypeName);
     /**
         Determines PST file path for the specified neuron.
         @param modelDataDir The model data directory.
@@ -277,6 +292,18 @@ namespace CIS3D
                                          const QString& cellTypeName,
                                          const int neuronId,
                                          const NeuronType presynapticNeuronType);
+
+    QString getNormalizedApicalPSTFileFullPath(const QDir& modelDataDir,
+                                               const QString& regionName,
+                                               const QString& cellTypeName,
+                                               const int neuronId,
+                                               const NeuronType presynapticNeuronType);
+
+    QString getNormalizedBasalPSTFileFullPath(const QDir& modelDataDir,
+                                              const QString& regionName,
+                                              const QString& cellTypeName,
+                                              const int neuronId,
+                                              const NeuronType presynapticNeuronType);
 
     /**
         Determines the directory containing the overall PST density files.

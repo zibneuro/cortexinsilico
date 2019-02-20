@@ -22,6 +22,8 @@ FeatureProvider::FeatureProvider()
     mPostFolder = "features_postExc";
     mWriteAll = true;
     mUniquePre = false;
+    mPostApicalFolder = "features_postApicalExc";
+    mPostBasalFolder = "features_postBasalExc";
 }
 
 FeatureProvider::FeatureProvider(QString metaFolder, QString preFolder, QString postFolder, bool writeAll, bool uniquePre)
@@ -31,6 +33,8 @@ FeatureProvider::FeatureProvider(QString metaFolder, QString preFolder, QString 
     , mWriteAll(writeAll)
     , mUniquePre(uniquePre)
 {
+    mPostApicalFolder = "features_postApicalExc";
+    mPostBasalFolder = "features_postBasalExc";
 }
 
 FeatureProvider::~FeatureProvider()
@@ -227,7 +231,7 @@ void
 FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
 {
     NeuronSelection selection;
-    selection.setFullModel(networkProps);
+    selection.setFullModel(networkProps, false); // temp.
 
     qDebug() << "[*] Extracting full model" << selection.Presynaptic().size() << selection.Postsynaptic().size();
 
@@ -237,8 +241,10 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
     UtilIO::makeDir(mMetaFolder);
     UtilIO::makeDir(mPreFolder);
     UtilIO::makeDir(mPostFolder);
+    UtilIO::makeDir(mPostApicalFolder);
+    UtilIO::makeDir(mPostBasalFolder);
+    UtilIO::makeDir("features_postInh");
     UtilIO::makeDir("features_postAll");
-
 
     std::set<int> voxel;
     std::map<int, float> voxel_postAllExc;
@@ -320,6 +326,7 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
         int funcType = networkProps.cellTypes.isExcitatory(cellTypeId) ? 0 : 1;
         neuron_funct[neuronId] = funcType;
 
+        // ########### REGULAR PST ###########
         QString filePathExc = CIS3D::getNormalizedPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::EXCITATORY);
 
         SparseField* postFieldExc = SparseField::load(filePathExc);
@@ -336,6 +343,42 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
         }
 
         writeMapFloat(field, voxel, mPostFolder, QString("%1.dat").arg(neuronId));
+
+        // ########### APCIAL PST ###########
+        QString filePathExcApical = CIS3D::getNormalizedApicalPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::EXCITATORY);
+
+        SparseField* postFieldExcApical = SparseField::load(filePathExcApical);
+        assertGrid(postFieldExcApical);
+        std::map<int, float> fieldApical = postFieldExcApical->getModifiedCopy(1, 0, false);
+        for (auto it = fieldApical.begin(); it != fieldApical.end(); it++)
+        {
+            if (voxelPositions.find(it->first) == voxelPositions.end())
+            {
+                Vec3f position = postFieldExcApical->getSpatialLocation(it->first);
+                voxelPositions[it->first] = position;
+            }
+            voxel.insert(it->first);
+        }
+
+        writeMapFloat(fieldApical, voxel, mPostApicalFolder, QString("%1.dat").arg(neuronId));
+
+        // ########### BASAL PST ###########
+        QString filePathExcBasal = CIS3D::getNormalizedBasalPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::EXCITATORY);
+
+        SparseField* postFieldExcBasal = SparseField::load(filePathExcBasal);
+        assertGrid(postFieldExcBasal);
+        std::map<int, float> fieldBasal = postFieldExcBasal->getModifiedCopy(1, 0, false);
+        for (auto it = fieldBasal.begin(); it != fieldBasal.end(); it++)
+        {
+            if (voxelPositions.find(it->first) == voxelPositions.end())
+            {
+                Vec3f position = postFieldExcBasal->getSpatialLocation(it->first);
+                voxelPositions[it->first] = position;
+            }
+            voxel.insert(it->first);
+        }
+
+        writeMapFloat(fieldBasal, voxel, mPostBasalFolder, QString("%1.dat").arg(neuronId));
     }
 
     // ########### POST ALL EXC ###########
@@ -345,7 +388,6 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
     SparseField* postAllExcField = SparseField::load(postAllExcFile);
     voxel_postAllExc = postAllExcField->getModifiedCopy(1, 0, false);
     writeMapFloat(voxel_postAllExc, voxel, "features_postAll", "voxel_postAllExc.dat");
-
 
     writeVoxels(voxelPositions, mMetaFolder, "voxel_pos.dat");
 }
@@ -504,7 +546,8 @@ FeatureProvider::load(std::map<int, std::map<int, float> >& neuron_pre,
 
 void
 FeatureProvider::loadCIS3D(std::map<int, std::map<int, float> >& neuron_pre,
-                           std::map<int, std::map<int, float> >& neuron_postExc)
+                           std::map<int, std::map<int, float> >& neuron_postExc,
+                           QString target)
 {
     QDirIterator it_pre(mPreFolder);
     while (it_pre.hasNext())
@@ -518,6 +561,14 @@ FeatureProvider::loadCIS3D(std::map<int, std::map<int, float> >& neuron_pre,
             readMapFloat(foo, "", file, 1.0);
             neuron_pre[neuron] = foo;
         }
+    }
+
+    QString postFolder = mPostFolder;
+    if (target == "APICAL")
+    {
+        postFolder = mPostApicalFolder;
+    } else {
+        postFolder = mPostBasalFolder;
     }
 
     QDirIterator it_postExc(mPostFolder);

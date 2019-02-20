@@ -59,7 +59,7 @@ printUsage()
     qDebug() << "./networkSimulator SIMULATE_BATCH  <simulationSpecFile>";
     qDebug() << "./networkSimulator SUBCUBE         <voxelSpecFile>";
     qDebug() << "./networkSimulator EXTRACT_ALL     <modelDataDir>";
-    qDebug() << "./networkSimulator COMPUTE_SPATIAL_ALL";
+    qDebug() << "./networkSimulator COMPUTE_SPATIAL_ALL [APICAL|BASAL]";
     qDebug() << "./networkSimulator SHOW_DIMENSIONS <sparseField>";
     qDebug() << "";
     qDebug() << "The <initSpecFile> contains the neuron selection to be used for"
@@ -68,6 +68,7 @@ printUsage()
     qDebug() << "The <voxelSpecFile> contains the model data directory and the "
              << "parameters of the subcube.";
     qDebug() << "The <modelDataDir> is the direct path to the model data directory.";
+    qDebug() << "Id no postsyn. subcellular target is specified all PSTs are used.";
 }
 
 void
@@ -445,7 +446,7 @@ extractCheckProbabilityConstraint(const QJsonObject spec)
 {
     if (spec["CHECK_PROBABILITY_CONSTRAINT"] != QJsonValue::Undefined)
     {
-        bool isActive = 1 == spec["CHECK_PROBABILITY_CONSTRAINT"].toInt();        
+        bool isActive = 1 == spec["CHECK_PROBABILITY_CONSTRAINT"].toInt();
         return isActive;
     }
     else
@@ -720,17 +721,18 @@ main(int argc, char** argv)
     }
     else if (mode == "COMPUTE_SPATIAL_ALL")
     {
-        if (argc != 2)
+        if (argc != 3)
         {
             printUsage();
             return 1;
         }
         else
         {
+            const QString target = argv[2];
             std::map<int, std::map<int, float> > neurons_pre;
             std::map<int, std::map<int, float> > neurons_post;
-            FeatureProvider featureProvider;
-            featureProvider.loadCIS3D(neurons_pre, neurons_post);
+            FeatureProvider featureProvider;            
+            featureProvider.loadCIS3D(neurons_pre, neurons_post, target);
             qDebug() << neurons_pre.size() << neurons_post.size();
             Calculator::calculateSpatial(neurons_pre, neurons_post);
             return 0;

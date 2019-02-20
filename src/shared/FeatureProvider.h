@@ -51,7 +51,8 @@ public:
               std::map<int, std::set<int> >& voxel_neuronsPostInh);
 
     void loadCIS3D(std::map<int, std::map<int, float> >& neuron_pre,
-                 std::map<int, std::map<int, float> >& neuron_postExc);
+                   std::map<int, std::map<int, float> >& neuron_postExc,
+                   QString target);
 
     void loadVoxelPositions(std::vector<int>& voxelIds, std::vector<float>& x, std::vector<float>& y, std::vector<float>& z);
 
@@ -64,7 +65,7 @@ private:
     void writeMapFloat(std::map<int, float>& mapping, std::set<int>& voxelIds, QString folder, QString file);
     void writeMapInt(std::map<int, int>& mapping, QString folder, QString file);
     void writeIndex(std::map<int, std::set<int> >& index, QString folder, QString file);
-    void loadIndex(std::map<int, std::set<int> >& index, QString folder, QString fileName);    
+    void loadIndex(std::map<int, std::set<int> >& index, QString folder, QString fileName);
     void readMapInt(std::map<int, int>& mapping, QString folder, QString fileName);
     void readIndex(std::map<int, std::set<int> >& index, QString folder, QString file);
     void registerVoxelIds(std::set<int>& voxelIds, std::map<int, float>& field);
@@ -89,4 +90,6 @@ private:
     QString mPostFolder;
     bool mWriteAll;
     bool mUniquePre;
+    QString mPostApicalFolder;
+    QString mPostBasalFolder;
 };
