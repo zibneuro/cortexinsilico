@@ -314,10 +314,9 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
 }
 
 void
-Calculator::calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc)
-{
-    QString tmpDir = "innervation";
-    UtilIO::makeDir(tmpDir);
+Calculator::calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc, QString innervationDir)
+{    
+    UtilIO::makeDir(innervationDir);
 
     std::vector<int> preIndices;
     for (auto it = neuron_pre.begin(); it != neuron_pre.end(); ++it)
@@ -382,7 +381,7 @@ Calculator::calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, s
                     innervationPerPre[postId] = innervationPerVoxel;
                 }
             }
-            QString fileName = QDir(tmpDir).filePath("preNeuronID_" + QString::number(preId));
+            QString fileName = QDir(innervationDir).filePath("preNeuronID_" + QString::number(preId));
             fileNames.insert(fileName);
             QFile file(fileName);
             if (!file.open(QIODevice::WriteOnly))

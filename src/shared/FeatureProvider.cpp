@@ -231,7 +231,7 @@ void
 FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
 {
     NeuronSelection selection;
-    selection.setFullModel(networkProps, false); // temp.
+    selection.setFullModel(networkProps);
 
     qDebug() << "[*] Extracting full model" << selection.Presynaptic().size() << selection.Postsynaptic().size();
 
@@ -348,6 +348,7 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
         QString filePathExcApical = CIS3D::getNormalizedApicalPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::EXCITATORY);
 
         SparseField* postFieldExcApical = SparseField::load(filePathExcApical);
+
         assertGrid(postFieldExcApical);
         std::map<int, float> fieldApical = postFieldExcApical->getModifiedCopy(1, 0, false);
         for (auto it = fieldApical.begin(); it != fieldApical.end(); it++)
@@ -379,6 +380,8 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
         }
 
         writeMapFloat(fieldBasal, voxel, mPostBasalFolder, QString("%1.dat").arg(neuronId));
+
+        //qDebug() << neuronId << postFieldExc->getFieldSum() << postFieldExcApical->getFieldSum() << postFieldExcBasal->getFieldSum();
     }
 
     // ########### POST ALL EXC ###########
@@ -563,15 +566,21 @@ FeatureProvider::loadCIS3D(std::map<int, std::map<int, float> >& neuron_pre,
         }
     }
 
-    QString postFolder = mPostFolder;
-    if (target == "APICAL")
+    QString postFolder = "";
+    if (target == "ALL")
+    {
+        postFolder = mPostFolder;
+    }
+    else if (target == "APICAL")
     {
         postFolder = mPostApicalFolder;
-    } else {
+    }
+    else if (target == "BASAL")
+    {
         postFolder = mPostBasalFolder;
     }
 
-    QDirIterator it_postExc(mPostFolder);
+    QDirIterator it_postExc(postFolder);
     while (it_postExc.hasNext())
     {
         QString file = it_postExc.next();

@@ -59,8 +59,9 @@ printUsage()
     qDebug() << "./networkSimulator SIMULATE_BATCH  <simulationSpecFile>";
     qDebug() << "./networkSimulator SUBCUBE         <voxelSpecFile>";
     qDebug() << "./networkSimulator EXTRACT_ALL     <modelDataDir>";
-    qDebug() << "./networkSimulator COMPUTE_SPATIAL_ALL [APICAL|BASAL]";
+    qDebug() << "./networkSimulator COMPUTE_SPATIAL [ALL|APICAL|BASAL]";
     qDebug() << "./networkSimulator SHOW_DIMENSIONS <sparseField>";
+    qDebug() << "./networkSimulator GET_FIELD_SUM <sparseField>";
     qDebug() << "";
     qDebug() << "The <initSpecFile> contains the neuron selection to be used for"
              << "simulation.";
@@ -719,7 +720,7 @@ main(int argc, char** argv)
             return 0;
         }
     }
-    else if (mode == "COMPUTE_SPATIAL_ALL")
+    else if (mode == "COMPUTE_SPATIAL")
     {
         if (argc != 3)
         {
@@ -729,12 +730,30 @@ main(int argc, char** argv)
         else
         {
             const QString target = argv[2];
+            QString innervationDir = "";
+            if (target == "ALL")
+            {
+                innervationDir = "innervation";
+            }
+            else if (target == "APICAL")
+            {
+                innervationDir = "innervationApical";
+            }
+            else if (target == "BASAL")
+            {
+                innervationDir = "innervationBasal";
+            }
+            else
+            {
+                printUsage();
+                return 1;
+            }
             std::map<int, std::map<int, float> > neurons_pre;
             std::map<int, std::map<int, float> > neurons_post;
-            FeatureProvider featureProvider;            
+            FeatureProvider featureProvider;
             featureProvider.loadCIS3D(neurons_pre, neurons_post, target);
             qDebug() << neurons_pre.size() << neurons_post.size();
-            Calculator::calculateSpatial(neurons_pre, neurons_post);
+            Calculator::calculateSpatial(neurons_pre, neurons_post, innervationDir);
             return 0;
         }
     }
@@ -750,6 +769,21 @@ main(int argc, char** argv)
             const QString filePath = argv[2];
             SparseField* field = SparseField::load(filePath);
             field->getCoordinates().print();
+            return 0;
+        }
+    }
+    else if (mode == "GET_FIELD_SUM")
+    {
+        if (argc != 3)
+        {
+            printUsage();
+            return 1;
+        }
+        else
+        {
+            const QString filePath = argv[2];
+            SparseField* field = SparseField::load(filePath);
+            qDebug() << field->getFieldSum();
             return 0;
         }
     }

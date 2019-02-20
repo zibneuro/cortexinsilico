@@ -6,19 +6,20 @@ EPS = "0.00001"
 
 def printUsageAndExit():
     print("Usage:")
-    print("python3 parseSpatialFolder.py <dir>")
+    print("python3 parseSpatialFolder.py <dir> <outfile>")
     print()
     print("<dir> = The directory with the downloaded spatial innervation distribution.")    
     sys.exit(1)
 
-if (len(sys.argv) != 2):
+if (len(sys.argv) != 3):
     printUsageAndExit()
 
 refDir = sys.argv[1]
+outfile = sys.argv[2]
 
 neuronToNeuronInnervation = []
 
-resultFile = open("neuronToNeuronInnervation","w")
+resultFile = open(outfile,"w+")
 
 for root, dirs, files in os.walk(refDir):
     for file in files:

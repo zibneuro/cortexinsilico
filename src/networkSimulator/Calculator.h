@@ -23,7 +23,7 @@ public:
 
     void calculateBatch(std::vector<QVector<float> > parametersBatch, double maxInnervation, QString mode, double boutonPSTRatio, bool checkProb, double maxFailedRatio);
 
-    static void calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc);
+    static void calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc, QString innervationDir);
 
 private:
     double calculateProbability(double innervationMean);
