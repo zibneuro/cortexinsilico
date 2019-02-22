@@ -197,7 +197,7 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mNetwork.loadFilesForQuery();
 
         // EXTRACT CONNECTION PROBABILITY FORMULA
-        QString connProbFormula = jsonData["connProbFormula"].toString();
+        QJsonObject formulas = jsonData["formulas"].toObject();
 
         // EXTRACT SLICE PARAMETERS
         const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
@@ -228,7 +228,7 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
         qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
         InnervationStatistic innervation(mNetwork);
-        innervation.setExpression(connProbFormula);
+        innervation.setExpression("");
 
         connect(&innervation, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));

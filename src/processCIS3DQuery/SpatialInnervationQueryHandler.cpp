@@ -216,7 +216,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             QTextStream outStream(&tempFile);
 
             QString line = inStream.readLine();
-            int currentPostId;
+            int currentPostId = -1;
             while (!line.isNull())
             {
                 QStringList parts = line.split(' ');
