@@ -20,6 +20,7 @@
 #include <QTextStream>
 #include <QDebug>
 #include "NeuronSelection.h"
+#include "FormulaCalculator.h"
 
 QJsonObject
 SpatialInnervationQueryHandler::createJsonResult(
@@ -119,6 +120,13 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForSynapseComputation();
 
+        /*
+        QJsonObject formulas = jsonData["formulas"].toObject();
+        FormulaCalculator calculator(formulas);
+        bool initSuccess = calculator.init();
+        qDebug() << "Formula calculator" << initSuccess;
+        */
+        
         QString dataFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "innervation");
         QString voxelFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_meta");
 

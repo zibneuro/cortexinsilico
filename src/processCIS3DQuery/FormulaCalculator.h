@@ -13,6 +13,8 @@ class FormulaCalculator
 public:
     FormulaCalculator(QJsonObject formulas);
     bool init();
+    float calculateSynapseProbability(float innervation, int k);
+    float calculateConnectionProbability(float innervation);
 
 private:
     std::string mSynapseDistributionFormula;

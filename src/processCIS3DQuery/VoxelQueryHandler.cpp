@@ -21,6 +21,7 @@
 #include <QDebug>
 #include "NeuronSelection.h"
 #include "FeatureProvider.h"
+#include "FormulaCalculator.h"
 #include <fstream>
 
 template <typename T>
@@ -215,6 +216,11 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForSynapseComputation();
 
+        QJsonObject formulas = jsonData["formulas"].toObject();
+        FormulaCalculator calculator(formulas);
+        bool initSuccess = calculator.init();
+        qDebug() << "Formula calculator" << initSuccess;
+
         QString preFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_pre");
         QString postFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_postExc");
         QString postAllFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_postAll");
@@ -331,15 +337,15 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                 QStringList parts = line.split(" ");
 
                 int voxelId = parts[0].toInt();
-                double voxelX = parts[1].toDouble();
-                double voxelY = parts[2].toDouble();
-                double voxelZ = parts[3].toDouble();
+                double voxelX = parts[1].toDouble() - 25;
+                double voxelY = parts[2].toDouble() - 25;
+                double voxelZ = parts[3].toDouble() - 25;
 
-                if (voxelX >= minX && voxelX <= maxX)
+                if (voxelX >= minX && voxelX < maxX)
                 {
-                    if (voxelY >= minY && voxelY <= maxY)
+                    if (voxelY >= minY && voxelY < maxY)
                     {
-                        if (voxelZ >= minZ && voxelZ <= maxZ)
+                        if (voxelZ >= minZ && voxelZ < maxZ)
                         {
                             mSelectedVoxels.insert(voxelId);
                             filteredVoxels.insert(voxelId);
@@ -373,7 +379,6 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             //int absVoxelCount  = 0;
             while (!in.atEnd() && !mAborted)
             {
-                
                 QString line = in.readLine();
                 line = line.trimmed();
                 QStringList parts = line.split(" ");
@@ -437,13 +442,13 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                             if (preIt->first != postIt->first)
                             {
                                 float innervation = preIt->second * postIt->second;
-                                int multipl = preMultiplicity[preIt->first];                               
-                                
+                                int multipl = preMultiplicity[preIt->first];
+
                                 for (int k = 1; k <= synK; k++)
                                 {
-                                    float synap = calculateSynapseProbability(innervation, k);
+                                    float synap = calculator.calculateSynapseProbability(innervation, k);
                                     synPerVoxel[k] += multipl * synap;
-                                }                             
+                                }
 
                                 for (int j = 1; j < multipl; j++)
                                 {
@@ -658,9 +663,9 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         }
         else
         {*/
-            // ###################### ZIP FILES ######################
+        // ###################### ZIP FILES ######################
 
-            /*
+        /*
             qDebug() << "[*] Zipping view file:" << jsonFullPath;
             QProcess zip;
             zip.setWorkingDirectory(mTempFolder);
@@ -684,9 +689,9 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             }
             */
 
-            // ###################### UPLOAD FILES ######################
+        // ###################### UPLOAD FILES ######################
 
-            /*
+        /*
             //fileSizeBytes1 = QFileInfo(zipFullPath).size();
             int upload1 = QueryHelpers::uploadToS3(zipFileName, zipFullPath, mConfig);
             //fileSizeBytes2 = QFileInfo(dataZipFullPath).size();
@@ -705,7 +710,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                 mAborted = true;
             }
             */
-        //} 
+        //}
 
         // ###################### CLEAN FILES ######################
 
