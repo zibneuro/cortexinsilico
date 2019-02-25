@@ -7,7 +7,11 @@
 
     @param props The complete model data.
 */
-FeatureExtractor::FeatureExtractor(NetworkProps& props) : mNetworkProps(props), mVerbose(true) {}
+FeatureExtractor::FeatureExtractor(NetworkProps& props)
+    : mNetworkProps(props)
+    , mVerbose(true)
+{
+}
 
 /*
     Extracts the model features from the specified subvolume according
@@ -21,12 +25,15 @@ FeatureExtractor::FeatureExtractor(NetworkProps& props) : mNetworkProps(props), 
     @param neuronIds The neuron IDs filter (overrules all others, if set).
     @param samplingFactor The neuron sampling factor, 1: take all, 2: take half, etc.
 */
-void FeatureExtractor::extract(QVector<float> origin, QVector<int> dimensions,
-                               QSet<QString> cellTypes, QSet<QString> regions, QSet<int> neuronIds,
-                               int samplingFactor) {
-    correctOrigin(origin);
+void
+FeatureExtractor::extract(QVector<float> origin, QVector<int> dimensions, QSet<QString> cellTypes, QSet<QString> regions, QSet<int> neuronIds, int samplingFactor)
+{
+    qDebug() << "[*] User defined origin:" << origin;
     qDebug() << "[*] Pre-filtering neurons.";
     QList<int> neurons = determineNeurons(origin, dimensions, cellTypes, regions, neuronIds);
+    qDebug() << "[*] Filtered neurons:" << neurons.size();
+    correctOrigin(origin);
+    qDebug() << "[*] Aligned origin:" << origin;
     qDebug() << "[*] Extracting features.";
     QList<Feature> features = extractFeatures(neurons, origin, dimensions, samplingFactor);
     qDebug() << "[*] Writing extracted features to file: features.csv.";
@@ -45,7 +52,9 @@ void FeatureExtractor::extract(QVector<float> origin, QVector<int> dimensions,
     "index.dat" with a mapping (neuronID -> voxel_1, ..., voxel_k).
     @param cellTypes The cell types filter.
 */
-void FeatureExtractor::extractAll(QSet<QString> cellTypes) {
+void
+FeatureExtractor::extractAll(QSet<QString> cellTypes)
+{
     mVerbose = false;
     createOutputDir("voxelFeatures");
 
@@ -64,15 +73,19 @@ void FeatureExtractor::extractAll(QSet<QString> cellTypes) {
     QMap<int, QSet<QString> > index;
     SelectionFilter emptyFilter;
     QList<int> allNeurons = mNetworkProps.neurons.getFilteredNeuronIds(emptyFilter);
-    for(int i=0; i<allNeurons.size(); i++){
+    for (int i = 0; i < allNeurons.size(); i++)
+    {
         QSet<QString> emptySet;
         index.insert(allNeurons[i], emptySet);
     }
-    
+
     // Iterate over voxels.
-    for (int x = 0; x < dimensions[0]; x++) {
-        for (int y = 0; y < dimensions[1]; y++) {
-            for (int z = 0; z < dimensions[2]; z++) {
+    for (int x = 0; x < dimensions[0]; x++)
+    {
+        for (int y = 0; y < dimensions[1]; y++)
+        {
+            for (int z = 0; z < dimensions[2]; z++)
+            {
                 QVector<float> location;
                 location.push_back(origin[0] + x * voxelSize[0]);
                 location.push_back(origin[1] + y * voxelSize[1]);
@@ -81,19 +94,21 @@ void FeatureExtractor::extractAll(QSet<QString> cellTypes) {
                 const QString voxelId = QString("%1-%2-%3").arg(x + 1).arg(y + 1).arg(z + 1);
                 qDebug() << "[*] Processing voxel" << voxelId;
                 QList<int> currentNeurons =
-                    determineNeurons(location, dimOne, cellTypes, regions, neuronIds);        
+                    determineNeurons(location, dimOne, cellTypes, regions, neuronIds);
                 QList<Feature> features = extractFeatures(currentNeurons, location, dimOne, 1);
-                if(features.size() > 0){
-                    QString voxelFilePath = QDir("voxelFeatures").filePath(voxelId + ".csv");                
+                if (features.size() > 0)
+                {
+                    QString voxelFilePath = QDir("voxelFeatures").filePath(voxelId + ".csv");
                     writeFeaturesSparse(voxelFilePath, features);
-                    for(int i=0; i<features.size(); i++){
+                    for (int i = 0; i < features.size(); i++)
+                    {
                         index[features[i].neuronID].insert(voxelId);
                     }
                 }
             }
         }
     }
-    
+
     QString indexFilePath = QDir("voxelFeatures").filePath("index.dat");
     writeIndexFile(indexFilePath, index);
 }
@@ -107,10 +122,11 @@ void FeatureExtractor::extractAll(QSet<QString> cellTypes) {
     @param regions The regions filter.
     @param neuronIds The neuron IDs filter.
 */
-QList<int> FeatureExtractor::determineNeurons(QVector<float> origin, QVector<int> dimensions,
-                                              QSet<QString> cellTypes, QSet<QString> regions,
-                                              QSet<int> neuronIds) {
-    if (neuronIds.size() > 0) {
+QList<int>
+FeatureExtractor::determineNeurons(QVector<float> origin, QVector<int> dimensions, QSet<QString> cellTypes, QSet<QString> regions, QSet<int> neuronIds)
+{
+    if (neuronIds.size() > 0)
+    {
         return neuronIds.toList();
     }
 
@@ -118,27 +134,37 @@ QList<int> FeatureExtractor::determineNeurons(QVector<float> origin, QVector<int
     QList<int> prunedNeurons;
     QList<int> prunedNeurons2;
 
-    if (cellTypes.size() == 0) {
+    if (cellTypes.size() == 0)
+    {
         prunedNeurons.append(neurons);
-    } else {
-        for (int i = 0; i < neurons.size(); i++) {
+    }
+    else
+    {
+        for (int i = 0; i < neurons.size(); i++)
+        {
             int neuronId = neurons[i];
             int cellTypeId = mNetworkProps.neurons.getCellTypeId(neuronId);
             QString cellType = mNetworkProps.cellTypes.getName(cellTypeId);
-            if (cellTypes.contains(cellType)) {
+            if (cellTypes.contains(cellType))
+            {
                 prunedNeurons.append(neuronId);
             }
         }
     }
 
-    if (regions.size() == 0) {
+    if (regions.size() == 0)
+    {
         prunedNeurons2.append(prunedNeurons);
-    } else {
-        for (int i = 0; i < prunedNeurons.size(); i++) {
+    }
+    else
+    {
+        for (int i = 0; i < prunedNeurons.size(); i++)
+        {
             int neuronId = prunedNeurons[i];
             int regionId = mNetworkProps.neurons.getRegionId(neuronId);
             QString region = mNetworkProps.regions.getName(regionId);
-            if (regions.contains(region)) {
+            if (regions.contains(region))
+            {
                 prunedNeurons2.append(neuronId);
             }
         }
@@ -162,19 +188,21 @@ QList<int> FeatureExtractor::determineNeurons(QVector<float> origin, QVector<int
     @return All voxels that with the pre- and postsynaptic target counts.
 
 */
-QList<Voxel> FeatureExtractor::determineVoxels(SparseField* pre, SparseField* postExc,
-                                               SparseField* postAllExc, SparseField* postInh,
-                                               SparseField* postAllInh, QVector<float> origin,
-                                               QVector<int> dimensions) {
+QList<Voxel>
+FeatureExtractor::determineVoxels(SparseField* pre, SparseField* postExc, SparseField* postAllExc, SparseField* postInh, SparseField* postAllInh, QVector<float> origin, QVector<int> dimensions)
+{
     const float voxelSize = 50;
     QList<Voxel> voxels;
     Vec3f position;
-    for (int x = 0; x < dimensions[0]; x++) {
+    for (int x = 0; x < dimensions[0]; x++)
+    {
         position.setX(origin[0] + x * voxelSize);
-        for (int y = 0; y < dimensions[1]; y++) {
+        for (int y = 0; y < dimensions[1]; y++)
+        {
             position.setY(origin[1] + y * voxelSize);
-            for (int z = 0; z < dimensions[2]; z++) {
-                position.setZ(origin[2] + z * voxelSize);                
+            for (int z = 0; z < dimensions[2]; z++)
+            {
+                position.setZ(origin[2] + z * voxelSize);
 
                 Voxel voxel;
                 voxel.voxelId = SparseField::getVoxelId(Vec3i(x, y, z), dimensions);
@@ -182,42 +210,58 @@ QList<Voxel> FeatureExtractor::determineVoxels(SparseField* pre, SparseField* po
                 voxel.voxelY = y + 1;
                 voxel.voxelZ = z + 1;
 
-                if (pre != NULL && pre->inRange(position)) {
+                if (pre != NULL && pre->inRange(position))
+                {
                     Vec3i voxelLocation = pre->getVoxelContainingPoint(position);
                     voxel.pre = pre->getFieldValue(voxelLocation);
-                } else {                    
+                }
+                else
+                {
                     voxel.pre = 0;
                 }
 
-                if (postExc != NULL && postExc->inRange(position)) {
+                if (postExc != NULL && postExc->inRange(position))
+                {
                     Vec3i voxelLocation = postExc->getVoxelContainingPoint(position);
                     voxel.postExc = postExc->getFieldValue(voxelLocation);
-                } else {
+                }
+                else
+                {
                     voxel.postExc = 0;
                 }
 
-                if (postAllExc != NULL && postAllExc->inRange(position)) {
+                if (postAllExc != NULL && postAllExc->inRange(position))
+                {
                     Vec3i voxelLocation = postAllExc->getVoxelContainingPoint(position);
                     voxel.postAllExc = postAllExc->getFieldValue(voxelLocation);
-                } else {
+                }
+                else
+                {
                     voxel.postAllExc = 0;
                 }
 
-                if (postInh != NULL && postInh->inRange(position)) {
+                if (postInh != NULL && postInh->inRange(position))
+                {
                     Vec3i voxelLocation = postInh->getVoxelContainingPoint(position);
                     voxel.postInh = postInh->getFieldValue(voxelLocation);
-                } else {
+                }
+                else
+                {
                     voxel.postInh = 0;
                 }
 
-                if (postAllInh != NULL && postAllInh->inRange(position)) {
+                if (postAllInh != NULL && postAllInh->inRange(position))
+                {
                     Vec3i voxelLocation = postAllInh->getVoxelContainingPoint(position);
                     voxel.postAllInh = postAllInh->getFieldValue(voxelLocation);
-                } else {
+                }
+                else
+                {
                     voxel.postAllInh = 0;
                 }
 
-                if (voxel.pre != 0 || voxel.postExc != 0 || voxel.postInh != 0) {
+                if (voxel.pre != 0 || voxel.postExc != 0 || voxel.postInh != 0)
+                {
                     voxels.append(voxel);
                 }
             }
@@ -235,8 +279,9 @@ QList<Voxel> FeatureExtractor::determineVoxels(SparseField* pre, SparseField* po
     @param samplingFactor The sampling factor, 1: take all, 2: take half, etc.
     @return A list of features.
 */
-QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<float> origin,
-                                                 QVector<int> dimensions, int samplingFactor) {
+QList<Feature>
+FeatureExtractor::extractFeatures(QList<int> neurons, QVector<float> origin, QVector<int> dimensions, int samplingFactor)
+{
     QList<Feature> features;
     QDir modelDataDir = CIS3D::getModelDataDir(mNetworkProps.dataRoot);
 
@@ -245,12 +290,14 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
     const QString pstAllFileInh = CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::INHIBITORY);
     SparseField* postAllInh = SparseField::load(pstAllFileInh);
 
-    if (samplingFactor > 1) {
+    if (samplingFactor > 1)
+    {
         std::random_shuffle(neurons.begin(), neurons.end());
     }
 
     int nonEmptyNeurons = 0;
-    for (int i = 0; i < neurons.size(); i++) {
+    for (int i = 0; i < neurons.size(); i++)
+    {
         int neuronId = neurons[i];
         int cellTypeId = mNetworkProps.neurons.getCellTypeId(neuronId);
         QString cellType = mNetworkProps.cellTypes.getName(cellTypeId);
@@ -264,29 +311,31 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
         SparseField* postExc = NULL;
         SparseField* postInh = NULL;
         if (synapticSide == CIS3D::SynapticSide::PRESYNAPTIC ||
-            synapticSide == CIS3D::SynapticSide::BOTH_SIDES) {
+            synapticSide == CIS3D::SynapticSide::BOTH_SIDES)
+        {
             int mappedId = mNetworkProps.axonRedundancyMap.getNeuronIdToUse(neuronId);
             const QString filePath =
                 CIS3D::getBoutonsFileFullPath(modelDataDir, cellType, mappedId);
             boutons = loadSparseField(filePath);
         }
         if (synapticSide == CIS3D::SynapticSide::POSTSYNAPTIC ||
-            synapticSide == CIS3D::SynapticSide::BOTH_SIDES) {
-            const QString filePathExc = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType,
-                                                                  neuronId, CIS3D::EXCITATORY);
+            synapticSide == CIS3D::SynapticSide::BOTH_SIDES)
+        {
+            const QString filePathExc = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::EXCITATORY);
             postExc = loadSparseField(filePathExc);
-            const QString filePathInh = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType,
-                                                                  neuronId, CIS3D::INHIBITORY);
+            const QString filePathInh = CIS3D::getPSTFileFullPath(modelDataDir, region, cellType, neuronId, CIS3D::INHIBITORY);
             postInh = loadSparseField(filePathInh);
         }
 
         QList<Voxel> voxels =
             determineVoxels(boutons, postExc, postAllExc, postInh, postAllInh, origin, dimensions);
-
-        if (voxels.size() > 0) {
+        if (voxels.size() > 0)
+        {
             nonEmptyNeurons++;
-            if (nonEmptyNeurons % samplingFactor == 0) {
-                for (int j = 0; j < voxels.size(); j++) {
+            if (nonEmptyNeurons % samplingFactor == 0)
+            {
+                for (int j = 0; j < voxels.size(); j++)
+                {                    
                     Feature feature;
                     feature.neuronID = neuronId;
                     feature.voxelID = voxels[j].voxelId;
@@ -306,8 +355,9 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
                 }
             }
         }
-        
-        if (mVerbose && i % 1000 == 0) {
+
+        if (mVerbose && i % 1000 == 0)
+        {
             qDebug() << "   Processed neuron " << i + 1 << "of" << neurons.size()
                      << "- Number of features" << features.size();
         }
@@ -326,9 +376,12 @@ QList<Feature> FeatureExtractor::extractFeatures(QList<int> neurons, QVector<flo
     @param fileName The name of the file.
     @param features A list with the features.
 */
-void FeatureExtractor::writeFeatures(QString fileName, QList<Feature>& features) {
+void
+FeatureExtractor::writeFeatures(QString fileName, QList<Feature>& features)
+{
     QFile csv(fileName);
-    if (!csv.open(QIODevice::WriteOnly)) {
+    if (!csv.open(QIODevice::WriteOnly))
+    {
         const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
         throw std::runtime_error(qPrintable(msg));
     }
@@ -339,7 +392,8 @@ void FeatureExtractor::writeFeatures(QString fileName, QList<Feature>& features)
         << "synapticSide" << sep << "pre" << sep << "postExc" << sep << "postAllExc" << sep
         << "postInh" << sep << "postAllInh"
         << "\n";
-    for (int i = 0; i < features.size(); i++) {
+    for (int i = 0; i < features.size(); i++)
+    {
         Feature feature = features[i];
         out << feature.voxelID << sep << feature.voxelX << sep << feature.voxelY << sep
             << feature.voxelZ << sep << feature.neuronID << sep << feature.morphologicalCellType
@@ -356,10 +410,12 @@ void FeatureExtractor::writeFeatures(QString fileName, QList<Feature>& features)
     @param origin The corrected origin.
     @param features A list with the features.
 */
-void FeatureExtractor::writeFeaturesSpatial(QString fileName, QList<Feature>& features,
-                                            QVector<float> origin) {
+void
+FeatureExtractor::writeFeaturesSpatial(QString fileName, QList<Feature>& features, QVector<float> origin)
+{
     QFile csv(fileName);
-    if (!csv.open(QIODevice::WriteOnly)) {
+    if (!csv.open(QIODevice::WriteOnly))
+    {
         const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
         throw std::runtime_error(qPrintable(msg));
     }
@@ -370,7 +426,8 @@ void FeatureExtractor::writeFeaturesSpatial(QString fileName, QList<Feature>& fe
         << sep << "postExc" << sep << "postAllExc" << sep << "postInh" << sep << "postAllInh"
         << "\n";
     float voxelSize = 50;
-    for (int i = 0; i < features.size(); i++) {
+    for (int i = 0; i < features.size(); i++)
+    {
         Feature feature = features[i];
         float x = origin[0] + (feature.voxelX - 1) * voxelSize;
         float y = origin[1] + (feature.voxelY - 1) * voxelSize;
@@ -389,9 +446,12 @@ void FeatureExtractor::writeFeaturesSpatial(QString fileName, QList<Feature>& fe
     @param fileName The name of the file.
     @param features A list with the features.
 */
-void FeatureExtractor::writeFeaturesSparse(QString fileName, QList<Feature>& features) {
+void
+FeatureExtractor::writeFeaturesSparse(QString fileName, QList<Feature>& features)
+{
     QFile csv(fileName);
-    if (!csv.open(QIODevice::WriteOnly)) {
+    if (!csv.open(QIODevice::WriteOnly))
+    {
         const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
         throw std::runtime_error(qPrintable(msg));
     }
@@ -399,8 +459,9 @@ void FeatureExtractor::writeFeaturesSparse(QString fileName, QList<Feature>& fea
     QTextStream out(&csv);
     out << "neuronID" << sep << "pre" << sep << "postExc" << sep
         << "postAllExc" << sep << "postInh" << sep << "postAllInh"
-        << "\n";    
-    for (int i = 0; i < features.size(); i++) {
+        << "\n";
+    for (int i = 0; i < features.size(); i++)
+    {
         Feature feature = features[i];
         out << feature.neuronID << sep << feature.pre << sep << feature.postExc << sep << feature.postAllExc << sep
             << feature.postInh << sep << feature.postAllInh << "\n";
@@ -415,10 +476,12 @@ void FeatureExtractor::writeFeaturesSparse(QString fileName, QList<Feature>& fea
     @param origin Origin of the subvolume (in spatial coordinates).
     @param dimensions Number of voxels in each direction from the origin.
 */
-void FeatureExtractor::writeNeurons(QString fileName, QList<Feature>& features,
-                                    QVector<float> origin, QVector<int> dimensions) {
+void
+FeatureExtractor::writeNeurons(QString fileName, QList<Feature>& features, QVector<float> origin, QVector<int> dimensions)
+{
     QFile csv(fileName);
-    if (!csv.open(QIODevice::WriteOnly)) {
+    if (!csv.open(QIODevice::WriteOnly))
+    {
         const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
         throw std::runtime_error(qPrintable(msg));
     }
@@ -429,12 +492,14 @@ void FeatureExtractor::writeNeurons(QString fileName, QList<Feature>& features,
         << sep << "region" << sep << "laminarLocation" << sep << "synapticSide"
         << "\n";
     QSet<int> neuronIdSet;
-    for (int i = 0; i < features.size(); i++) {
+    for (int i = 0; i < features.size(); i++)
+    {
         neuronIdSet.insert(features[i].neuronID);
     }
     QList<int> neuronIds = neuronIdSet.toList();
     qSort(neuronIds);
-    for (int i = 0; i < neuronIds.size(); i++) {
+    for (int i = 0; i < neuronIds.size(); i++)
+    {
         int neuronId = neuronIds[i];
         Vec3f somaPosition = mNetworkProps.neurons.getSomaPosition(neuronId);
         QString somaWithin =
@@ -461,9 +526,12 @@ void FeatureExtractor::writeNeurons(QString fileName, QList<Feature>& features,
     @param fileName The name of the file.
     @param features The extracted features.
 */
-void FeatureExtractor::writeVoxels(QString fileName, QList<Feature>& features) {
+void
+FeatureExtractor::writeVoxels(QString fileName, QList<Feature>& features)
+{
     QFile csv(fileName);
-    if (!csv.open(QIODevice::WriteOnly)) {
+    if (!csv.open(QIODevice::WriteOnly))
+    {
         const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
         throw std::runtime_error(qPrintable(msg));
     }
@@ -472,34 +540,60 @@ void FeatureExtractor::writeVoxels(QString fileName, QList<Feature>& features) {
     out << "voxelID" << sep << "voxelX" << sep << "voxelY" << sep << "voxelZ" << sep << "preNeurons"
         << sep << "postNeurons" << sep << "allNeurons"
         << "\n";
-    if (features.size() == 0) {
+    if (features.size() == 0)
+    {
         return;
     }
-    int voxelId = features[0].voxelID;
-    QSet<int> preNeurons;
-    QSet<int> postNeurons;
-    QSet<int> allNeurons;
-    for (int i = 0; i < features.size(); i++) {
-        if (voxelId == features[i].voxelID) {
-            allNeurons.insert(features[i].neuronID);
-            if (features[i].pre != 0) {
-                preNeurons.insert(features[i].neuronID);
-            }
-            if (features[i].postExc != 0 || features[i].postInh != 0) {
-                postNeurons.insert(features[i].neuronID);
-            }
+    std::map<int, std::set<int> > preNeurons;
+    std::map<int, std::set<int> > postNeurons;
+    std::map<int, std::set<int> > allNeurons;
+    std::map<int, std::vector<int> > voxelPositions;
+
+    for (int i = 0; i < features.size(); i++)
+    {
+        int voxelId = features[i].voxelID;
+        if (voxelPositions.find(voxelId) == voxelPositions.end())
+        {
+            std::vector<int> pos;
+            pos.push_back(features[i].voxelX);
+            pos.push_back(features[i].voxelY);
+            pos.push_back(features[i].voxelZ);
+            voxelPositions[voxelId] = pos;
         }
-        if (voxelId != features[i].voxelID || i + 1 == features.size()) {
-            int idx = i + 1 == features.size() ? i : i - 1;
-            out << features[idx].voxelID << sep << features[idx].voxelX << sep
-                << features[idx].voxelY << sep << features[idx].voxelZ << sep << preNeurons.size()
-                << sep << postNeurons.size() << sep << allNeurons.size() << "\n";
-            preNeurons.clear();
-            postNeurons.clear();
-            allNeurons.clear();
-            voxelId = features[i].voxelID;
+        if (preNeurons.find(voxelId) == preNeurons.end())
+        {
+            std::set<int> empty;
+            preNeurons[voxelId] = empty;
+        }
+        if (postNeurons.find(voxelId) == postNeurons.end())
+        {
+            std::set<int> empty;
+            postNeurons[voxelId] = empty;
+        }
+        if (allNeurons.find(voxelId) == allNeurons.end())
+        {
+            std::set<int> empty;
+            allNeurons[voxelId] = empty;
+        }
+
+        if (features[i].pre != 0)
+        {
+            preNeurons[voxelId].insert(features[i].neuronID);
+            allNeurons[voxelId].insert(features[i].neuronID);
+        }
+        if (features[i].postExc != 0 || features[i].postInh != 0)
+        {
+            postNeurons[voxelId].insert(features[i].neuronID);
+            allNeurons[voxelId].insert(features[i].neuronID);
         }
     }
+    for (auto it = voxelPositions.begin(); it != voxelPositions.end(); it++)
+    {
+        int voxelId = it->first;
+        out << voxelId << sep << it->second[0] << sep
+            << it->second[1] << sep << it->second[2] << sep << preNeurons[voxelId].size()
+            << sep << postNeurons[voxelId].size() << sep << allNeurons[voxelId].size() << "\n";
+    }    
 }
 
 /*
@@ -510,10 +604,15 @@ void FeatureExtractor::writeVoxels(QString fileName, QList<Feature>& features) {
     @param b Second feature.
     @return True, if the first feature is smaller than the second feature.
 */
-bool FeatureExtractor::lessThan(Feature& a, Feature& b) {
-    if (a.voxelID == b.voxelID) {
+bool
+FeatureExtractor::lessThan(Feature& a, Feature& b)
+{
+    if (a.voxelID == b.voxelID)
+    {
         return a.neuronID < b.neuronID;
-    } else {
+    }
+    else
+    {
         return a.voxelID < b.voxelID;
     }
 }
@@ -526,19 +625,21 @@ bool FeatureExtractor::lessThan(Feature& a, Feature& b) {
     @param dimensions The number of voxels in each dimension.
     @return The intersecting neurons.
 */
-QList<int> FeatureExtractor::determineIntersectingNeurons(QVector<float> origin,
-                                                          QVector<int> dimensions) {
+QList<int>
+FeatureExtractor::determineIntersectingNeurons(QVector<float> origin,
+                                               QVector<int> dimensions)
+{
     const float voxelSize = 50;
-    Vec3f shiftedOrigin(origin[0], origin[1], origin[2]);
-    Vec3f pointMax(origin[0] + dimensions[0] * voxelSize, origin[1] + dimensions[1] * voxelSize,
-                   origin[2] + dimensions[2] * voxelSize);
+    Vec3f shiftedOrigin(origin[0] - voxelSize, origin[1] - voxelSize, origin[2] - voxelSize);
+    Vec3f pointMax(origin[0] + dimensions[0] * voxelSize, origin[1] + dimensions[1] * voxelSize, origin[2] + dimensions[2] * voxelSize);
     BoundingBox subcube(shiftedOrigin, pointMax);
 
     QList<int> intersectingNeurons;
     SelectionFilter emptyFilter;
     QList<int> allNeurons = mNetworkProps.neurons.getFilteredNeuronIds(emptyFilter);
 
-    for (int i = 0; i < allNeurons.size(); i++) {
+    for (int i = 0; i < allNeurons.size(); i++)
+    {
         int neuronId = allNeurons[i];
         bool axonIntersects = false;
         bool dendriteIntersects = false;
@@ -547,16 +648,19 @@ QList<int> FeatureExtractor::determineIntersectingNeurons(QVector<float> origin,
         bool isPostsynaptic =
             mNetworkProps.neurons.getSynapticSide(neuronId) != CIS3D::SynapticSide::PRESYNAPTIC;
 
-        if (isPresynaptic) {
+        if (isPresynaptic)
+        {
             axonIntersects = mNetworkProps.boundingBoxes.getAxonBox(neuronId).intersects(subcube);
         }
 
-        if (isPostsynaptic) {
+        if (isPostsynaptic)
+        {
             dendriteIntersects =
                 mNetworkProps.boundingBoxes.getDendriteBox(neuronId).intersects(subcube);
         }
 
-        if (axonIntersects || dendriteIntersects) {
+        if (axonIntersects || dendriteIntersects)
+        {
             intersectingNeurons.append(neuronId);
         }
     }
@@ -572,11 +676,13 @@ QList<int> FeatureExtractor::determineIntersectingNeurons(QVector<float> origin,
     @param dimensions The number of voxels in each dimension.
     @return True, if the soma is located within the subcube.
 */
-bool FeatureExtractor::somaWithinSubcube(Vec3f somaPosition, QVector<float> origin,
-                                         QVector<int> dimensions) {
+bool
+FeatureExtractor::somaWithinSubcube(Vec3f somaPosition, QVector<float> origin, QVector<int> dimensions)
+{
     bool within = true;
     const float voxelSize = 50;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         float low = origin[i];
         float high = origin[i] + dimensions[i] * voxelSize;
         within = within && (somaPosition[i] >= low && somaPosition[i] <= high);
@@ -589,7 +695,9 @@ bool FeatureExtractor::somaWithinSubcube(Vec3f somaPosition, QVector<float> orig
     centre of the voxel (according to the grid exported from Amira).
     @param origin The user specified origin.
 */
-void FeatureExtractor::correctOrigin(QVector<float>& origin) {
+void
+FeatureExtractor::correctOrigin(QVector<float>& origin)
+{
     QDir modelDataDir = CIS3D::getModelDataDir(mNetworkProps.dataRoot);
     const QString pstAllFileExc = CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
     SparseField* postAllExc = SparseField::load(pstAllFileExc);
@@ -597,7 +705,8 @@ void FeatureExtractor::correctOrigin(QVector<float>& origin) {
     Vec3i voxelLocation = postAllExc->getVoxelContainingPoint(origin3f);
     Vec3f referenceOrigin = postAllExc->getOrigin();
     Vec3f voxelSize = postAllExc->getVoxelSize();
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         origin[i] = referenceOrigin[i] + voxelLocation[i] * voxelSize[i] + 0.5 * voxelSize[i];
     }
     delete postAllExc;
@@ -608,13 +717,19 @@ void FeatureExtractor::correctOrigin(QVector<float>& origin) {
     all files in the directory are deleted.
     @param dirName The name of the directory.
 */
-void FeatureExtractor::createOutputDir(QString dirName) {
+void
+FeatureExtractor::createOutputDir(QString dirName)
+{
     QDir dir;
-    if (dir.exists(dirName)) {
+    if (dir.exists(dirName))
+    {
         QDir outputDir(dirName);
         outputDir.setNameFilters(QStringList() << "*.*");
         outputDir.setFilter(QDir::Files);
-        foreach (QString dirFile, outputDir.entryList()) { outputDir.remove(dirFile); }
+        foreach (QString dirFile, outputDir.entryList())
+        {
+            outputDir.remove(dirFile);
+        }
     }
     dir.mkdir(dirName);
 }
@@ -624,8 +739,9 @@ void FeatureExtractor::createOutputDir(QString dirName) {
     @param origin The model origin (ouput).
     @param dimensions The model dimensions (ouput).
 */
-void FeatureExtractor::determineModelDimensions(QVector<float>& origin, QVector<int>& dimensions,
-                                                QVector<float>& voxelSize) {
+void
+FeatureExtractor::determineModelDimensions(QVector<float>& origin, QVector<int>& dimensions, QVector<float>& voxelSize)
+{
     QDir modelDataDir = CIS3D::getModelDataDir(mNetworkProps.dataRoot);
     const QString pstAllFileExc = CIS3D::getPSTAllFullPath(modelDataDir, CIS3D::EXCITATORY);
     SparseField* postAllExc = SparseField::load(pstAllFileExc);
@@ -633,7 +749,8 @@ void FeatureExtractor::determineModelDimensions(QVector<float>& origin, QVector<
     Vec3f voxelSizeRef = postAllExc->getVoxelSize();
     Vec3i dimRef = postAllExc->getDimensions();
     delete postAllExc;
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         origin.push_back(originRef[i] + 0.5 * voxelSizeRef[i]);
         dimensions.push_back(dimRef[i]);
         voxelSize.push_back(voxelSizeRef[i]);
@@ -647,21 +764,26 @@ void FeatureExtractor::determineModelDimensions(QVector<float>& origin, QVector<
     @fileName The name of the file.
     @index The index to write.
 */
-void FeatureExtractor::writeIndexFile(QString fileName, QMap<int, QSet<QString> >& index) {
+void
+FeatureExtractor::writeIndexFile(QString fileName, QMap<int, QSet<QString> >& index)
+{
     QFile file(fileName);
-    if (!file.open(QIODevice::WriteOnly)) {
+    if (!file.open(QIODevice::WriteOnly))
+    {
         const QString msg = QString("Cannot open file %1 for writing.").arg(fileName);
         throw std::runtime_error(qPrintable(msg));
     }
     const QChar sep(' ');
     QTextStream out(&file);
     QList<int> neuronIds = index.keys();
-    for(int i=0; i<neuronIds.size(); i++){
+    for (int i = 0; i < neuronIds.size(); i++)
+    {
         out << neuronIds[i];
         QList<QString> voxelIds = index[neuronIds[i]].toList();
-        for(int j=0; j<voxelIds.size(); j++){
+        for (int j = 0; j < voxelIds.size(); j++)
+        {
             out << sep << voxelIds[j];
-        } 
+        }
         out << "\n";
     }
 }
@@ -669,13 +791,18 @@ void FeatureExtractor::writeIndexFile(QString fileName, QMap<int, QSet<QString> 
 /*
     Loads a sparse field using a cache.
 */
-SparseField* FeatureExtractor::loadSparseField(QString fileName){
+SparseField*
+FeatureExtractor::loadSparseField(QString fileName)
+{
     QMap<QString, SparseField*>::const_iterator it = mSparseFieldCache.find(fileName);
-    if(it == mSparseFieldCache.end()){
+    if (it == mSparseFieldCache.end())
+    {
         SparseField* field = SparseField::load(fileName);
         mSparseFieldCache.insert(fileName, field);
         return field;
-    } else {
+    }
+    else
+    {
         return mSparseFieldCache[fileName];
     }
 }

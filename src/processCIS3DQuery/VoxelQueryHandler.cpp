@@ -349,6 +349,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                         {
                             mSelectedVoxels.insert(voxelId);
                             filteredVoxels.insert(voxelId);
+                            qDebug() << "[!] voxel ID" << voxelId;
                         }
                     }
                 }
@@ -362,7 +363,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         }
 
         totalVoxelCount = filteredVoxels.size();
-        int synK = 8;
+        int synK = 10;
         for (int q = 1; q <= synK; q++)
         {
             std::vector<float> foo;
@@ -400,12 +401,14 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                     mMapPreCellsPerVoxel[voxelId] = 0;
                     mMapBoutonsPerVoxel[voxelId] = 0;
                     mMapPostsynapticSitesPerVoxel[voxelId] = 0;
+                    mSynapsesPerVoxel[voxelId] = 0;
 
                     for (int i = 4; i < parts.size(); i += 2)
                     {
                         int neuronId = parts[i].toInt();
                         if (neuronId > 0 && (mappedPreIds.find(neuronId) != mappedPreIds.end()))
                         {
+                            qDebug() << "unique preId" << neuronId;
                             mMapPreCellsPerVoxel[voxelId] += preMultiplicity[neuronId];
                             int mult = preMultiplicity[neuronId];
                             float boutons = parts[i + 1].toFloat();
@@ -448,6 +451,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                                 {
                                     float synap = calculator.calculateSynapseProbability(innervation, k);
                                     synPerVoxel[k] += multipl * synap;
+                                    mSynapsesPerVoxel[voxelId] += k* multipl * synap;
                                 }
 
                                 for (int j = 1; j < multipl; j++)
@@ -462,9 +466,11 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                     {
                         mSynapsesPerConnectionOccurrences[k].push_back(synPerVoxel[k]);
                     }
-
+                    
+                    /*
                     float synapses = boutonSum * postSum;
                     mSynapsesPerVoxel[voxelId] = synapses;
+                    */
                 }
 
                 // ################ REPORT UPDATE ################
