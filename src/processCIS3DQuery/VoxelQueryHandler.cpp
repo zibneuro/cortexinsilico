@@ -132,14 +132,14 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
         preCellsPerVoxel.write(out, "Presynaptic cells per voxel");
         postCellsPerVoxel.write(out, "Postsynaptic cells per voxel");
-        boutonsPerVoxel.write(out, "Boutons cells per voxel");
+        boutonsPerVoxel.write(out, "Boutons per voxel");
         postsynapticSitesPerVoxel.write(out, "Postsynaptic sites per voxel");
         synapsesPerVoxel.write(out, "Synapses per voxel");
 
         out << "\n";
         preCellsPerVoxelH.write(out, "Presynaptic cells per voxel");
         postCellsPerVoxelH.write(out, "Postsynaptic cells per voxel");
-        boutonsPerVoxelH.write(out, "Boutons cells per voxel");
+        boutonsPerVoxelH.write(out, "Boutons per voxel");
         postsynapticSitesPerVoxelH.write(out, "Postsynaptic sites per voxel");
         synapsesPerVoxelH.write(out, "Synapses per voxel");
         out << "\n";

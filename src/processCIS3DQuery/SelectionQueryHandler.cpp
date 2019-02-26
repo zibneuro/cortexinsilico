@@ -32,8 +32,27 @@ createJsonResult(const IdsPerCellTypeRegion& idsPerCellTypeRegion,
     {
         const CellTypeRegion ctr = it.key();
         const int numNeurons = it.value().size();
-        const QString cellType = network.cellTypes.getName(ctr.first);
-        const QString region = network.regions.getName(ctr.second);
+        QString cellType = network.cellTypes.getName(ctr.first);
+
+        QString region = network.regions.getName(ctr.second);
+
+        if (region.contains("Septum"))
+        {
+            QStringList parts = region.split("_");
+            region = QString("Septum of %1").arg(parts[2]);
+        }
+
+        if (region.contains("Surrounding"))
+        {
+            QStringList parts = region.split("_");
+            region = QString("Surrounding of %1").arg(parts[2]);
+        }
+
+        if (region.contains("Barreloid"))
+        {
+            QStringList parts = region.split("_");
+            region = QString("Barreloid %1").arg(parts[0]);
+        }
 
         QJsonObject obj;
         obj["cellType"] = cellType;
