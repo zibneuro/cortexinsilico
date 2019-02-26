@@ -665,3 +665,49 @@ Util::getMinMedMax(std::vector<float> in, float& min, float& med, float& max)
         med = in[half];
     }
 }
+
+QString
+Util::getAdvancedSettingsString(QJsonObject& spec)
+{
+    QString s = "";
+    const double tissueLowPre = spec["tissueLowPre"].toDouble();
+    const double tissueHighPre = spec["tissueHighPre"].toDouble();
+    QString tissueModePre = spec["tissueModePre"].toString();
+    const double tissueLowPost = spec["tissueLowPost"].toDouble();
+    const double tissueHighPost = spec["tissueHighPost"].toDouble();
+    QString tissueModePost = spec["tissueModePost"].toString();
+    const double sliceRef = spec["sliceRef"].toDouble();
+    const bool isSlice = sliceRef != -9999;
+
+    if (isSlice)
+    {
+        QString modePre = tissueModePre == "oneSided" ? "one-sided" : "two-sided";
+        s += "Presyn. tissue depth mode," + modePre + "\n";
+        s += "Presyn. tissue depth low," + QString::number(tissueLowPre) + "\n";
+        s += "Presyn. tissue depth high," + QString::number(tissueHighPre) + "\n";
+
+        QString modePost = tissueModePost == "oneSided" ? "one-sided" : "two-sided";
+        s += "Postsyn. tissue depth mode," + modePost + "\n";
+        s += "Postsyn. tissue depth low," + QString::number(tissueLowPost) + "\n";
+        s += "Postsyn. tissue depth high," + QString::number(tissueHighPost) + "\n";
+    }
+
+    QJsonObject formulas = spec["formulas"].toObject();
+
+    QString synapseDistributionFormula = formulas["synapseDistributionFormula"].toString();
+    bool useCustomConnectionProbabilityFormula = formulas["connectionProbabilityMode"].toString() == "formula";
+    QString connectionProbabilityFormula = formulas["connectionProbabilityFormula"].toString();
+
+    s += "Synapse distribution formula," + synapseDistributionFormula + "\n";
+    s += "Connection probability formula,";
+    if (useCustomConnectionProbabilityFormula)
+    {
+        s+= connectionProbabilityFormula + "\n";
+    }
+    else
+    {
+        s+= "1-P_i(0)\n";
+    }
+
+    return s;
+}

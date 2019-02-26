@@ -44,7 +44,7 @@ VoxelQueryHandler::createStatistics(std::map<int, T>& values,
 }
 
 QJsonObject
-VoxelQueryHandler::createJsonResult()
+VoxelQueryHandler::createJsonResult(bool createFile)
 {
     Statistics preCellsPerVoxel;
     Histogram preCellsPerVoxelH(50);
@@ -104,8 +104,76 @@ VoxelQueryHandler::createJsonResult()
     result.insert("synapsesPerVoxelHisto", Util::createJsonHistogram(synapsesPerVoxelH));
     //result.insert("synapsesPerConnection", Util::createJsonStatistic(mSynapsesPerConnection));
     result.insert("synapsesPerConnectionPlot", synapsesPerConnectionPlot);
-    result.insert("downloadS3key", "");
-    result.insert("fileSize", 0);
+
+    // ################# CREATE CSV FILE #################
+
+    if (createFile)
+    {
+        const QString key = QString("voxel_%1.csv").arg(mQueryId);
+        const QString tmpDir = mConfig["WORKER_TMP_DIR"].toString();
+        QString filename = QString("%1/%2").arg(tmpDir).arg(key);
+        QFile csv(filename);
+        if (!csv.open(QIODevice::WriteOnly))
+        {
+            QString msg = QString("Cannot open file for saving csv: %1").arg(filename);
+            throw std::runtime_error(qPrintable(msg));
+        }
+        const QChar sep(',');
+
+        QTextStream out(&csv);
+        out << mFilterString;
+        out << "\n";
+        out << "\n";
+
+        out << "Voxels meeting spatial filter condition:" << sep << (int)mSelectedVoxels.size() << "\n";
+        out << "Voxels innervated by presyn. cells:" << sep << (int)mPreInnervatedVoxels.size() << "\n";
+        out << "Voxels innervated by postsyn. cells:" << sep << (int)mPostInnervatedVoxels.size() << "\n";
+        out << "\n";
+
+        preCellsPerVoxel.write(out, "Presynaptic cells per voxel");
+        postCellsPerVoxel.write(out, "Postsynaptic cells per voxel");
+        boutonsPerVoxel.write(out, "Boutons cells per voxel");
+        postsynapticSitesPerVoxel.write(out, "Postsynaptic sites per voxel");
+        synapsesPerVoxel.write(out, "Synapses per voxel");
+
+        out << "\n";
+        preCellsPerVoxelH.write(out, "Presynaptic cells per voxel");
+        postCellsPerVoxelH.write(out, "Postsynaptic cells per voxel");
+        boutonsPerVoxelH.write(out, "Boutons cells per voxel");
+        postsynapticSitesPerVoxelH.write(out, "Postsynaptic sites per voxel");
+        synapsesPerVoxelH.write(out, "Synapses per voxel");
+        out << "\n";
+
+        out << "Number of synapses (k) per axon/dendrite branch:\n";
+        out << "k,min,med,max\n";
+        for (int i = 0; i < synapsesPerConnectionMin.size(); i++)
+        {
+            out << i + 1 << sep << synapsesPerConnectionMin[i].toDouble()
+                << sep << synapsesPerConnectionMed[i].toDouble() << sep
+                << synapsesPerConnectionMax[i].toDouble() << "\n";
+        }
+
+        out.flush();
+        csv.close();
+
+        const qint64 fileSizeBytes = QFileInfo(filename).size();
+        qDebug() << filename << fileSizeBytes;
+        if (QueryHelpers::uploadToS3(key, filename, mConfig) != 0)
+        {
+            qDebug() << "Error uploading csv file to S3:" << filename;
+            logoutAndExit(1);
+        }
+
+        result.insert("downloadS3key", key);
+        result.insert("fileSize", fileSizeBytes);
+        qDebug() << fileSizeBytes;
+    }
+    else
+    {
+        result.insert("downloadS3key", "");
+        result.insert("fileSize", 0);
+    }
+
     return result;
 }
 
@@ -216,6 +284,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForSynapseComputation();
 
+        QString advancedSettings = Util::getAdvancedSettingsString(jsonData);
         QJsonObject formulas = jsonData["formulas"].toObject();
         FormulaCalculator calculator(formulas);
         bool initSuccess = calculator.init();
@@ -275,10 +344,12 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             {
                 selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
             }
+            setFilterString(mode, preSelString, postSelString, advancedSettings, voxelOrigin, voxelDimensions);
         }
         else
         {
             selection.setFullModel(mNetwork, false);
+            setFilterString(mode, "", "", advancedSettings, voxelOrigin, voxelDimensions);
         }
 
         IdList preIds = selection.Presynaptic();
@@ -349,7 +420,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                         {
                             mSelectedVoxels.insert(voxelId);
                             filteredVoxels.insert(voxelId);
-                            qDebug() << "[!] voxel ID" << voxelId;
+                            //qDebug() << "[!] voxel ID" << voxelId;
                         }
                     }
                 }
@@ -370,7 +441,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             mSynapsesPerConnectionOccurrences[q] = foo;
         }
 
-        RandomGenerator generator(50000);
+        // RandomGenerator generator(50000);
 
         QFile inputFile(indexFile);
         int lastUpdatedVoxelCount = -1;
@@ -408,7 +479,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                         int neuronId = parts[i].toInt();
                         if (neuronId > 0 && (mappedPreIds.find(neuronId) != mappedPreIds.end()))
                         {
-                            qDebug() << "unique preId" << neuronId;
+                            //qDebug() << "unique preId" << neuronId;
                             mMapPreCellsPerVoxel[voxelId] += preMultiplicity[neuronId];
                             int mult = preMultiplicity[neuronId];
                             float boutons = parts[i + 1].toFloat();
@@ -451,7 +522,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                                 {
                                     float synap = calculator.calculateSynapseProbability(innervation, k);
                                     synPerVoxel[k] += multipl * synap;
-                                    mSynapsesPerVoxel[voxelId] += k* multipl * synap;
+                                    mSynapsesPerVoxel[voxelId] += k * multipl * synap;
                                 }
 
                                 for (int j = 1; j < multipl; j++)
@@ -466,7 +537,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                     {
                         mSynapsesPerConnectionOccurrences[k].push_back(synPerVoxel[k]);
                     }
-                    
+
                     /*
                     float synapses = boutonSum * postSum;
                     mSynapsesPerVoxel[voxelId] = synapses;
@@ -478,7 +549,8 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                 if (updateRate > 0 && (voxelCount % updateRate == 0) && (voxelCount != lastUpdatedVoxelCount))
                 {
                     lastUpdatedVoxelCount = voxelCount;
-                    const QJsonObject result = createJsonResult();
+                    QString foo;
+                    const QJsonObject result = createJsonResult(false);
                     QJsonObject progress;
                     progress.insert("completed", voxelCount + 1);
                     progress.insert("total", totalVoxelCount);
@@ -529,208 +601,6 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             throw std::runtime_error(qPrintable(msg));
         }
 
-        /*
-        if (!mAborted)
-        {
-            // ###################### PROCESS VOXELS ######################
-
-            std::vector<int> voxelIds;
-            std::vector<float> x;
-            std::vector<float> y;
-            std::vector<float> z;
-
-            QJsonArray positionsJson;
-            QJsonArray voxelIdsJson;
-            QJsonArray colorsJson;
-
-            QString fileName = QDir(metaFolder).filePath("voxel_pos.dat");
-            QFile file(fileName);
-            if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-            {
-                const QString msg =
-                    QString("Error reading features file. Could not open file %1").arg(fileName);
-                throw std::runtime_error(qPrintable(msg));
-            }
-
-            QTextStream in(&file);
-            QString line = in.readLine();
-            while (!line.isNull())
-            {
-                QStringList parts = line.split(' ');
-                int voxelId = parts[0].toInt();
-                auto it = innervationPerVoxel.find(voxelId);
-                if (it != innervationPerVoxel.end())
-                {
-                    voxelIds.push_back(it->first);
-                    x.push_back(parts[1].toFloat());
-                    y.push_back(parts[2].toFloat());
-                    z.push_back(parts[3].toFloat());
-                    positionsJson.push_back(QJsonValue(parts[1].toFloat()));
-                    positionsJson.push_back(QJsonValue(parts[2].toFloat()));
-                    positionsJson.push_back(QJsonValue(parts[3].toFloat()));
-                    voxelIdsJson.push_back(QJsonValue(it->first));
-                    colorsJson.push_back(it->second);
-                    colorsJson.push_back(it->second);
-                    colorsJson.push_back(it->second);
-                }
-                line = in.readLine();
-            }
-
-            QString voxelFileName = QDir(mTempFolder).filePath("voxelPositions");
-            fileNames.append(voxelFileName);
-            QFile voxelFile(voxelFileName);
-            if (!voxelFile.open(QIODevice::WriteOnly))
-            {
-                const QString msg =
-                    QString("Cannot open file %1 for writing.").arg(voxelFileName);
-                throw std::runtime_error(qPrintable(msg));
-            }
-            QTextStream stream(&voxelFile);
-            for (unsigned int i = 0; i < voxelIds.size(); i++)
-            {
-                //qDebug() << i;
-                stream << voxelIds[i] << " " << x[i] << " " << y[i] << " " << z[i] << "\n";
-            }
-            voxelFile.close();
-
-            qDebug() << "[*] Add voxel positions to zip file:" << dataFullPath;
-            QProcess zip3;
-            zip3.setWorkingDirectory(mTempFolder);
-
-            QStringList arguments3;
-
-            arguments3.append("-ju");
-
-            arguments3.append(dataZipFullPath);
-            arguments3.append(voxelFileName);
-
-            zip3.start("zip", arguments3);
-
-            if (!zip3.waitForStarted())
-            {
-                throw std::runtime_error("Error starting zip process");
-            }
-
-            if (!zip3.waitForFinished())
-            {
-                throw std::runtime_error("Error completing zip process");
-            }
-
-            QJsonObject metadata;
-            metadata.insert("version", 1);
-            metadata.insert("type", "BufferGeometry");
-            metadata.insert("generator", "CortexInSilico3D");
-
-            QJsonObject voxelIdsField;
-            voxelIdsField.insert("array", voxelIdsJson);
-
-            QJsonObject position;
-            position.insert("itemSize", 3);
-            position.insert("type", "Float32Array");
-            position.insert("array", positionsJson);
-
-            QJsonObject color;
-            color.insert("itemSize", 3);
-            color.insert("type", "Float32Array");
-            color.insert("array", colorsJson);
-
-            QJsonObject attributes;
-            attributes.insert("position", position);
-            attributes.insert("color", color);
-
-            QJsonObject data;
-            data.insert("attributes", attributes);
-
-            QJsonObject result;
-            result.insert("metadata", metadata);
-            result.insert("data", data);
-
-            QFile jsonFile(jsonFullPath);
-            if (!jsonFile.open(QIODevice::WriteOnly))
-            {
-                const QString msg = QString("Cannot open file for saving json: %1").arg(jsonFullPath);
-                throw std::runtime_error(qPrintable(msg));
-            }
-
-            QJsonDocument doc(result);
-            QTextStream out(&jsonFile);
-            out << doc.toJson(QJsonDocument::Compact);
-            jsonFile.close();
-        }
-        */
-
-        //qint64 fileSizeBytes1 = 0;
-        //qint64 fileSizeBytes2 = 0;
-
-        /*
-        if (mAborted)
-        {
-            logoutAndExit(1);
-        }
-        else
-        {*/
-        // ###################### ZIP FILES ######################
-
-        /*
-            qDebug() << "[*] Zipping view file:" << jsonFullPath;
-            QProcess zip;
-            zip.setWorkingDirectory(mTempFolder);
-
-            QStringList arguments;
-            arguments.append("-j");
-            arguments.append(zipFileName);
-            arguments.append(jsonFileName);
-
-            qDebug() << "Arguments" << arguments;
-            zip.start("zip", arguments);
-
-            if (!zip.waitForStarted())
-            {
-                throw std::runtime_error("Error starting zip process");
-            }
-
-            if (!zip.waitForFinished())
-            {
-                throw std::runtime_error("Error completing zip process");
-            }
-            */
-
-        // ###################### UPLOAD FILES ######################
-
-        /*
-            //fileSizeBytes1 = QFileInfo(zipFullPath).size();
-            int upload1 = QueryHelpers::uploadToS3(zipFileName, zipFullPath, mConfig);
-            //fileSizeBytes2 = QFileInfo(dataZipFullPath).size();
-            int upload2 = QueryHelpers::uploadToS3(dataZipFileName, dataZipFullPath, mConfig);
-
-            if (upload1 != 0)
-            {
-                qDebug() << "Error uploading geometry json file to S3:" << zipFullPath;
-            }
-            if (upload2 != 0)
-            {
-                qDebug() << "Error uploading geometry json file to S3:" << dataZipFullPath;
-            }
-            if (upload1 != 0 || upload2 != 0)
-            {
-                mAborted = true;
-            }
-            */
-        //}
-
-        // ###################### CLEAN FILES ######################
-
-        /*
-        QProcess rm;
-        QStringList rmArgs;
-        rmArgs << "-rf" << mTempFolder;
-        rm.start("rm", rmArgs);
-        rm.waitForStarted();
-        rm.waitForFinished();
-
-        qDebug() << "[*] Removed original files";
-        */
-
         if (mAborted)
         {
             logoutAndExit(1);
@@ -739,7 +609,8 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         {
             // ###################### SIGNAL COMPLETION ######################
 
-            const QJsonObject result = createJsonResult();
+            QString summaryFile;
+            const QJsonObject result = createJsonResult(true);
 
             QJsonObject progress;
             progress.insert("completed", voxelCount);
@@ -843,4 +714,47 @@ VoxelQueryHandler::calculateSynapseProbability(float innervation, int k)
 
     //qDebug() << k << nfak << innervation << synapseProb << r.drawPoisson(innervation);
     return synapseProb;
+}
+
+void
+VoxelQueryHandler::setFilterString(QString mode,
+                                   QString preFilter,
+                                   QString postFilter,
+                                   QString advancedSettings,
+                                   std::vector<double> origin,
+                                   std::vector<int> dimensions)
+{
+    const QChar sep(',');
+    mFilterString += "Selection:\n";
+    mFilterString += "Mode:,";
+    if (mode == "voxel")
+    {
+        mFilterString += "Explicit voxel selection\n";
+    }
+    else if (mode == "prePostVoxel")
+    {
+        mFilterString += "Explicit voxel selection with neuron filter\n";
+    }
+    else
+    {
+        mFilterString += "Implicit voxel selection with neuron filter\n";
+    }
+
+    if (mode == "voxel" || mode == "prePostVoxel")
+    {
+        mFilterString += "Voxel cube origin:,";
+        mFilterString += QString("%1 %2 %3\n").arg(origin[0]).arg(origin[1]).arg(origin[2]);
+        mFilterString += "Voxel cube dimensions:,";
+        mFilterString += QString("%1 %2 %3\n").arg(dimensions[0]).arg(dimensions[1]).arg(dimensions[2]);
+    }
+    if (mode == "prePost" || mode == "prePostVoxel")
+    {
+        mFilterString += "Presynaptic selection:,";
+        mFilterString += preFilter;
+        mFilterString += "\n";
+        mFilterString += "Postsynaptic selection:,";
+        mFilterString += postFilter;
+        mFilterString += "\n";
+    }
+    mFilterString += advancedSettings;
 }

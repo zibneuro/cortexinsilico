@@ -8,6 +8,7 @@
 #include "CIS3DStatistics.h"
 #include "Histogram.h"
 #include "Typedefs.h"
+#include <QJsonObject>
 
 class QJsonObject;
 class QJsonArray;
@@ -110,6 +111,8 @@ namespace Util
     std::vector<double> getHeatMap(double value, double min, double max);
 
     void getMinMedMax(std::vector<float> in, float& min, float& med, float& max);
+
+    QString getAdvancedSettingsString(QJsonObject& spec);
 
 } // namespace Util
 

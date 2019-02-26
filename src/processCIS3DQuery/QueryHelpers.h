@@ -9,6 +9,8 @@
 #include "Typedefs.h"
 #include <QJsonArray>
 #include <QNetworkAccessManager>
+#include <QTextStream>
+#include <QString>
 
 struct AuthInfo
 {
@@ -41,6 +43,7 @@ namespace QueryHelpers
     QJsonArray getDatasetsAsJson(const QJsonObject& config);
 
     void setAuthorization(const QJsonObject& config, QNetworkRequest& request);
+    
 } // namespace QueryHelpers
 
 #endif // QUERYHELPERS_H

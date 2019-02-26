@@ -20,6 +20,12 @@ public:
     VoxelQueryHandler(QObject* parent = 0);
 
     void process(const QString& voxelQueryId, const QJsonObject& config);
+    void setFilterString(QString mode,
+                         QString preFilter,
+                         QString postFilter,
+                         QString advancedSettings,
+                         std::vector<double> origin,
+                         std::vector<int> dimensions);
 
 signals:
     void completedProcessing();
@@ -31,12 +37,11 @@ private slots:
 
 private:
     QJsonObject
-    createJsonResult();
+    createJsonResult(bool createFile);
     float calculateSynapseProbability(float innervation, int k);
     void readIndex(QString indexFile, std::vector<double> origin, std::vector<int> dimensions, std::set<int>& voxelIds, std::set<int>& neuronIds);
     template <typename T>
     void createStatistics(std::map<int, T>& values, Statistics& stat, Histogram& histogram);
-
 
     QString mQueryId;
     QJsonObject mConfig;
@@ -69,10 +74,11 @@ private:
     std::set<int> mSelectedVoxels;
     std::set<int> mPreInnervatedVoxels;
     std::set<int> mPostInnervatedVoxels;
-    std::map<int, float> mSynapsesPerVoxel;    
+    std::map<int, float> mSynapsesPerVoxel;
     Statistics mSynapsesPerConnection;
     std::map<int, std::vector<float> > mSynapsesPerConnectionOccurrences;
-    
+    QString mFilterString;
+
     bool mAborted;
 
     void logoutAndExit(const int exitCode);

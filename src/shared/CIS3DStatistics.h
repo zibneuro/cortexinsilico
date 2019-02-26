@@ -3,6 +3,7 @@
 
 #include <QFlags>
 #include <deque>
+#include <QTextStream>
 
 /**
     Collects a set of samples and computes basic statistics.
@@ -83,6 +84,8 @@ class Statistics {
         StandardDeviation = 1 << 4,
         Variance = 1 << 5
     };
+
+    void write(QTextStream& out, QString label);
 
     Q_DECLARE_FLAGS(Fields, Field)
 

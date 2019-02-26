@@ -3,6 +3,8 @@
 
 #include <QList>
 #include <QJsonObject>
+#include <QTextStream>
+#include <QString>
 
 /**
     Collects sample values and represents them as a histogram.
@@ -108,6 +110,8 @@ public:
         @returns Histogram as json object.
     */
     QJsonObject createJson() const;
+
+    void write(QTextStream& out, QString label);
 
 private:
     float      mBinSize;

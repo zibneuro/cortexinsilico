@@ -281,3 +281,23 @@ Histogram::createJson() const
 
     return histObj;
 };
+
+void
+Histogram::write(QTextStream& out, QString label)
+{
+    const QString sep(',');
+    out << label << " histogram\n";
+    out << "Number of values:" << sep << getNumberOfValues() << "\n";
+    out << "Number of zeros:" << sep << getNumberOfZeros() << "\n";
+    out << "\n";
+    out << "Bin" << sep << "Bin range min" << sep << "Bin range max" << sep << "Value"
+        << "\n";
+    for (int b = 0; b < getNumberOfBins(); ++b)
+    {
+        out << b << sep
+            << getBinStart(b) << sep
+            << getBinEnd(b) << sep
+            << getBinValue(b) << "\n";
+    }
+    out << "\n";
+}
