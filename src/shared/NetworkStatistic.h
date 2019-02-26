@@ -19,10 +19,11 @@
     Serves as base class for any summary statistic about the neural network.
     Provides interfaces to integrate statistic into the webframework.
 */
-class NetworkStatistic : public QObject {
+class NetworkStatistic : public QObject
+{
     Q_OBJECT
 
-   public:
+public:
     /**
         Constructor.
         @param networkProps The model data of the network.
@@ -36,8 +37,7 @@ class NetworkStatistic : public QObject {
         @param cache Cache of preloaded innervation values.
         @param parent The Qt parent object. Empty by default.
     */
-    NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache,
-                     QObject* parent = 0);
+    NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache, QObject* parent = 0);
 
     /**
         Destructor.
@@ -76,8 +76,11 @@ class NetworkStatistic : public QObject {
         @param tmpDir Folder where the file is initially created.
         @returns The file name.
     */
-    virtual QString createCSVFile(const QString& key, const QString& presynSelectionText,
-                                  const QString& postsynSelectionText, const QString& tmpDir) const;
+    virtual QString createCSVFile(const QString& key,
+                                  const QString& presynSelectionText,
+                                  const QString& postsynSelectionText,
+                                  const QString& tmpDir,
+                                  const QString advancedSettings) const;
 
     /**
         Creates a csv-file of the statistic.
@@ -88,9 +91,12 @@ class NetworkStatistic : public QObject {
         @param tmpDir Folder where the file is initially created.
         @returns The file name.
     */
-    virtual QString createCSVFile(const QString& key, const QString& motifASelectionText,
+    virtual QString createCSVFile(const QString& key,
+                                  const QString& motifASelectionText,
                                   const QString& motifBSelectionText,
-                                  const QString& motifCSelectionText, const QString& tmpDir) const;
+                                  const QString& motifCSelectionText,
+                                  const QString& tmpDir,
+                                  const QString advancedSettings) const;
 
     /**
         Retrieves the total number of connections to be analysed.
@@ -108,7 +114,7 @@ class NetworkStatistic : public QObject {
 
     void setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC);
 
-   signals:
+signals:
     // Signals intermediate results are available
     //
     // param stat: the statistic being computed
@@ -119,7 +125,7 @@ class NetworkStatistic : public QObject {
     // param stat: the statistic being computed
     void complete(NetworkStatistic* stat);
 
-   protected:
+protected:
     /**
         Performs the actual computation based on the specified neurons.
         @param selection The selected neurons.
@@ -180,4 +186,4 @@ class NetworkStatistic : public QObject {
     bool mAborted;
 };
 
-#endif  // NETWORKSTATISTIC_H
+#endif // NETWORKSTATISTIC_H

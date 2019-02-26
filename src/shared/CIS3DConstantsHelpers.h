@@ -76,7 +76,8 @@ namespace CIS3D
         SOMA = 1,
         AXON = 2,
         DEND = 3,
-        APICAL = 4
+        APICAL = 4,
+        BASAL = 5
     };
 
     /**

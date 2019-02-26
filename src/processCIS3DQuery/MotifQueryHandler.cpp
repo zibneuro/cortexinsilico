@@ -141,7 +141,12 @@ MotifQueryHandler::reportComplete(NetworkStatistic* stat)
     const QString motifBSelectionText = mCurrentJsonData["motifBSelectionFilterAsText"].toString();
     const QString motifCSelectionText = mCurrentJsonData["motifCSelectionFilterAsText"].toString();
     const QString csvfile =
-        stat->createCSVFile(key, motifASelectionText, motifBSelectionText, motifCSelectionText, mConfig["WORKER_TMP_DIR"].toString());
+        stat->createCSVFile(key,
+                            motifASelectionText,
+                            motifBSelectionText,
+                            motifCSelectionText,
+                            mConfig["WORKER_TMP_DIR"].toString(),
+                            mAdvancedSettings);
     const qint64 fileSizeBytes = QFileInfo(csvfile).size();
     if (QueryHelpers::uploadToS3(key, csvfile, mConfig) != 0)
     {
@@ -218,6 +223,8 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         const QString tissueModeMotifC = jsonData["tissueModeMotifC"].toString();
         const double sliceRef = jsonData["sliceRef"].toDouble();
         const bool isSlice = sliceRef != -9999;
+
+        mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
 
         NeuronSelection selection;
         qDebug() << "[*] Determining triplet selection:" << motifASelString << motifBSelString

@@ -6,7 +6,9 @@
     @param parent The Qt parent object. Empty by default.
 */
 NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, QObject* parent)
-    : QObject(parent), mNetwork(networkProps) {
+    : QObject(parent)
+    , mNetwork(networkProps)
+{
     mCache = SparseVectorCache();
     mConnectome = new InnervationMatrix(networkProps);
     mAborted = false;
@@ -18,9 +20,11 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, QObject* pa
     @param cache Cache of preloaded innervation values.
     @param parent The Qt parent object. Empty by default.
 */
-NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache,
-                                   QObject* parent)
-    : QObject(parent), mNetwork(networkProps), mCache(cache) {
+NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache, QObject* parent)
+    : QObject(parent)
+    , mNetwork(networkProps)
+    , mCache(cache)
+{
     mConnectome = new InnervationMatrix(networkProps);
     mAborted = false;
 };
@@ -28,14 +32,19 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, const Spars
 /**
     Destructor.
 */
-NetworkStatistic::~NetworkStatistic() { delete mConnectome; }
+NetworkStatistic::~NetworkStatistic()
+{
+    delete mConnectome;
+}
 
 /**
     Starts calculation with the specified neurons. To be called from the
     webframework.
     @param selection The selected neurons.
 */
-void NetworkStatistic::calculate(const NeuronSelection& selection) {
+void
+NetworkStatistic::calculate(const NeuronSelection& selection)
+{
     mConnectionsDone = 0;
     this->doCalculate(selection);
 }
@@ -48,7 +57,9 @@ void NetworkStatistic::calculate(const NeuronSelection& selection) {
         references csv file).
     @return The JSON object.
 */
-QJsonObject NetworkStatistic::createJson(const QString& key, const qint64 fileSizeBytes) {
+QJsonObject
+NetworkStatistic::createJson(const QString& key, const qint64 fileSizeBytes)
+{
     QJsonObject obj;
     doCreateJson(obj);
     obj.insert("downloadS3key", key);
@@ -61,7 +72,9 @@ QJsonObject NetworkStatistic::createJson(const QString& key, const qint64 fileSi
     the webframework.
     @return The JSON object.
 */
-QJsonObject NetworkStatistic::createJson() {
+QJsonObject
+NetworkStatistic::createJson()
+{
     QJsonObject obj;
     doCreateJson(obj);
     return obj;
@@ -75,12 +88,17 @@ QJsonObject NetworkStatistic::createJson() {
 `   @param tmpDir Folder where the file is initially created.
     @returns The file name.
 */
-QString NetworkStatistic::createCSVFile(const QString& key, const QString& presynSelectionText,
-                                        const QString& postsynSelectionText,
-                                        const QString& tmpDir) const {
+QString
+NetworkStatistic::createCSVFile(const QString& key,
+                                const QString& presynSelectionText,
+                                const QString& postsynSelectionText,
+                                const QString& tmpDir,
+                                const QString advancedSettings) const
+{
     QString filename = QString("%1/%2.csv").arg(tmpDir).arg(key);
     QFile csv(filename);
-    if (!csv.open(QIODevice::WriteOnly)) {
+    if (!csv.open(QIODevice::WriteOnly))
+    {
         QString msg = QString("Cannot open file for saving csv: %1").arg(filename);
         throw std::runtime_error(qPrintable(msg));
     }
@@ -91,6 +109,7 @@ QString NetworkStatistic::createCSVFile(const QString& key, const QString& presy
         << "\n";
     out << "Postsynaptic selection:" << sep << "\"" << postsynSelectionText << "\""
         << "\n";
+    out << advancedSettings;
     out << "\n";
 
     doCreateCSV(out, sep);
@@ -107,13 +126,18 @@ QString NetworkStatistic::createCSVFile(const QString& key, const QString& presy
     @param tmpDir Folder where the file is initially created.
     @returns The file name.
 */
-QString NetworkStatistic::createCSVFile(const QString& key, const QString& motifASelectionText,
-                                        const QString& motifBSelectionText,
-                                        const QString& motifCSelectionText,
-                                        const QString& tmpDir) const {
+QString
+NetworkStatistic::createCSVFile(const QString& key,
+                                const QString& motifASelectionText,
+                                const QString& motifBSelectionText,
+                                const QString& motifCSelectionText,
+                                const QString& tmpDir,
+                                const QString advancedSettings) const
+{
     QString filename = QString("%1/%2.csv").arg(tmpDir).arg(key);
     QFile csv(filename);
-    if (!csv.open(QIODevice::WriteOnly)) {
+    if (!csv.open(QIODevice::WriteOnly))
+    {
         QString msg = QString("Cannot open file for saving csv: %1").arg(filename);
         throw std::runtime_error(qPrintable(msg));
     }
@@ -126,17 +150,22 @@ QString NetworkStatistic::createCSVFile(const QString& key, const QString& motif
         << "\n";
     out << "Neuron selection C:" << sep << "\"" << motifCSelectionText << "\""
         << "\n";
+    out << advancedSettings;
 
     doCreateCSV(out, sep);
 
     return filename;
 }
 
-void NetworkStatistic::abort(){
+void
+NetworkStatistic::abort()
+{
     mAborted = true;
 }
 
-void NetworkStatistic::setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC){
+void
+NetworkStatistic::setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC)
+{
     mConnectome->setOriginalPreIds(preIdsA, preIdsB, preIdsC);
 }
 
@@ -144,7 +173,9 @@ void NetworkStatistic::setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB,
     Adds the result values to a JSON object
     @param obj: JSON object to which the values are appended
 */
-void NetworkStatistic::doCreateJson(QJsonObject& /*obj*/) const {
+void
+NetworkStatistic::doCreateJson(QJsonObject& /*obj*/) const
+{
     // do nothing by default
 }
 
@@ -153,29 +184,46 @@ void NetworkStatistic::doCreateJson(QJsonObject& /*obj*/) const {
     @param out The file stream to which the values are written.
     @param sep The separator between parameter name and value.
 */
-void NetworkStatistic::doCreateCSV(QTextStream& /*out*/, const QChar /*sep*/) const {
+void
+NetworkStatistic::doCreateCSV(QTextStream& /*out*/, const QChar /*sep*/) const
+{
     // do nothing by default
 }
 
 // Signals intermediate results are available
 //
 // param stat: the statistic being computed
-void NetworkStatistic::reportUpdate() { emit update(this); }
+void
+NetworkStatistic::reportUpdate()
+{
+    emit update(this);
+}
 
 // Signals that the computation has been completed
 //
 // param stat: the statistic being computed
-void NetworkStatistic::reportComplete() { emit complete(this); }
+void
+NetworkStatistic::reportComplete()
+{
+    emit complete(this);
+}
 
 /**
     Retrieves the total number of connections to be analysed.
     @return The number of connections.
 */
-long long NetworkStatistic::getNumConnections() const { return mNumConnections; }
+long long
+NetworkStatistic::getNumConnections() const
+{
+    return mNumConnections;
+}
 
 /**
     Retrieves the number of connections analysed to this point.
     @return The number of connections.
 */
-long long NetworkStatistic::getConnectionsDone() const { return mConnectionsDone; }
-
+long long
+NetworkStatistic::getConnectionsDone() const
+{
+    return mConnectionsDone;
+}

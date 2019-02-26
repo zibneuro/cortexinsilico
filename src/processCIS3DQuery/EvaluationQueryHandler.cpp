@@ -137,7 +137,11 @@ EvaluationQueryHandler::reportComplete(NetworkStatistic* stat)
     const QString key = QString("innervation_%1_%2_%3.csv").arg(mQueryId).arg(preSelId).arg(postSelId);
     const QString presynSelectionText = mCurrentJsonData["presynapticSelectionFilterAsText"].toString();
     const QString postsynSelectionText = mCurrentJsonData["postsynapticSelectionFilterAsText"].toString();
-    const QString csvfile = stat->createCSVFile(key, presynSelectionText, postsynSelectionText, mConfig["WORKER_TMP_DIR"].toString());
+    const QString csvfile = stat->createCSVFile(key,
+                                                presynSelectionText,
+                                                postsynSelectionText,
+                                                mConfig["WORKER_TMP_DIR"].toString(),
+                                                mAdvancedSettings);
     const qint64 fileSizeBytes = QFileInfo(csvfile).size();
     if (QueryHelpers::uploadToS3(key, csvfile, mConfig) != 0)
     {
@@ -209,6 +213,8 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         const double sliceRef = jsonData["sliceRef"].toDouble();
         //const bool isSlice = sliceRef != -9999;
         qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
+
+        mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
 
         QString preSelString = jsonData["presynapticSelectionFilter"].toString();
         QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());

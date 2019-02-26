@@ -130,6 +130,26 @@ getLaminarLocationsAsJson()
     return arr;
 }
 
+QJsonArray
+getPostsynapticTargetsAsJson()
+{
+    QJsonArray arr;
+
+    QJsonObject granularObj;
+    granularObj.insert("ID", int(CIS3D::BASAL));
+    granularObj.insert("name", "Basal");
+    arr.append(granularObj);
+
+    QJsonObject infraObj;
+    infraObj.insert("ID", int(CIS3D::APICAL));
+    infraObj.insert("name", "Apical");
+    arr.append(infraObj);
+
+    return arr;
+}
+
+
+
 void
 NetworkDataUploadHandler::process(const QJsonObject& config)
 {
@@ -144,6 +164,7 @@ NetworkDataUploadHandler::process(const QJsonObject& config)
     const QString regionsEndPoint = mConfig["METEOR_REGIONS_ENDPOINT"].toString();
     const QString laminarLocationsEndPoint = mConfig["METEOR_LAMINARLOCATIONS_ENDPOINT"].toString();
     const QString networksEndPoint = mConfig["METEOR_NETWORKS_ENDPOINT"].toString();
+    const QString postsynapticTargetsEndpoint = mConfig["METEOR_POSTSYNAPTICTARGETS_ENDPOINT"].toString();
 
     mLoginUrl = baseUrl + loginEndPoint;
     mLogoutUrl = baseUrl + logoutEndPoint;
@@ -152,6 +173,7 @@ NetworkDataUploadHandler::process(const QJsonObject& config)
     const QString regionsUrl = baseUrl + regionsEndPoint;
     const QString laminarLocationsUrl = baseUrl + laminarLocationsEndPoint;
     const QString networksUrl = baseUrl + networksEndPoint;
+    const QString postsynapticTargetsUrl = baseUrl + postsynapticTargetsEndpoint;
 
     mDataRoot = QueryHelpers::getPrimaryDatasetRoot(config);
     mNetwork.setDataRoot(mDataRoot);
@@ -168,6 +190,7 @@ NetworkDataUploadHandler::process(const QJsonObject& config)
     mPendingRequestIds.append("Regions");
     mPendingRequestIds.append("LaminarLocations");
     mPendingRequestIds.append("Networks");
+    mPendingRequestIds.append("PostsynapticTargets");
 
     QNetworkRequest ctRequest;
     ctRequest.setUrl(cellTypesUrl);
@@ -224,12 +247,24 @@ NetworkDataUploadHandler::process(const QJsonObject& config)
     QJsonDocument networksDoc(networksData);
     QString networksPostData(networksDoc.toJson());
 
+    QNetworkRequest targetsRequest;
+    targetsRequest.setUrl(postsynapticTargetsUrl);
+    targetsRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
+    targetsRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
+    targetsRequest.setAttribute(QNetworkRequest::User, QVariant("PostsynapticTargets"));
+    targetsRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, targetsRequest);
+    QJsonArray tarData = getPostsynapticTargetsAsJson();
+    QJsonDocument targetsDoc(tarData);
+    QString targetsPostData(targetsDoc.toJson());
+
     connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
     mNetworkManager.put(ctRequest, ctPostData.toLocal8Bit());
     mNetworkManager.put(colRequest, colPostData.toLocal8Bit());
     mNetworkManager.put(regRequest, regPostData.toLocal8Bit());
     mNetworkManager.put(locRequest, locPostData.toLocal8Bit());
     mNetworkManager.put(networksRequest, networksPostData.toLocal8Bit());
+    mNetworkManager.put(targetsRequest, targetsPostData.toLocal8Bit());
 }
 
 void
@@ -243,7 +278,8 @@ NetworkDataUploadHandler::replyGetQueryFinished(QNetworkReply* reply)
             requestId == "Columns" ||
             requestId == "Regions" ||
             requestId == "LaminarLocations" ||
-            requestId == "Networks")
+            requestId == "Networks" ||
+            requestId == "PostsynapticTargets")
         {
             qDebug() << "[*] Successful upload of" << requestId;
             reply->deleteLater();

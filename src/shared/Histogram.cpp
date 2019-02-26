@@ -287,8 +287,8 @@ Histogram::write(QTextStream& out, QString label)
 {
     const QString sep(',');
     out << label << " histogram\n";
-    out << "Number of values:" << sep << getNumberOfValues() << "\n";
-    out << "Number of zeros:" << sep << getNumberOfZeros() << "\n";
+    out << "Number of non-zero values::" << sep << getNumberOfValues() << "\n";
+    out << "Number of zero values:" << sep << getNumberOfZeros() << "\n";
     out << "\n";
     out << "Bin" << sep << "Bin range min" << sep << "Bin range max" << sep << "Value"
         << "\n";

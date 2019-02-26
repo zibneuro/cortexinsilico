@@ -153,7 +153,7 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
                 const float innervation = vectorSet->getValue(postId, mappedPreId);
                 x = innervation;
                 //const float connProb = float(1.0 - exp(-1.0 * innervation));
-                float connProb = expression.value();
+                float connProb = 1 - exp(x);
                 if(connProb != connProb){ // check nan
                     connProb = 0;
                 }
@@ -241,8 +241,10 @@ void
 InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
 {
     out << "Number of presynaptic neurons:" << sep << numPreNeurons << "\n";
-    out << "Number of unique presynaptic neurons:" << sep << numPreNeuronsUnique << "\n";
+    //out << "Number of unique presynaptic neurons:" << sep << numPreNeuronsUnique << "\n";
     out << "Number of postsynaptic neurons:" << sep << numPostNeurons << "\n";
+    out << "Number of neuron pairs:" << sep << innervationHisto.getNumberOfValues() << "\n";
+    out << "Number of non-overlapping neuron pairs:" << sep << innervationHisto.getNumberOfZeros() << "\n";
     out << "\n";
 
     out << "Innervation" << sep
@@ -257,6 +259,7 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
         << "Min" << sep << connProb.getMinimum() << sep
         << "Max" << sep << connProb.getMaximum() << "\n";
 
+    /*
     out << "Innervation unique" << sep
         << "Average" << sep << innervationUnique.getMean() << sep
         << "StDev" << sep << innervationUnique.getStandardDeviation() << sep
@@ -268,13 +271,13 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
         << "StDev" << sep << connProbUnique.getStandardDeviation() << sep
         << "Min" << sep << connProbUnique.getMinimum() << sep
         << "Max" << sep << connProbUnique.getMaximum() << "\n";
-
+    */
     out << "Innervation per presynaptic neuron" << sep
         << "Average" << sep << innervationPerPre.getMean() << sep
         << "StDev" << sep << innervationPerPre.getStandardDeviation() << sep
         << "Min" << sep << innervationPerPre.getMinimum() << sep
         << "Max" << sep << innervationPerPre.getMaximum() << "\n";
-
+    /*
     out << "Divergence" << sep
         << "Average" << sep << divergence.getMean() << sep
         << "StDev" << sep << divergence.getStandardDeviation() << sep
@@ -286,30 +289,31 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
         << "StDev" << sep << innervationPerPreUnique.getStandardDeviation() << sep
         << "Min" << sep << innervationPerPreUnique.getMinimum() << sep
         << "Max" << sep << innervationPerPreUnique.getMaximum() << "\n";
-
+    
     out << "Divergence unique" << sep
         << "Average" << sep << divergenceUnique.getMean() << sep
         << "StDev" << sep << divergenceUnique.getStandardDeviation() << sep
         << "Min" << sep << divergenceUnique.getMinimum() << sep
         << "Max" << sep << divergenceUnique.getMaximum() << "\n";
-
+    */
     out << "Innervation per postsynaptic neuron" << sep
         << "Average" << sep << innervationPerPost.getMean() << sep
         << "StDev" << sep << innervationPerPost.getStandardDeviation() << sep
         << "Min" << sep << innervationPerPost.getMinimum() << sep
         << "Max" << sep << innervationPerPost.getMaximum() << "\n";
 
+    /*
     out << "Convergence" << sep
         << "Average" << sep << convergence.getMean() << sep
         << "StDev" << sep << convergence.getStandardDeviation() << sep
         << "Min" << sep << convergence.getMinimum() << sep
         << "Max" << sep << convergence.getMaximum() << "\n";
-
+    */
     out << "\n";
 
     out << "Innervation histogram\n";
-    out << "Number of values:" << sep << innervationHisto.getNumberOfValues() << "\n";
-    out << "Number of zeros:" << sep << innervationHisto.getNumberOfZeros() << "\n";
+    out << "Number of non-zero values:" << sep << innervationHisto.getNumberOfValues() << "\n";
+    out << "Number of zero values:" << sep << innervationHisto.getNumberOfZeros() << "\n";
     out << "\n";
     out << "Bin" << sep << "Bin range min" << sep << "Bin range max" << sep << "Value"
         << "\n";
@@ -323,8 +327,8 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
     out << "\n";
 
     out << "Connection probability histogram\n";
-    out << "Number of values:" << sep << connProbHisto.getNumberOfValues() << "\n";
-    out << "Number of zeros:" << sep << connProbHisto.getNumberOfZeros() << "\n";
+    out << "Number of non-zero values:" << sep << connProbHisto.getNumberOfValues() << "\n";
+    out << "Number of zero values:" << sep << connProbHisto.getNumberOfZeros() << "\n";
     out << "\n";
     out << "Bin" << sep << "Bin range min" << sep << "Bin range max" << sep << "Value"
         << "\n";

@@ -39,6 +39,7 @@ private:
     QString mLogoutUrl;
     QString mQueryUrl;
     QJsonObject mCurrentJsonData;
+    QString mAdvancedSettings;
 
 
     void logoutAndExit(const int exitCode);
