@@ -5,9 +5,10 @@
     @param networkProps The model data of the network.
     @param parent The Qt parent object. Empty by default.
 */
-NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, QObject* parent)
-    : QObject(parent)
+NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, FormulaCalculator& calculator, QObject* parent)
+    : QObject(parent)    
     , mNetwork(networkProps)
+    , mCalculator(calculator)
 {
     mCache = SparseVectorCache();
     mConnectome = new InnervationMatrix(networkProps);
@@ -20,10 +21,11 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, QObject* pa
     @param cache Cache of preloaded innervation values.
     @param parent The Qt parent object. Empty by default.
 */
-NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache, QObject* parent)
-    : QObject(parent)
-    , mNetwork(networkProps)
+NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache, FormulaCalculator& calculator, QObject* parent)
+    : QObject(parent)    
+    , mNetwork(networkProps)    
     , mCache(cache)
+    , mCalculator(calculator)
 {
     mConnectome = new InnervationMatrix(networkProps);
     mAborted = false;
@@ -47,6 +49,10 @@ NetworkStatistic::calculate(const NeuronSelection& selection)
 {
     mConnectionsDone = 0;
     this->doCalculate(selection);
+}
+
+float NetworkStatistic::calculateProbability(float innervation){
+    return mCalculator.calculateConnectionProbability(innervation);
 }
 
 /**

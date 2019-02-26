@@ -21,6 +21,7 @@
 #include <vector>
 #include <list>
 #include "InnervationMatrix.h"
+#include "NetworkStatistic.h"
 
 typedef std::pair< unsigned int, unsigned int > ConnectionType;
 
@@ -35,7 +36,7 @@ class TripletMotif
 public:
 	TripletMotif(std::list< ConnectionType > connections);
 
-	double computeOccurrenceProbability(std::vector< std::vector< double > > innervation);
+	double computeOccurrenceProbability(std::vector< std::vector< double > > innervation, NetworkStatistic* stat);
 	double computeOccurrenceProbabilityGivenInputProbability(std::vector< std::vector< double > > convergence);
 	unsigned int computeOccurrencesWithStrength(std::vector< std::vector< unsigned int > > synapseRangeMatrix);
 	bool getConnections(unsigned int idx1, unsigned int idx2);

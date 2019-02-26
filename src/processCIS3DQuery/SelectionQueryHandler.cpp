@@ -51,7 +51,7 @@ createJsonResult(const IdsPerCellTypeRegion& idsPerCellTypeRegion,
         if (region.contains("Barreloid"))
         {
             QStringList parts = region.split("_");
-            region = QString("Barreloid %1").arg(parts[0]);
+            region = QString("%1 Barreloid").arg(parts[0]);
         }
 
         QJsonObject obj;

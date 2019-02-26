@@ -141,7 +141,7 @@ InDegreeQueryHandler::reportComplete(NetworkStatistic* stat)
     const QString motifBSelectionText = mCurrentJsonData["inDegreeBSelectionFilterAsText"].toString();
     const QString motifCSelectionText = mCurrentJsonData["inDegreeCSelectionFilterAsText"].toString();
     const QString csvfile =
-        stat->createCSVFile(key, motifASelectionText, motifBSelectionText, motifCSelectionText, mConfig["WORKER_TMP_DIR"].toString());
+        stat->createCSVFile(key, motifASelectionText, motifBSelectionText, motifCSelectionText, mConfig["WORKER_TMP_DIR"].toString(), mAdvancedSettings);
     const qint64 fileSizeBytes = QFileInfo(csvfile).size();
     if (QueryHelpers::uploadToS3(key, csvfile, mConfig) != 0)
     {
@@ -221,6 +221,13 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         const double sliceRef = jsonData["sliceRef"].toDouble();
         const bool isSlice = sliceRef != -9999;
 
+        // EXTRACT FORMULA
+        QJsonObject formulas = jsonData["formulas"].toObject();
+        FormulaCalculator calculator(formulas);
+        calculator.init();
+
+         mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
+
         NeuronSelection selection;
         qDebug() << "[*] Determining In-Degree selection:" << motifASelString << motifBSelString
                  << motifCSelString;
@@ -240,9 +247,9 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                                          highC,
                                          modeC);
         }
-        selection.printMotifStats();
+        //selection.printMotifStats();
 
-        InDegreeStatistic statistic(mNetwork, 1000);
+        InDegreeStatistic statistic(mNetwork, 1000, calculator);
         connect(&statistic, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&statistic, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
         statistic.calculate(selection);

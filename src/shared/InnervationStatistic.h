@@ -3,11 +3,6 @@
 
 #include "NetworkStatistic.h"
 #include "Histogram.h"
-#include "FormulaParser.h"
-
-typedef exprtk::symbol_table<float> symbol_table_t;
-typedef exprtk::expression<float> expression_t;
-typedef exprtk::parser<float> parser_t;
 
 class SparseVectorCache;
 
@@ -24,7 +19,8 @@ public:
         @param innervation BinSize Bin size of the innervation histogram.
         @param conProbBinSize Bin size of the connectionProbability histogram.
     */
-    InnervationStatistic(const NetworkProps& networkProps,
+    InnervationStatistic(const NetworkProps& networkProps,                         
+                         FormulaCalculator& calculator,
                          const float innervationBinSize = 0.1f,
                          const float connProbBinSize = 0.05f);
 
@@ -36,11 +32,10 @@ public:
         @param cache Cache of preloaded innervation values.
     */
     InnervationStatistic(const NetworkProps& networkProps,
-                         const SparseVectorCache& cache,
+                         const SparseVectorCache& cache,                         
+                         FormulaCalculator& calculator,
                          const float innervationBinSize = 0.1f,
                          const float connProbBinSize = 0.05f);
-
-    void setExpression(QString expression);
 
 protected:
     /**
@@ -82,7 +77,6 @@ private:
     int numPreNeurons;
     int numPostNeurons;
     int numPreNeuronsUnique;
-    std::string mExpression;
 };
 
 #endif // INNERVATION_H

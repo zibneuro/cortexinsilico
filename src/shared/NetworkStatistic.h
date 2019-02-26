@@ -14,6 +14,7 @@
 #include "NeuronSelection.h"
 #include "SparseVectorCache.h"
 #include "Typedefs.h"
+#include "FormulaCalculator.h"
 
 /**
     Serves as base class for any summary statistic about the neural network.
@@ -29,7 +30,7 @@ public:
         @param networkProps The model data of the network.
         @param parent The Qt parent object. Empty by default.
     */
-    NetworkStatistic(const NetworkProps& networkProps, QObject* parent = 0);
+    NetworkStatistic(const NetworkProps& networkProps, FormulaCalculator& calculator, QObject* parent = 0);
 
     /**
         Constructor.
@@ -37,7 +38,7 @@ public:
         @param cache Cache of preloaded innervation values.
         @param parent The Qt parent object. Empty by default.
     */
-    NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache, QObject* parent = 0);
+    NetworkStatistic(const NetworkProps& networkProps,  const SparseVectorCache& cache, FormulaCalculator& calculator, QObject* parent = 0);
 
     /**
         Destructor.
@@ -50,6 +51,8 @@ public:
         @param selection The selected neurons.
     */
     void calculate(const NeuronSelection& selection);
+
+    float calculateProbability(float innervation);
 
     /**
         Creates a JSON object representing the statistic. To be called from
@@ -158,7 +161,7 @@ protected:
     /**
         The model data of the network.
     */
-    const NetworkProps& mNetwork;
+    const NetworkProps& mNetwork;    
 
     /**
         The total number of connections (presyn. neuron x postsyn. neuron)
@@ -178,12 +181,15 @@ protected:
     */
     SparseVectorCache mCache;
 
+    FormulaCalculator& mCalculator;
+
     /*
         The innervation matrix.
     */
     InnervationMatrix* mConnectome;
 
     bool mAborted;
+    
 };
 
 #endif // NETWORKSTATISTIC_H

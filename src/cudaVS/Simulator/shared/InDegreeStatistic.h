@@ -7,7 +7,9 @@
 class InDegreeStatistic : public NetworkStatistic
 {
 public:
-    InDegreeStatistic(const NetworkProps& networkProps, int sampleSize);
+    InDegreeStatistic(const NetworkProps& networkProps,
+                      int sampleSize,
+                      FormulaCalculator& calculator);
 
 protected:
     void doCalculate(const NeuronSelection& selection) override;

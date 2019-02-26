@@ -39,12 +39,6 @@ def compileCppAndRunUnitTests(src_dir, build_dir):
     check_call(["qmake", convertSparse_pro_file], cwd=convertSparse_build_dir)
     check_call(["make", "all"], cwd=convertSparse_build_dir)
 
-    computeStatistic_pro_file = os.path.join(src_dir, "computeStatistic/computeStatistic.pro")
-    computeStatistic_build_dir = os.path.join(build_dir, "computeStatistic")
-    os.makedirs(computeStatistic_build_dir, exist_ok=True)
-    check_call(["qmake", computeStatistic_pro_file], cwd=computeStatistic_build_dir)
-    check_call(["make", "all"], cwd=computeStatistic_build_dir)
-
     process3DQuery_pro_file = os.path.join(src_dir, "processCIS3DQuery/processCIS3DQuery.pro")
     process3DQuery_build_dir = os.path.join(build_dir, "processCIS3DQuery")
     os.makedirs(process3DQuery_build_dir, exist_ok=True)

@@ -55,14 +55,14 @@ SOURCES += \
     ../shared/InnervationMatrix.cpp \
     ../shared/RandomGenerator.cpp \
     ../shared/FeatureProvider.cpp \
+    ../shared/FormulaCalculator.cpp \
     EvaluationQueryHandler.cpp \
     MotifQueryHandler.cpp \
     InDegreeQueryHandler.cpp \
     SelectionQueryHandler.cpp \
     NetworkDataUploadHandler.cpp \
     SpatialInnervationQueryHandler.cpp \
-    VoxelQueryHandler.cpp \
-    FormulaCalculator.cpp \
+    VoxelQueryHandler.cpp \    
     QueryHelpers.cpp
 
 HEADERS += \
@@ -95,12 +95,12 @@ HEADERS += \
     ../shared/RandomGenerator.h \
     ../shared/FormulaParser.h \
     ../shared/FeatureProvider.h \
+    ../shared/FormulaCalculator.h \
     EvaluationQueryHandler.h \
     MotifQueryHandler.h \
     InDegreeQueryHandler.h \
     SelectionQueryHandler.h \
     NetworkDataUploadHandler.h \
     SpatialInnervationQueryHandler.h \
-    VoxelQueryHandler.h \
-    FormulaCalculator.h \
+    VoxelQueryHandler.h \    
     QueryHelpers.h

@@ -16,16 +16,16 @@
     @param conProbBinSize Bin size of the connectionProbability histogram.
 */
 InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
+                                           FormulaCalculator& calculator,
                                            const float innervationBinSize,
                                            const float connProbBinSize)
-    : NetworkStatistic(networkProps)
+    : NetworkStatistic(networkProps, calculator)
 {
     innervationHisto = Histogram(innervationBinSize);
     connProbHisto = Histogram(connProbBinSize);
     numPreNeurons = 0;
     numPostNeurons = 0;
     numPreNeuronsUnique = 0;
-    mExpression = "1-exp(-x)";
 }
 
 /**
@@ -37,22 +37,16 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
 */
 InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
                                            const SparseVectorCache& cache,
+                                           FormulaCalculator& calculator,
                                            const float innervationBinSize,
                                            const float connProbBinSize)
-    : NetworkStatistic(networkProps, cache)
+    : NetworkStatistic(networkProps, cache, calculator)
 {
     innervationHisto = Histogram(innervationBinSize);
     connProbHisto = Histogram(connProbBinSize);
     numPreNeurons = 0;
     numPostNeurons = 0;
     numPreNeuronsUnique = 0;
-    mExpression = "1-exp(-x)";
-}
-
-void
-InnervationStatistic::setExpression(QString expression)
-{
-    mExpression = expression.toStdString();
 }
 
 /**
@@ -66,16 +60,6 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
     QHash<int, float> preNeuronConnProbSum;
     QHash<int, float> preNeuronInnervationSumUnique;
     QHash<int, float> preNeuronConnProbSumUnique;
-
-    float x;
-    symbol_table_t symbol_table;
-    symbol_table.add_variable("x", x);
-    symbol_table.add_constants();
-    expression_t expression;
-    expression.register_symbol_table(symbol_table);
-    parser_t parser;
-    parser.compile(mExpression, expression);
-    std::cout << "[*] Connection probability formula " << mExpression << std::endl;
 
     this->numPreNeurons = selection.Presynaptic().size();
     this->numPreNeuronsUnique = 0;
@@ -145,20 +129,16 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
             {
                 const int preId = preIdList[pre];
 
-                if(selection.getPresynapticBand(preId) != selection.getPostsynapticBand(postId)){
+                if (selection.getPresynapticBand(preId) != selection.getPostsynapticBand(postId))
+                {
                     continue;
                 }
 
                 const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
                 const float innervation = vectorSet->getValue(postId, mappedPreId);
-                x = innervation;
-                //const float connProb = float(1.0 - exp(-1.0 * innervation));
-                float connProb = 1 - exp(x);
-                if(connProb != connProb){ // check nan
-                    connProb = 0;
-                }
-                connProb = connProb < 0 ? 0 : connProb;
-                connProb = connProb > 1 ? 1 : connProb;                
+                                
+                float connProb = mCalculator.calculateConnectionProbability(innervation);
+
                 this->innervationHisto.addValue(innervation);
                 this->connProbHisto.addValue(connProb);
 

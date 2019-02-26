@@ -224,6 +224,11 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         const double sliceRef = jsonData["sliceRef"].toDouble();
         const bool isSlice = sliceRef != -9999;
 
+        // EXTRACT FORMULA
+        QJsonObject formulas = jsonData["formulas"].toObject();
+        FormulaCalculator calculator(formulas);
+        calculator.init();
+
         mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
 
         NeuronSelection selection;
@@ -248,7 +253,7 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         }
         selection.printMotifStats();
 
-        TripletStatistic statistic(mNetwork, 50, 200);
+        TripletStatistic statistic(mNetwork, 50, 200, calculator);
 
         if (isSlice)
         {

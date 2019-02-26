@@ -24,8 +24,7 @@ factorial(T arg)
 
 bool
 FormulaCalculator::init()
-{
-    std::cout << mSynapseDistributionFormula;
+{    
     bool valid = true;
     mSymbolTable.add_variable("i", mCurrentValue_i);
     mSymbolTable.add_variable("k", mCurrentValue_k);
@@ -40,6 +39,7 @@ FormulaCalculator::init()
         valid &= parser.compile(mConnectionProbabilityFormula, mConnectionProbabilityExpression);
     }
     mValid = valid;
+    std::cout << "[!] Init formula" << mSynapseDistributionFormula << mConnectionProbabilityFormula << valid;
     return mValid;
 }
 
@@ -75,7 +75,7 @@ FormulaCalculator::calculateConnectionProbability(float innervation)
         float prob;
         if (mUseCustomConnectionProbabilityFormula)
         {
-            mCurrentValue_i = innervation;            
+            mCurrentValue_i = innervation;
             prob = mConnectionProbabilityExpression.value();
         }
         else

@@ -24,8 +24,11 @@
     @param sampleSize The number of triplets to draw.
     @param iterations The number of iterations.
 */
-TripletStatistic::TripletStatistic(const NetworkProps& networkProps, int sampleSize, int iterations)
-    : NetworkStatistic(networkProps)
+TripletStatistic::TripletStatistic(const NetworkProps& networkProps,
+                                   int sampleSize,
+                                   int iterations,
+                                   FormulaCalculator& calculator)
+    : NetworkStatistic(networkProps, calculator)
     , mSampleSize(sampleSize)
     , mIterations(iterations)
 {
@@ -119,7 +122,9 @@ TripletStatistic::drawTriplets(const NeuronSelection& selection)
     {
         const QString msg = QString("Drawing triplets failed");
         throw std::runtime_error(qPrintable(msg));
-    } else {
+    }
+    else
+    {
         mSampleSize = triplets.size();
     }
 
@@ -213,7 +218,7 @@ TripletStatistic::doCalculate(const NeuronSelection& selection)
 double
 TripletStatistic::calculateConnectionProbability(double innervation)
 {
-    return 1 - exp(-1 * innervation);
+    return (double)mCalculator.calculateConnectionProbability((float)innervation);
 }
 
 /**
@@ -372,7 +377,7 @@ TripletStatistic::computeProbabilities(
             for (motifListIt = motifList.begin(); motifListIt != motifList.end(); ++motifListIt)
             {
                 TripletMotif* currentMotif = *motifListIt;
-                motifProb += currentMotif->computeOccurrenceProbability(currentTriplet.innervation);
+                motifProb += currentMotif->computeOccurrenceProbability(currentTriplet.innervation, this);
             }
             mMotifProbabilities[j].addSample(motifProb);
         }
@@ -401,7 +406,7 @@ TripletStatistic::computeExpectedProbabilities(
         for (motifListIt = motifList.begin(); motifListIt != motifList.end(); ++motifListIt)
         {
             TripletMotif* currentMotif = *motifListIt;
-            expectedProb += currentMotif->computeOccurrenceProbability(avgInnervation);
+            expectedProb += currentMotif->computeOccurrenceProbability(avgInnervation, this);
         }
         mMotifExpectedProbabilities[j].addSample(expectedProb);
     }

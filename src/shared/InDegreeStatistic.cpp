@@ -19,13 +19,16 @@
 #include <random>
 #include <algorithm>
 
+
 InDegreeStatistic::InDegreeStatistic(const NetworkProps& networkProps,
-                                     int sampleSize)
-    : NetworkStatistic(networkProps)
+                                     int sampleSize,
+                                     FormulaCalculator& calculator)
+    : NetworkStatistic(networkProps, calculator)
     , mSampleSize(sampleSize)
 {
     this->mNumConnections = mSampleSize;
 }
+
 
 void
 InDegreeStatistic::checkInput(const NeuronSelection& selection)

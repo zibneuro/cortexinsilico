@@ -18,6 +18,7 @@
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
 #include <stdexcept>
+#include "FormulaCalculator.h"
 
 EvaluationQueryHandler::EvaluationQueryHandler(QObject* parent)
     : QObject(parent)
@@ -200,8 +201,11 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForQuery();
 
-        // EXTRACT CONNECTION PROBABILITY FORMULA
+        // EXTRACT FORMULA
+        qDebug() << jsonData;
         QJsonObject formulas = jsonData["formulas"].toObject();
+        FormulaCalculator calculator(formulas);
+        calculator.init();
 
         // EXTRACT SLICE PARAMETERS
         const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
@@ -233,8 +237,7 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
 
         qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
-        InnervationStatistic innervation(mNetwork);
-        innervation.setExpression("");
+        InnervationStatistic innervation(mNetwork, calculator);
 
         connect(&innervation, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));

@@ -10,7 +10,7 @@ typedef exprtk::parser<float> parser_t;
 
 class FormulaCalculator
 {
-public:
+public:    
     FormulaCalculator(QJsonObject formulas);
     bool init();
     float calculateSynapseProbability(float innervation, int k);

@@ -8,22 +8,26 @@
 /**
     Computes the probability distribution of triplet motifs.
 */
-class TripletStatistic : public NetworkStatistic {
-   public:
+class TripletStatistic : public NetworkStatistic
+{
+public:
     /**
         Constructor.
         @param networkProps The model data of the network.
         @param sampleSize The number of triplets to draw.
         @param iterations The number of iterations.
     */
-    TripletStatistic(const NetworkProps& networkProps, int sampleSize, int iterations);
+    TripletStatistic(const NetworkProps& networkProps,
+                     int sampleSize,
+                     int iterations,
+                     FormulaCalculator& calculator);
 
     /**
         Writes result to file, for testing purposes.
     */
     void writeResult() const;
 
-   protected:
+protected:
     /**
         Performs the actual computation based on the specified neurons.
         @param selection The selected neurons.
@@ -43,7 +47,7 @@ class TripletStatistic : public NetworkStatistic {
     */
     void doCreateCSV(QTextStream& out, const QChar sep) const override;
 
-   private:
+private:
     /**
         Checks wheter the neuron selectio is valid.
         @throws runtime_error if selection is ncot valid.
@@ -176,4 +180,4 @@ class TripletStatistic : public NetworkStatistic {
     int mIterations;
 };
 
-#endif  // TRIPLETSTATISTIC
+#endif // TRIPLETSTATISTIC
