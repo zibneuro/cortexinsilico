@@ -8,7 +8,7 @@
 #include <QSharedMemory>
 
 /**
-    A filter to select subroups of neurons based on cell type, region,
+    A filter to select subgroups of neurons based on cell type, region,
     barrel column, laminar location, and synaptic side.
 */
 struct SelectionFilter {

@@ -702,12 +702,26 @@ Util::getAdvancedSettingsString(QJsonObject& spec)
     s += "Connection probability formula,";
     if (useCustomConnectionProbabilityFormula)
     {
-        s+= connectionProbabilityFormula + "\n";
+        s += connectionProbabilityFormula + "\n";
     }
     else
     {
-        s+= "1-P_i(0)\n";
+        s += "1-P_i(0)\n";
     }
 
     return s;
+}
+
+CIS3D::Structure
+Util::getPostsynapticTarget(QString selectionString)
+{
+    if (selectionString.contains("Basal") && !selectionString.contains("Apical"))
+    {
+        return CIS3D::BASAL;
+    }
+    if (!selectionString.contains("Basal") && selectionString.contains("Apical"))
+    {
+        return CIS3D::APICAL;
+    }
+    return CIS3D::DEND;
 }

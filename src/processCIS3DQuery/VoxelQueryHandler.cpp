@@ -312,7 +312,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             QString tissueModePost = jsonData["tissueModePost"].toString();
             const double sliceRef = jsonData["sliceRef"].toDouble();
             const bool isSlice = sliceRef != -9999;
-            qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
+            //qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
 
             QString preSelString = jsonData["presynapticSelectionFilter"].toString();
             QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
@@ -326,6 +326,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
             QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
             QJsonArray postArr = postDoc.array();
+            qDebug() << Util::getPostsynapticTarget(postSelString);
             SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
             Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
             IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
@@ -575,7 +576,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                     QJsonDocument putDoc(payload);
                     QString putData(putDoc.toJson());
 
-                    qDebug() << "[*] Posting intermediate result:" << percent << "\%    (" << voxelCount + 1 << "/" << totalVoxelCount << ")";
+                    //qDebug() << "[*] Posting intermediate result:" << percent << "\%    (" << voxelCount + 1 << "/" << totalVoxelCount << ")";
 
                     QEventLoop loop;
                     QNetworkReply* reply = mNetworkManager.put(putRequest, putData.toLocal8Bit());

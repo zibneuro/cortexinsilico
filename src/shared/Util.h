@@ -8,6 +8,7 @@
 #include "CIS3DStatistics.h"
 #include "Histogram.h"
 #include "Typedefs.h"
+#include "CIS3DConstantsHelpers.h"
 #include <QJsonObject>
 
 class QJsonObject;
@@ -113,6 +114,8 @@ namespace Util
     void getMinMedMax(std::vector<float> in, float& min, float& med, float& max);
 
     QString getAdvancedSettingsString(QJsonObject& spec);
+
+    CIS3D::Structure getPostsynapticTarget(QString selectionString);
 
 } // namespace Util
 
