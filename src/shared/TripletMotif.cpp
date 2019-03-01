@@ -156,7 +156,7 @@ CellTriplet::CellTriplet(int neuron1, int neuron2, int neuron3)
 }
 
 void
-CellTriplet::setInnervation(InnervationMatrix* connectome)
+CellTriplet::setInnervation(InnervationMatrix* connectome, std::vector<CIS3D::Structure> postTargets)
 {
     for (int ii = 0; ii < 3; ++ii)
     {
@@ -172,7 +172,7 @@ CellTriplet::setInnervation(InnervationMatrix* connectome)
             {
                 int preId = preCellIndex[ii];
                 int postId = postCellIndex[jj];
-                this->innervation[ii].push_back(connectome->getValue(preId, postId, ii));
+                this->innervation[ii].push_back(connectome->getValue(preId, postId, ii, postTargets[jj]));
             }
         }
     }

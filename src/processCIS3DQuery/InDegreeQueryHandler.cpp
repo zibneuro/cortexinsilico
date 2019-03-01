@@ -208,6 +208,10 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         QString motifBSelString = jsonData["inDegreeBSelectionFilter"].toString();
         QString motifCSelString = jsonData["inDegreeCSelectionFilter"].toString();
 
+        CIS3D::Structure postTargetA = Util::getPostsynapticTarget(motifASelString);
+        CIS3D::Structure postTargetB = Util::getPostsynapticTarget(motifBSelString);
+        CIS3D::Structure postTargetC = Util::getPostsynapticTarget(motifCSelString);
+
         // EXTRACT SLICE PARAMETERS
         const double lowA = jsonData["tissueLowInDegreeA"].toDouble();
         const double highA = jsonData["tissueHighInDegreeA"].toDouble();
@@ -226,12 +230,13 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         FormulaCalculator calculator(formulas);
         calculator.init();
 
-         mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
+        mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
 
         NeuronSelection selection;
         qDebug() << "[*] Determining In-Degree selection:" << motifASelString << motifBSelString
                  << motifCSelString;
         selection.setInDegreeSelection(motifASelString, motifBSelString, motifCSelString, mNetwork);
+        selection.setPostTarget(postTargetA, postTargetB, postTargetC);
 
         if (isSlice)
         {

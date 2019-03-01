@@ -279,26 +279,18 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         qDebug() << "[*] Voxel query: " << mode << voxelOrigin[0] << voxelOrigin[1] << voxelOrigin[2] << voxelDimensions[0] << voxelDimensions[1] << voxelDimensions[2];
 
         const QString datasetShortName = jsonData["network"].toString();
-        mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
-        qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
+        mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);        
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForSynapseComputation();
 
         QString advancedSettings = Util::getAdvancedSettingsString(jsonData);
         QJsonObject formulas = jsonData["formulas"].toObject();
         FormulaCalculator calculator(formulas);
-        bool initSuccess = calculator.init();
-        qDebug() << "Formula calculator" << initSuccess;
-
-        QString preFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_pre");
-        QString postFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_postExc");
-        QString postAllFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_postAll");
-        QString metaFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_meta");
-        QString voxelPosFile = QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos.dat");
-        QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() + "voxel_indexL.dat");
-        QString innervationFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "innervation");
+        calculator.init();        
 
         // ################# DETERMINE NEURON IDS #################
+
+        CIS3D::Structure postTarget = CIS3D::DEND;
 
         NeuronSelection selection;
         if (mode == "prePost" || mode == "prePostVoxel")
@@ -326,7 +318,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
             QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
             QJsonArray postArr = postDoc.array();
-            qDebug() << Util::getPostsynapticTarget(postSelString);
+            postTarget = Util::getPostsynapticTarget(postSelString);
             SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
             Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
             IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
@@ -352,6 +344,11 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             selection.setFullModel(mNetwork, false);
             setFilterString(mode, "", "", advancedSettings, voxelOrigin, voxelDimensions);
         }
+              
+        QString postAllFolder = QDir::cleanPath(mDataRoot + QDir::separator()  + "features_postAll");
+        QString metaFolder = QDir::cleanPath(mDataRoot + QDir::separator() +  "features_meta");
+        QString voxelPosFile = QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos.dat");
+        QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() + Util::getIndexFileName(postTarget));  
 
         IdList preIds = selection.Presynaptic();
         IdList postIds = selection.Postsynaptic();

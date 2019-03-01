@@ -9,7 +9,12 @@
 /**
   Empty constructor.
 */
-NeuronSelection::NeuronSelection(){};
+NeuronSelection::NeuronSelection()
+{
+    mPostTarget.push_back(CIS3D::DEND);
+    mPostTarget.push_back(CIS3D::DEND);
+    mPostTarget.push_back(CIS3D::DEND);
+};
 
 /**
     Constructor for a second order network statistic, containing pre-
@@ -19,7 +24,12 @@ NeuronSelection::NeuronSelection(){};
 */
 NeuronSelection::NeuronSelection(const IdList& presynaptic, const IdList& postsynaptic)
     : mPresynaptic(presynaptic)
-    , mPostsynaptic(postsynaptic){};
+    , mPostsynaptic(postsynaptic)
+{
+    mPostTarget.push_back(CIS3D::DEND);
+    mPostTarget.push_back(CIS3D::DEND);
+    mPostTarget.push_back(CIS3D::DEND);
+};
 
 IdList
 NeuronSelection::filterTissueDepth(const NetworkProps& networkProps,
@@ -338,7 +348,7 @@ NeuronSelection::setFullModel(const NetworkProps& networkProps, bool uniquePre)
 {
     mPresynaptic.clear();
     mPostsynaptic.clear();
-    
+
     SelectionFilter preFilter;
     preFilter.synapticSide = CIS3D::PRESYNAPTIC;
     IdList preNeurons = networkProps.neurons.getFilteredNeuronIds(preFilter);
@@ -350,10 +360,11 @@ NeuronSelection::setFullModel(const NetworkProps& networkProps, bool uniquePre)
             mPresynaptic.append(preNeurons[i]);
         }
     }
-    if(uniquePre){
+    if (uniquePre)
+    {
         filterUniquePre(networkProps);
     }
-    
+
     SelectionFilter postFilter;
     postFilter.synapticSide = CIS3D::POSTSYNAPTIC;
     IdList postNeurons = networkProps.neurons.getFilteredNeuronIds(postFilter);
@@ -511,6 +522,21 @@ NeuronSelection::filterPreOrBoth(const NetworkProps& networkProps, IdList ids)
         }
     }
     return pruned;
+}
+
+void
+NeuronSelection::setPostTarget(CIS3D::Structure selectionA, CIS3D::Structure selectionB, CIS3D::Structure selectionC)
+{
+    mPostTarget.clear();
+    mPostTarget.push_back(selectionA);
+    mPostTarget.push_back(selectionB);
+    mPostTarget.push_back(selectionC);
+}
+
+CIS3D::Structure
+NeuronSelection::getPostTarget(int selectionIndex) const
+{
+    return mPostTarget[selectionIndex];
 }
 
 void

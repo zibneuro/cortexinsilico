@@ -11,7 +11,7 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, FormulaCalc
     , mCalculator(calculator)
 {
     mCache = SparseVectorCache();
-    mConnectome = new InnervationMatrix(networkProps);
+    mInnervationMatrix = new InnervationMatrix(networkProps);
     mAborted = false;
 };
 
@@ -27,7 +27,7 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, const Spars
     , mCache(cache)
     , mCalculator(calculator)
 {
-    mConnectome = new InnervationMatrix(networkProps);
+    mInnervationMatrix = new InnervationMatrix(networkProps);
     mAborted = false;
 };
 
@@ -36,7 +36,7 @@ NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, const Spars
 */
 NetworkStatistic::~NetworkStatistic()
 {
-    delete mConnectome;
+    delete mInnervationMatrix;
 }
 
 /**
@@ -172,7 +172,7 @@ NetworkStatistic::abort()
 void
 NetworkStatistic::setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC)
 {
-    mConnectome->setOriginalPreIds(preIdsA, preIdsB, preIdsC);
+    mInnervationMatrix->setOriginalPreIds(preIdsA, preIdsB, preIdsC);
 }
 
 /**

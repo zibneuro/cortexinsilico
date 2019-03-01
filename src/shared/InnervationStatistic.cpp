@@ -61,6 +61,8 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
     QHash<int, float> preNeuronInnervationSumUnique;
     QHash<int, float> preNeuronConnProbSumUnique;
 
+    CIS3D::Structure postTarget = selection.getPostTarget(1);
+
     this->numPreNeurons = selection.Presynaptic().size();
     this->numPreNeuronsUnique = 0;
     for (int pre = 0; pre < selection.Presynaptic().size(); ++pre)
@@ -89,29 +91,8 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
             return;
         }
 
-        const CellTypeRegion cellTypeRegion = it.key();
-        const QString cellTypeName = mNetwork.cellTypes.getName(cellTypeRegion.first);
-        const QString regionName = mNetwork.regions.getName(cellTypeRegion.second);
-        const QDir innervationDir = CIS3D::getInnervationDataDir(mNetwork.dataRoot);
-        const QString innervationFile = CIS3D::getInnervationPostFileName(innervationDir, regionName, cellTypeName);
-
         const IdList& ids = it.value();
-        SparseVectorSet* vectorSet;
-        bool fromCache;
-        if (mCache.contains(innervationFile))
-        {
-            vectorSet = mCache.get(innervationFile);
-            fromCache = true;
-        }
-        else
-        {
-            const QTime loadStart = QTime::currentTime();
-            vectorSet = SparseVectorSet::load(innervationFile);
-            const QTime loadEnd = QTime::currentTime();
-            fromCache = false;
-            qDebug() << "[*] Loading" << innervationFile;
-            qDebug() << "Time load:      " << loadStart.secsTo(loadEnd) << "sec.";
-        }
+      
 
         const IdList preIdList = selection.Presynaptic();
 
@@ -135,8 +116,8 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
                 }
 
                 const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
-                const float innervation = vectorSet->getValue(postId, mappedPreId);
-                                
+                const float innervation = mInnervationMatrix->getValue(mappedPreId, postId, postTarget);
+
                 float connProb = mCalculator.calculateConnectionProbability(innervation);
 
                 this->innervationHisto.addValue(innervation);
@@ -197,11 +178,6 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
         const QTime reportStart = QTime::currentTime();
         reportUpdate();
         const QTime reportEnd = QTime::currentTime();
-
-        if (!fromCache)
-        {
-            delete vectorSet;
-        }
 
         qDebug() << "Time process:   " << processStart.secsTo(processEnd)
                  << "     ("

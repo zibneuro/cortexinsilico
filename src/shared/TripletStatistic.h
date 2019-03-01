@@ -4,6 +4,7 @@
 #include "InnervationMatrix.h"
 #include "NetworkStatistic.h"
 #include "TripletMotif.h"
+#include "Util.h"
 
 /**
     Computes the probability distribution of triplet motifs.
@@ -19,7 +20,7 @@ public:
     */
     TripletStatistic(const NetworkProps& networkProps,
                      int sampleSize,
-                     int iterations,
+                     int iterations,                     
                      FormulaCalculator& calculator);
 
     /**
@@ -86,7 +87,7 @@ private:
         @param postsynapticNeuronId The ID of the postsynaptic neuron.
         @return  The convergence to the postsynaptic neuron.
     */
-    double calculateConvergence(IdList& presynapticNeurons, int postsynapticNeuronId, int selectionIndex);
+    double calculateConvergence(IdList& presynapticNeurons, int postsynapticNeuronId, int preSelectionIndex, int postSelectionIndex);
 
     /**
         Calculates the average convergence to for all combinations by
@@ -94,22 +95,6 @@ private:
         @param selection The selected neuron groups.
     */
     void calculateAverageConvergence(const NeuronSelection& selection);
-
-    /**
-        Calculates the average convergence to the specified postsynaptic neurons.
-        @param presynapticNeurons The IDs of the presynaptic neurons.
-        @param postsynapticNeuronId The IDs of the postsynaptic neurons.
-        @return  The average convergence to the postsynaptic neurons.
-    */
-    double calculateAverageConvergence(IdList& presynapticNeurons, IdList& postsynapticNeurons);
-
-    /**
-        Determines the average convergence values between the three neuron
-        subselections using the randomly drawn triplets for sampling.
-        @param triplets The randomly drawn triplets.
-        @return The average convergence values.
-    */
-    std::vector<std::vector<double> > getAverageConvergence(QList<CellTriplet>& triplets);
 
     /**
         Computes the occurrence probability of the specified motifs based
@@ -178,6 +163,7 @@ private:
     std::vector<std::vector<Statistics> > mConvergences;
     int mSampleSize;
     int mIterations;
+    std::vector<CIS3D::Structure> mPostTargets;
 };
 
 #endif // TRIPLETSTATISTIC

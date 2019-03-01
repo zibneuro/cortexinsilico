@@ -141,7 +141,7 @@ TripletStatistic::setInnervation(QList<CellTriplet>& triplets)
     qDebug() << "[*] Setting innervation values.";
     for (int i = 0; i < triplets.size(); i++)
     {
-        triplets[i].setInnervation(mConnectome);
+        triplets[i].setInnervation(mInnervationMatrix, mPostTargets);
     }
 }
 
@@ -181,6 +181,10 @@ TripletStatistic::doCalculate(const NeuronSelection& selection)
     initializeStatistics();
     checkInput(selection);
 
+    mPostTargets.push_back(selection.getPostTarget(0));
+    mPostTargets.push_back(selection.getPostTarget(1));
+    mPostTargets.push_back(selection.getPostTarget(2));
+
     qDebug() << "[*] Initializing motif combinations.";
     MotifCombinations combinations;
     std::map<unsigned int, std::list<TripletMotif*> > motifs =
@@ -192,16 +196,26 @@ TripletStatistic::doCalculate(const NeuronSelection& selection)
         {
             return;
         }
-
+        double t0 = std::clock();
         QList<CellTriplet> triplets = drawTriplets(selection);
+        double t1 = std::clock();
         setInnervation(triplets);
+        double t2 = std::clock();
         computeProbabilities(triplets, motifs);
-        // std::vector<std::vector<double> > avgConvergence =
-        // TripletStatistic::getAverageConvergence(triplets);
-        // computeExpectedProbabilities(avgConvergence, motifs);
+        double t3 = std::clock();
         calculateAverageConvergence(selection);
-        printAverageConvergence();
+        double t4 = std::clock();
+        //printAverageConvergence();
         computeExpectedProbabilities(motifs);
+        double t5 = std::clock();
+
+        double dt1 = (t1 - t0) / (double)CLOCKS_PER_SEC;
+        double dt2 = (t2 - t1) / (double)CLOCKS_PER_SEC;
+        double dt3 = (t3 - t2) / (double)CLOCKS_PER_SEC;
+        double dt4 = (t4 - t3) / (double)CLOCKS_PER_SEC;
+        double dt5 = (t5 - t4) / (double)CLOCKS_PER_SEC;
+        qDebug() << "MOTIF TIME" << dt1 << dt2 << dt3 << dt4 << dt5;
+
         mConnectionsDone = i + 1;
         reportUpdate();
     }
@@ -230,14 +244,16 @@ TripletStatistic::calculateConnectionProbability(double innervation)
 double
 TripletStatistic::calculateConvergence(IdList& presynapticNeurons,
                                        int postsynapticNeuronId,
-                                       int selectionIndex)
+                                       int preSelectionIndex,
+                                       int postSelectionIndex)
 {
     int presynapticSamplingFactor = 1;
     Statistics connectionProbability;
+    CIS3D::Structure postTarget = mPostTargets[postSelectionIndex];
     for (int i = 0; i < presynapticNeurons.size(); i += presynapticSamplingFactor)
     {
         int preId = presynapticNeurons[i];
-        double innervation = mConnectome->getValue(preId, postsynapticNeuronId, selectionIndex);
+        double innervation = mInnervationMatrix->getValue(preId, postsynapticNeuronId, preSelectionIndex, postTarget);
         double probability = calculateConnectionProbability(innervation);
         connectionProbability.addSample(probability);
     }
@@ -274,79 +290,12 @@ TripletStatistic::calculateAverageConvergence(const NeuronSelection& selection)
                         break;
                     } else {
                     */
-                    mConvergences[i][j].addSample(calculateConvergence(pre[i], post[j][k], i));
+                    mConvergences[i][j].addSample(calculateConvergence(pre[i], post[j][k], i, j));
                     //}
                 }
             }
         }
     }
-}
-
-/**
-    Calculates the average convergence to the specified postsynaptic neurons.
-    @param presynapticNeurons The IDs of the presynaptic neurons.
-    @param postsynapticNeuronId The IDs of the postsynaptic neurons.
-    @return  The average convergence to the postsynaptic neurons.
-*/
-double
-TripletStatistic::calculateAverageConvergence(IdList& presynapticNeurons,
-                                              IdList& postsynapticNeurons)
-{
-    int postsynapticSamplingFactor = 1;
-    Statistics convergence;
-    for (int i = 0; i < postsynapticNeurons.size(); i += postsynapticSamplingFactor)
-    {
-        convergence.addSample(calculateConvergence(presynapticNeurons, postsynapticNeurons[i], i));
-    }
-    return convergence.getMean();
-}
-
-/**
-    Determines the average convergence values between the three neuron
-    subselections using the randomly drawn triplets for sampling.
-    @param triplets The randomly drawn triplets.
-    @return The average convergence values.
-*/
-std::vector<std::vector<double> >
-TripletStatistic::getAverageConvergence(
-    // Retrieve sample of neuron selections based on triplets.
-    QList<CellTriplet>& triplets)
-{
-    IdList motifA;
-    IdList motifB;
-    IdList motifC;
-    for (int k = 0; k < triplets.size(); k++)
-    {
-        motifA.push_back(triplets[k].preCellIndex[0]);
-        motifB.push_back(triplets[k].preCellIndex[1]);
-        motifC.push_back(triplets[k].preCellIndex[2]);
-    }
-    std::vector<IdList> selections;
-    selections.push_back(motifA);
-    selections.push_back(motifB);
-    selections.push_back(motifC);
-
-    // Compute average convergence for all 6 cases.
-    std::vector<std::vector<double> > avgConvergence;
-    for (int i = 0; i < 3; i++)
-    {
-        std::vector<double> emptyRow;
-        avgConvergence.push_back(emptyRow);
-        for (int j = 0; j < 3; j++)
-        {
-            if (i == j)
-            {
-                avgConvergence[i].push_back(0.0);
-            }
-            else
-            {
-                double convergence = calculateAverageConvergence(selections[i], selections[j]);
-                qDebug() << "[*] Convergence " << i << j << convergence;
-                avgConvergence[i].push_back(convergence);
-            }
-        }
-    }
-    return avgConvergence;
 }
 
 /**

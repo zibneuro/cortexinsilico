@@ -22,6 +22,7 @@
 #include <list>
 #include "InnervationMatrix.h"
 #include "NetworkStatistic.h"
+#include "Util.h"
 
 typedef std::pair< unsigned int, unsigned int > ConnectionType;
 
@@ -58,7 +59,7 @@ public:
 	std::vector< std::vector< double > > innervation;
 	std::vector< std::vector< double > > avgConvergence;
 
-	void setInnervation(InnervationMatrix* connectome);
+	void setInnervation(InnervationMatrix* connectome, std::vector<CIS3D::Structure> postTargets);
 	void setAverageConvergenceMatrix(std::vector< std::vector< double > > avgConvergence);
 
 	void print();

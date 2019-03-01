@@ -117,6 +117,12 @@ namespace Util
 
     CIS3D::Structure getPostsynapticTarget(QString selectionString);
 
+    QString getPostFolderName(CIS3D::Structure target);
+
+    QString getIndexFileName(CIS3D::Structure target);
+
+    QString getInnervationFolderName(CIS3D::Structure target);
+
 } // namespace Util
 
 #endif // UTIL_H

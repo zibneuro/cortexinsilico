@@ -186,7 +186,7 @@ protected:
     /*
         The innervation matrix.
     */
-    InnervationMatrix* mConnectome;
+    InnervationMatrix* mInnervationMatrix;
 
     bool mAborted;
     

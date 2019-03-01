@@ -126,9 +126,6 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         bool initSuccess = calculator.init();
         qDebug() << "Formula calculator" << initSuccess;
         */
-        
-        QString dataFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "innervation");
-        QString voxelFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "spatialInnervation" + QDir::separator() + "features_meta");
 
         // EXTRACT SLICE PARAMETERS
         const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
@@ -157,6 +154,10 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
         IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
 
+        CIS3D::Structure postTarget = Util::getPostsynapticTarget(postSelString);
+        QString dataFolder = QDir::cleanPath(mDataRoot + QDir::separator() + Util::getInnervationFolderName(postTarget));
+        QString voxelFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "features_meta");
+
         NeuronSelection selection(preNeurons, postNeurons);
         QVector<float> bbmin;
         QVector<float> bbmax;
@@ -173,6 +174,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         {
             selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
         }
+
         IdList preIds = selection.Presynaptic();
         IdList postIds = selection.Postsynaptic();
 

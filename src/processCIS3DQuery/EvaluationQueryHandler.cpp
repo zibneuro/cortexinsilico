@@ -236,6 +236,9 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
         IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
 
+        CIS3D::Structure postTargetA = Util::getPostsynapticTarget(preSelString);
+        CIS3D::Structure postTargetB = Util::getPostsynapticTarget(postSelString);
+
         qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
         InnervationStatistic innervation(mNetwork, calculator);
 
@@ -243,6 +246,7 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
         NeuronSelection selection(preNeurons, postNeurons);
         selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
+        selection.setPostTarget(postTargetA, postTargetB);
         innervation.calculate(selection);
     }
     else

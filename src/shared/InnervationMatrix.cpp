@@ -1,13 +1,17 @@
 #include "InnervationMatrix.h"
 #include <QDebug>
+#include <QDir>
+#include <QTextStream>
 #include "CIS3DConstantsHelpers.h"
+#include "Util.h"
 
 /**
     Constructor.
     @param networkProps The model data.
 */
 InnervationMatrix::InnervationMatrix(const NetworkProps& networkProps)
-    : mNetwork(networkProps)
+    : mNetwork(networkProps)    
+    , mCacheLimit(50000000)
     , mRandomGenerator(-1){};
 
 /**
@@ -25,7 +29,7 @@ InnervationMatrix::~InnervationMatrix()
     @return The innervation from presynaptic to postsynaptic neuron.
 */
 float
-InnervationMatrix::getValue(int preId, int postId, int selectionIndex)
+InnervationMatrix::getValue(int preId, int postId, int selectionIndex, CIS3D::Structure target)
 {
     CIS3D::SynapticSide preSide = mNetwork.neurons.getSynapticSide(preId);
     CIS3D::SynapticSide postSide = mNetwork.neurons.getSynapticSide(postId);
@@ -46,28 +50,31 @@ InnervationMatrix::getValue(int preId, int postId, int selectionIndex)
         return 0;
     }
 
-    int cellTypeId = mNetwork.neurons.getCellTypeId(postId);
-    int regionId = mNetwork.neurons.getRegionId(postId);
-    const QString cellTypeName = mNetwork.cellTypes.getName(cellTypeId);
-    const QString regionName = mNetwork.regions.getName(regionId);
-    const QDir innervationDir = CIS3D::getInnervationDataDir(mNetwork.dataRoot);
-    const QString innervationFile =
-        CIS3D::getInnervationPostFileName(innervationDir, regionName, cellTypeName);
+    return getValue(preId, postId, target);
+}
 
-    SparseVectorSet* vectorSet;
-    if (mCache.contains(innervationFile))
-    {
-        vectorSet = mCache.get(innervationFile);
-    }
-    else
-    {
-        vectorSet = SparseVectorSet::load(innervationFile);
-        mCache.add(innervationFile, vectorSet);
-    }
-
+float
+InnervationMatrix::getValue(int preId, int postId, CIS3D::Structure target)
+{
     const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
-    float innervation = vectorSet->getValue(postId, mappedPreId);
-    return innervation;
+    nniKey k(mappedPreId, postId, target);
+    auto it = mCache.find(k);
+    if (it == mCache.end())
+    {
+        loadFile(mappedPreId, target);
+        it = mCache.find(k);
+    }
+    return it->second;
+
+}
+
+void
+InnervationMatrix::setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC)
+{
+    mOriginalPreIdsA = preIdsA;
+    mOriginalPreIdsB = preIdsB;
+    mOriginalPreIdsC = preIdsC;
+    mRandomGenerator = RandomGenerator(-1);
 }
 
 int
@@ -88,10 +95,36 @@ InnervationMatrix::getRandomDuplicatedPreId(int selectionIndex)
 }
 
 void
-InnervationMatrix::setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC)
+InnervationMatrix::loadFile(int preId, CIS3D::Structure target)
 {
-    mOriginalPreIdsA = preIdsA;
-    mOriginalPreIdsB = preIdsB;
-    mOriginalPreIdsC = preIdsC;
-    mRandomGenerator = RandomGenerator(-1);
+    if (mCache.size() > mCacheLimit)
+    {
+        mCache.clear();
+    }
+
+    QString filename = QString("preNeuronID_%1_sum").arg(preId);
+    QString folder = Util::getInnervationFolderName(target);
+    QString filepath = QDir::cleanPath(mNetwork.dataRoot + QDir::separator() + folder + QDir::separator() + filename);
+
+    QFile innervationFile(filepath);
+    if (innervationFile.open(QIODevice::ReadOnly))
+    {
+        QTextStream in(&innervationFile);
+        while (!in.atEnd())
+        {
+            QString line = in.readLine();
+            line = line.trimmed();
+            QStringList parts = line.split(" ");
+            int postId = parts[0].toInt();
+            float innervation = parts[1].toFloat();
+            nniKey k(preId, postId, target);
+            mCache[k] = innervation;
+        }
+    }
+    else
+    {
+        const QString msg =
+            QString("Error reading innervation file. Could not open file %1").arg(filepath);
+        throw std::runtime_error(qPrintable(msg));
+    }
 }

@@ -210,6 +210,9 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         QString motifASelString = jsonData["motifASelectionFilter"].toString();
         QString motifBSelString = jsonData["motifBSelectionFilter"].toString();
         QString motifCSelString = jsonData["motifCSelectionFilter"].toString();
+        CIS3D::Structure postTargetA = Util::getPostsynapticTarget(motifASelString);
+        CIS3D::Structure postTargetB = Util::getPostsynapticTarget(motifBSelString);
+        CIS3D::Structure postTargetC = Util::getPostsynapticTarget(motifCSelString);
 
         // EXTRACT SLICE PARAMETERS
         const double tissueLowMotifA = jsonData["tissueLowMotifA"].toDouble();
@@ -253,7 +256,12 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         }
         selection.printMotifStats();
 
-        TripletStatistic statistic(mNetwork, 50, 200, calculator);
+        selection.setPostTarget(postTargetA, postTargetB, postTargetC);
+
+        TripletStatistic statistic(mNetwork,
+                                   50,
+                                   200,
+                                   calculator);
 
         if (isSlice)
         {

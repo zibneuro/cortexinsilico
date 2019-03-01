@@ -156,6 +156,10 @@ public:
 
     static IdList filterPreOrBoth(const NetworkProps& networkProps, IdList ids);
 
+    void setPostTarget(CIS3D::Structure selectionA, CIS3D::Structure selectionB, CIS3D::Structure selectionC = CIS3D::DEND);
+
+    CIS3D::Structure getPostTarget(int selectionIndex) const;
+
 private:
     static bool inSliceBand(double somaX, double min, double max);
 
@@ -177,6 +181,7 @@ private:
     std::map<int, CIS3D::SliceBand> mMotifCBand;
     std::map<int, CIS3D::SliceBand> mPresynapticBand;
     std::map<int, CIS3D::SliceBand> mPostsynapticBand;
+    std::vector<CIS3D::Structure> mPostTarget;
 };
 
 #endif

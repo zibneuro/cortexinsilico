@@ -81,26 +81,8 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
     const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(postIds, mNetwork);
     for (IdsPerCellTypeRegion::ConstIterator it = idsPerCellTypeRegion.constBegin(); it != idsPerCellTypeRegion.constEnd(); ++it)
     {
-        const CellTypeRegion cellTypeRegion = it.key();
-        const QString cellTypeName = mNetwork.cellTypes.getName(cellTypeRegion.first);
-        const QString regionName = mNetwork.regions.getName(cellTypeRegion.second);
-        const QDir innervationDir = CIS3D::getInnervationDataDir(mNetwork.dataRoot);
-        const QString innervationFile = CIS3D::getInnervationPostFileName(innervationDir, regionName, cellTypeName);
 
-        const IdList& ids = it.value();
-        SparseVectorSet* vectorSet;
-        bool fromCache;
-        if (mCache.contains(innervationFile))
-        {
-            vectorSet = mCache.get(innervationFile);
-            fromCache = true;
-        }
-        else
-        {
-            vectorSet = SparseVectorSet::load(innervationFile);
-            fromCache = false;
-            qDebug() << "[*] Loading" << innervationFile;
-        }
+        const IdList& ids = it.value();        
 
         const IdList preIdListA = selection.MotifA();
         const IdList preIdListB = selection.MotifB();
@@ -117,14 +99,14 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
 
             Statistics perPostAC;
             Statistics perPostBC;
-
+            
             for (int pre = 0; pre < preIdListA.size(); ++pre)
             {
                 const int preId = preIdListA[pre];
                 if (selection.getMotifABand(preId) == postSliceBand)
                 {
                     const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
-                    const float innervation = vectorSet->getValue(postId, mappedPreId);
+                    const float innervation = mInnervationMatrix->getValue(mappedPreId, postId, selection.getPostTarget(2));
                     perPostAC.addSample(double(innervation));
                 }
             }
@@ -134,7 +116,7 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
                 if (selection.getMotifBBand(preId) == postSliceBand)
                 {
                     const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
-                    const float innervation = vectorSet->getValue(postId, mappedPreId);
+                    const float innervation = mInnervationMatrix->getValue(mappedPreId, postId, selection.getPostTarget(2));
                     perPostBC.addSample(double(innervation));
                 }
             }
@@ -150,11 +132,6 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
             {
                 reportUpdate();
             }
-        }
-
-        if (!fromCache)
-        {
-            delete vectorSet;
         }
     }
     reportComplete();

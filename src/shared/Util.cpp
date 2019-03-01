@@ -725,3 +725,54 @@ Util::getPostsynapticTarget(QString selectionString)
     }
     return CIS3D::DEND;
 }
+
+QString
+Util::getPostFolderName(CIS3D::Structure target)
+{
+    if (target == CIS3D::APICAL)
+    {
+        return "features_postApicalExc";
+    }
+    else if (target == CIS3D::BASAL)
+    {
+        return "features_postBasalExc";
+    }
+    else
+    {
+        return "features_postExc";
+    }
+}
+
+QString
+Util::getIndexFileName(CIS3D::Structure target)
+{
+    if (target == CIS3D::APICAL)
+    {
+        return "voxel_indexApical";
+    }
+    else if (target == CIS3D::BASAL)
+    {
+        return "voxel_indexBasal";
+    }
+    else
+    {
+        return "voxel_indexAll";
+    }
+}
+
+QString
+Util::getInnervationFolderName(CIS3D::Structure target)
+{
+    if (target == CIS3D::APICAL)
+    {
+        return "innervationApical";
+    }
+    else if (target == CIS3D::BASAL)
+    {
+        return "innervationBasal";
+    }
+    else
+    {
+        return "innervation";
+    }
+}
