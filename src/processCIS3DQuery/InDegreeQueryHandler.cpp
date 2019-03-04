@@ -198,7 +198,8 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mCurrentJsonData = jsonData;
         reply->deleteLater();
 
-        const QString datasetShortName = jsonData["network"].toString();
+        int samplingFactor = -1;
+        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
         mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
         qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
         mNetwork.setDataRoot(mDataRoot);
@@ -236,6 +237,7 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         qDebug() << "[*] Determining In-Degree selection:" << motifASelString << motifBSelString
                  << motifCSelString;
         selection.setInDegreeSelection(motifASelString, motifBSelString, motifCSelString, mNetwork);
+        selection.sampleDownFactor(samplingFactor, 50000);
         selection.setPostTarget(postTargetA, postTargetB, postTargetC);
 
         if (isSlice)

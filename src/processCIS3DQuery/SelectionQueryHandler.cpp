@@ -18,6 +18,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
+#include "RandomGenerator.h"
 
 QJsonObject
 createJsonResult(const IdsPerCellTypeRegion& idsPerCellTypeRegion,
@@ -255,7 +256,16 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             QString selectionString = jsonResponse.object().value("data").toString();
             qDebug() << "    Starting computation:" << mQueryId << selectionString;
 
-            const QString datasetShortName = jsonResponse.object().value("network").toString();
+            QString datasetShortName = jsonResponse.object().value("network").toString();
+            int samplingFactor = jsonResponse.object().value("samplingFactor").toInt();
+            if (datasetShortName == "RBCk")
+            {
+                datasetShortName = "RBC";
+            }
+            else
+            {
+                samplingFactor = -1;
+            }
 
             // EXTRACT SLICE PARAMETERS
             const double tissueLow = jsonResponse.object().value("tissueLow").toDouble();
@@ -304,6 +314,8 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                 CIS3D::SliceBand band = mode == "twoSided" ? CIS3D::SliceBand::BOTH : CIS3D::SliceBand::FIRST;
                 neurons = NeuronSelection::filterTissueDepth(mNetwork, neurons, sliceRef, tissueLow, tissueHigh, band);
             }
+            RandomGenerator generator(50000);
+            neurons = NeuronSelection::getDownsampledFactor(neurons, samplingFactor, generator);
             qDebug() << "    Start sorting " << neurons.size() << " neurons.";
 
             const QString key = QString("neuronselection_%1.json.zip").arg(mQueryId);

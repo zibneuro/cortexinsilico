@@ -154,18 +154,22 @@ public:
 
     void sampleDown(int maxSize, int seed);
 
+    void sampleDownFactor(int samplingFactor, int seed);
+
     static IdList filterPreOrBoth(const NetworkProps& networkProps, IdList ids);
 
     void setPostTarget(CIS3D::Structure selectionA, CIS3D::Structure selectionB, CIS3D::Structure selectionC = CIS3D::DEND);
 
     CIS3D::Structure getPostTarget(int selectionIndex) const;
 
+    static IdList getDownsampledFactor(IdList& original, int factor, RandomGenerator& randomGenerator);    
+
 private:
     static bool inSliceBand(double somaX, double min, double max);
 
     static void inSliceRange(double somaX, double sliceRef, double low, double high, bool& first, bool& second);
 
-    IdList getDownsampled(IdList& original, int maxSize, RandomGenerator& randomGenerator);
+    IdList getDownsampled(IdList& original, int maxSize, RandomGenerator& randomGenerator);      
 
     IdList mPresynaptic;
     IdList mPostsynaptic;

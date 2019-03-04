@@ -201,9 +201,10 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mCurrentJsonData = jsonData;
         reply->deleteLater();
 
-        const QString datasetShortName = jsonData["network"].toString();
+        int samplingFactor = -1;
+        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
         mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
-        qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
+        qDebug() << "    Loading network data motif:" << datasetShortName << "Path: " << mDataRoot << samplingFactor;
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForQuery();
 
@@ -255,7 +256,7 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                                          tissueModeMotifC);
         }
         selection.printMotifStats();
-
+        selection.sampleDownFactor(samplingFactor, 50000);
         selection.setPostTarget(postTargetA, postTargetB, postTargetC);
 
         TripletStatistic statistic(mNetwork,

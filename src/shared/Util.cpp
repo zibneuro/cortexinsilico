@@ -776,3 +776,16 @@ Util::getInnervationFolderName(CIS3D::Structure target)
         return "innervation";
     }
 }
+
+QString
+Util::getNetwork(QJsonObject& spec, int& samplingFactor)
+{
+    QString name = spec["network"].toString();
+    if(name == "RBCk"){
+        name = "RBC";
+        samplingFactor = spec["samplingFactor"].toInt();
+    } else {
+        samplingFactor = -1;
+    }
+    return name;
+}

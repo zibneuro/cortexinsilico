@@ -510,6 +510,17 @@ NeuronSelection::sampleDown(int maxSize, int seed)
     mMotifC = getDownsampled(mMotifC, maxSize, randomGenerator);
 }
 
+void
+NeuronSelection::sampleDownFactor(int samplingFactor, int seed)
+{
+    RandomGenerator randomGenerator(seed);
+    mPresynaptic = getDownsampledFactor(mPresynaptic, samplingFactor, randomGenerator);
+    mPostsynaptic = getDownsampledFactor(mPostsynaptic, samplingFactor, randomGenerator);
+    mMotifA = getDownsampledFactor(mMotifA, samplingFactor, randomGenerator);
+    mMotifB = getDownsampledFactor(mMotifB, samplingFactor, randomGenerator);
+    mMotifC = getDownsampledFactor(mMotifC, samplingFactor, randomGenerator);
+}
+
 IdList
 NeuronSelection::filterPreOrBoth(const NetworkProps& networkProps, IdList ids)
 {
@@ -571,6 +582,22 @@ NeuronSelection::getDownsampled(IdList& original, int maxSize, RandomGenerator& 
         }
         return pruned;
     }
+}
+
+IdList
+NeuronSelection::getDownsampledFactor(IdList& original, int factor, RandomGenerator& randomGenerator)
+{    
+    if(factor == -1){
+        return original;
+    }
+    std::sort(original.begin(),original.end());
+    randomGenerator.shuffleList(original);
+    IdList pruned;
+    for (int i = 0; i < original.size(); i +=factor)
+    {
+        pruned.append(original[i]);
+    }
+    return pruned;
 }
 
 bool

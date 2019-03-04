@@ -278,7 +278,8 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
         qDebug() << "[*] Voxel query: " << mode << voxelOrigin[0] << voxelOrigin[1] << voxelOrigin[2] << voxelDimensions[0] << voxelDimensions[1] << voxelDimensions[2];
 
-        const QString datasetShortName = jsonData["network"].toString();
+        int samplingFactor = -1;
+        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
         mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);        
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForSynapseComputation();
@@ -349,6 +350,8 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         QString metaFolder = QDir::cleanPath(mDataRoot + QDir::separator() +  "features_meta");
         QString voxelPosFile = QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos.dat");
         QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() + Util::getIndexFileName(postTarget));  
+
+        selection.sampleDownFactor(samplingFactor, 50000);
 
         IdList preIds = selection.Presynaptic();
         IdList postIds = selection.Postsynaptic();

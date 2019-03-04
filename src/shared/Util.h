@@ -123,6 +123,8 @@ namespace Util
 
     QString getInnervationFolderName(CIS3D::Structure target);
 
+    QString getNetwork(QJsonObject& spec, int& samplingFactor);
+
 } // namespace Util
 
 #endif // UTIL_H

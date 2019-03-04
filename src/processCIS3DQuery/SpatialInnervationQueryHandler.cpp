@@ -114,7 +114,8 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mCurrentJsonData = jsonData;
         reply->deleteLater();
 
-        const QString datasetShortName = jsonData["network"].toString();
+        int samplingFactor = -1;
+        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
         mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
         qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
         mNetwork.setDataRoot(mDataRoot);
@@ -174,6 +175,8 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         {
             selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
         }
+
+        selection.sampleDownFactor(samplingFactor, 50000);
 
         IdList preIds = selection.Presynaptic();
         IdList postIds = selection.Postsynaptic();

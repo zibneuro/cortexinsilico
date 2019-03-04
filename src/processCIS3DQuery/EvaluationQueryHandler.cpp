@@ -195,9 +195,10 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mCurrentJsonData = jsonData;
         reply->deleteLater();
 
-        const QString datasetShortName = jsonData["network"].toString();
+        int samplingFactor = -1;
+        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
         mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
-        qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
+        qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot << "Sampling factor" << samplingFactor;
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForQuery();
 
@@ -246,7 +247,8 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
         NeuronSelection selection(preNeurons, postNeurons);
         selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
-        selection.setPostTarget(postTargetA, postTargetB);
+        selection.sampleDownFactor(samplingFactor, 50000);
+        selection.setPostTarget(postTargetA, postTargetB);        
         innervation.calculate(selection);
     }
     else
