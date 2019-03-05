@@ -113,7 +113,7 @@ namespace Util
 
     void getMinMedMax(std::vector<float> in, float& min, float& med, float& max);
 
-    QString getAdvancedSettingsString(QJsonObject& spec);
+    QString getAdvancedSettingsString(QJsonObject& spec, bool hasSynapseDistribution = false, bool hasConnectionProbability = true);
 
     CIS3D::Structure getPostsynapticTarget(QString selectionString);
 

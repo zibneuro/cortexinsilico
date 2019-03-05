@@ -132,19 +132,19 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
         preCellsPerVoxel.write(out, "Presynaptic cells per voxel");
         postCellsPerVoxel.write(out, "Postsynaptic cells per voxel");
-        boutonsPerVoxel.write(out, "Boutons per voxel");
-        postsynapticSitesPerVoxel.write(out, "Postsynaptic sites per voxel");
+        //boutonsPerVoxel.write(out, "Boutons per voxel");
+        //postsynapticSitesPerVoxel.write(out, "Postsynaptic sites per voxel");
         synapsesPerVoxel.write(out, "Synapses per voxel");
 
         out << "\n";
         preCellsPerVoxelH.write(out, "Presynaptic cells per voxel");
         postCellsPerVoxelH.write(out, "Postsynaptic cells per voxel");
-        boutonsPerVoxelH.write(out, "Boutons per voxel");
-        postsynapticSitesPerVoxelH.write(out, "Postsynaptic sites per voxel");
+        //boutonsPerVoxelH.write(out, "Boutons per voxel");
+        //postsynapticSitesPerVoxelH.write(out, "Postsynaptic sites per voxel");
         synapsesPerVoxelH.write(out, "Synapses per voxel");
         out << "\n";
 
-        out << "Number of synapses (k) per axon/dendrite branch:\n";
+        out << "Number of synapses (k) per neuron pair:\n";
         out << "k,min,med,max\n";
         for (int i = 0; i < synapsesPerConnectionMin.size(); i++)
         {
@@ -284,7 +284,7 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForSynapseComputation();
 
-        QString advancedSettings = Util::getAdvancedSettingsString(jsonData);
+        QString advancedSettings = Util::getAdvancedSettingsString(jsonData, true, false);
         QJsonObject formulas = jsonData["formulas"].toObject();
         FormulaCalculator calculator(formulas);
         calculator.init();        

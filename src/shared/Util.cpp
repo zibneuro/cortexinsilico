@@ -667,7 +667,7 @@ Util::getMinMedMax(std::vector<float> in, float& min, float& med, float& max)
 }
 
 QString
-Util::getAdvancedSettingsString(QJsonObject& spec)
+Util::getAdvancedSettingsString(QJsonObject& spec, bool hasSynapseDistribution, bool hasConnectionProbability)
 {
     QString s = "";
     const double tissueLowPre = spec["tissueLowPre"].toDouble();
@@ -698,15 +698,21 @@ Util::getAdvancedSettingsString(QJsonObject& spec)
     bool useCustomConnectionProbabilityFormula = formulas["connectionProbabilityMode"].toString() == "formula";
     QString connectionProbabilityFormula = formulas["connectionProbabilityFormula"].toString();
 
-    s += "Synapse distribution formula," + synapseDistributionFormula + "\n";
-    s += "Connection probability formula,";
-    if (useCustomConnectionProbabilityFormula)
+    if (hasSynapseDistribution)
     {
-        s += connectionProbabilityFormula + "\n";
+        s += "Synapse distribution formula,\"" + synapseDistributionFormula + "\"\n";
     }
-    else
+    if (hasConnectionProbability)
     {
-        s += "1-P_i(0)\n";
+        s += "Connection probability formula,";
+        if (useCustomConnectionProbabilityFormula)
+        {
+            s += "\"" + connectionProbabilityFormula + "\"" + "\n";
+        }
+        else
+        {
+            s += "\"1-P_i(0)\"\n";
+        }
     }
 
     return s;
@@ -781,10 +787,13 @@ QString
 Util::getNetwork(QJsonObject& spec, int& samplingFactor)
 {
     QString name = spec["network"].toString();
-    if(name == "RBCk"){
+    if (name == "RBCk")
+    {
         name = "RBC";
         samplingFactor = spec["samplingFactor"].toInt();
-    } else {
+    }
+    else
+    {
         samplingFactor = -1;
     }
     return name;
