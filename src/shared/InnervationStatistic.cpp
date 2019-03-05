@@ -56,134 +56,81 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
 void
 InnervationStatistic::doCalculate(const NeuronSelection& selection)
 {
-    QHash<int, float> preNeuronInnervationSum;
-    QHash<int, float> preNeuronConnProbSum;
-    QHash<int, float> preNeuronInnervationSumUnique;
-    QHash<int, float> preNeuronConnProbSumUnique;
+    std::map<int, int> preIds; // unique ID, multiplicity
+    std::map<int, float> postInnervation;
 
     CIS3D::Structure postTarget = selection.getPostTarget(1);
 
+    this->numPostNeurons = selection.Postsynaptic().size();
     this->numPreNeurons = selection.Presynaptic().size();
-    this->numPreNeuronsUnique = 0;
-    for (int pre = 0; pre < selection.Presynaptic().size(); ++pre)
-    {
-        const int preId = selection.Presynaptic()[pre];
-        const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
-        preNeuronInnervationSum.insert(preId, 0.0f);
-        preNeuronConnProbSum.insert(preId, 0.0f);
+    this->mNumConnections = (long long)(this->numPreNeurons) * (long long)(this->numPostNeurons);
 
-        if (preId == mappedPreId)
+    for (int i = 0; i < selection.Presynaptic().size(); ++i)
+    {
+        const int preId = selection.Presynaptic()[i];
+        const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
+        if (preIds.find(mappedPreId) == preIds.end())
         {
-            this->numPreNeuronsUnique += 1;
-            preNeuronInnervationSumUnique.insert(mappedPreId, 0.0f);
-            preNeuronConnProbSumUnique.insert(mappedPreId, 0.0f);
+            preIds[mappedPreId] = 1;
+        }
+        else
+        {
+            preIds[mappedPreId] += 1;
         }
     }
 
-    this->mNumConnections = (long long)(this->numPreNeurons) * (long long)(selection.Postsynaptic().size());
+    for (int i = 0; i < selection.Postsynaptic().size(); ++i)
+    {
+        int postId = selection.Postsynaptic()[i];
+        postInnervation[postId] = 0;
+    }
 
-    const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(selection.Postsynaptic(), mNetwork);
-
-    for (IdsPerCellTypeRegion::ConstIterator it = idsPerCellTypeRegion.constBegin(); it != idsPerCellTypeRegion.constEnd(); ++it)
+    for (auto itPre = preIds.begin(); itPre != preIds.end(); itPre++)
     {
         if (mAborted)
         {
             return;
         }
 
-        const IdList& ids = it.value();
-      
+        float currentPreInnervation = 0;
 
-        const IdList preIdList = selection.Presynaptic();
-
-        const QTime processStart = QTime::currentTime();
-        for (int post = 0; post < ids.size(); ++post)
+        for (int j = 0; j < selection.Postsynaptic().size(); ++j)
         {
-            const int postId = ids[post];
+            const int postId = selection.Postsynaptic()[j];
 
-            float postNeuronInnervationSum = 0.0f;
-            float postNeuronConnProbSum = 0.0f;
-            float postNeuronInnervationSumUnique = 0.0f;
-            float postNeuronConnProbSumUnique = 0.0f;
-
-            for (int pre = 0; pre < preIdList.size(); ++pre)
+            if (selection.getPresynapticBand(itPre->first) != selection.getPostsynapticBand(postId))
             {
-                const int preId = preIdList[pre];
+                continue;
+            }
 
-                if (selection.getPresynapticBand(preId) != selection.getPostsynapticBand(postId))
-                {
-                    continue;
-                }
+            const float innervation = mInnervationMatrix->getValue(itPre->first, postId, postTarget);
+            currentPreInnervation += innervation;
+            float connProb = mCalculator.calculateConnectionProbability(innervation);
 
-                const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
-                const float innervation = mInnervationMatrix->getValue(mappedPreId, postId, postTarget);
-
-                float connProb = mCalculator.calculateConnectionProbability(innervation);
-
+            for (int k = 0; k < itPre->second; k++)
+            {
                 this->innervationHisto.addValue(innervation);
                 this->connProbHisto.addValue(connProb);
-
                 this->innervation.addSample(innervation);
                 this->connProb.addSample(connProb);
-
-                preNeuronInnervationSum[preId] += innervation;
-                preNeuronConnProbSum[preId] += connProb;
-                postNeuronInnervationSum += innervation;
-                postNeuronConnProbSum += connProb;
-
-                if (preId == mappedPreId)
-                {
-                    this->innervationUnique.addSample(innervation);
-                    this->connProbUnique.addSample(connProb);
-
-                    preNeuronInnervationSumUnique[mappedPreId] += innervation;
-                    preNeuronConnProbSumUnique[mappedPreId] += connProb;
-                    postNeuronInnervationSumUnique += innervation;
-                    postNeuronConnProbSumUnique += connProb;
-                }
             }
-            this->numPostNeurons += 1;
 
-            this->innervationPerPost.addSample(postNeuronInnervationSum);
-            this->convergence.addSample(postNeuronConnProbSum / this->numPreNeurons);
-        }
-        const QTime processEnd = QTime::currentTime();
+            postInnervation[postId] += innervation;
+        }        
 
-        const QTime statisticsStart = QTime::currentTime();
-        this->innervationPerPre = Statistics();
-        this->innervationPerPreUnique = Statistics();
-        this->divergence = Statistics();
-        this->divergenceUnique = Statistics();
-
-        for (QHash<int, float>::ConstIterator it = preNeuronInnervationSum.constBegin(); it != preNeuronInnervationSum.constEnd(); ++it)
+        for (int k = 0; k < itPre->second; k++)
         {
-            this->innervationPerPre.addSample(it.value());
-        }
-        for (QHash<int, float>::ConstIterator it = preNeuronInnervationSumUnique.constBegin(); it != preNeuronInnervationSumUnique.constEnd(); ++it)
-        {
-            this->innervationPerPreUnique.addSample(it.value());
-        }
-        for (QHash<int, float>::ConstIterator it = preNeuronConnProbSum.constBegin(); it != preNeuronConnProbSum.constEnd(); ++it)
-        {
-            this->divergence.addSample(it.value() / this->numPostNeurons);
-        }
-        for (QHash<int, float>::ConstIterator it = preNeuronConnProbSumUnique.constBegin(); it != preNeuronConnProbSumUnique.constEnd(); ++it)
-        {
-            this->divergenceUnique.addSample(it.value() / this->numPostNeurons);
+            this->innervationPerPre.addSample(currentPreInnervation);
         }
 
-        mConnectionsDone += (long long)(ids.size()) * (long long)(selection.Presynaptic().size());
-        const QTime statisticsEnd = QTime::currentTime();
+        this->innervationPerPost = Statistics();
+        for (auto it = postInnervation.begin(); it != postInnervation.end(); it++)
+        {
+            this->innervationPerPost.addSample(it->second);
+        }
 
-        const QTime reportStart = QTime::currentTime();
+        mConnectionsDone += (long long)(selection.Postsynaptic().size()) * (long long)(itPre->second);
         reportUpdate();
-        const QTime reportEnd = QTime::currentTime();
-
-        qDebug() << "Time process:   " << processStart.secsTo(processEnd)
-                 << "     ("
-                 << "Pre:" << preIdList.size() << "Post:" << ids.size() << ")";
-        qDebug() << "Time statistics:" << statisticsStart.secsTo(statisticsEnd);
-        qDebug() << "Time report:    " << reportStart.secsTo(reportEnd);
     }
     reportComplete();
 }
