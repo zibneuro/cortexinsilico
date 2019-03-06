@@ -20,7 +20,6 @@ public:
     */
     TripletStatistic(const NetworkProps& networkProps,
                      int sampleSize,
-                     int iterations,                     
                      FormulaCalculator& calculator);
 
     /**
@@ -162,6 +161,8 @@ private:
     QList<Statistics> mMotifExpectedProbabilities;
     std::vector<std::vector<Statistics> > mConvergences;
     int mSampleSize;
+    int mOverallSampleSize;
+    int mOverallCompletedSamples;
     int mIterations;
     std::vector<CIS3D::Structure> mPostTargets;
 };

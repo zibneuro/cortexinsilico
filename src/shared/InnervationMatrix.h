@@ -4,6 +4,23 @@
 #include "CIS3DNetworkProps.h"
 #include "RandomGenerator.h"
 #include "CIS3DConstantsHelpers.h"
+#include <set>
+#include <map>
+
+class CacheEntry
+{
+public:
+    CacheEntry(int preId);
+    void load(QString filePath);
+    float getValue(int postId);
+    int getPreId();
+    long getHits() const;
+
+private:
+    int mPreId;
+    std::map<int, float> mInnervation;
+    long mHits;
+};
 
 /**
     Represents the innervation matrix. Provides acces to innervation values,
@@ -11,7 +28,6 @@
 */
 class InnervationMatrix
 {
-    typedef std::tuple<int, int, CIS3D::Structure> nniKey;
 
 public:
     /**
@@ -34,10 +50,14 @@ public:
     float getValue(int preID, int postID, int selectionIndex, CIS3D::Structure target);
     float getValue(int preID, int postID, CIS3D::Structure target);
     void setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC);
+    void clearCache(std::map<int, CacheEntry*>& cache);
+    CacheEntry* getEntry(int preId, CIS3D::Structure target);
+    CacheEntry* getOrLoad(std::map<int, CacheEntry*>& cache, int preId, CIS3D::Structure target);
+    void pruneCache(std::map<int, CacheEntry*>& cache);
 
 private:
     int getRandomDuplicatedPreId(int selectionIndex);
-    void loadFile(int preId, CIS3D::Structure target);
+    //void loadFile(int preId, CIS3D::Structure target);
 
     const NetworkProps& mNetwork;
     unsigned int mCacheLimit;
@@ -45,7 +65,10 @@ private:
     QList<int> mOriginalPreIdsB;
     QList<int> mOriginalPreIdsC;
     RandomGenerator mRandomGenerator;
-    std::map<nniKey, float> mCache;
+    std::map<int, CacheEntry*> mInnervationAll;
+    std::map<int, CacheEntry*> mInnervationBasal;
+    std::map<int, CacheEntry*> mInnervationApical;
+    std::set<int> mPreIds;
 };
 
 #endif // INNERVATIONMATRIX_H

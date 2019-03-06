@@ -233,6 +233,8 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         FormulaCalculator calculator(formulas);
         calculator.init();
 
+        int numberOfSamples = jsonData["numberSamples"].toInt();
+
         mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
 
         NeuronSelection selection;
@@ -260,8 +262,7 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         selection.setPostTarget(postTargetA, postTargetB, postTargetC);
 
         TripletStatistic statistic(mNetwork,
-                                   50,
-                                   200,
+                                   numberOfSamples,
                                    calculator);
 
         if (isSlice)

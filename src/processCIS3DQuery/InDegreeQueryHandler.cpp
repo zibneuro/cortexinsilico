@@ -231,6 +231,8 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         FormulaCalculator calculator(formulas);
         calculator.init();
 
+        int numberOfSamples = jsonData["numberSamples"].toInt();
+
         mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
 
         NeuronSelection selection;
@@ -256,7 +258,7 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         }
         //selection.printMotifStats();
 
-        InDegreeStatistic statistic(mNetwork, 1000, calculator);
+        InDegreeStatistic statistic(mNetwork, numberOfSamples, calculator);
         connect(&statistic, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&statistic, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
         statistic.calculate(selection);

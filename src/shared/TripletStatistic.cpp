@@ -26,13 +26,15 @@
 */
 TripletStatistic::TripletStatistic(const NetworkProps& networkProps,
                                    int sampleSize,
-                                   int iterations,
                                    FormulaCalculator& calculator)
-    : NetworkStatistic(networkProps, calculator)
-    , mSampleSize(sampleSize)
-    , mIterations(iterations)
+    : NetworkStatistic(networkProps, calculator)    
 {
+    mSampleSize = 30;
+    mOverallSampleSize = sampleSize;
+    mOverallCompletedSamples = 0;
+    mIterations = (int)std::ceil((double)sampleSize / (double)mSampleSize); 
     this->mNumConnections = (long long)mIterations;
+    mConnectionsDone = 0;
 }
 
 /**
@@ -70,7 +72,7 @@ TripletStatistic::drawTriplets(const NeuronSelection& selection)
 {
     QList<CellTriplet> triplets;
 
-    qDebug() << "[*] Selecting " << mSampleSize << " random neuron triplets.";
+    //qDebug() << "[*] Selecting " << mSampleSize << " random neuron triplets.";
 
     std::srand(std::time(NULL));
 
@@ -138,7 +140,7 @@ TripletStatistic::drawTriplets(const NeuronSelection& selection)
 void
 TripletStatistic::setInnervation(QList<CellTriplet>& triplets)
 {
-    qDebug() << "[*] Setting innervation values.";
+    //qDebug() << "[*] Setting innervation values.";
     for (int i = 0; i < triplets.size(); i++)
     {
         triplets[i].setInnervation(mInnervationMatrix, mPostTargets);
@@ -185,38 +187,44 @@ TripletStatistic::doCalculate(const NeuronSelection& selection)
     mPostTargets.push_back(selection.getPostTarget(1));
     mPostTargets.push_back(selection.getPostTarget(2));
 
-    qDebug() << "[*] Initializing motif combinations.";
+    //qDebug() << "[*] Initializing motif combinations.";
     MotifCombinations combinations;
     std::map<unsigned int, std::list<TripletMotif*> > motifs =
         combinations.initializeNonRedundantTripletMotifs();
-
-    for (int i = 0; i < mIterations; i++)
-    {
+    
+    while (mOverallCompletedSamples < mOverallSampleSize && mConnectionsDone < mIterations)
+    {        
         if (mAborted)
         {
             return;
         }
-        double t0 = std::clock();
+
+        if(mOverallCompletedSamples + mSampleSize > mOverallSampleSize){
+            mSampleSize = mOverallSampleSize - mOverallCompletedSamples;
+        }
+
+        //double t0 = std::clock();
         QList<CellTriplet> triplets = drawTriplets(selection);
-        double t1 = std::clock();
+        mOverallCompletedSamples += triplets.size();
+        //double t1 = std::clock();
         setInnervation(triplets);
-        double t2 = std::clock();
+        //double t2 = std::clock();
         computeProbabilities(triplets, motifs);
-        double t3 = std::clock();
+        //double t3 = std::clock();
         calculateAverageConvergence(selection);
-        double t4 = std::clock();
+        //double t4 = std::clock();
         //printAverageConvergence();
         computeExpectedProbabilities(motifs);
-        double t5 = std::clock();
+        //double t5 = std::clock();
 
-        double dt1 = (t1 - t0) / (double)CLOCKS_PER_SEC;
-        double dt2 = (t2 - t1) / (double)CLOCKS_PER_SEC;
-        double dt3 = (t3 - t2) / (double)CLOCKS_PER_SEC;
-        double dt4 = (t4 - t3) / (double)CLOCKS_PER_SEC;
-        double dt5 = (t5 - t4) / (double)CLOCKS_PER_SEC;
-        qDebug() << "MOTIF TIME" << dt1 << dt2 << dt3 << dt4 << dt5;
+        //double dt1 = (t1 - t0) / (double)CLOCKS_PER_SEC;
+        //double dt2 = (t2 - t1) / (double)CLOCKS_PER_SEC;
+        //double dt3 = (t3 - t2) / (double)CLOCKS_PER_SEC;
+        //double dt4 = (t4 - t3) / (double)CLOCKS_PER_SEC;
+        //double dt5 = (t5 - t4) / (double)CLOCKS_PER_SEC;
+        //qDebug() << "MOTIF TIME" << dt1 << dt2 << dt3 << dt4 << dt5;
 
-        mConnectionsDone = i + 1;
+        mConnectionsDone += 1;
         reportUpdate();
     }
 
@@ -427,7 +435,7 @@ TripletStatistic::deleteMotifCombinations(
 void
 TripletStatistic::doCreateJson(QJsonObject& obj) const
 {
-    obj["sampleSize"] = mSampleSize * mConnectionsDone;
+    obj["sampleSize"] = mOverallCompletedSamples;
 
     for (int i = 0; i < 16; i++)
     {

@@ -180,7 +180,7 @@ InDegreeStatistic::calculateMean(std::vector<double>& values)
 void
 InDegreeStatistic::doCreateJson(QJsonObject& obj) const
 {
-    obj["sampleSize"] = mSampleSize;
+    obj.insert("sampleSize",  mSampleSize);
     obj.insert("innervationStatisticsAC", Util::createJsonStatistic(mStatisticsAC));
     obj.insert("innervationStatisticsBC", Util::createJsonStatistic(mStatisticsBC));
     obj.insert("innervationValuesAC", Util::createJsonArray(mValuesAC));
@@ -191,7 +191,7 @@ InDegreeStatistic::doCreateJson(QJsonObject& obj) const
 void
 InDegreeStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
 {
-    out << "Number of samples (from selection C):" << sep << mSampleSize
+    out << "Number of postsynaptic neuron samples (from selection C):" << sep << mSampleSize
         << "\n\n";
 
     out << "Innervation A->C" << sep << mStatisticsAC.getMean() << sep << "StDev" << sep
