@@ -137,7 +137,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         QString tissueModePost = jsonData["tissueModePost"].toString();
         const double sliceRef = jsonData["sliceRef"].toDouble();
         const bool isSlice = sliceRef != -9999;
-        qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
+        //qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
 
         QString preSelString = jsonData["presynapticSelectionFilter"].toString();
         QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());

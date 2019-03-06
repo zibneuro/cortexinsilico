@@ -373,34 +373,32 @@ Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
     {
         const QString value = insideS1Obj["value"].toString();
         QList<int> filteredRegionIds;
+        
         const int S1id = network.regions.getId("S1");
+        QList<int> allRegions = network.regions.getAllRegionIds();
+        QList<int> insideRegions;
+        for(int i = 0; i<allRegions.size(); i++){
+            int regionId = allRegions[i];
+            if(network.regions.isInSubtree(regionId, S1id)){
+                insideRegions.append(regionId);
+            } 
+        }
+
         if (value == "Yes")
         {
-            for (int r = 0; r < filter.regionIds.size(); ++r)
-            {
-                const int regionId = filter.regionIds.at(r);
-                if (network.regions.isInSubtree(regionId, S1id))
-                {
-                    filteredRegionIds.append(regionId);
-                }
-            }
+            filteredRegionIds = filterListKeeping(insideRegions, filter.regionIds);
         }
         else if (value == "No")
         {
-            for (int r = 0; r < filter.regionIds.size(); ++r)
-            {
-                const int regionId = filter.regionIds.at(r);
-                if (!network.regions.isInSubtree(regionId, S1id))
-                {
-                    filteredRegionIds.append(regionId);
-                }
-            }
+            filteredRegionIds = filterListRemoving(insideRegions, filter.regionIds);
         }
         else
         {
-            const QString msg =
-                QString("[-] Invalid selection filter value (Inside S1): %1").arg(value);
+            const QString msg = "Invalid S1 predicate";
             std::runtime_error(qPrintable(msg));
+        }
+        if(filteredRegionIds.size() == 0){
+            filteredRegionIds.append(network.regions.getId("Brain"));
         }
         filter.regionIds = filteredRegionIds;
     }

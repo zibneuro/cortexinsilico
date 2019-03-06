@@ -557,9 +557,10 @@ NeuronSelection::filterUniquePre(const NetworkProps& networkProps)
     for (int i = 0; i < mPresynaptic.size(); i++)
     {
         int id = mPresynaptic[i];
-        if (id == networkProps.axonRedundancyMap.getNeuronIdToUse(id))
+        int mappedId = networkProps.axonRedundancyMap.getNeuronIdToUse(id);
+        if(!pruned.contains(mappedId))
         {
-            pruned.append(id);
+            pruned.append(mappedId);
         }
     }
     mPresynaptic = pruned;

@@ -113,9 +113,8 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
                 this->connProbHisto.addValue(connProb);
                 this->innervation.addSample(innervation);
                 this->connProb.addSample(connProb);
-            }
-
-            postInnervation[postId] += innervation;
+                postInnervation[postId] += innervation;
+            }            
         }        
 
         for (int k = 0; k < itPre->second; k++)

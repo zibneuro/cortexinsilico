@@ -97,7 +97,14 @@ Statistics::getMaximum() const
 double
 Statistics::getStandardDeviation() const
 {
-    return sqrt(getVariance());
+    if (mMinimum == mMaximum)
+    {
+        return 0;
+    }
+    else
+    {
+        return sqrt(getVariance());
+    }
 }
 
 /**
