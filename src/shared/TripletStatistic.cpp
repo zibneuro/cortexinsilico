@@ -27,12 +27,12 @@
 TripletStatistic::TripletStatistic(const NetworkProps& networkProps,
                                    int sampleSize,
                                    FormulaCalculator& calculator)
-    : NetworkStatistic(networkProps, calculator)    
+    : NetworkStatistic(networkProps, calculator)
 {
     mSampleSize = 30;
     mOverallSampleSize = sampleSize;
     mOverallCompletedSamples = 0;
-    mIterations = (int)std::ceil((double)sampleSize / (double)mSampleSize); 
+    mIterations = (int)std::ceil((double)sampleSize / (double)mSampleSize);
     this->mNumConnections = (long long)mIterations;
     mConnectionsDone = 0;
 }
@@ -191,15 +191,16 @@ TripletStatistic::doCalculate(const NeuronSelection& selection)
     MotifCombinations combinations;
     std::map<unsigned int, std::list<TripletMotif*> > motifs =
         combinations.initializeNonRedundantTripletMotifs();
-    
+
     while (mOverallCompletedSamples < mOverallSampleSize && mConnectionsDone < mIterations)
-    {        
+    {
         if (mAborted)
         {
             return;
         }
 
-        if(mOverallCompletedSamples + mSampleSize > mOverallSampleSize){
+        if (mOverallCompletedSamples + mSampleSize > mOverallSampleSize)
+        {
             mSampleSize = mOverallSampleSize - mOverallCompletedSamples;
         }
 
@@ -456,14 +457,33 @@ TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
 {
     out << "Number of triplet samples:" << sep << mSampleSize * mConnectionsDone << "\n\n";
 
-    for (int i = 0; i < mMotifProbabilities.size(); i++)
+    std::vector<int> permutation; // [1 3 5 6 4 7 2 8 10 11 12 13 9 14 15 16]
+    permutation.push_back(1);
+    permutation.push_back(3);
+    permutation.push_back(5);
+    permutation.push_back(6);
+    permutation.push_back(4);
+    permutation.push_back(7);
+    permutation.push_back(2);
+    permutation.push_back(8);
+    permutation.push_back(10);
+    permutation.push_back(11);
+    permutation.push_back(12);
+    permutation.push_back(13);
+    permutation.push_back(9);
+    permutation.push_back(14);
+    permutation.push_back(15);
+    permutation.push_back(16);
+
+    for (int i = 0; i < mMotifProbabilities.size() - 1; i++)
     {
+        int dataIndex = permutation[i] - 1;
         out << QString("Motif %1").arg(i + 1) << sep << "Probability" << sep
-            << mMotifProbabilities[i].getMean() << sep << "StDev" << sep
-            << mMotifProbabilities[i].getStandardDeviation() << sep << "Min" << sep
-            << mMotifProbabilities[i].getMinimum() << sep << "Max" << sep
-            << mMotifProbabilities[i].getMaximum() << sep << "Motif deviation" << sep
-            << getDeviation(i) << "\n";
+            << mMotifProbabilities[dataIndex].getMean() << sep << "StDev" << sep
+            << mMotifProbabilities[dataIndex].getStandardDeviation() << sep << "Min" << sep
+            << mMotifProbabilities[dataIndex].getMinimum() << sep << "Max" << sep
+            << mMotifProbabilities[dataIndex].getMaximum() << sep << "Motif deviation" << sep
+            << getDeviation(dataIndex) << "\n";
     }
 }
 
