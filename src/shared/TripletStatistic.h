@@ -157,6 +157,15 @@ private:
     */
     void printAverageConvergence();
 
+    /**
+        Permutation of motif IDs, as obtained by ordering the motifs by:
+        1) Number of connected edges
+        2) Degree of recurrence (number of bidirectional connections)  
+    */
+    std::vector<int> getMotifPermutation() const;
+
+    void calculateConcentration();
+
     QList<Statistics> mMotifProbabilities;
     QList<Statistics> mMotifExpectedProbabilities;
     std::vector<std::vector<Statistics> > mConvergences;
@@ -165,6 +174,8 @@ private:
     int mOverallCompletedSamples;
     int mIterations;
     std::vector<CIS3D::Structure> mPostTargets;
+    std::vector<float> mConcentrations;
+    std::vector<float> mExpectedConcentrations;
 };
 
 #endif // TRIPLETSTATISTIC

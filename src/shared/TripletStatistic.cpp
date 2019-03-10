@@ -457,23 +457,7 @@ TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
 {
     out << "Number of triplet samples:" << sep << mSampleSize * mConnectionsDone << "\n\n";
 
-    std::vector<int> permutation; // [1 3 5 6 4 7 2 8 10 11 12 13 9 14 15 16]
-    permutation.push_back(1);
-    permutation.push_back(3);
-    permutation.push_back(5);
-    permutation.push_back(6);
-    permutation.push_back(4);
-    permutation.push_back(7);
-    permutation.push_back(2);
-    permutation.push_back(8);
-    permutation.push_back(10);
-    permutation.push_back(11);
-    permutation.push_back(12);
-    permutation.push_back(13);
-    permutation.push_back(9);
-    permutation.push_back(14);
-    permutation.push_back(15);
-    permutation.push_back(16);
+    std::vector<int> permutation = getMotifPermutation();
 
     for (int i = 0; i < mMotifProbabilities.size() - 1; i++)
     {
@@ -589,4 +573,37 @@ TripletStatistic::printAverageConvergence()
             qDebug() << i << j << mConvergences[i][j].getMean();
         }
     }
+}
+
+/**
+    Permutation of motif IDs, as obtained by ordering the motifs by:
+    1) Number of connected edges
+    2) Degree of recurrence (number of bidirectional connections)  
+*/
+std::vector<int>
+TripletStatistic::getMotifPermutation() const
+{
+    std::vector<int> permutation; // [1 3 5 6 4 7 2 8 10 11 12 13 9 14 15 16]
+    permutation.push_back(1);
+    permutation.push_back(3);
+    permutation.push_back(5);
+    permutation.push_back(6);
+    permutation.push_back(4);
+    permutation.push_back(7);
+    permutation.push_back(2);
+    permutation.push_back(8);
+    permutation.push_back(10);
+    permutation.push_back(11);
+    permutation.push_back(12);
+    permutation.push_back(13);
+    permutation.push_back(9);
+    permutation.push_back(14);
+    permutation.push_back(15);
+    permutation.push_back(16);
+    return permutation;
+}
+
+void
+TripletStatistic::calculateConcentration()
+{
 }
