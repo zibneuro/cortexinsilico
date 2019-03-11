@@ -13,6 +13,7 @@
 #include <mutex>
 #include <omp.h>
 #include <ctime>
+#include <cmath>
 
 /*
     Constructor.
@@ -29,12 +30,20 @@ Calculator::Calculator(
 }
 
 void
-Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double maxInnervation, QString mode, double boutonPSTRatio, bool checkProb, double maxFailedRatio)
+Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, QString mode, std::map<QString, float>& propsFloat, std::map<QString, bool>& propsBoolean)
 {
     //double zeroTime = std::clock();
-    bool parallelLoop = !mRandomGenerator.hasUserSeed();
-    bool checkBounds = boutonPSTRatio != -1 || checkProb;
-    bool checkOrderMagnitude = boutonPSTRatio != -1;
+    bool parallelLoop = false; //!mRandomGenerator.hasUserSeed();
+    float maxInnervation = propsFloat["MAX_INNERVATION"];
+    float maxInnervationLog = maxInnervation == 0 ? -100 : log(maxInnervation);
+    float boutonPSTRatio = propsFloat["BOUTON_PST_RATIO"];
+    float innervationCutoff = propsFloat["ABSOLUTE_INNERVATION_CUTOFF"];
+    float innervationCutoffLog = innervationCutoff == 0 ? -100 : log(innervationCutoff);
+    bool checkMaxInnervation = propsBoolean["APPLY_CONSTRAINT_MAX_INNERVATION"];
+    bool checkBoutonPstRatio = propsBoolean["APPLY_CONSTRAINT_BOUTON_PST_RATIO"];
+    bool checkPstProbability = propsBoolean["APPLY_CONSTRAINT_PST_PROBABILITY"];
+    bool discardSingle = propsBoolean["DISCARD_SINGLE"];
+    //bool writeRaw = props["WRITE_RAW_DATA"];
 
     // ###################### LOAD FEATURES ######################
 
@@ -67,16 +76,19 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
 
     for (unsigned int run = 0; run < mRunIndices.size(); run++)
     {
-        int failedBounds = 0;
-        int validBounds = 0;
-        bool failed = false;
+        std::vector<long> constraintCount;
+        constraintCount.push_back(0); // total number of checks, i.e. number of all neuron pairs in all voxels
+        constraintCount.push_back(0); // number of violated bouton vs. PST magnitude bounds
+        constraintCount.push_back(0); // number of violated probability bounds
+        constraintCount.push_back(0); // number of violated max innervation bounds
+        constraintCount.push_back(0); // number of violated bounds (any)
+
         int runIndex = mRunIndices[run];
         //qDebug() << "BATCH" << runIndex << parametersBatch.size();
         QVector<float> parameters = parametersBatch[run];
 
         // ###################### SET PARAMETERS ######################
 
-        float maxInnervationLog = log(maxInnervation);
         float b0 = 0;
         float b1 = 0;
         float b2 = 0;
@@ -156,100 +168,71 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
                                 float preVal = pre->second;
                                 float postVal = neuron_postExc[postId][pre->first];
                                 float postAllVal = voxel_postAllExc[pre->first];
+                                float postNormVal = postVal - postAllVal; // ln(a/b) = ln(a)-ln(b)
+                                float arg;
+                                float boundArg1;
+                                float boundArg2;
 
                                 if (mode == "h0_intercept_pre_pst_pstAll" || mode == "h0_pre_pst_pstAll")
                                 {
-                                    float arg = b0 + b1 * preVal + b2 * postVal + b3 * postAllVal;
-                                    if (checkBounds)
-                                    {
-                                        float boundArg1 = b1 * preVal - b2 * postVal - b3 * postAllVal;
-                                        //boundArg1 = boundArg1 < 0 ? -boundArg1 : boundArg1;
-                                        float boundArg2 = b2 * postVal + b3 * postAllVal;
-
-                                        bool orderOfMagnitudeBoundViolated = checkOrderMagnitude && (boundArg1 < boutonPSTRatio);
-                                        bool probabilityConstraintViolated = checkProb && (boundArg2 > 0);
-
-                                        if (orderOfMagnitudeBoundViolated || probabilityConstraintViolated)
-                                        {
-                                            failedBounds++;
-                                        }
-                                        else
-                                        {
-                                            validBounds++;
-                                        }
-                                        //qDebug() << preVal << postNorm << boundArg << boundsViolated;
-                                    }
-                                    arg = std::min(maxInnervationLog, arg);
-                                    int synapses = 0;
-                                    if (arg >= -7)
-                                    {
-                                        float mu = exp(arg);
-                                        innervation[i][j] += mu;
-                                        synapses = mRandomGenerator.drawPoisson(mu);
-                                        if (synapses > 0)
-                                        {
-                                            if (mode == "h0_intercept_pre_pst_pstAll")
-                                            {
-                                                sufficientStat[0] += synapses;
-                                                sufficientStat[1] += preVal * synapses;
-                                                sufficientStat[2] += postVal * synapses;
-                                                sufficientStat[3] += postAllVal * synapses;
-                                            }
-                                            else
-                                            {
-                                                sufficientStat[0] += preVal * synapses;
-                                                sufficientStat[1] += postVal * synapses;
-                                                sufficientStat[2] += postAllVal * synapses;
-                                            }
-                                            contacts[i][j] += synapses;
-                                        }
-                                    }
+                                    arg = b0 + b1 * preVal + b2 * postVal + b3 * postAllVal;
+                                    boundArg1 = std::fabs(b1 * preVal - (b2 * postVal + b3 * postAllVal));
+                                    boundArg2 = b2 * postVal + b3 * postAllVal;
                                 }
-                                else if (mode == "h0_intercept_pre_pstNorm" || mode == "h0_pre_pstNorm")
+                                else
                                 {
-                                    float postNorm = postVal - postAllVal; // ln(a/b) = ln(a)-ln(b)
-                                    float arg = b0 + b1 * preVal + b2 * postNorm;
-                                    if (checkBounds)
+                                    arg = b0 + b1 * preVal + b2 * postNormVal;
+                                    boundArg1 = std::fabs(b1 * preVal - b2 * postNormVal);
+                                    boundArg2 = b2 * postNormVal;
+                                }
+
+                                //qDebug() << preVal << postVal << postAllVal << postNormVal << arg;
+
+                                bool orderOfMagnitudeBoundViolated = checkBoutonPstRatio && (boundArg1 < boutonPSTRatio);
+                                bool probabilityConstraintViolated = checkPstProbability && (boundArg2 > 0);
+                                bool innervationBoundViolated = checkMaxInnervation && (arg > maxInnervationLog);
+
+                                bool anyViolated = updateConstraintCount(constraintCount,
+                                                                         orderOfMagnitudeBoundViolated,
+                                                                         probabilityConstraintViolated,
+                                                                         innervationBoundViolated);
+
+                                arg = std::min(arg, innervationCutoffLog);
+
+                                if (!(discardSingle && anyViolated))
+                                {
+                                    int synapses = 0;
+                                    float mu = exp(arg);
+                                    innervation[i][j] += mu;
+                                    synapses = mRandomGenerator.drawPoisson(mu);
+                                    if (synapses > 0)
                                     {
-                                        float boundArg1 = b1 * preVal - b2 * postNorm;
-                                        //boundArg1 = boundArg1 < 0 ? -boundArg1 : boundArg1;
-                                        float boundArg2 = b2 * postNorm;
-
-                                        bool orderOfMagnitudeBoundViolated = checkOrderMagnitude && (boundArg1 < boutonPSTRatio);
-                                        bool probabilityConstraintViolated = checkProb && (boundArg2 > 0);
-
-                                        if (orderOfMagnitudeBoundViolated || probabilityConstraintViolated)
+                                        if (mode == "h0_intercept_pre_pst_pstAll")
                                         {
-                                            failedBounds++;
+                                            sufficientStat[0] += synapses;
+                                            sufficientStat[1] += preVal * synapses;
+                                            sufficientStat[2] += postVal * synapses;
+                                            sufficientStat[3] += postAllVal * synapses;
+                                        }
+                                        else if (mode == "h0_pre_pst_pstAll")
+                                        {
+                                            sufficientStat[0] += preVal * synapses;
+                                            sufficientStat[1] += postVal * synapses;
+                                            sufficientStat[2] += postAllVal * synapses;
+                                        }
+                                        else if (mode == "h0_intercept_pre_pstNorm")
+                                        {
+                                            sufficientStat[0] += synapses;
+                                            sufficientStat[1] += preVal * synapses;
+                                            sufficientStat[2] += postNormVal * synapses;
                                         }
                                         else
                                         {
-                                            validBounds++;
+                                            sufficientStat[0] += preVal * synapses;
+                                            sufficientStat[1] += postNormVal * synapses;
                                         }
-                                        //qDebug() << preVal << postNorm << boundArg << boundsViolated;
-                                    }
-                                    arg = std::min(maxInnervationLog, arg);
-                                    int synapses = 0;
-                                    if (arg >= -7)
-                                    {
-                                        float mu = exp(arg);
-                                        innervation[i][j] += mu;
-                                        synapses = mRandomGenerator.drawPoisson(mu);
-                                        if (synapses > 0)
-                                        {
-                                            if (mode == "h0_intercept_pre_pstNorm")
-                                            {
-                                                sufficientStat[0] += synapses;
-                                                sufficientStat[1] += preVal * synapses;
-                                                sufficientStat[2] += postNorm * synapses;
-                                            }
-                                            else
-                                            {
-                                                sufficientStat[0] += preVal * synapses;
-                                                sufficientStat[1] += postNorm * synapses;
-                                            }
-                                            contacts[i][j] += synapses;
-                                        }
+
+                                        contacts[i][j] += synapses;
                                     }
                                 }
                             }
@@ -258,6 +241,7 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
                 }
             }
         }
+
         //double loopTime = std::clock();
 
         // ###################### DETERMINE STATISTICS ######################
@@ -277,45 +261,36 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, double 
         //double statisticsTime = std::clock();
 
         // ###################### WRITE OUTPUT ######################
-        int total = failedBounds + validBounds;
-        if (total != 0)
-        {
-            failed = ((double)failedBounds / (double)(total)) > maxFailedRatio;
-        }
+        // qDebug() << constraintCount;
 
         writeSynapseMatrix(runIndex, contacts);
         writeInnervationMatrix(runIndex, innervation);
-        writeStatistics(runIndex, connProbSynapse.getMean(), connProbInnervation.getMean(), sufficientStat, failed);
+        writeStatistics(runIndex,
+                        connProbSynapse.getMean(),
+                        connProbInnervation.getMean(),
+                        sufficientStat,
+                        constraintCount);
 
         //double outputTime = std::clock();
 
         // ###################### WRITE CONSOLE ######################
 
         /*
-    outputTime = (outputTime - statisticsTime) / (double)CLOCKS_PER_SEC;
-    statisticsTime = (statisticsTime - loopTime) / (double)CLOCKS_PER_SEC;
-    loopTime = (loopTime - featureLoadTime) / (double)CLOCKS_PER_SEC;
-    featureLoadTime = (featureLoadTime - zeroTime) / (double)CLOCKS_PER_SEC;
-    QString timeCost = QString("Features %1, Loop %2, Statistics %3, Output %4").arg(featureLoadTime).arg(loopTime).arg(statisticsTime).arg(outputTime);
-    */
-        QString boundString = "";
-        if (checkBounds && failed)
-        {
-            boundString = "FAILED";
-        }
-        else if (checkBounds && !failed)
-        {
-            boundString = "OK";
-        }
+        outputTime = (outputTime - statisticsTime) / (double)CLOCKS_PER_SEC;
+        statisticsTime = (statisticsTime - loopTime) / (double)CLOCKS_PER_SEC;
+        loopTime = (loopTime - featureLoadTime) / (double)CLOCKS_PER_SEC;
+        featureLoadTime = (featureLoadTime - zeroTime) / (double)CLOCKS_PER_SEC;
+        QString timeCost = QString("Features %1, Loop %2, Statistics %3, Output %4").arg(featureLoadTime).arg(loopTime).arg(statisticsTime).arg(outputTime);
+        */
 
-        qDebug() << "RUN: " << runIndex << paramString << QString("Connection prob.: %1").arg(connProbInnervation.getMean()) << boundString;
+        qDebug() << "RUN: " << runIndex << paramString << QString("Connection prob.: %1").arg(connProbInnervation.getMean());
         //qDebug() << runIndex << "Time" << timeCost;
     }
 }
 
 void
 Calculator::calculateSpatial(std::map<int, std::map<int, float> >& neuron_pre, std::map<int, std::map<int, float> >& neuron_postExc, QString innervationDir)
-{    
+{
     UtilIO::makeDir(innervationDir);
 
     std::vector<int> preIndices;
@@ -489,7 +464,7 @@ Calculator::writeStatistics(int runIndex,
                             double connectionProbability,
                             double connectionProbabilityInnervation,
                             std::vector<double> sufficientStat,
-                            bool failed)
+                            std::vector<long> constraintCount)
 {
     QString fileName = QString("statistics_%1.json").arg(runIndex);
     QString filePath = QDir("output").filePath(fileName);
@@ -517,13 +492,37 @@ Calculator::writeStatistics(int runIndex,
         out << "," << sufficientStat[3];
     }
     out << "],";
-    if (failed)
-    {
-        out << "\"STATUS\": \"FAILED\"";
-    }
-    else
-    {
-        out << "\"STATUS\": \"OK\"";
-    }
+    out << "\"CONSTRAINT_NUMBER_CHECKS\":" << constraintCount[0] << ",";
+    out << "\"CONSTRAINT_MAGNITUDE_VIOLATED\":" << constraintCount[1] << ",";
+    out << "\"CONSTRAINT_PROBABILITY_VIOLATED\":" << constraintCount[2] << ",";
+    out << "\"CONSTRAINT_INNERVATION_VIOLATED\":" << constraintCount[3] << ",";
+    out << "\"CONSTRAINT_ANY_VIOLATED\":" << constraintCount[4];
     out << "}";
+}
+
+bool
+Calculator::updateConstraintCount(std::vector<long>& count,
+                                  bool magnitudeBoundViolated,
+                                  bool probabilityBoundViolated,
+                                  bool maxInnervationBoundViolated)
+{
+    count[0] += 1;
+    if (magnitudeBoundViolated)
+    {
+        count[1] += 1;
+    }
+    if (probabilityBoundViolated)
+    {
+        count[2] += 1;
+    }
+    if (maxInnervationBoundViolated)
+    {
+        count[3] += 1;
+    }
+    bool anyViolated = magnitudeBoundViolated || probabilityBoundViolated || maxInnervationBoundViolated;
+    if (anyViolated)
+    {
+        count[4] += 1;
+    }
+    return anyViolated;
 }

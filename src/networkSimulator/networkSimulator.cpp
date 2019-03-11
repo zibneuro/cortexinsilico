@@ -233,16 +233,17 @@ extractBoutonPSTRatio(const QJsonObject spec)
     }
 }
 
-double
-extractMaxFailedConstraintRatio(const QJsonObject spec)
+bool
+extractBoolean(const QJsonObject spec, QString key, bool defaultValue)
 {
-    if (spec["MAX_FAILED_CONSTRAINT_RATIO"] != QJsonValue::Undefined)
+    if (spec[key] != QJsonValue::Undefined)
     {
-        return spec["MAX_FAILED_CONSTRAINT_RATIO"].toDouble();
+        int defaultInt = defaultValue ? 1 : 0;
+        return spec[key].toInt(defaultInt) != 0;
     }
     else
     {
-        return 1;
+        return defaultValue;
     }
 }
 
@@ -518,17 +519,39 @@ extractRandomSeed(const QJsonObject spec)
     }
 }
 
-double
-extractInnervationBound(const QJsonObject spec)
+float
+extractFloat(const QJsonObject spec, QString key, float defaultValue)
 {
-    if (spec["INNERVATION_BOUND"] != QJsonValue::Undefined)
+    if (spec[key] != QJsonValue::Undefined)
     {
-        return spec["INNERVATION_BOUND"].toDouble();
+        return (float)spec[key].toDouble((double)defaultValue);
     }
     else
     {
-        return 1000;
+        return defaultValue;
     }
+}
+
+std::map<QString, float>
+getPropsFloat(const QJsonObject spec)
+{
+    std::map<QString, float> props;
+    props["MAX_INNERVATION"] = extractFloat(spec, "MAX_INNERVATION", 1000);
+    props["BOUTON_PST_RATIO"] = extractFloat(spec, "BOUTON_PST_RATIO", 5);
+    props["ABSOLUTE_INNERVATION_CUTOFF"] = extractFloat(spec, "ABSOLUTE_INNERVATION_CUTOFF", 10000);
+    return props;
+}
+
+std::map<QString, bool>
+getPropsBoolean(const QJsonObject spec)
+{
+    std::map<QString, bool> props;
+    props["APPLY_CONSTRAINT_MAX_INNERVATION"] = extractBoolean(spec, "APPLY_CONSTRAINT_MAX_INNERVATION", false);
+    props["APPLY_CONSTRAINT_BOUTON_PST_RATIO"] = extractBoolean(spec, "APPLY_CONSTRAINT_BOUTON_PST_RATIO", false);
+    props["APPLY_CONSTRAINT_PST_PROBABILITY"] = extractBoolean(spec, "APPLY_CONSTRAINT_PST_PROBABILITY", false);
+    props["DISCARD_SINGLE"] = extractBoolean(spec, "DISCARD_SINGLE", false);
+    props["WRITE_RAW_DATA"] = extractBoolean(spec, "WRITE_RAW_DATA", false);
+    return props;
 }
 
 void
@@ -593,13 +616,9 @@ main(int argc, char** argv)
         {
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            double maxInnervation = extractInnervationBound(spec);
             QString mode = extractSimulationMode(spec);
             int numParameters = checkSimulationMode(mode);
             int seed = extractRandomSeed(spec);
-            double boutonPSTRatio = extractBoutonPSTRatio(spec);
-            bool checkProb = extractCheckProbabilityConstraint(spec);
-            double maxFailedRatio = extractMaxFailedConstraintRatio(spec);
             std::vector<int> runIndices;
             runIndices.push_back(extractRunIndex(spec));
             RandomGenerator randomGenerator(seed);
@@ -607,7 +626,10 @@ main(int argc, char** argv)
             parameters.push_back(extractRuleParameters(spec, numParameters));
             FeatureProvider featureProvider;
             Calculator calculator(featureProvider, randomGenerator, runIndices);
-            calculator.calculateBatch(parameters, maxInnervation, mode, boutonPSTRatio, checkProb, maxFailedRatio);
+            std::map<QString, float> propsFloat = getPropsFloat(spec);
+            std::map<QString, bool> propsBoolean = getPropsBoolean(spec);
+            qDebug() << propsFloat << propsBoolean;
+            calculator.calculateBatch(parameters, mode, propsFloat, propsBoolean);
         }
     }
     else if (mode == "SIMULATE_BATCH")
@@ -621,20 +643,18 @@ main(int argc, char** argv)
         {
             const QString specFile = argv[2];
             QJsonObject spec = UtilIO::parseSpecFile(specFile);
-            double maxInnervation = extractInnervationBound(spec);
-            QString mode = extractSimulationMode(spec);
+            QString mode = extractSimulationMode(spec);            
             int numParameters = checkSimulationMode(mode);
             int seed = extractRandomSeed(spec);
             std::vector<int> runIndices = extractRunIndicesBatch(spec);
-            double boutonPSTRatio = extractBoutonPSTRatio(spec);
-            bool checkProb = extractCheckProbabilityConstraint(spec);
-            double maxFailedRatio = extractMaxFailedConstraintRatio(spec);
             qDebug() << "BATCH-SIZE:" << runIndices.size();
             RandomGenerator randomGenerator(seed);
             std::vector<QVector<float> > parameters = extractRuleParametersBatch(spec, numParameters);
             FeatureProvider featureProvider;
             Calculator calculator(featureProvider, randomGenerator, runIndices);
-            calculator.calculateBatch(parameters, maxInnervation, mode, boutonPSTRatio, checkProb, maxFailedRatio);
+            std::map<QString, float> propsFloat = getPropsFloat(spec);
+            std::map<QString, bool> propsBoolean = getPropsBoolean(spec);
+            calculator.calculateBatch(parameters, mode, propsFloat, propsBoolean);
         }
     }
     else if (mode == "SUBCUBE")
@@ -693,7 +713,6 @@ main(int argc, char** argv)
             QVector<float> bboxMax = extractBBoxMax(spec);
             QVector<float> rangePre = extractPiaSomaDistancePre(spec);
             QVector<float> rangePost = extractPiaSomaDistancePost(spec);
-            QString mode = extractSimulationMode(spec);
             selection.setInnervationSelection(spec, networkProps, samplingFactor, seed);
             selection.setBBox(bboxMin, bboxMax);
             selection.setPiaSomaDistance(rangePre, rangePost, networkProps);
