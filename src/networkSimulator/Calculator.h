@@ -27,11 +27,24 @@ public:
 
 private:
 
-    struct rawDataItem {
+    struct RawDataItem {
+        float beta0;
+        float beta1;
+        float beta2;
+        float beta3;
         int voxelId;
+        int preId;
+        int postId;
         float pre;
         float post;
-        float postAll;        
+        float postAll;
+        float postNorm;
+        float innervation;
+        int synapses;
+        bool magnitudeBound;
+        bool probabilityBound;
+        bool innervationBound;    
+        bool discarded;    
     };
 
     double calculateProbability(double innervationMean);
@@ -46,6 +59,7 @@ private:
                                bool magnitudeBoundViolated,
                                bool probabilityBoundViolated,
                                bool maxInnervationBoundViolated);
+    void writeRawData(int runIndex, std::vector<RawDataItem>& rawData); 
 
     FeatureProvider& mFeatureProvider;
     RandomGenerator& mRandomGenerator;

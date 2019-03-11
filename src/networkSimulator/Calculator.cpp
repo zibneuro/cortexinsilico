@@ -43,7 +43,7 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, QString
     bool checkBoutonPstRatio = propsBoolean["APPLY_CONSTRAINT_BOUTON_PST_RATIO"];
     bool checkPstProbability = propsBoolean["APPLY_CONSTRAINT_PST_PROBABILITY"];
     bool discardSingle = propsBoolean["DISCARD_SINGLE"];
-    //bool writeRaw = props["WRITE_RAW_DATA"];
+    bool writeRaw = propsBoolean["WRITE_RAW_DATA"];
 
     // ###################### LOAD FEATURES ######################
 
@@ -145,6 +145,8 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, QString
             sufficientStat.push_back(0);
         }
 
+        std::vector<RawDataItem> rawData;
+
         Statistics connProbSynapse;
         Statistics connProbInnervation;
 
@@ -198,13 +200,41 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, QString
                                                                          innervationBoundViolated);
 
                                 arg = std::min(arg, innervationCutoffLog);
+                                float mu = exp(arg);
+                                int synapses = mRandomGenerator.drawPoisson(mu);
+
+                                if (writeRaw)
+                                {
+                                    RawDataItem rawDataItem;
+                                    rawDataItem.beta0 = b0;
+                                    rawDataItem.beta1 = b1;
+                                    rawDataItem.beta2 = b2;
+                                    if (mode == "h0_intercept_pre_pst_pstAll" || mode == "h0_pre_pst_pstAll")
+                                    {
+                                        rawDataItem.beta3 = b3;
+                                    }
+                                    else
+                                    {
+                                        rawDataItem.beta3 = -999;
+                                    }
+                                    rawDataItem.voxelId = pre->first;
+                                    rawDataItem.preId = preId;
+                                    rawDataItem.postId = postId;
+                                    rawDataItem.pre = preVal;
+                                    rawDataItem.post = postVal;
+                                    rawDataItem.postAll = postAllVal;
+                                    rawDataItem.postNorm = postNormVal;
+                                    rawDataItem.innervation = mu;
+                                    rawDataItem.synapses = synapses;
+                                    rawDataItem.magnitudeBound = orderOfMagnitudeBoundViolated;
+                                    rawDataItem.probabilityBound = probabilityConstraintViolated;
+                                    rawDataItem.innervationBound = innervationBoundViolated;
+                                    rawData.push_back(rawDataItem);
+                                }
 
                                 if (!(discardSingle && anyViolated))
                                 {
-                                    int synapses = 0;
-                                    float mu = exp(arg);
                                     innervation[i][j] += mu;
-                                    synapses = mRandomGenerator.drawPoisson(mu);
                                     if (synapses > 0)
                                     {
                                         if (mode == "h0_intercept_pre_pst_pstAll")
@@ -270,6 +300,11 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, QString
                         connProbInnervation.getMean(),
                         sufficientStat,
                         constraintCount);
+
+        if (writeRaw)
+        {
+            writeRawData(runIndex, rawData);
+        }
 
         //double outputTime = std::clock();
 
@@ -525,4 +560,61 @@ Calculator::updateConstraintCount(std::vector<long>& count,
         count[4] += 1;
     }
     return anyViolated;
+}
+
+void
+Calculator::writeRawData(int runIndex, std::vector<RawDataItem>& rawData)
+{
+    QString fileName = QString("rawData_%1.dat").arg(runIndex);
+    QString filePath = QDir("output").filePath(fileName);
+
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        const QString msg =
+            QString("Cannot open file %1 for writing.").arg(filePath);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    QTextStream out(&file);
+
+    out << "beta0"
+        << " beta1"
+        << " beta2"
+        << " beta3"
+        << " voxelId"
+        << " preId"
+        << " postId"
+        << " pre"
+        << " post"
+        << " postAll"
+        << " postNorm"
+        << " innervation"
+        << " synapses"
+        << " magnitudeBoundViolated"
+        << " probabilityBoundViolated"
+        << " innervationBoundViolated"
+        << " discarded"
+        << "\n";
+
+    for (unsigned int i = 0; i < rawData.size(); i++)
+    {
+        RawDataItem r = rawData[i];
+        out << r.beta0 << " "
+            << r.beta1 << " "
+            << r.beta2 << " "
+            << r.beta3 << " "
+            << r.voxelId << " "
+            << r.preId << " "
+            << r.postId << " "
+            << r.pre << " "
+            << r.post << " "
+            << r.postAll << " "
+            << r.postNorm << " "
+            << r.innervation << " "
+            << r.synapses << " "
+            << r.magnitudeBound << " "
+            << r.probabilityBound << " "
+            << r.innervationBound << " "
+            << r.discarded << "\n";
+    }
 }
