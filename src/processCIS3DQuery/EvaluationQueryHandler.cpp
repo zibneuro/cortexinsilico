@@ -187,76 +187,23 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
     }
     else if (error == QNetworkReply::NoError)
     {
-        qDebug() << "[*] Starting computation of innervation query";
-
         const QByteArray content = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
         mCurrentJsonData = jsonResponse.object().value("data").toObject();
         mAdvancedSettings = Util::getAdvancedSettingsString(mCurrentJsonData);
         reply->deleteLater();        
-
         QJsonObject formulas = mCurrentJsonData["formulas"].toObject();
         FormulaCalculator calculator(formulas);
         calculator.init();
 
-        /*
-
-        int samplingFactor = -1;
-        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
-        mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
-        qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot << "Sampling factor" << samplingFactor;
-        mNetwork.setDataRoot(mDataRoot);
-        mNetwork.loadFilesForQuery();
-
-
-        // EXTRACT SLICE PARAMETERS
-        const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
-        const double tissueHighPre = jsonData["tissueHighPre"].toDouble();
-        QString tissueModePre = jsonData["tissueModePre"].toString();
-        const double tissueLowPost = jsonData["tissueLowPost"].toDouble();
-        const double tissueHighPost = jsonData["tissueHighPost"].toDouble();
-        QString tissueModePost = jsonData["tissueModePost"].toString();
-        const double sliceRef = jsonData["sliceRef"].toDouble();
-        //const bool isSlice = sliceRef != -9999;
-        // qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
-
-        
-
-        QString preSelString = jsonData["presynapticSelectionFilter"].toString();
-        QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
-        QJsonArray preArr = preDoc.array();
-
-        SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork, CIS3D::PRESYNAPTIC);
-        Util::correctVPMSelectionFilter(preFilter, mNetwork);
-        Util::correctInterneuronSelectionFilter(preFilter, mNetwork);
-        IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
-
-        QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
-        QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
-        QJsonArray postArr = postDoc.array();
-        SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
-        Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
-        IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
-
-        CIS3D::Structure postTargetA = Util::getPostsynapticTarget(preSelString);
-        CIS3D::Structure postTargetB = Util::getPostsynapticTarget(postSelString);
-
-        qDebug() << "[*] Start processing " << preNeurons.size() << " presynaptic and " << postNeurons.size() << " postsynaptic neurons.";
+        NeuronSelection selection;
+        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork);
         InnervationStatistic innervation(mNetwork, calculator);
-
+        
         connect(&innervation, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
-
-        NeuronSelection selection(preNeurons, postNeurons);
-        selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
-        selection.sampleDownFactor(samplingFactor, 50000);
-        selection.setPostTarget(postTargetA, postTargetB);        
         
-
-        NeuronSelection selection;
-        selection.setSelectionFromQuery(mCurrentJsonData);
-        innervation.calculate(selection);
-        */
+        innervation.calculate(selection);    
     }
     else
     {

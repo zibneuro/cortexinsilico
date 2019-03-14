@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonArray>
+#include <QJsonObject>
 #include <QJsonDocument>
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
@@ -18,6 +19,7 @@
 #include "QueryHelpers.h"
 #include "TripletStatistic.h"
 #include "Util.h"
+
 
 MotifQueryHandler::MotifQueryHandler(QObject* parent)
     : QObject(parent)
@@ -193,83 +195,36 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
     }
     else if (error == QNetworkReply::NoError)
     {
-        qDebug() << "[*] Starting computation of motif query";
-
         const QByteArray content = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
-        QJsonObject jsonData = jsonResponse.object().value("data").toObject();
-        mCurrentJsonData = jsonData;
+        mCurrentJsonData = jsonResponse.object().value("data").toObject();
+        QJsonObject networkSelection = mCurrentJsonData["networkSelection"].toObject();
+        int networkNumber = mCurrentJsonData["networkNumber"].toInt();
+
+        QJsonObject sampleSettings = mCurrentJsonData["sampleSettings"].toObject();
+        mAdvancedSettings = Util::getAdvancedSettingsString(mCurrentJsonData);
         reply->deleteLater();
 
-        int samplingFactor = -1;
-        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
-        mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
-        qDebug() << "    Loading network data motif:" << datasetShortName << "Path: " << mDataRoot << samplingFactor;
-        mNetwork.setDataRoot(mDataRoot);
-        mNetwork.loadFilesForQuery();
-
-        QString motifASelString = jsonData["motifASelectionFilter"].toString();
-        QString motifBSelString = jsonData["motifBSelectionFilter"].toString();
-        QString motifCSelString = jsonData["motifCSelectionFilter"].toString();
-        CIS3D::Structure postTargetA = Util::getPostsynapticTarget(motifASelString);
-        CIS3D::Structure postTargetB = Util::getPostsynapticTarget(motifBSelString);
-        CIS3D::Structure postTargetC = Util::getPostsynapticTarget(motifCSelString);
-
-        // EXTRACT SLICE PARAMETERS
-        const double tissueLowMotifA = jsonData["tissueLowMotifA"].toDouble();
-        const double tissueHighMotifA = jsonData["tissueHighMotifA"].toDouble();
-        const QString tissueModeMotifA = jsonData["tissueModeMotifA"].toString();
-        const double tissueLowMotifB = jsonData["tissueLowMotifB"].toDouble();
-        const double tissueHighMotifB = jsonData["tissueHighMotifB"].toDouble();
-        const QString tissueModeMotifB = jsonData["tissueModeMotifB"].toString();
-        const double tissueLowMotifC = jsonData["tissueLowMotifC"].toDouble();
-        const double tissueHighMotifC = jsonData["tissueHighMotifC"].toDouble();
-        const QString tissueModeMotifC = jsonData["tissueModeMotifC"].toString();
-        const double sliceRef = jsonData["sliceRef"].toDouble();
-        const bool isSlice = sliceRef != -9999;
-
-        // EXTRACT FORMULA
-        QJsonObject formulas = jsonData["formulas"].toObject();
+        QJsonObject formulas = mCurrentJsonData["formulas"].toObject();
         FormulaCalculator calculator(formulas);
         calculator.init();
 
-        int numberOfSamples = jsonData["numberSamples"].toInt();
-
-        mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
+        int numberSamples, randomSeed;
+        Util::getSampleSettings(sampleSettings, networkNumber, numberSamples, randomSeed);
 
         NeuronSelection selection;
-        qDebug() << "[*] Determining triplet selection:" << motifASelString << motifBSelString
-                 << motifCSelString;
-        selection.setTripletSelection(motifASelString, motifBSelString, motifCSelString, mNetwork);
-        //selection.printMotifStats();
-
-        if (isSlice)
-        {
-            selection.filterTripletSlice(mNetwork,
-                                         sliceRef,
-                                         tissueLowMotifA,
-                                         tissueHighMotifA,
-                                         tissueModeMotifA,
-                                         tissueLowMotifB,
-                                         tissueHighMotifB,
-                                         tissueModeMotifB,
-                                         tissueLowMotifC,
-                                         tissueHighMotifC,
-                                         tissueModeMotifC);
-        }
-        selection.printMotifStats();
-        selection.sampleDownFactor(samplingFactor, 50000);
-        selection.setPostTarget(postTargetA, postTargetB, postTargetC);
+        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork);
 
         TripletStatistic statistic(mNetwork,
-                                   numberOfSamples,
+                                   numberSamples,
                                    calculator);
 
-        if (isSlice)
+        double sliceRef;
+        if (Util::isSlice(networkSelection, networkNumber, sliceRef))
         {
-            statistic.setOriginalPreIds(NeuronSelection::filterPreOrBoth(mNetwork, selection.MotifA()),
-                                        NeuronSelection::filterPreOrBoth(mNetwork, selection.MotifB()),
-                                        NeuronSelection::filterPreOrBoth(mNetwork, selection.MotifC()));
+            statistic.setOriginalPreIds(NeuronSelection::filterPreOrBoth(mNetwork, selection.SelectionA()),
+                                        NeuronSelection::filterPreOrBoth(mNetwork, selection.SelectionB()),
+                                        NeuronSelection::filterPreOrBoth(mNetwork, selection.SelectionC()));
         }
 
         connect(&statistic, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));

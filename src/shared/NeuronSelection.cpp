@@ -5,6 +5,7 @@
 #include "Util.h"
 #include "UtilIO.h"
 #include "Columns.h"
+#include <iostream>
 
 /**
   Empty constructor.
@@ -16,20 +17,22 @@ NeuronSelection::NeuronSelection()
     mPostTarget.push_back(CIS3D::DEND);
 };
 
-/**
-    Constructor for a second order network statistic, containing pre-
-    and postsynaptic neuron selections.
-    @param presynaptic The presynaptic neuron IDs.
-    @param postsynaptic The postsynaptic neuron IDs.
-*/
-NeuronSelection::NeuronSelection(const IdList& presynaptic, const IdList& postsynaptic)
-    : mPresynaptic(presynaptic)
-    , mPostsynaptic(postsynaptic)
+NeuronSelection::NeuronSelection(const IdList& selectionA, const IdList& selectionB, const IdList& selectionC)
+    : mSelectionA(selectionA)
+    , mSelectionB(selectionB)
+    , mSelectionC(selectionC)
 {
     mPostTarget.push_back(CIS3D::DEND);
     mPostTarget.push_back(CIS3D::DEND);
     mPostTarget.push_back(CIS3D::DEND);
-};
+
+    mBBoxMin.append(-10000);
+    mBBoxMin.append(-10000);
+    mBBoxMin.append(-10000);
+    mBBoxMax.append(10000);
+    mBBoxMax.append(10000);
+    mBBoxMax.append(10000);
+}
 
 IdList
 NeuronSelection::filterTissueDepth(const NetworkProps& networkProps,
@@ -70,107 +73,6 @@ NeuronSelection::filterTissueDepth(const NetworkProps& networkProps,
 }
 
 /**
-    Determines a innervation statistic selection from a specification file.
-    @param spec The spec file with the filter definition.
-    @param networkProps the model data of the network.
-    @param samplingFactor Sampling rate for selection (default: 1 = take all)
-    @param seed The random seed for the sampling (-1, to use random seed)
-*/
-void
-NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor, int seed)
-{
-    mPresynaptic.clear();
-    mPostsynaptic.clear();
-    IdList pre = UtilIO::getPreSynapticNeurons(spec, networkProps);
-    IdList post = UtilIO::getPostSynapticNeuronIds(spec, networkProps);
-    if (samplingFactor == 1)
-    {
-        mPresynaptic.append(pre);
-        mPostsynaptic.append(post);
-    }
-    else
-    {
-        RandomGenerator randomGenerator(seed);
-        randomGenerator.shuffleList(pre);
-        randomGenerator.shuffleList(post);
-        for (int i = 0; i < pre.size(); i += samplingFactor)
-        {
-            mPresynaptic.append(pre[i]);
-        }
-        for (int i = 0; i < post.size(); i += samplingFactor)
-        {
-            mPostsynaptic.append(post[i]);
-        }
-    }
-}
-
-/**
-    Determines a triplet motif statistic selection from a specification file.
-    @param spec The spec file with the filter definition.
-    @param networkProps the model data of the network.
-*/
-void
-NeuronSelection::setTripletSelection(const QJsonObject& spec,
-                                     const NetworkProps& networkProps)
-{
-    QJsonObject tmpSpec;
-
-    tmpSpec["NEURON_REGIONS"] = spec["MOTIF_A_REGIONS"];
-    tmpSpec["NEURON_CELLTYPES"] = spec["MOTIF_A_CELLTYPES"];
-    tmpSpec["NEURON_IDS"] = spec["MOTIF_A_IDS"];
-
-    mMotifA.clear();
-    mMotifA.append(UtilIO::getNeuronIds(tmpSpec, networkProps));
-
-    tmpSpec["NEURON_REGIONS"] = spec["MOTIF_B_REGIONS"];
-    tmpSpec["NEURON_CELLTYPES"] = spec["MOTIF_B_CELLTYPES"];
-    tmpSpec["NEURON_IDS"] = spec["MOTIF_B_IDS"];
-    mMotifB.clear();
-    mMotifB.append(UtilIO::getNeuronIds(tmpSpec, networkProps));
-
-    tmpSpec["NEURON_REGIONS"] = spec["MOTIF_C_REGIONS"];
-    tmpSpec["NEURON_CELLTYPES"] = spec["MOTIF_C_CELLTYPES"];
-    tmpSpec["NEURON_IDS"] = spec["MOTIF_C_IDS"];
-    mMotifC.clear();
-    mMotifC.append(UtilIO::getNeuronIds(tmpSpec, networkProps));
-}
-
-/**
-    Determines a triplet motif statistic selection from selection strings.
-    @param motifASelString The first selection string.
-    @param motifBSelString The second selection string.
-    @param motifASelString The third selection string.
-    @param networkProps the model data of the network.
-*/
-void
-NeuronSelection::setTripletSelection(const QString motifASelString,
-                                     const QString motifBSelString,
-                                     const QString motifCSelString,
-                                     const NetworkProps& networkProps)
-{
-    mMotifA.clear();
-    mMotifA.append(getSelectedNeurons(motifASelString, networkProps));
-    mMotifB.clear();
-    mMotifB.append(getSelectedNeurons(motifBSelString, networkProps));
-    mMotifC.clear();
-    mMotifC.append(getSelectedNeurons(motifCSelString, networkProps));
-}
-
-void
-NeuronSelection::setInDegreeSelection(const QString selAString,
-                                      const QString selBString,
-                                      const QString selCString,
-                                      const NetworkProps& networkProps)
-{
-    mMotifA.clear();
-    mMotifA.append(getSelectedNeurons(selAString, networkProps, CIS3D::PRESYNAPTIC));
-    mMotifB.clear();
-    mMotifB.append(getSelectedNeurons(selBString, networkProps, CIS3D::PRESYNAPTIC));
-    mMotifC.clear();
-    mMotifC.append(getSelectedNeurons(selCString, networkProps, CIS3D::POSTSYNAPTIC));
-}
-
-/**
     Determines neuron IDs based on a selection string;
     @param selectionString The selection string.
     @param networkProps The model data of the network.
@@ -190,55 +92,37 @@ NeuronSelection::getSelectedNeurons(const QString selectionString,
 }
 
 /**
-  Returns the presynaptic subselection.
-*/
-IdList
-NeuronSelection::Presynaptic() const
-{
-    return mPresynaptic;
-}
-
-/**
-  Returns the postynaptic subselection.
-*/
-IdList
-NeuronSelection::Postsynaptic() const
-{
-    return mPostsynaptic;
-}
-
-/**
   Returns the first neuron subselection for motif statistics.
 */
 IdList
-NeuronSelection::MotifA() const
+NeuronSelection::SelectionA() const
 {
-    return mMotifA;
+    return mSelectionA;
 }
 
 /**
   Returns the second neuron subselection for motif statistics.
 */
 IdList
-NeuronSelection::MotifB() const
+NeuronSelection::SelectionB() const
 {
-    return mMotifB;
+    return mSelectionB;
 }
 
 /**
   Returns the third neuron subselection for motif statistics.
 */
 IdList
-NeuronSelection::MotifC() const
+NeuronSelection::SelectionC() const
 {
-    return mMotifC;
+    return mSelectionC;
 }
 
 CIS3D::SliceBand
-NeuronSelection::getMotifABand(int id) const
+NeuronSelection::getBandA(int id) const
 {
-    auto it = mMotifABand.find(id);
-    if (it != mMotifABand.end())
+    auto it = mBandA.find(id);
+    if (it != mBandA.end())
     {
         return it->second;
     }
@@ -249,10 +133,10 @@ NeuronSelection::getMotifABand(int id) const
 }
 
 CIS3D::SliceBand
-NeuronSelection::getMotifBBand(int id) const
+NeuronSelection::getBandB(int id) const
 {
-    auto it = mMotifBBand.find(id);
-    if (it != mMotifBBand.end())
+    auto it = mBandB.find(id);
+    if (it != mBandB.end())
     {
         return it->second;
     }
@@ -263,38 +147,10 @@ NeuronSelection::getMotifBBand(int id) const
 }
 
 CIS3D::SliceBand
-NeuronSelection::getMotifCBand(int id) const
+NeuronSelection::getBandC(int id) const
 {
-    auto it = mMotifCBand.find(id);
-    if (it != mMotifCBand.end())
-    {
-        return it->second;
-    }
-    else
-    {
-        return CIS3D::SliceBand::FIRST;
-    }
-}
-
-CIS3D::SliceBand
-NeuronSelection::getPresynapticBand(int id) const
-{
-    auto it = mPresynapticBand.find(id);
-    if (it != mPresynapticBand.end())
-    {
-        return it->second;
-    }
-    else
-    {
-        return CIS3D::SliceBand::FIRST;
-    }
-}
-
-CIS3D::SliceBand
-NeuronSelection::getPostsynapticBand(int id) const
-{
-    auto it = mPostsynapticBand.find(id);
-    if (it != mPostsynapticBand.end())
+    auto it = mBandC.find(id);
+    if (it != mBandC.end())
     {
         return it->second;
     }
@@ -308,10 +164,10 @@ NeuronSelection::getPostsynapticBand(int id) const
     Prints the number of selected neurons for motif statistics.
 */
 void
-NeuronSelection::printMotifStats()
+NeuronSelection::printSelectionStats()
 {
-    qDebug() << "[*] Number of selected neurons (motif A,B,C):" << mMotifA.size() << mMotifB.size()
-             << mMotifC.size();
+    qDebug() << "[*] Number of selected neurons (A,B,C):" << mSelectionA.size() << mSelectionB.size()
+             << mSelectionC.size();
 }
 
 void
@@ -339,15 +195,15 @@ NeuronSelection::setPiaSomaDistance(QVector<float> rangePre, QVector<float> rang
     //qDebug() << rangePre << rangePost;
     mPiaSomaDistancePre = rangePre;
     mPiaSomaDistancePost = rangePost;
-    filterPiaSoma(mPresynaptic, rangePre, networkProps);
-    filterPiaSoma(mPostsynaptic, rangePost, networkProps);
+    filterPiaSoma(mSelectionA, rangePre, networkProps);
+    filterPiaSoma(mSelectionB, rangePost, networkProps);
 }
 
 void
 NeuronSelection::setFullModel(const NetworkProps& networkProps, bool uniquePre)
 {
-    mPresynaptic.clear();
-    mPostsynaptic.clear();
+    mSelectionA.clear();
+    mSelectionB.clear();
 
     SelectionFilter preFilter;
     preFilter.synapticSide = CIS3D::PRESYNAPTIC;
@@ -357,7 +213,7 @@ NeuronSelection::setFullModel(const NetworkProps& networkProps, bool uniquePre)
         int cellTypeId = networkProps.neurons.getCellTypeId(preNeurons[i]);
         if (networkProps.cellTypes.isExcitatory(cellTypeId))
         {
-            mPresynaptic.append(preNeurons[i]);
+            mSelectionA.append(preNeurons[i]);
         }
     }
     if (uniquePre)
@@ -373,7 +229,7 @@ NeuronSelection::setFullModel(const NetworkProps& networkProps, bool uniquePre)
         int cellTypeId = networkProps.neurons.getCellTypeId(postNeurons[i]);
         if (networkProps.cellTypes.isExcitatory(cellTypeId))
         {
-            mPostsynaptic.append(postNeurons[i]);
+            mSelectionB.append(postNeurons[i]);
         }
     }
 }
@@ -456,41 +312,200 @@ applyTissueDepthFilter(IdList& selectionIds,
 }
 
 void
-NeuronSelection::filterTripletSlice(const NetworkProps& networkProps,
-                                    double sliceRef,
-                                    double tissueLowMotifA,
-                                    double tissueHighMotifA,
-                                    QString tissueModeMotifA,
-                                    double tissueLowMotifB,
-                                    double tissueHighMotifB,
-                                    QString tissueModeMotifB,
-                                    double tissueLowMotifC,
-                                    double tissueHighMotifC,
-                                    QString tissueModeMotifC)
+NeuronSelection::filterSlice(const NetworkProps& networkProps,
+                             double sliceRef,
+                             QJsonObject& tissueA,
+                             QJsonObject& tissueB,
+                             QJsonObject& tissueC)
 {
-    applyTissueDepthFilter(mMotifA, mMotifABand, networkProps, sliceRef, tissueLowMotifA, tissueHighMotifA, tissueModeMotifA);
-    applyTissueDepthFilter(mMotifB, mMotifBBand, networkProps, sliceRef, tissueLowMotifB, tissueHighMotifB, tissueModeMotifB);
-    applyTissueDepthFilter(mMotifC, mMotifCBand, networkProps, sliceRef, tissueLowMotifC, tissueHighMotifC, tissueModeMotifC);
+    double lowA, lowB, lowC, highA, highB, highC;
+    QString modeA, modeB, modeC;
+    getTissueDepthParameters(tissueA, lowA, highA, modeA);
+    getTissueDepthParameters(tissueB, lowB, highB, modeB);
+    getTissueDepthParameters(tissueC, lowC, highC, modeC);
+
+    applyTissueDepthFilter(mSelectionA, mBandA, networkProps, sliceRef, lowA, highA, modeA);
+    applyTissueDepthFilter(mSelectionB, mBandB, networkProps, sliceRef, lowB, highB, modeB);
+    applyTissueDepthFilter(mSelectionC, mBandC, networkProps, sliceRef, lowC, highC, modeC);
 }
 
 void
-NeuronSelection::filterInnervationSlice(const NetworkProps& networkProps,
-                                        double sliceRef,
-                                        double tissueLowPre,
-                                        double tissueHighPre,
-                                        QString tissueModePre,
-                                        double tissueLowPost,
-                                        double tissueHighPost,
-                                        QString tissueModePost)
+NeuronSelection::setSelectionFromQuery(const QJsonObject& query, const NetworkProps& networkProps)
 {
-    applyTissueDepthFilter(mPresynaptic, mPresynapticBand, networkProps, sliceRef, tissueLowPre, tissueHighPre, tissueModePre);
-    applyTissueDepthFilter(mPostsynaptic, mPostsynapticBand, networkProps, sliceRef, tissueLowPost, tissueHighPost, tissueModePost);
+    QJsonObject networkSelection = query["networkSelection"].toObject();
+    int number = query["networkNumber"].toInt();
+    QString networkName = Util::getShortName(networkSelection, number);
+    QJsonObject cellSelection = query["selection"].toObject();
+    QJsonObject selectionA = cellSelection["selectionA"].toObject();
+    QJsonObject selectionB = cellSelection["selectionB"].toObject();
+    QJsonObject selectionC = cellSelection["selectionC"].toObject();
+    QString queryType = query["queryType"].toString();
+
+    QString dataRoot = "";
+    QString dataRoot2 = "";
+
+    //networkProps.setDataRoot(dataRoot);
+    //networkProps.loadFilesForQuery();
+
+    processSelection(
+        networkSelection,
+        number,
+        networkProps,
+        selectionA,
+        selectionB,
+        selectionC);
+
+    if (Util::matchCells(networkSelection, number))
+    {
+        int oppositeNumber = Util::getOppositeNetworkNumber(number);
+        QString networkName2 = Util::getShortName(networkSelection, oppositeNumber);
+        //QString dataRoot2 = QueryHelpers::getDatasetPath(networkName2, mConfig);
+        NetworkProps networkProps2;
+        //networkProps2.setDataRoot(dataRoot2);
+        //networkProps2.loadFilesForQuery();
+
+        processSelection(
+            networkSelection,
+            oppositeNumber,
+            networkProps2,
+            selectionA,
+            selectionB,
+            selectionC,
+            true);
+    }
+
+    if (queryType == "spatialInnervation")
+    {
+        filterUniquePre(networkProps);
+    }
 }
 
 void
-NeuronSelection::setSelectionFromQuery(const QJsonObject& spec, const NetworkProps& networkProps)
+NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor, int seed)
 {
+    mSelectionA.clear();
+    mSelectionB.clear();
+    IdList pre = UtilIO::getPreSynapticNeurons(spec, networkProps);
+    IdList post = UtilIO::getPostSynapticNeuronIds(spec, networkProps);
+    if (samplingFactor == 1)
+    {
+        mSelectionA.append(pre);
+        mSelectionB.append(post);
+    }
+    else
+    {
+        RandomGenerator randomGenerator(seed);
+        randomGenerator.shuffleList(pre);
+        randomGenerator.shuffleList(post);
+        for (int i = 0; i < pre.size(); i += samplingFactor)
+        {
+            mSelectionA.append(pre[i]);
+        }
+        for (int i = 0; i < post.size(); i += samplingFactor)
+        {
+            mSelectionB.append(post[i]);
+        }
+    }
+}
 
+void
+NeuronSelection::processSelection(
+    QJsonObject& networkSelection,
+    int number,
+    const NetworkProps& networkProps,
+    QJsonObject& selectionA,
+    QJsonObject& selectionB,
+    QJsonObject& selectionC,
+    bool prune)
+{
+    QString selectionAString = selectionA["filterAsText"].toString();
+    QString selectionBString = selectionB["filterAsText"].toString();
+    QString selectionCString = selectionC["filterAsText"].toString();
+
+    QJsonArray conditionsA = selectionA["conditions"].toArray();
+    QJsonArray conditionsB = selectionB["conditions"].toArray();
+    QJsonArray conditionsC = selectionC["conditions"].toArray();
+
+    bool enabledA = selectionA["enabled"].toBool();
+    bool enabledB = selectionB["enabled"].toBool();
+    bool enabledC = selectionC["enabled"].toBool();
+
+    CIS3D::SynapticSide sideA = Util::getSynapticSide(selectionA);
+    CIS3D::SynapticSide sideB = Util::getSynapticSide(selectionB);
+    CIS3D::SynapticSide sideC = Util::getSynapticSide(selectionC);
+
+    IdList neuronsA, neuronsB, neuronsC;
+
+    if (enabledA)
+    {
+        SelectionFilter filterA = Util::getSelectionFilterFromJson(conditionsA, networkProps, sideA);
+        Util::correctVPMSelectionFilter(filterA, networkProps);
+        Util::correctInterneuronSelectionFilter(filterA, networkProps);
+        neuronsA = networkProps.neurons.getFilteredNeuronIds(filterA);
+    }
+
+    if (enabledB)
+    {
+        SelectionFilter filterB = Util::getSelectionFilterFromJson(conditionsB, networkProps, sideB);
+        Util::correctVPMSelectionFilter(filterB, networkProps);
+        Util::correctInterneuronSelectionFilter(filterB, networkProps);
+        neuronsB = networkProps.neurons.getFilteredNeuronIds(filterB);
+    }
+
+    if (enabledC)
+    {
+        SelectionFilter filterC = Util::getSelectionFilterFromJson(conditionsC, networkProps, sideC);
+        Util::correctVPMSelectionFilter(filterC, networkProps);
+        Util::correctInterneuronSelectionFilter(filterC, networkProps);
+        neuronsC = networkProps.neurons.getFilteredNeuronIds(filterC);
+    }
+
+    NeuronSelection tmpSelection(neuronsA, neuronsB, neuronsC);
+
+    double sliceRef;
+    if (Util::isSlice(networkSelection, number, sliceRef))
+    {
+        QJsonObject tissueA = selectionA["tissueDepth"].toObject();
+        QJsonObject tissueB = selectionB["tissueDepth"].toObject();
+        QJsonObject tissueC = selectionC["tissueDepth"].toObject();
+
+        tmpSelection.filterSlice(networkProps,
+                                 sliceRef,
+                                 tissueA,
+                                 tissueB,
+                                 tissueC);
+    }
+
+    int samplingFactor, randomSeed;
+    if (Util::isSampled(networkSelection, number, samplingFactor, randomSeed))
+    {
+        tmpSelection.sampleDownFactor(samplingFactor, randomSeed);
+    }
+
+    if (prune)
+    {
+        tmpSelection.setNetworkName(Util::getShortName(networkSelection, number));
+        tmpSelection.setDataRoot(networkProps.dataRoot);
+        pruneSelection(tmpSelection);
+    }
+    else
+    {
+        mDataRoot = networkProps.dataRoot;
+        mNetworkName = Util::getShortName(networkSelection, number);
+        copySelection(tmpSelection);
+        CIS3D::Structure postTargetA = Util::getPostsynapticTarget(selectionAString);
+        CIS3D::Structure postTargetB = Util::getPostsynapticTarget(selectionBString);
+        CIS3D::Structure postTargetC = Util::getPostsynapticTarget(selectionCString);
+        setPostTarget(postTargetA, postTargetB, postTargetC);
+    }
+}
+
+void
+NeuronSelection::getTissueDepthParameters(QJsonObject& tissueDepth, double& low, double& high, QString& mode)
+{
+    low = tissueDepth["low"].toDouble();
+    high = tissueDepth["high"].toDouble();
+    mode = tissueDepth["mode"].toString();
 }
 
 QVector<float>
@@ -509,22 +524,18 @@ void
 NeuronSelection::sampleDown(int maxSize, int seed)
 {
     RandomGenerator randomGenerator(seed);
-    mPresynaptic = getDownsampled(mPresynaptic, maxSize, randomGenerator);
-    mPostsynaptic = getDownsampled(mPostsynaptic, maxSize, randomGenerator);
-    mMotifA = getDownsampled(mMotifA, maxSize, randomGenerator);
-    mMotifB = getDownsampled(mMotifB, maxSize, randomGenerator);
-    mMotifC = getDownsampled(mMotifC, maxSize, randomGenerator);
+    mSelectionA = getDownsampled(mSelectionA, maxSize, randomGenerator);
+    mSelectionB = getDownsampled(mSelectionB, maxSize, randomGenerator);
+    mSelectionC = getDownsampled(mSelectionC, maxSize, randomGenerator);
 }
 
 void
 NeuronSelection::sampleDownFactor(int samplingFactor, int seed)
 {
     RandomGenerator randomGenerator(seed);
-    mPresynaptic = getDownsampledFactor(mPresynaptic, samplingFactor, randomGenerator);
-    mPostsynaptic = getDownsampledFactor(mPostsynaptic, samplingFactor, randomGenerator);
-    mMotifA = getDownsampledFactor(mMotifA, samplingFactor, randomGenerator);
-    mMotifB = getDownsampledFactor(mMotifB, samplingFactor, randomGenerator);
-    mMotifC = getDownsampledFactor(mMotifC, samplingFactor, randomGenerator);
+    mSelectionA = getDownsampledFactor(mSelectionA, samplingFactor, randomGenerator);
+    mSelectionB = getDownsampledFactor(mSelectionB, samplingFactor, randomGenerator);
+    mSelectionC = getDownsampledFactor(mSelectionC, samplingFactor, randomGenerator);
 }
 
 IdList
@@ -560,16 +571,16 @@ void
 NeuronSelection::filterUniquePre(const NetworkProps& networkProps)
 {
     IdList pruned;
-    for (int i = 0; i < mPresynaptic.size(); i++)
+    for (int i = 0; i < mSelectionA.size(); i++)
     {
-        int id = mPresynaptic[i];
+        int id = mSelectionA[i];
         int mappedId = networkProps.axonRedundancyMap.getNeuronIdToUse(id);
         if (!pruned.contains(mappedId))
         {
             pruned.append(mappedId);
         }
     }
-    mPresynaptic = pruned;
+    mSelectionA = pruned;
 }
 
 IdList
@@ -608,6 +619,30 @@ NeuronSelection::getDownsampledFactor(IdList& original, int factor, RandomGenera
     return pruned;
 }
 
+QString
+NeuronSelection::getNetworkName()
+{
+    return mNetworkName;
+}
+
+void
+NeuronSelection::setNetworkName(QString name)
+{
+    mNetworkName = name;
+}
+
+QString
+NeuronSelection::getDataRoot()
+{
+    return mDataRoot;
+}
+
+void
+NeuronSelection::setDataRoot(QString dataRoot)
+{
+    mDataRoot = dataRoot;
+}
+
 bool
 NeuronSelection::inSliceBand(double somaX, double min, double max)
 {
@@ -620,4 +655,119 @@ NeuronSelection::inSliceRange(double somaX, double sliceRef, double low, double 
     double sliceWidth = 300;
     first = inSliceBand(somaX, sliceRef + low, sliceRef + high);
     second = inSliceBand(somaX, sliceRef + sliceWidth - high, sliceRef + sliceWidth - low);
+}
+
+void
+NeuronSelection::clear()
+{
+    mSelectionA.clear();
+    mSelectionB.clear();
+    mSelectionC.clear();
+    mBandA.clear();
+    mBandB.clear();
+    mBandC.clear();
+}
+
+void
+NeuronSelection::copySelection(NeuronSelection& selection)
+{
+    clear();
+
+    mSelectionA = selection.SelectionA();
+    mSelectionB = selection.SelectionB();
+    mSelectionC = selection.SelectionC();
+
+    for (int i = 0; i < mSelectionA.size(); i++)
+    {
+        int id = mSelectionA[i];
+        mBandA[id] = selection.getBandA(id);
+    }
+
+    for (int i = 0; i < mSelectionB.size(); i++)
+    {
+        int id = mSelectionB[i];
+        mBandB[id] = selection.getBandB(id);
+    }
+
+    for (int i = 0; i < mSelectionC.size(); i++)
+    {
+        int id = mSelectionC[i];
+        mBandC[id] = selection.getBandC(id);
+    }
+}
+
+void
+NeuronSelection::pruneSelection(NeuronSelection& selection)
+{
+    std::map<int, int> mapping = readMapping(selection);
+
+    std::set<int> allowedA = getAllowedIds(selection.SelectionA(), mapping);
+    pruneIds(mSelectionA, allowedA);
+
+    std::set<int> allowedB = getAllowedIds(selection.SelectionB(), mapping);
+    pruneIds(mSelectionB, allowedB);
+
+    std::set<int> allowedC = getAllowedIds(selection.SelectionC(), mapping);
+    pruneIds(mSelectionC, allowedC);
+}
+
+std::set<int>
+NeuronSelection::getAllowedIds(const IdList& selection, std::map<int, int>& mapping)
+{
+    std::set<int> allowed;
+    for (int i = 0; i < selection.size(); i++)
+    {
+        int id = selection[i];
+        allowed.insert(mapping[id]);
+    }
+    return allowed;
+}
+
+void
+NeuronSelection::pruneIds(IdList& selection, std::set<int>& allowed)
+{
+    IdList prunedSelection;
+    for (int i = 0; i < selection.size(); i++)
+    {
+        int id = selection[i];
+        if (allowed.find(id) != allowed.end())
+        {
+            prunedSelection.push_back(id);
+        }
+    }
+    selection = prunedSelection;
+}
+
+std::map<int, int>
+NeuronSelection::readMapping(NeuronSelection& selection)
+{
+    QDir dataRootDir(selection.getDataRoot());
+    QString networkName = selection.getNetworkName();
+    QString path = CIS3D::getMappingFilePath(dataRootDir, networkName, mNetworkName);
+
+    std::map<int, int> mapping;
+
+    QFile mappingFile(path);
+    if (mappingFile.open(QIODevice::ReadOnly))
+    {
+        QTextStream in(&mappingFile);
+        while (!in.atEnd())
+        {
+            QString line = in.readLine();
+            line = line.trimmed();
+            QStringList parts = line.split(" ");
+
+            int id1 = parts[0].toInt();
+            int id2 = parts[1].toInt();
+            mapping[id1] = id2;
+        }
+    }
+    else
+    {
+        const QString msg =
+            QString("Error reading index file. Could not open file %1").arg(path);
+        throw std::runtime_error(qPrintable(msg));
+    }
+
+    return mapping;
 }

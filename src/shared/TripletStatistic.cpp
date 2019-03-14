@@ -44,17 +44,17 @@ TripletStatistic::TripletStatistic(const NetworkProps& networkProps,
 void
 TripletStatistic::checkInput(const NeuronSelection& selection)
 {
-    if (selection.MotifA().size() == 0)
+    if (selection.SelectionA().size() == 0)
     {
         const QString msg = QString("Motif selection A empty");
         throw std::runtime_error(qPrintable(msg));
     }
-    if (selection.MotifB().size() == 0)
+    if (selection.SelectionB().size() == 0)
     {
         const QString msg = QString("Motif selection B empty");
         throw std::runtime_error(qPrintable(msg));
     }
-    if (selection.MotifC().size() == 0)
+    if (selection.SelectionC().size() == 0)
     {
         const QString msg = QString("Motif selection C empty");
         throw std::runtime_error(qPrintable(msg));
@@ -76,9 +76,9 @@ TripletStatistic::drawTriplets(const NeuronSelection& selection)
 
     std::srand(std::time(NULL));
 
-    const unsigned int NMAX1 = selection.MotifA().size();
-    const unsigned int NMAX2 = selection.MotifB().size();
-    const unsigned int NMAX3 = selection.MotifC().size();
+    const unsigned int NMAX1 = selection.SelectionA().size();
+    const unsigned int NMAX2 = selection.SelectionB().size();
+    const unsigned int NMAX3 = selection.SelectionC().size();
 
     std::list<std::vector<unsigned int> > usedTriplets;
 
@@ -92,15 +92,15 @@ TripletStatistic::drawTriplets(const NeuronSelection& selection)
 
         // Cell1 randomly drawn from Seleciton1
         index1 = std::rand() % NMAX1;
-        int neuron1 = selection.MotifA()[index1];
+        int neuron1 = selection.SelectionA()[index1];
 
         // Cell2 randomly drawn from Selection2
         index2 = std::rand() % NMAX2;
-        int neuron2 = selection.MotifB()[index2];
+        int neuron2 = selection.SelectionB()[index2];
 
         // Cell3 randomly drawn from Selection3
         index3 = std::rand() % NMAX3;
-        int neuron3 = selection.MotifC()[index3];
+        int neuron3 = selection.SelectionC()[index3];
 
         // If drawn CellIDs are identical, draw again
         if (neuron1 == neuron2 || neuron1 == neuron3 || neuron2 == neuron3)
@@ -110,8 +110,8 @@ TripletStatistic::drawTriplets(const NeuronSelection& selection)
 
         // If drawn CellIDs are in different slices, draw again
         if (
-            (selection.getMotifABand(neuron1) != selection.getMotifBBand(neuron2) ||
-             selection.getMotifABand(neuron1) != selection.getMotifCBand(neuron3)))
+            (selection.getBandA(neuron1) != selection.getBandB(neuron2) ||
+             selection.getBandA(neuron1) != selection.getBandC(neuron3)))
         {
             continue;
         }
@@ -279,13 +279,13 @@ TripletStatistic::calculateAverageConvergence(const NeuronSelection& selection)
 {
     int preLimit = 3000;
     std::vector<IdList> pre;
-    pre.push_back(drawRandomlyExceeds(selection.MotifA(), preLimit));
-    pre.push_back(drawRandomlyExceeds(selection.MotifB(), preLimit));
-    pre.push_back(drawRandomlyExceeds(selection.MotifC(), preLimit));
+    pre.push_back(drawRandomlyExceeds(selection.SelectionA(), preLimit));
+    pre.push_back(drawRandomlyExceeds(selection.SelectionB(), preLimit));
+    pre.push_back(drawRandomlyExceeds(selection.SelectionC(), preLimit));
     std::vector<IdList> post;
-    post.push_back(drawRandomly(selection.MotifA(), mSampleSize));
-    post.push_back(drawRandomly(selection.MotifB(), mSampleSize));
-    post.push_back(drawRandomly(selection.MotifC(), mSampleSize));
+    post.push_back(drawRandomly(selection.SelectionA(), mSampleSize));
+    post.push_back(drawRandomly(selection.SelectionB(), mSampleSize));
+    post.push_back(drawRandomly(selection.SelectionC(), mSampleSize));
     for (int i = 0; i < 3; i++)
     {
         for (int j = 0; j < 3; j++)

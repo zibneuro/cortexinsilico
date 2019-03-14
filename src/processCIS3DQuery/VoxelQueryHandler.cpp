@@ -253,6 +253,12 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mCurrentJsonData = jsonData;
         reply->deleteLater();
 
+        int samplingFactor = -1;
+        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
+        mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
+        mNetwork.setDataRoot(mDataRoot);
+        mNetwork.loadFilesForSynapseComputation();
+
         QJsonObject voxelFilter = jsonData["voxelFilter"].toObject();
         QString mode = voxelFilter["mode"].toString();
         std::vector<double> voxelOrigin;
@@ -276,18 +282,12 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             voxelDimensions.push_back(500);
         }
 
-        qDebug() << "[*] Voxel query: " << mode << voxelOrigin[0] << voxelOrigin[1] << voxelOrigin[2] << voxelDimensions[0] << voxelDimensions[1] << voxelDimensions[2];
-
-        int samplingFactor = -1;
-        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
-        mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);        
-        mNetwork.setDataRoot(mDataRoot);
-        mNetwork.loadFilesForSynapseComputation();
+        qDebug() << "[*] Voxel query: " << mode << voxelOrigin[0] << voxelOrigin[1] << voxelOrigin[2] << voxelDimensions[0] << voxelDimensions[1] << voxelDimensions[2];        
 
         QString advancedSettings = Util::getAdvancedSettingsString(jsonData, true, false);
         QJsonObject formulas = jsonData["formulas"].toObject();
         FormulaCalculator calculator(formulas);
-        calculator.init();        
+        calculator.init();
 
         // ################# DETERMINE NEURON IDS #################
 
@@ -296,48 +296,9 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         NeuronSelection selection;
         if (mode == "prePost" || mode == "prePostVoxel")
         {
-            // EXTRACT SLICE PARAMETERS
-            const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
-            const double tissueHighPre = jsonData["tissueHighPre"].toDouble();
-            QString tissueModePre = jsonData["tissueModePre"].toString();
-            const double tissueLowPost = jsonData["tissueLowPost"].toDouble();
-            const double tissueHighPost = jsonData["tissueHighPost"].toDouble();
-            QString tissueModePost = jsonData["tissueModePost"].toString();
-            const double sliceRef = jsonData["sliceRef"].toDouble();
-            const bool isSlice = sliceRef != -9999;
-            //qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
+            QString preSelString = mCurrentJsonData["presynapticSelectionFilterAsText"].toString();
+            QString postSelString = mCurrentJsonData["postsynapticSelectionFilterAsText"].toString();
 
-            QString preSelString = jsonData["presynapticSelectionFilter"].toString();
-            QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
-            QJsonArray preArr = preDoc.array();
-
-            SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork, CIS3D::PRESYNAPTIC);
-            Util::correctVPMSelectionFilter(preFilter, mNetwork);
-            Util::correctInterneuronSelectionFilter(preFilter, mNetwork);
-            IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
-
-            QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
-            QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
-            QJsonArray postArr = postDoc.array();
-            postTarget = Util::getPostsynapticTarget(postSelString);
-            SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
-            Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
-            IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
-
-            selection = NeuronSelection(preNeurons, postNeurons);
-            QVector<float> bbmin;
-            QVector<float> bbmax;
-            bbmin.append(-10000);
-            bbmin.append(-10000);
-            bbmin.append(-10000);
-            bbmax.append(10000);
-            bbmax.append(10000);
-            bbmax.append(10000);
-            selection.setBBox(bbmin, bbmax);
-            if (isSlice)
-            {
-                selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
-            }
             setFilterString(mode, preSelString, postSelString, advancedSettings, voxelOrigin, voxelDimensions);
         }
         else
@@ -345,16 +306,16 @@ VoxelQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             selection.setFullModel(mNetwork, false);
             setFilterString(mode, "", "", advancedSettings, voxelOrigin, voxelDimensions);
         }
-              
-        QString postAllFolder = QDir::cleanPath(mDataRoot + QDir::separator()  + "features_postAll");
-        QString metaFolder = QDir::cleanPath(mDataRoot + QDir::separator() +  "features_meta");
+
+        QString postAllFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "features_postAll");
+        QString metaFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "features_meta");
         QString voxelPosFile = QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos.dat");
-        QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() + Util::getIndexFileName(postTarget));  
+        QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() + Util::getIndexFileName(postTarget));
 
         selection.sampleDownFactor(samplingFactor, 50000);
 
-        IdList preIds = selection.Presynaptic();
-        IdList postIds = selection.Postsynaptic();
+        IdList preIds = selection.SelectionA();
+        IdList postIds = selection.SelectionB();
         std::set<int> mappedPreIds;
         std::set<int> prunedPostIds;
         std::map<int, int> preMultiplicity;

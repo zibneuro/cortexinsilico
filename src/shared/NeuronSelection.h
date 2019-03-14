@@ -5,6 +5,8 @@
 #include "Typedefs.h"
 #include "CIS3DConstantsHelpers.h"
 #include "RandomGenerator.h"
+#include <set>
+#include <map>
 
 #ifndef NEURONSELECTION_H
 #define NEURONSELECTION_H
@@ -21,13 +23,7 @@ public:
     */
     NeuronSelection();
 
-    /**
-     Constructor for a second order network statistic, containing pre-
-     and postsynaptic neuron selections.
-     @param presynaptic The presynaptic neuron IDs.
-     @param postsynaptic The postsynaptic neuron IDs.
-    */
-    NeuronSelection(const IdList& presynaptic, const IdList& postsynaptic);
+    NeuronSelection(const IdList& selectionA, const IdList& selectionB, const IdList& selectionC);
 
     /**
       Filters neurons in a slice model based on tissue depth.
@@ -35,64 +31,21 @@ public:
     */
     static IdList filterTissueDepth(const NetworkProps& networkProps, IdList& preFiltered, double sliceRef, double low, double high, CIS3D::SliceBand band = CIS3D::SliceBand::BOTH);
 
-    /**
-        Determines a innervation statistic selection from a specification file.
-        @param spec The spec file with the filter definition.
-        @param networkProps the model data of the network.
-        @param samplingFactor Sampling rate for selection (default: 1 = take all)
-        @param seed The random seed for the sampling (-1, to use random seed)
-    */
-    void setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor = 1, int seed = -1);
-
-    /**
-        Determines a triplet motif statistic selection from a specification file.
-        @param spec The spec file with the filter definition.
-        @param networkProps the model data of the network.
-    */
-    void setTripletSelection(const QJsonObject& spec, const NetworkProps& networkProps);
-
-    /**
-        Determines a triplet motif statistic selection from selection strings.
-        @param motifASelString The first selection string.
-        @param motifBSelString The second selection string.
-        @param motifASelString The third selection string.
-        @param networkProps the model data of the network.
-    */
-    void setTripletSelection(const QString selAString, const QString selBString, const QString selCString, const NetworkProps& networkProps);
-
-    void setInDegreeSelection(const QString selAString,
-                              const QString selBSelString,
-                              const QString selCSelString,
-                              const NetworkProps& networkProps);
-
     void setPiaSomaDistance(QVector<float> rangePre, QVector<float> rangePost, const NetworkProps& networkProps);
 
     void setFullModel(const NetworkProps& networkProps, bool uniquePre = true);
 
     void filterPiaSoma(IdList& neuronIds, QVector<float> range, const NetworkProps& networkProps);
 
-    void filterTripletSlice(const NetworkProps& networkProps,
-                            double sliceRef,
-                            double tissueLowMotifA,
-                            double tissueHighMotifA,
-                            QString tissueModeMotifA,
-                            double tissueLowMotifB,
-                            double tissueHighMotifB,
-                            QString tissueModeMotifB,
-                            double tissueLowMotifC,
-                            double tissueHighMotifC,
-                            QString tissueModeMotifC);
+    void filterSlice(const NetworkProps& networkProps,
+                     double sliceRef,
+                     QJsonObject& tissueA,
+                     QJsonObject& tissueB,
+                     QJsonObject& tissueC);
 
-    void filterInnervationSlice(const NetworkProps& networkProps,
-                                double sliceRef,
-                                double tissueLowPre,
-                                double tissueHighPre,
-                                QString tissueModePre,
-                                double tissueLowPost,
-                                double tissueHighPost,
-                                QString tissueModePost);
+    void setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor = 1, int seed = -1);
 
-    void setSelectionFromQuery(const QJsonObject& spec, const NetworkProps& networkProps);
+    void setSelectionFromQuery(const QJsonObject& query, const NetworkProps& networkProps);
 
     /**
         Determines neuron IDs based on a selection string;
@@ -103,44 +56,27 @@ public:
     IdList getSelectedNeurons(const QString selectionString, const NetworkProps& networkProps, CIS3D::SynapticSide synapticSide = CIS3D::BOTH_SIDES);
 
     /**
-      Returns the presynaptic subselection.
+      Returns the neuron selection A.
     */
-    IdList Presynaptic() const;
+    IdList SelectionA() const;
 
     /**
-      Returns the postynaptic subselection.
+      Returns the neuron selection B.
     */
-    IdList Postsynaptic() const;
+    IdList SelectionB() const;
 
     /**
-      Returns the first neuron subselection for motif statistics.
+      Returns the neuron selection C.
     */
-    IdList MotifA() const;
+    IdList SelectionC() const;
 
-    /**
-      Returns the second neuron subselection for motif statistics.
-    */
-    IdList MotifB() const;
+    CIS3D::SliceBand getBandA(int id) const;
 
-    /**
-      Returns the third neuron subselection for motif statistics.
-    */
-    IdList MotifC() const;
+    CIS3D::SliceBand getBandB(int id) const;
 
-    CIS3D::SliceBand getMotifABand(int id) const;
+    CIS3D::SliceBand getBandC(int id) const;
 
-    CIS3D::SliceBand getMotifBBand(int id) const;
-
-    CIS3D::SliceBand getMotifCBand(int id) const;
-
-    CIS3D::SliceBand getPresynapticBand(int id) const;
-
-    CIS3D::SliceBand getPostsynapticBand(int id) const;
-
-    /*
-      Prints the number of selected neurons for motif statistics.
-    */
-    void printMotifStats();
+    void printSelectionStats();
 
     void setBBox(QVector<float> min, QVector<float> max);
 
@@ -160,11 +96,17 @@ public:
 
     static IdList filterPreOrBoth(const NetworkProps& networkProps, IdList ids);
 
-    void setPostTarget(CIS3D::Structure selectionA, CIS3D::Structure selectionB, CIS3D::Structure selectionC = CIS3D::DEND);
-
     CIS3D::Structure getPostTarget(int selectionIndex) const;
 
     static IdList getDownsampledFactor(IdList& original, int factor, RandomGenerator& randomGenerator);
+
+    QString getNetworkName();
+
+    void setNetworkName(QString name);
+
+    QString getDataRoot();
+
+    void setDataRoot(QString dataRoot);
 
 private:
     static bool inSliceBand(double somaX, double min, double max);
@@ -173,21 +115,46 @@ private:
 
     IdList getDownsampled(IdList& original, int maxSize, RandomGenerator& randomGenerator);
 
-    IdList mPresynaptic;
-    IdList mPostsynaptic;
-    IdList mMotifA;
-    IdList mMotifB;
-    IdList mMotifC;
+    void processSelection(
+        QJsonObject& networkSelection,
+        int number,
+        const NetworkProps& networkProps,
+        QJsonObject& selectionA,
+        QJsonObject& selectionB,
+        QJsonObject& selectionC,
+        bool prune = false);
+
+    void setPostTarget(CIS3D::Structure selectionA, CIS3D::Structure selectionB, CIS3D::Structure selectionC = CIS3D::DEND);
+
+    void copySelection(NeuronSelection& selection);
+
+    void pruneSelection(NeuronSelection& selection);
+
+    void getTissueDepthParameters(QJsonObject& tissueDepth, double& low, double& high, QString& mode);
+
+    void clear();
+
+    std::set<int> getAllowedIds(const IdList& selection, std::map<int, int>& mapping);
+
+    void pruneIds(IdList& selection, std::set<int>& allowed);
+
+    std::map<int, int> readMapping(NeuronSelection& selection);
+
+    IdList mSelectionA;
+    IdList mSelectionB;
+    IdList mSelectionC;
+
+    std::vector<CIS3D::Structure> mPostTarget;
+    std::map<int, CIS3D::SliceBand> mBandA;
+    std::map<int, CIS3D::SliceBand> mBandB;
+    std::map<int, CIS3D::SliceBand> mBandC;
+
     QVector<float> mBBoxMin;
     QVector<float> mBBoxMax;
     QVector<float> mPiaSomaDistancePre;
     QVector<float> mPiaSomaDistancePost;
-    std::map<int, CIS3D::SliceBand> mMotifABand;
-    std::map<int, CIS3D::SliceBand> mMotifBBand;
-    std::map<int, CIS3D::SliceBand> mMotifCBand;
-    std::map<int, CIS3D::SliceBand> mPresynapticBand;
-    std::map<int, CIS3D::SliceBand> mPostsynapticBand;
-    std::vector<CIS3D::Structure> mPostTarget;
+    QString mNetworkName;
+    QString mDataRoot;
 };
 
 #endif

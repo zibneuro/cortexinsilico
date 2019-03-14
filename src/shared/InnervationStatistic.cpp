@@ -61,13 +61,13 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
 
     CIS3D::Structure postTarget = selection.getPostTarget(1);
 
-    this->numPostNeurons = selection.Postsynaptic().size();
-    this->numPreNeurons = selection.Presynaptic().size();
+    this->numPostNeurons = selection.SelectionB().size();
+    this->numPreNeurons = selection.SelectionA().size();
     this->mNumConnections = (long long)(this->numPreNeurons) * (long long)(this->numPostNeurons);
 
-    for (int i = 0; i < selection.Presynaptic().size(); ++i)
+    for (int i = 0; i < selection.SelectionA().size(); ++i)
     {
-        const int preId = selection.Presynaptic()[i];
+        const int preId = selection.SelectionA()[i];
         const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
         if (preIds.find(mappedPreId) == preIds.end())
         {
@@ -79,9 +79,9 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
         }
     }
 
-    for (int i = 0; i < selection.Postsynaptic().size(); ++i)
+    for (int i = 0; i < selection.SelectionB().size(); ++i)
     {
-        int postId = selection.Postsynaptic()[i];
+        int postId = selection.SelectionB()[i];
         postInnervation[postId] = 0;
     }
 
@@ -94,11 +94,11 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
 
         float currentPreInnervation = 0;
 
-        for (int j = 0; j < selection.Postsynaptic().size(); ++j)
+        for (int j = 0; j < selection.SelectionB().size(); ++j)
         {
-            const int postId = selection.Postsynaptic()[j];
+            const int postId = selection.SelectionB()[j];
 
-            if (selection.getPresynapticBand(itPre->first) != selection.getPostsynapticBand(postId))
+            if (selection.getBandA(itPre->first) != selection.getBandB(postId))
             {
                 continue;
             }
@@ -128,7 +128,7 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
             this->innervationPerPost.addSample(it->second);
         }
 
-        mConnectionsDone += (long long)(selection.Postsynaptic().size()) * (long long)(itPre->second);
+        mConnectionsDone += (long long)(selection.SelectionB().size()) * (long long)(itPre->second);
         reportUpdate();
     }
     reportComplete();

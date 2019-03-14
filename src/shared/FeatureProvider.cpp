@@ -84,9 +84,9 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
 
     // ########### PRE ###########
     qDebug() << "[*] Loading presynaptic.";
-    for (int i = 0; i < selection.Presynaptic().size(); i++)
+    for (int i = 0; i < selection.SelectionA().size(); i++)
     {
-        int neuronId = selection.Presynaptic()[i];
+        int neuronId = selection.SelectionA()[i];
 
         int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
         neuron_morph[neuronId] = cellTypeId;
@@ -109,9 +109,9 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
 
     // ########### POST ###########
     qDebug() << "[*] Loading postsynaptic. Mode:" << (normalized ? "normalized" : "unnormalized");
-    for (int i = 0; i < selection.Postsynaptic().size(); i++)
+    for (int i = 0; i < selection.SelectionB().size(); i++)
     {
-        int neuronId = selection.Postsynaptic()[i];
+        int neuronId = selection.SelectionB()[i];
 
         int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
         neuron_morph[neuronId] = cellTypeId;
@@ -233,7 +233,7 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
     NeuronSelection selection;
     selection.setFullModel(networkProps);
 
-    qDebug() << "[*] Extracting full model" << selection.Presynaptic().size() << selection.Postsynaptic().size();
+    qDebug() << "[*] Extracting full model" << selection.SelectionA().size() << selection.SelectionB().size();
 
     // ########### INIT FIELDS ###########
     QDir modelDataDir = CIS3D::getModelDataDir(networkProps.dataRoot, networkProps.useLegacyPath);
@@ -275,9 +275,9 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
     std::map<int, Vec3f> voxelPositions;
 
     qDebug() << "[*] Loading presynaptic.";
-    for (int i = 0; i < selection.Presynaptic().size(); i++)
+    for (int i = 0; i < selection.SelectionA().size(); i++)
     {
-        int neuronId = selection.Presynaptic()[i];
+        int neuronId = selection.SelectionA()[i];
         int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
         neuron_morph[neuronId] = cellTypeId;
         QString cellType = networkProps.cellTypes.getName(cellTypeId);
@@ -313,9 +313,9 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
 
     // ########### POST ###########
     qDebug() << "[*] Loading postsynaptic";
-    for (int i = 0; i < selection.Postsynaptic().size(); i++)
+    for (int i = 0; i < selection.SelectionB().size(); i++)
     {
-        int neuronId = selection.Postsynaptic()[i];
+        int neuronId = selection.SelectionB()[i];
 
         int cellTypeId = networkProps.neurons.getCellTypeId(neuronId);
         neuron_morph[neuronId] = cellTypeId;

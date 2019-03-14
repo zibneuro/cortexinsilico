@@ -8,6 +8,7 @@
 #include "Histogram.h"
 #include "Typedefs.h"
 #include <cmath>
+#include <iostream>
 
 /**
     Checks whether two neurons overlap based on their bounding box.
@@ -682,10 +683,11 @@ Util::getAdvancedSettingsString(QJsonObject& spec, bool hasSynapseDistribution, 
     QString s = "";
     s += writeNetworkDescription(networkSelection, networkNumber, preSelection, postSelection);
 
-    if(matchCells(networkSelection, networkNumber)){
+    if (matchCells(networkSelection, networkNumber))
+    {
         s += "Match cells to network:\n";
         s += writeNetworkDescription(networkSelection, oppositeNumber, preSelection, postSelection);
-    }    
+    }
 
     // ######### WRITE FORMULA DESCRIPTION #########
 
@@ -732,7 +734,8 @@ Util::writeNetworkDescription(QJsonObject& networkSelection, int number, QJsonOb
         s += QString::number(randomSeed) + "\n";
     }
 
-    if (isSlice(networkSelection, number))
+    double sliceRef;
+    if (isSlice(networkSelection, number, sliceRef))
     {
         const double tissueLowPre = preSelection["tissueLowPre"].toDouble();
         const double tissueHighPre = preSelection["tissueHighPre"].toDouble();
@@ -853,18 +856,18 @@ Util::getSliceRef(QString network)
 }
 
 bool
-Util::isSlice(QJsonObject& networkSpec, int number)
+Util::isSlice(QJsonObject& networkSpec, int number, double& sliceRef)
 {
     QString network1 = networkSpec["network1"].toString();
     QString network2 = networkSpec["network2"].toString();
-    int sliceRef = -9999;
+    sliceRef = -9999;
     if (number == 1)
     {
-        sliceRef = getSliceRef(network1);
+        sliceRef = (double)getSliceRef(network1);
     }
     else
     {
-        sliceRef = getSliceRef(network2);
+        sliceRef = (double)getSliceRef(network2);
     }
     return sliceRef != -9999;
 }
@@ -888,8 +891,9 @@ Util::isFull(QJsonObject& networkSpec, int number)
 bool
 Util::matchCells(QJsonObject& networkSpec, int number)
 {
+    double sliceRef;
     return isFull(networkSpec, number) &&
-           isSlice(networkSpec, getOppositeNetworkNumber(number)) &&
+           isSlice(networkSpec, getOppositeNetworkNumber(number), sliceRef) &&
            networkSpec["matchCells"].toBool();
 }
 
@@ -937,5 +941,43 @@ Util::getLongName(QJsonObject& networkSpec, int number)
     else
     {
         return networkSpec["network2Long"].toString();
+    }
+}
+
+QString
+Util::getShortName(QJsonObject& networkSpec, int number)
+{
+    if (number == 1)
+    {
+        return networkSpec["network1"].toString();
+    }
+    else
+    {
+        return networkSpec["network2"].toString();
+    }
+}
+
+void
+Util::getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed)
+{
+    if(network == 1){
+        sampleSize = sampleSettings["samplesNetwork1"].toInt();
+        randomSeed = sampleSettings["randomSeedNetwork1"].toInt();
+    } else {
+        sampleSize = sampleSettings["samplesNetwork2"].toInt();
+        randomSeed = sampleSettings["randomSeedNetwork2"].toInt();
+    }
+}
+
+CIS3D::SynapticSide Util::getSynapticSide(QJsonObject& selectionFilter){
+    QString side = selectionFilter["synapticSide"].toString();
+    if(side == "presynaptic"){
+        return CIS3D::PRESYNAPTIC;
+    } else if(side == "postsynaptic"){
+        return CIS3D::POSTSYNAPTIC;
+    } else if(side == "both"){
+        return CIS3D::BOTH_SIDES;
+    } else {
+        throw std::runtime_error("Invalid side");
     }
 }

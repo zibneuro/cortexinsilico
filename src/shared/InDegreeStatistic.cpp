@@ -33,17 +33,17 @@ InDegreeStatistic::InDegreeStatistic(const NetworkProps& networkProps,
 void
 InDegreeStatistic::checkInput(const NeuronSelection& selection)
 {
-    if (selection.MotifA().size() == 0)
+    if (selection.SelectionA().size() == 0)
     {
         const QString msg = QString("In-Degree selection A empty");
         throw std::runtime_error(qPrintable(msg));
     }
-    if (selection.MotifB().size() == 0)
+    if (selection.SelectionB().size() == 0)
     {
         const QString msg = QString("In-Degree selection B empty");
         throw std::runtime_error(qPrintable(msg));
     }
-    if (selection.MotifC().size() == 0)
+    if (selection.SelectionC().size() == 0)
     {
         const QString msg = QString("In-Degree selection C empty");
         throw std::runtime_error(qPrintable(msg));
@@ -76,7 +76,7 @@ void
 InDegreeStatistic::doCalculate(const NeuronSelection& selection)
 {
     checkInput(selection);
-    QList<int> postIds = samplePostIds(selection.MotifC());
+    QList<int> postIds = samplePostIds(selection.SelectionC());
 
     const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(postIds, mNetwork);
     for (IdsPerCellTypeRegion::ConstIterator it = idsPerCellTypeRegion.constBegin(); it != idsPerCellTypeRegion.constEnd(); ++it)
@@ -84,8 +84,8 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
 
         const IdList& ids = it.value();        
 
-        const IdList preIdListA = selection.MotifA();
-        const IdList preIdListB = selection.MotifB();
+        const IdList preIdListA = selection.SelectionA();
+        const IdList preIdListB = selection.SelectionB();
 
         for (int post = 0; post < ids.size(); ++post)
         {
@@ -95,7 +95,7 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
             }
 
             const int postId = ids[post];
-            CIS3D::SliceBand postSliceBand = selection.getMotifCBand(postId);
+            CIS3D::SliceBand postSliceBand = selection.getBandC(postId);
 
             Statistics perPostAC;
             Statistics perPostBC;
@@ -103,7 +103,7 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
             for (int pre = 0; pre < preIdListA.size(); ++pre)
             {
                 const int preId = preIdListA[pre];
-                if (selection.getMotifABand(preId) == postSliceBand)
+                if (selection.getBandA(preId) == postSliceBand)
                 {
                     const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
                     const float innervation = mInnervationMatrix->getValue(mappedPreId, postId, selection.getPostTarget(2));
@@ -113,7 +113,7 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
             for (int pre = 0; pre < preIdListB.size(); ++pre)
             {
                 const int preId = preIdListB[pre];
-                if (selection.getMotifBBand(preId) == postSliceBand)
+                if (selection.getBandB(preId) == postSliceBand)
                 {
                     const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
                     const float innervation = mInnervationMatrix->getValue(mappedPreId, postId, selection.getPostTarget(2));

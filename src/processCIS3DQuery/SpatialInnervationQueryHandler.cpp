@@ -112,76 +112,18 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
         QJsonObject jsonData = jsonResponse.object().value("data").toObject();
         mCurrentJsonData = jsonData;
-        reply->deleteLater();
+        reply->deleteLater();        
 
-        int samplingFactor = -1;
-        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
-        mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
-        qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
-        mNetwork.setDataRoot(mDataRoot);
-        mNetwork.loadFilesForSynapseComputation();
+        NeuronSelection selection;
+        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork);
 
-        /*
-        QJsonObject formulas = jsonData["formulas"].toObject();
-        FormulaCalculator calculator(formulas);
-        bool initSuccess = calculator.init();
-        qDebug() << "Formula calculator" << initSuccess;
-        */
+        IdList preIds = selection.SelectionA();
+        IdList postIds = selection.SelectionB();            
 
-        // EXTRACT SLICE PARAMETERS
-        const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
-        const double tissueHighPre = jsonData["tissueHighPre"].toDouble();
-        QString tissueModePre = jsonData["tissueModePre"].toString();
-        const double tissueLowPost = jsonData["tissueLowPost"].toDouble();
-        const double tissueHighPost = jsonData["tissueHighPost"].toDouble();
-        QString tissueModePost = jsonData["tissueModePost"].toString();
-        const double sliceRef = jsonData["sliceRef"].toDouble();
-        const bool isSlice = sliceRef != -9999;
-        //qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
+        // ###################### LOOP OVER NEURONS ######################
 
-        QString preSelString = jsonData["presynapticSelectionFilter"].toString();
-        QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
-        QJsonArray preArr = preDoc.array();
-
-        SelectionFilter preFilter = Util::getSelectionFilterFromJson(preArr, mNetwork, CIS3D::PRESYNAPTIC);
-        Util::correctVPMSelectionFilter(preFilter, mNetwork);
-        Util::correctInterneuronSelectionFilter(preFilter, mNetwork);
-        IdList preNeurons = mNetwork.neurons.getFilteredNeuronIds(preFilter);
-
-        QString postSelString = jsonData["postsynapticSelectionFilter"].toString();
-        QJsonDocument postDoc = QJsonDocument::fromJson(postSelString.toLocal8Bit());
-        QJsonArray postArr = postDoc.array();
-        SelectionFilter postFilter = Util::getSelectionFilterFromJson(postArr, mNetwork, CIS3D::POSTSYNAPTIC);
-        Util::correctInterneuronSelectionFilter(postFilter, mNetwork);
-        IdList postNeurons = mNetwork.neurons.getFilteredNeuronIds(postFilter);
-
-        CIS3D::Structure postTarget = Util::getPostsynapticTarget(postSelString);
-        QString dataFolder = QDir::cleanPath(mDataRoot + QDir::separator() + Util::getInnervationFolderName(postTarget));
+        QString dataFolder = QDir::cleanPath(mDataRoot + QDir::separator() + Util::getInnervationFolderName(selection.getPostTarget(1)));
         QString voxelFolder = QDir::cleanPath(mDataRoot + QDir::separator() + "features_meta");
-
-        NeuronSelection selection(preNeurons, postNeurons);
-        QVector<float> bbmin;
-        QVector<float> bbmax;
-        bbmin.append(-10000);
-        bbmin.append(-10000);
-        bbmin.append(-10000);
-        bbmax.append(10000);
-        bbmax.append(10000);
-        bbmax.append(10000);
-
-        selection.filterUniquePre(mNetwork);
-        selection.setBBox(bbmin, bbmax);
-        if (isSlice)
-        {
-            selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
-        }
-
-        selection.sampleDownFactor(samplingFactor, 50000);
-
-        IdList preIds = selection.Presynaptic();
-        IdList postIds = selection.Postsynaptic();
-
-        qDebug() << "[*] SPATIAL QUERY " << preIds.size() << " presynaptic and " << postIds.size() << " postsynaptic neurons.";
 
         const QString zipFileName = QString("spatialInnervation_%1.json.zip").arg(mQueryId);
         const QString zipFullPath = QString("%1/%2").arg(mTempFolder).arg(zipFileName);
@@ -191,9 +133,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         const QString dataZipFileName = QString("spatialInnervation_%1.zip").arg(mQueryId);
         const QString dataZipFullPath = QString("%1/%2").arg(mTempFolder).arg(dataZipFileName);
         const QString dataFileName = QString(dataZipFileName).remove(".zip");
-        const QString dataFullPath = QString(dataZipFullPath).remove(".zip");
-
-        // ###################### LOOP OVER NEURONS ######################
+        const QString dataFullPath = QString(dataZipFullPath).remove(".zip");    
 
         std::map<int, float> innervationPerVoxel;
         QVector<QString> fileNames;
@@ -237,7 +177,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
                 int voxelId = parts[0].toInt(&isVoxelId);
                 if (isVoxelId)
                 {
-                    if (postIds.contains(currentPostId) && selection.getPresynapticBand(preIds[i]) == selection.getPostsynapticBand(currentPostId))
+                    if (postIds.contains(currentPostId) && selection.getBandA(preIds[i]) == selection.getBandB(currentPostId))
                     {
                         outStream << line << "\n";
 

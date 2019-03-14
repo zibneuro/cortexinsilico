@@ -127,7 +127,7 @@ namespace Util
 
     int getSliceRef(QString network);
 
-    bool isSlice(QJsonObject&  networkSpec, int number);
+    bool isSlice(QJsonObject&  networkSpec, int number, double& sliceRef);
 
     bool isFull(QJsonObject&  networkSpec, int number);
 
@@ -139,7 +139,13 @@ namespace Util
 
     QString getLongName(QJsonObject& networkSpec, int number);
 
+    QString getShortName(QJsonObject& networkSpec, int number);
+
     QString writeNetworkDescription(QJsonObject& networkSelection, int number, QJsonObject& preSelection, QJsonObject& postSelection);
+
+    void getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed);
+
+    CIS3D::SynapticSide getSynapticSide(QJsonObject& selectionFilter);
 
 } // namespace Util
 

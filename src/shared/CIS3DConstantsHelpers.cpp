@@ -218,18 +218,17 @@ CIS3D::getNormalizedPSTDir(const QDir& modelDataDir,
 
 QDir
 CIS3D::getNormalizedApicalPSTDir(const QDir& modelDataDir,
-                           const QString& regionName,
-                           const QString& cellTypeName)
+                                 const QString& regionName,
+                                 const QString& cellTypeName)
 {
     QDir normalizedPSTDir(getNormalizedApicalPSTRootDir(modelDataDir).absolutePath() + "/" + regionName + "/" + cellTypeName);
     return normalizedPSTDir;
 }
 
-
 QDir
 CIS3D::getNormalizedBasalPSTDir(const QDir& modelDataDir,
-                           const QString& regionName,
-                           const QString& cellTypeName)
+                                const QString& regionName,
+                                const QString& cellTypeName)
 {
     QDir normalizedPSTDir(getNormalizedBasalPSTRootDir(modelDataDir).absolutePath() + "/" + regionName + "/" + cellTypeName);
     return normalizedPSTDir;
@@ -261,10 +260,10 @@ CIS3D::getNormalizedPSTFileFullPath(const QDir& modelDataDir,
 
 QString
 CIS3D::getNormalizedApicalPSTFileFullPath(const QDir& modelDataDir,
-                                    const QString& regionName,
-                                    const QString& cellTypeName,
-                                    const int neuronId,
-                                    const CIS3D::NeuronType presynapticNeuronType)
+                                          const QString& regionName,
+                                          const QString& cellTypeName,
+                                          const int neuronId,
+                                          const CIS3D::NeuronType presynapticNeuronType)
 {
     QString path = getNormalizedApicalPSTDir(modelDataDir, regionName, cellTypeName).absolutePath();
     path += "/" + getNormalizedPSTFileName(neuronId, presynapticNeuronType);
@@ -273,10 +272,10 @@ CIS3D::getNormalizedApicalPSTFileFullPath(const QDir& modelDataDir,
 
 QString
 CIS3D::getNormalizedBasalPSTFileFullPath(const QDir& modelDataDir,
-                                    const QString& regionName,
-                                    const QString& cellTypeName,
-                                    const int neuronId,
-                                    const CIS3D::NeuronType presynapticNeuronType)
+                                         const QString& regionName,
+                                         const QString& cellTypeName,
+                                         const int neuronId,
+                                         const CIS3D::NeuronType presynapticNeuronType)
 {
     QString path = getNormalizedBasalPSTDir(modelDataDir, regionName, cellTypeName).absolutePath();
     path += "/" + getNormalizedPSTFileName(neuronId, presynapticNeuronType);
@@ -317,6 +316,13 @@ QString
 CIS3D::getAxonRedundancyMapFileName(const QDir& modelDataDir)
 {
     return modelDataDir.absolutePath() + "/AxonRedundancyMap.dat";
+}
+
+QString
+CIS3D::getMappingFilePath(QDir& dataRootDir, QString& network1, QString& network2)
+{    
+    QString mappingFilePath = QString("mapping_%1_%1").arg(network1, network2);
+    return QDir::cleanPath(dataRootDir.absolutePath() + QDir::separator() + mappingFilePath);    
 }
 
 QDir

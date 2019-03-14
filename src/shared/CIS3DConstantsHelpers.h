@@ -369,6 +369,8 @@ namespace CIS3D
     */
     QString getAxonRedundancyMapFileName(const QDir& modelDataDir);
 
+    QString getMappingFilePath(QDir& dataRootDir, QString& network1, QString& network2);
+
     /**
         Determines the file containing calculated innervation for the specified
         region and cell type.

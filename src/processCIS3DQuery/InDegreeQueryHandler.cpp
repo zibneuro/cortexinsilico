@@ -190,75 +190,27 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
     }
     else if (error == QNetworkReply::NoError)
     {
-        qDebug() << "[*] Starting computation of In-Degree query";
-
         const QByteArray content = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
-        QJsonObject jsonData = jsonResponse.object().value("data").toObject();
-        mCurrentJsonData = jsonData;
+        mCurrentJsonData = jsonResponse.object().value("data").toObject();
+        QJsonObject networkSelection = mCurrentJsonData["networkSelection"].toObject();
+        int networkNumber = mCurrentJsonData["networkNumber"].toInt();
+
+        QJsonObject sampleSettings = mCurrentJsonData["sampleSettings"].toObject();
+        mAdvancedSettings = Util::getAdvancedSettingsString(mCurrentJsonData);
         reply->deleteLater();
 
-        int samplingFactor = -1;
-        const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
-        mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
-        qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
-        mNetwork.setDataRoot(mDataRoot);
-        mNetwork.loadFilesForQuery();
-
-        QString motifASelString = jsonData["inDegreeASelectionFilter"].toString();
-        QString motifBSelString = jsonData["inDegreeBSelectionFilter"].toString();
-        QString motifCSelString = jsonData["inDegreeCSelectionFilter"].toString();
-
-        CIS3D::Structure postTargetA = Util::getPostsynapticTarget(motifASelString);
-        CIS3D::Structure postTargetB = Util::getPostsynapticTarget(motifBSelString);
-        CIS3D::Structure postTargetC = Util::getPostsynapticTarget(motifCSelString);
-
-        // EXTRACT SLICE PARAMETERS
-        const double lowA = jsonData["tissueLowInDegreeA"].toDouble();
-        const double highA = jsonData["tissueHighInDegreeA"].toDouble();
-        const QString modeA = jsonData["tissueModeInDegreeA"].toString();
-        const double lowB = jsonData["tissueLowInDegreeB"].toDouble();
-        const double highB = jsonData["tissueHighInDegreeB"].toDouble();
-        const QString modeB = jsonData["tissueModeInDegreeB"].toString();
-        const double lowC = jsonData["tissueLowInDegreeC"].toDouble();
-        const double highC = jsonData["tissueHighInDegreeC"].toDouble();
-        const QString modeC = jsonData["tissueModeInDegreeC"].toString();
-        const double sliceRef = jsonData["sliceRef"].toDouble();
-        const bool isSlice = sliceRef != -9999;
-
-        // EXTRACT FORMULA
-        QJsonObject formulas = jsonData["formulas"].toObject();
+        QJsonObject formulas = mCurrentJsonData["formulas"].toObject();
         FormulaCalculator calculator(formulas);
         calculator.init();
 
-        int numberOfSamples = jsonData["numberSamples"].toInt();
-
-        mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
+        int numberSamples, randomSeed;
+        Util::getSampleSettings(sampleSettings, networkNumber, numberSamples, randomSeed);
 
         NeuronSelection selection;
-        qDebug() << "[*] Determining In-Degree selection:" << motifASelString << motifBSelString
-                 << motifCSelString;
-        selection.setInDegreeSelection(motifASelString, motifBSelString, motifCSelString, mNetwork);
-        selection.sampleDownFactor(samplingFactor, 50000);
-        selection.setPostTarget(postTargetA, postTargetB, postTargetC);
+        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork);
 
-        if (isSlice)
-        {
-            selection.filterTripletSlice(mNetwork,
-                                         sliceRef,
-                                         lowA,
-                                         highA,
-                                         modeA,
-                                         lowB,
-                                         highB,
-                                         modeB,
-                                         lowC,
-                                         highC,
-                                         modeC);
-        }
-        //selection.printMotifStats();
-
-        InDegreeStatistic statistic(mNetwork, numberOfSamples, calculator);
+        InDegreeStatistic statistic(mNetwork, numberSamples, calculator);
         connect(&statistic, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&statistic, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
         statistic.calculate(selection);

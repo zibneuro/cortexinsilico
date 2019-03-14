@@ -252,71 +252,17 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
         if (status == "success")
         {
+            // ############ PROCESS SELECTION ############
+
+            const QByteArray content = reply->readAll();
             QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
-            QString selectionString = jsonResponse.object().value("data").toString();
-            qDebug() << "    Starting computation:" << mQueryId << selectionString;
+            QJsonObject jsonData = jsonResponse.object().value("data").toObject();
 
-            QString datasetShortName = jsonResponse.object().value("network").toString();
-            int samplingFactor = jsonResponse.object().value("samplingFactor").toInt();
-            if (datasetShortName == "RBCk")
-            {
-                datasetShortName = "RBC";
-            }
-            else
-            {
-                samplingFactor = -1;
-            }
+            NeuronSelection selection;
+            selection.setSelectionFromQuery(jsonData, mNetwork);
+            IdList neurons = selection.SelectionA();
 
-            // EXTRACT SLICE PARAMETERS
-            const double tissueLow = jsonResponse.object().value("tissueLow").toDouble();
-            const double tissueHigh = jsonResponse.object().value("tissueHigh").toDouble();
-            const double sliceRef = jsonResponse.object().value("sliceRef").toDouble();
-            QString mode = jsonResponse.object().value("tissueMode").toString();
-            const bool isSlice = sliceRef != -9999;
-            qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLow << tissueHigh << mode;
-
-            mDataRoot = QueryHelpers::getDatasetPath(datasetShortName, mConfig);
-            qDebug() << "    Loading network data:" << datasetShortName << "Path: " << mDataRoot;
-
-            mNetwork.setDataRoot(mDataRoot);
-            mNetwork.loadFilesForQuery();
-
-            CIS3D::SynapticSide synapticSide = CIS3D::BOTH_SIDES;
-            QString synapticSideString = jsonResponse.object().value("synapticSide").toString();
-            qDebug() << "SYNAPTIC SIDE" << synapticSideString;
-            if (!isSlice && synapticSideString == "presynaptic")
-            {
-                synapticSide = CIS3D::PRESYNAPTIC;
-            }
-            else if (!isSlice && synapticSideString == "postsynaptic")
-            {
-                synapticSide = CIS3D::POSTSYNAPTIC;
-            }
-            else if (isSlice || synapticSideString == "both")
-            {
-                synapticSide = CIS3D::BOTH_SIDES;
-            }
-            else
-            {
-                const QString msg = QString("[-] Invalid synaptic side string: %1").arg(synapticSideString);
-                throw std::runtime_error(qPrintable(msg));
-            }
-
-            QJsonDocument selectionDoc = QJsonDocument::fromJson(selectionString.toLocal8Bit());
-            QJsonArray selectionArr = selectionDoc.array();
-            SelectionFilter filter = Util::getSelectionFilterFromJson(selectionArr, mNetwork, synapticSide);
-            Util::correctVPMSelectionFilter(filter, mNetwork);
-            Util::correctInterneuronSelectionFilter(filter, mNetwork);
-            IdList neurons = mNetwork.neurons.getFilteredNeuronIds(filter);
-
-            if (isSlice)
-            {
-                CIS3D::SliceBand band = mode == "twoSided" ? CIS3D::SliceBand::BOTH : CIS3D::SliceBand::FIRST;
-                neurons = NeuronSelection::filterTissueDepth(mNetwork, neurons, sliceRef, tissueLow, tissueHigh, band);
-            }
-            RandomGenerator generator(50000);
-            neurons = NeuronSelection::getDownsampledFactor(neurons, samplingFactor, generator);
-            qDebug() << "    Start sorting " << neurons.size() << " neurons.";
+            // ############ UPLOAD RESULTS ############
 
             const QString key = QString("neuronselection_%1.json.zip").arg(mQueryId);
             QString geometryFile;
