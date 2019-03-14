@@ -191,9 +191,15 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
         const QByteArray content = reply->readAll();
         QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
-        QJsonObject jsonData = jsonResponse.object().value("data").toObject();
-        mCurrentJsonData = jsonData;
-        reply->deleteLater();
+        mCurrentJsonData = jsonResponse.object().value("data").toObject();
+        mAdvancedSettings = Util::getAdvancedSettingsString(mCurrentJsonData);
+        reply->deleteLater();        
+
+        QJsonObject formulas = mCurrentJsonData["formulas"].toObject();
+        FormulaCalculator calculator(formulas);
+        calculator.init();
+
+        /*
 
         int samplingFactor = -1;
         const QString datasetShortName = Util::getNetwork(jsonData, samplingFactor);
@@ -202,11 +208,6 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForQuery();
 
-        // EXTRACT FORMULA
-        qDebug() << jsonData;
-        QJsonObject formulas = jsonData["formulas"].toObject();
-        FormulaCalculator calculator(formulas);
-        calculator.init();
 
         // EXTRACT SLICE PARAMETERS
         const double tissueLowPre = jsonData["tissueLowPre"].toDouble();
@@ -217,9 +218,9 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         QString tissueModePost = jsonData["tissueModePost"].toString();
         const double sliceRef = jsonData["sliceRef"].toDouble();
         //const bool isSlice = sliceRef != -9999;
-        qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
+        // qDebug() << "Slice ref, Tissue depth" << sliceRef << tissueLowPre << tissueHighPre << tissueModePre << tissueLowPost << tissueHighPost << tissueModePost;
 
-        mAdvancedSettings = Util::getAdvancedSettingsString(jsonData);
+        
 
         QString preSelString = jsonData["presynapticSelectionFilter"].toString();
         QJsonDocument preDoc = QJsonDocument::fromJson(preSelString.toLocal8Bit());
@@ -245,11 +246,17 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
         connect(&innervation, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
+
         NeuronSelection selection(preNeurons, postNeurons);
         selection.filterInnervationSlice(mNetwork, sliceRef, tissueLowPre, tissueHighPre, tissueModePre, tissueLowPost, tissueHighPost, tissueModePost);
         selection.sampleDownFactor(samplingFactor, 50000);
         selection.setPostTarget(postTargetA, postTargetB);        
+        
+
+        NeuronSelection selection;
+        selection.setSelectionFromQuery(mCurrentJsonData);
         innervation.calculate(selection);
+        */
     }
     else
     {

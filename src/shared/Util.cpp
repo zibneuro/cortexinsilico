@@ -373,15 +373,17 @@ Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
     {
         const QString value = insideS1Obj["value"].toString();
         QList<int> filteredRegionIds;
-        
+
         const int S1id = network.regions.getId("S1");
         QList<int> allRegions = network.regions.getAllRegionIds();
         QList<int> insideRegions;
-        for(int i = 0; i<allRegions.size(); i++){
+        for (int i = 0; i < allRegions.size(); i++)
+        {
             int regionId = allRegions[i];
-            if(network.regions.isInSubtree(regionId, S1id)){
+            if (network.regions.isInSubtree(regionId, S1id))
+            {
                 insideRegions.append(regionId);
-            } 
+            }
         }
 
         if (value == "Yes")
@@ -397,7 +399,8 @@ Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
             const QString msg = "Invalid S1 predicate";
             std::runtime_error(qPrintable(msg));
         }
-        if(filteredRegionIds.size() == 0){
+        if (filteredRegionIds.size() == 0)
+        {
             filteredRegionIds.append(network.regions.getId("Brain"));
         }
         filter.regionIds = filteredRegionIds;
@@ -667,30 +670,26 @@ Util::getMinMedMax(std::vector<float> in, float& min, float& med, float& max)
 QString
 Util::getAdvancedSettingsString(QJsonObject& spec, bool hasSynapseDistribution, bool hasConnectionProbability)
 {
+    QJsonObject query = spec["query"].toObject();
+    QJsonObject networkSelection = query["networkSelection"].toObject();
+    QJsonObject preSelection = query["preSelection"].toObject();
+    QJsonObject postSelection = query["postSelection"].toObject();
+    int networkNumber = query["networkNumber"].toInt();
+    int oppositeNumber = getOppositeNetworkNumber(networkNumber);
+
+    // ######### WRITE NETWORK SELECTION #########
+
     QString s = "";
-    const double tissueLowPre = spec["tissueLowPre"].toDouble();
-    const double tissueHighPre = spec["tissueHighPre"].toDouble();
-    QString tissueModePre = spec["tissueModePre"].toString();
-    const double tissueLowPost = spec["tissueLowPost"].toDouble();
-    const double tissueHighPost = spec["tissueHighPost"].toDouble();
-    QString tissueModePost = spec["tissueModePost"].toString();
-    const double sliceRef = spec["sliceRef"].toDouble();
-    const bool isSlice = sliceRef != -9999;
+    s += writeNetworkDescription(networkSelection, networkNumber, preSelection, postSelection);
 
-    if (isSlice)
-    {
-        QString modePre = tissueModePre == "oneSided" ? "one-sided" : "two-sided";
-        s += "Presyn. tissue depth mode," + modePre + "\n";
-        s += "Presyn. tissue depth low," + QString::number(tissueLowPre) + "\n";
-        s += "Presyn. tissue depth high," + QString::number(tissueHighPre) + "\n";
+    if(matchCells(networkSelection, networkNumber)){
+        s += "Match cells to network:\n";
+        s += writeNetworkDescription(networkSelection, oppositeNumber, preSelection, postSelection);
+    }    
 
-        QString modePost = tissueModePost == "oneSided" ? "one-sided" : "two-sided";
-        s += "Postsyn. tissue depth mode," + modePost + "\n";
-        s += "Postsyn. tissue depth low," + QString::number(tissueLowPost) + "\n";
-        s += "Postsyn. tissue depth high," + QString::number(tissueHighPost) + "\n";
-    }
+    // ######### WRITE FORMULA DESCRIPTION #########
 
-    QJsonObject formulas = spec["formulas"].toObject();
+    QJsonObject formulas = query["formulas"].toObject();
 
     QString synapseDistributionFormula = formulas["synapseDistributionFormula"].toString();
     bool useCustomConnectionProbabilityFormula = formulas["connectionProbabilityMode"].toString() == "formula";
@@ -711,6 +710,46 @@ Util::getAdvancedSettingsString(QJsonObject& spec, bool hasSynapseDistribution, 
         {
             s += "\"1-P_i(0)\"\n";
         }
+    }
+
+    return s;
+}
+
+QString
+Util::writeNetworkDescription(QJsonObject& networkSelection, int number, QJsonObject& preSelection, QJsonObject& postSelection)
+{
+    QString s = "";
+
+    s += "Neural network,";
+    s += getLongName(networkSelection, number) + "\n";
+
+    int samplingFactor = -1;
+    int randomSeed = -1;
+    if (isSampled(networkSelection, number, samplingFactor, randomSeed))
+    {
+        s += "Sampling factor,";
+        s += QString::number(samplingFactor) + "\n";
+        s += QString::number(randomSeed) + "\n";
+    }
+
+    if (isSlice(networkSelection, number))
+    {
+        const double tissueLowPre = preSelection["tissueLowPre"].toDouble();
+        const double tissueHighPre = preSelection["tissueHighPre"].toDouble();
+        QString tissueModePre = preSelection["tissueModePre"].toString();
+        const double tissueLowPost = postSelection["tissueLowPost"].toDouble();
+        const double tissueHighPost = postSelection["tissueHighPost"].toDouble();
+        QString tissueModePost = postSelection["tissueModePost"].toString();
+
+        QString modePre = tissueModePre == "oneSided" ? "one-sided" : "two-sided";
+        s += "Presyn. tissue depth mode," + modePre + "\n";
+        s += "Presyn. tissue depth low," + QString::number(tissueLowPre) + "\n";
+        s += "Presyn. tissue depth high," + QString::number(tissueHighPre) + "\n";
+
+        QString modePost = tissueModePost == "oneSided" ? "one-sided" : "two-sided";
+        s += "Postsyn. tissue depth mode," + modePost + "\n";
+        s += "Postsyn. tissue depth low," + QString::number(tissueLowPost) + "\n";
+        s += "Postsyn. tissue depth high," + QString::number(tissueHighPost) + "\n";
     }
 
     return s;
@@ -795,4 +834,108 @@ Util::getNetwork(QJsonObject& spec, int& samplingFactor)
         samplingFactor = -1;
     }
     return name;
+}
+
+int
+Util::getSliceRef(QString network)
+{
+    if (network == "")
+        return -9999;
+    else if (!network.contains("Truncated"))
+    {
+        return -9999;
+    }
+    else
+    {
+        int refX = network.mid(12, 3).toInt();
+        return refX;
+    }
+}
+
+bool
+Util::isSlice(QJsonObject& networkSpec, int number)
+{
+    QString network1 = networkSpec["network1"].toString();
+    QString network2 = networkSpec["network2"].toString();
+    int sliceRef = -9999;
+    if (number == 1)
+    {
+        sliceRef = getSliceRef(network1);
+    }
+    else
+    {
+        sliceRef = getSliceRef(network2);
+    }
+    return sliceRef != -9999;
+}
+
+bool
+Util::isFull(QJsonObject& networkSpec, int number)
+{
+    QString network = "";
+    if (number == 1)
+    {
+        network = networkSpec["network1"].toString();
+    }
+    else
+    {
+        network = networkSpec["network2"].toString();
+    }
+
+    return !network.contains("Truncated") && !network.isEmpty();
+}
+
+bool
+Util::matchCells(QJsonObject& networkSpec, int number)
+{
+    return isFull(networkSpec, number) &&
+           isSlice(networkSpec, getOppositeNetworkNumber(number)) &&
+           networkSpec["matchCells"].toBool();
+}
+
+int
+Util::getOppositeNetworkNumber(int number)
+{
+    if (number == 1)
+    {
+        return 2;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+bool
+Util::isSampled(QJsonObject& networkSpec, int number, int& samplingFactor, int& randomSeed)
+{
+    QString network = "";
+
+    if (number == 1)
+    {
+        network = networkSpec["network1"].toString();
+        samplingFactor = networkSpec["samplingFactor1"].toInt();
+        randomSeed = networkSpec["randomSeed1"].toInt();
+    }
+    else
+    {
+        network = networkSpec["network2"].toString();
+        samplingFactor = networkSpec["samplingFactor2"].toInt();
+        randomSeed = networkSpec["randomSeed2"].toInt();
+    }
+
+    return network == "RBCk";
+}
+
+QString
+Util::getLongName(QJsonObject& networkSpec, int number)
+{
+    if (number == 1)
+    {
+        return networkSpec["network1Long"].toString();
+    }
+    else
+    {
+        return networkSpec["network2Long"].toString();
+    }
 }

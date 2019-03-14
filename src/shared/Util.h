@@ -123,7 +123,23 @@ namespace Util
 
     QString getInnervationFolderName(CIS3D::Structure target);
 
-    QString getNetwork(QJsonObject& spec, int& samplingFactor);
+    QString getNetwork(QJsonObject& spec, int& samplingFactor);    
+
+    int getSliceRef(QString network);
+
+    bool isSlice(QJsonObject&  networkSpec, int number);
+
+    bool isFull(QJsonObject&  networkSpec, int number);
+
+    bool matchCells(QJsonObject&  networkSpec, int number);
+
+    int getOppositeNetworkNumber(int number);
+
+    bool isSampled(QJsonObject& networkSpec, int number, int& samplingFactor, int& randomSeed);
+
+    QString getLongName(QJsonObject& networkSpec, int number);
+
+    QString writeNetworkDescription(QJsonObject& networkSelection, int number, QJsonObject& preSelection, QJsonObject& postSelection);
 
 } // namespace Util
 

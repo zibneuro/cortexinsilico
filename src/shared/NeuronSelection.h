@@ -92,6 +92,8 @@ public:
                                 double tissueHighPost,
                                 QString tissueModePost);
 
+    void setSelectionFromQuery(const QJsonObject& spec, const NetworkProps& networkProps);
+
     /**
         Determines neuron IDs based on a selection string;
         @param selectionString The selection string.
@@ -162,14 +164,14 @@ public:
 
     CIS3D::Structure getPostTarget(int selectionIndex) const;
 
-    static IdList getDownsampledFactor(IdList& original, int factor, RandomGenerator& randomGenerator);    
+    static IdList getDownsampledFactor(IdList& original, int factor, RandomGenerator& randomGenerator);
 
 private:
     static bool inSliceBand(double somaX, double min, double max);
 
     static void inSliceRange(double somaX, double sliceRef, double low, double high, bool& first, bool& second);
 
-    IdList getDownsampled(IdList& original, int maxSize, RandomGenerator& randomGenerator);      
+    IdList getDownsampled(IdList& original, int maxSize, RandomGenerator& randomGenerator);
 
     IdList mPresynaptic;
     IdList mPostsynaptic;

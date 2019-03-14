@@ -487,6 +487,12 @@ NeuronSelection::filterInnervationSlice(const NetworkProps& networkProps,
     applyTissueDepthFilter(mPostsynaptic, mPostsynapticBand, networkProps, sliceRef, tissueLowPost, tissueHighPost, tissueModePost);
 }
 
+void
+NeuronSelection::setSelectionFromQuery(const QJsonObject& spec, const NetworkProps& networkProps)
+{
+
+}
+
 QVector<float>
 NeuronSelection::getPiaSomaDistancePre()
 {
@@ -558,7 +564,7 @@ NeuronSelection::filterUniquePre(const NetworkProps& networkProps)
     {
         int id = mPresynaptic[i];
         int mappedId = networkProps.axonRedundancyMap.getNeuronIdToUse(id);
-        if(!pruned.contains(mappedId))
+        if (!pruned.contains(mappedId))
         {
             pruned.append(mappedId);
         }
@@ -587,14 +593,15 @@ NeuronSelection::getDownsampled(IdList& original, int maxSize, RandomGenerator& 
 
 IdList
 NeuronSelection::getDownsampledFactor(IdList& original, int factor, RandomGenerator& randomGenerator)
-{    
-    if(factor == -1){
+{
+    if (factor == -1)
+    {
         return original;
     }
-    std::sort(original.begin(),original.end());
+    std::sort(original.begin(), original.end());
     randomGenerator.shuffleList(original);
     IdList pruned;
-    for (int i = 0; i < original.size(); i +=factor)
+    for (int i = 0; i < original.size(); i += factor)
     {
         pruned.append(original[i]);
     }
