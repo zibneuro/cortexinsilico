@@ -23,6 +23,8 @@ public:
 
     void preprocessFullModel(NetworkProps& networkProps);
 
+    void preprocessBranches(NetworkProps& networkProps);
+
     void init();
 
     int getNumPre();

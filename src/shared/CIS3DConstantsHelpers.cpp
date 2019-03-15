@@ -49,6 +49,14 @@ CIS3D::getSynapticSide(SynapticSide side)
     }
 }
 
+QString
+CIS3D::getNeuronIdFilePath(const QDir& dataDir, int neuronId)
+{
+    QString filename = QString("%1.dat").arg(neuronId, CIS3D::NeuronIdNumDigits, 10, QChar('0'));
+    QString filepath = dataDir.absolutePath() + "/" + filename;
+    return filepath;
+}
+
 /*
     Returns a string representation of the laminar location.
 

@@ -147,6 +147,9 @@ namespace CIS3D
     */
     QDir getInnervationDataDir(const QDir& dataRootDir);
 
+    QString
+    getNeuronIdFilePath(const QDir& dataDir, int neuronId);
+
     /**
         Get the directory containing the innervationPost data, relative to the innervation data directory.
         @param innervationDataDir The innervation directory
