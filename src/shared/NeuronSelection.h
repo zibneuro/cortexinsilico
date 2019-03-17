@@ -21,7 +21,7 @@ public:
     /**
       Empty constructor.
     */
-    NeuronSelection();
+    NeuronSelection();    
 
     NeuronSelection(const IdList& selectionA, const IdList& selectionB, const IdList& selectionC);
 
@@ -45,7 +45,7 @@ public:
 
     void setInnervationSelection(const QJsonObject& spec, const NetworkProps& networkProps, int samplingFactor = 1, int seed = -1);
 
-    void setSelectionFromQuery(const QJsonObject& query, const NetworkProps& networkProps);
+    void setSelectionFromQuery(const QJsonObject& query, NetworkProps& networkProps, const QJsonObject& config);
 
     /**
         Determines neuron IDs based on a selection string;
@@ -155,6 +155,7 @@ private:
     QVector<float> mPiaSomaDistancePost;
     QString mNetworkName;
     QString mDataRoot;
+    QString mMappingDir;
 };
 
 #endif

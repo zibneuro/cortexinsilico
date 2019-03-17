@@ -123,15 +123,15 @@ namespace Util
 
     QString getInnervationFolderName(CIS3D::Structure target);
 
-    QString getNetwork(QJsonObject& spec, int& samplingFactor);    
+    QString getNetwork(QJsonObject& spec, int& samplingFactor);
 
     int getSliceRef(QString network);
 
-    bool isSlice(QJsonObject&  networkSpec, int number, double& sliceRef);
+    bool isSlice(QJsonObject& networkSpec, int number, double& sliceRef);
 
-    bool isFull(QJsonObject&  networkSpec, int number);
+    bool isFull(QJsonObject& networkSpec, int number);
 
-    bool matchCells(QJsonObject&  networkSpec, int number);
+    bool matchCells(QJsonObject& networkSpec, int number);
 
     int getOppositeNetworkNumber(int number);
 
@@ -146,6 +146,9 @@ namespace Util
     void getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed);
 
     CIS3D::SynapticSide getSynapticSide(QJsonObject& selectionFilter);
+
+    QString getDatasetPath(const QString& datasetShortName,
+                           const QJsonObject& config);
 
 } // namespace Util
 

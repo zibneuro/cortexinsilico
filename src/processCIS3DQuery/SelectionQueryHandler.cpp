@@ -257,9 +257,9 @@ SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
             const QByteArray content = reply->readAll();
             QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
             QJsonObject jsonData = jsonResponse.object().value("data").toObject();
-
+            
             NeuronSelection selection;
-            selection.setSelectionFromQuery(jsonData, mNetwork);
+            selection.setSelectionFromQuery(jsonData, mNetwork, mConfig);
             IdList neurons = selection.SelectionA();
 
             // ############ UPLOAD RESULTS ############

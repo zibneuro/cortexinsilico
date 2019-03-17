@@ -191,19 +191,19 @@ EvaluationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
         mCurrentJsonData = jsonResponse.object().value("data").toObject();
         mAdvancedSettings = Util::getAdvancedSettingsString(mCurrentJsonData);
-        reply->deleteLater();        
+        reply->deleteLater();
         QJsonObject formulas = mCurrentJsonData["formulas"].toObject();
         FormulaCalculator calculator(formulas);
         calculator.init();
-
-        NeuronSelection selection;
-        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork);
-        InnervationStatistic innervation(mNetwork, calculator);
         
+        NeuronSelection selection;
+        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork, mConfig);
+        InnervationStatistic innervation(mNetwork, calculator);
+
         connect(&innervation, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));
         connect(&innervation, SIGNAL(complete(NetworkStatistic*)), this, SLOT(reportComplete(NetworkStatistic*)));
-        
-        innervation.calculate(selection);    
+
+        innervation.calculate(selection);
     }
     else
     {

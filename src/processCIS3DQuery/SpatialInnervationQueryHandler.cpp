@@ -115,7 +115,7 @@ SpatialInnervationQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         reply->deleteLater();        
 
         NeuronSelection selection;
-        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork);
+        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork, mConfig);
 
         IdList preIds = selection.SelectionA();
         IdList postIds = selection.SelectionB();            

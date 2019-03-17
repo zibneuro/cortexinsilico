@@ -330,7 +330,7 @@ NeuronSelection::filterSlice(const NetworkProps& networkProps,
 }
 
 void
-NeuronSelection::setSelectionFromQuery(const QJsonObject& query, const NetworkProps& networkProps)
+NeuronSelection::setSelectionFromQuery(const QJsonObject& query, NetworkProps& networkProps, const QJsonObject& config)
 {
     QJsonObject networkSelection = query["networkSelection"].toObject();
     int number = query["networkNumber"].toInt();
@@ -339,13 +339,12 @@ NeuronSelection::setSelectionFromQuery(const QJsonObject& query, const NetworkPr
     QJsonObject selectionA = cellSelection["selectionA"].toObject();
     QJsonObject selectionB = cellSelection["selectionB"].toObject();
     QJsonObject selectionC = cellSelection["selectionC"].toObject();
-    QString queryType = query["queryType"].toString();
+    QString queryType = query["queryType"].toString();    
 
-    QString dataRoot = "";
-    QString dataRoot2 = "";
+    QString dataRoot = Util::getDatasetPath(networkName, config);
 
-    //networkProps.setDataRoot(dataRoot);
-    //networkProps.loadFilesForQuery();
+    networkProps.setDataRoot(dataRoot);
+    networkProps.loadFilesForQuery();
 
     processSelection(
         networkSelection,
@@ -359,10 +358,11 @@ NeuronSelection::setSelectionFromQuery(const QJsonObject& query, const NetworkPr
     {
         int oppositeNumber = Util::getOppositeNetworkNumber(number);
         QString networkName2 = Util::getShortName(networkSelection, oppositeNumber);
-        //QString dataRoot2 = QueryHelpers::getDatasetPath(networkName2, mConfig);
+        QString dataRoot2 = Util::getDatasetPath(networkName2, config);
+        mMappingDir = config["NEURON_MAPPING_DIRECTORY"].toString();
         NetworkProps networkProps2;
-        //networkProps2.setDataRoot(dataRoot2);
-        //networkProps2.loadFilesForQuery();
+        networkProps2.setDataRoot(dataRoot2);
+        networkProps2.loadFilesForQuery();
 
         processSelection(
             networkSelection,
@@ -741,9 +741,9 @@ NeuronSelection::pruneIds(IdList& selection, std::set<int>& allowed)
 std::map<int, int>
 NeuronSelection::readMapping(NeuronSelection& selection)
 {
-    QDir dataRootDir(selection.getDataRoot());
     QString networkName = selection.getNetworkName();
-    QString path = CIS3D::getMappingFilePath(dataRootDir, networkName, mNetworkName);
+    QDir mappingDir = QDir(mMappingDir);
+    QString path = CIS3D::getMappingFilePath(mappingDir, networkName, mNetworkName);
 
     std::map<int, int> mapping;
 

@@ -206,9 +206,9 @@ InDegreeQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
 
         int numberSamples, randomSeed;
         Util::getSampleSettings(sampleSettings, networkNumber, numberSamples, randomSeed);
-
+        
         NeuronSelection selection;
-        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork);
+        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork, mConfig);
 
         InDegreeStatistic statistic(mNetwork, numberSamples, calculator);
         connect(&statistic, SIGNAL(update(NetworkStatistic*)), this, SLOT(reportUpdate(NetworkStatistic*)));

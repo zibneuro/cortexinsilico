@@ -960,24 +960,94 @@ Util::getShortName(QJsonObject& networkSpec, int number)
 void
 Util::getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed)
 {
-    if(network == 1){
+    if (network == 1)
+    {
         sampleSize = sampleSettings["samplesNetwork1"].toInt();
         randomSeed = sampleSettings["randomSeedNetwork1"].toInt();
-    } else {
+    }
+    else
+    {
         sampleSize = sampleSettings["samplesNetwork2"].toInt();
         randomSeed = sampleSettings["randomSeedNetwork2"].toInt();
     }
 }
 
-CIS3D::SynapticSide Util::getSynapticSide(QJsonObject& selectionFilter){
+CIS3D::SynapticSide
+Util::getSynapticSide(QJsonObject& selectionFilter)
+{
     QString side = selectionFilter["synapticSide"].toString();
-    if(side == "presynaptic"){
+    if (side == "presynaptic")
+    {
         return CIS3D::PRESYNAPTIC;
-    } else if(side == "postsynaptic"){
+    }
+    else if (side == "postsynaptic")
+    {
         return CIS3D::POSTSYNAPTIC;
-    } else if(side == "both"){
+    }
+    else if (side == "both")
+    {
         return CIS3D::BOTH_SIDES;
-    } else {
+    }
+    else
+    {
         throw std::runtime_error("Invalid side");
     }
+}
+
+QString
+Util::getDatasetPath(const QString& datasetShortName,
+                     const QJsonObject& config)
+{
+    qDebug() << datasetShortName;
+
+    const QJsonValue datasetsJson = config["WORKER_DATASETS_CIS3D"];
+    if (!datasetsJson.isArray())
+    {
+        throw std::runtime_error("QueryHelpers::getDatasetPath: WORKER_DATASETS_CIS3D is not an array");
+    }
+
+    const QJsonArray datasetsArray = datasetsJson.toArray();
+
+    for (int i = 0; i < datasetsArray.size(); ++i)
+    {
+        const QJsonValue& datasetJson = datasetsArray.at(i);
+
+        if (!datasetJson.isObject())
+        {
+            throw std::runtime_error("QueryHelpers::getDatasetPath: dataset entry is not an object");
+        }
+
+        const QJsonObject dataset = datasetJson.toObject();
+
+        if (!dataset.contains(QString("shortName")))
+        {
+            throw std::runtime_error("QueryHelpers::getDatasetPath: dataset entry has no field 'shortName'");
+        }
+
+        const QJsonValue shortNameJson = dataset.value(QString("shortName"));
+        if (!shortNameJson.isString())
+        {
+            throw std::runtime_error("QueryHelpers::getDatasetPath: dataset entry 'shortName' is not a string");
+        }
+
+        const QString shortName = shortNameJson.toString();
+
+        if (shortName == datasetShortName)
+        {
+            if (!dataset.contains(QString("path")))
+            {
+                throw std::runtime_error("QueryHelpers::getDatasetPath: dataset entry has no field 'path'");
+            }
+
+            const QJsonValue pathJson = dataset.value(QString("path"));
+            if (!pathJson.isString())
+            {
+                throw std::runtime_error("QueryHelpers::getDatasetPath: dataset entry 'path' is not a string");
+            }
+
+            return pathJson.toString();
+        }
+    }
+
+    throw std::runtime_error("QueryHelpers::getDatasetPath: no path found for dataset shortName");
 }

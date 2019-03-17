@@ -213,7 +213,7 @@ MotifQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
         Util::getSampleSettings(sampleSettings, networkNumber, numberSamples, randomSeed);
 
         NeuronSelection selection;
-        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork);
+        selection.setSelectionFromQuery(mCurrentJsonData, mNetwork, mConfig);
 
         TripletStatistic statistic(mNetwork,
                                    numberSamples,
