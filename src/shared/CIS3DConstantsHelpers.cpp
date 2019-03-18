@@ -49,6 +49,33 @@ CIS3D::getSynapticSide(SynapticSide side)
     }
 }
 
+QDir
+CIS3D::getBranchesPreDir(const QDir& modelDataDir)
+{
+    QDir branchesDir(modelDataDir.absolutePath() + "/" + "AxonBranches");
+    return branchesDir;
+}
+
+QDir
+CIS3D::getBranchesPostApicalDir(const QDir& modelDataDir)
+{
+    QDir branchesDir(modelDataDir.absolutePath() + "/" + "ApicalDendriteBranches");
+    return branchesDir;
+}
+
+QDir
+CIS3D::getBranchesPostBasalDir(const QDir& modelDataDir)
+{
+    QDir branchesDir(modelDataDir.absolutePath() + "/" + "BasalDendriteBranches");
+    return branchesDir;
+}
+
+QDir 
+CIS3D::getBranchesPostDir(const QDir& modelDataDir){
+    QDir branchesDir(modelDataDir.absolutePath() + "/" + "DendriteBranches");
+    return branchesDir;
+}
+
 QString
 CIS3D::getNeuronIdFilePath(const QDir& dataDir, int neuronId)
 {

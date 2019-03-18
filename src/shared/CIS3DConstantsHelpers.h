@@ -147,6 +147,17 @@ namespace CIS3D
     */
     QDir getInnervationDataDir(const QDir& dataRootDir);
 
+    QDir getBranchesPreDir(const QDir& modelDataDir);
+
+    QDir
+    getBranchesPostApicalDir(const QDir& modelDataDir);
+
+    QDir
+    getBranchesPostBasalDir(const QDir& modelDataDir);
+
+    QDir
+    getBranchesPostDir(const QDir& modelDataDir);
+
     QString
     getNeuronIdFilePath(const QDir& dataDir, int neuronId);
 

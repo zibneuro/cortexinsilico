@@ -24,6 +24,10 @@ FeatureProvider::FeatureProvider()
     mUniquePre = false;
     mPostApicalFolder = "features_postApicalExc";
     mPostBasalFolder = "features_postBasalExc";
+    mBranchesPreFolder = "features_branchesPre";
+    mBranchesPostFolder = "features_branchesPost";
+    mBranchesPostApicalFolder = "features_branchesPostApical";
+    mBranchesPostBasalFolder = "features_branchesPostBasal";
 }
 
 FeatureProvider::FeatureProvider(QString metaFolder, QString preFolder, QString postFolder, bool writeAll, bool uniquePre)
@@ -398,8 +402,8 @@ FeatureProvider::preprocessFullModel(NetworkProps& networkProps)
 void
 FeatureProvider::preprocessBranches(NetworkProps& networkProps)
 {
-    UtilIO::makeDir("features_branchPre");
-    //UtilIO::makeDir("features_branchApicalExc");
+    UtilIO::makeDir(mBranchesPreFolder);
+    UtilIO::makeDir(mBranchesPostFolder);
     //UtilIO::makeDir("features_branchBasalExc");
     //UtilIO::makeDir("features_branchAllExc");
 
@@ -415,10 +419,11 @@ FeatureProvider::preprocessBranches(NetworkProps& networkProps)
     mGridOrigin = postAllExcField->getOrigin();
     mGridDimensions = postAllExcField->getDimensions();
 
+    
     for (int i = 0; i < selection.SelectionA().size(); i++)
     {
         int neuronId = selection.SelectionA()[i];
-        QDir baseDir(modelDataDir.absolutePath() + "/" + "AxonBranches");
+        QDir baseDir(CIS3D::getBranchesPreDir(modelDataDir));
         QString filepath = CIS3D::getNeuronIdFilePath(baseDir, neuronId);
         SparseField* preField = SparseField::load(filepath);
         assertGrid(preField);
@@ -428,7 +433,23 @@ FeatureProvider::preprocessBranches(NetworkProps& networkProps)
             voxel.insert(it->first);
         }
 
-        writeMapFloat(field, voxel, "features_branchPre", QString("%1.dat").arg(neuronId));
+        writeMapFloat(field, voxel, mBranchesPreFolder, QString("%1.dat").arg(neuronId));
+    }
+    
+    for (int i = 0; i < selection.SelectionB().size(); i++)
+    {
+        int neuronId = selection.SelectionB()[i];
+        QDir baseDir(CIS3D::getBranchesPostDir(modelDataDir));
+        QString filepath = CIS3D::getNeuronIdFilePath(baseDir, neuronId);
+        SparseField* postField = SparseField::load(filepath);
+        assertGrid(postField);
+        std::map<int, float> field = postField->getModifiedCopy(1, 0, false);
+        for (auto it = field.begin(); it != field.end(); it++)
+        {
+            voxel.insert(it->first);
+        }
+
+        writeMapFloat(field, voxel, mBranchesPostFolder, QString("%1.dat").arg(neuronId));
     }
 }
 

@@ -54,14 +54,16 @@ printUsage()
     qDebug() << "";
     qDebug() << "Usage:";
     qDebug() << "";
-    qDebug() << "./networkSimulator INIT            <initSpecFile>";
-    qDebug() << "./networkSimulator SIMULATE        <simulationSpecFile>";
-    qDebug() << "./networkSimulator SIMULATE_BATCH  <simulationSpecFile>";
-    qDebug() << "./networkSimulator SUBCUBE         <voxelSpecFile>";
-    qDebug() << "./networkSimulator EXTRACT_ALL     <modelDataDir>";
-    qDebug() << "./networkSimulator COMPUTE_SPATIAL [ALL|APICAL|BASAL]";
-    qDebug() << "./networkSimulator SHOW_DIMENSIONS <sparseField>";
-    qDebug() << "./networkSimulator GET_FIELD_SUM <sparseField>";
+    qDebug() << "./networkSimulator INIT                <initSpecFile>";
+    qDebug() << "./networkSimulator SIMULATE            <simulationSpecFile>";
+    qDebug() << "./networkSimulator SIMULATE_BATCH      <simulationSpecFile>";
+    qDebug() << "./networkSimulator SUBCUBE             <voxelSpecFile>";
+    qDebug() << "./networkSimulator EXTRACT_ALL         <modelDataDir>";
+    qDebug() << "./networkSimulator EXTRACT_BRANCHES    <modelDataDir>";
+    qDebug() << "./networkSimulator COMPUTE_SPATIAL     [ALL|APICAL|BASAL]";
+    qDebug() << "./networkSimulator SHOW_DIMENSIONS     <sparseField>";
+    qDebug() << "./networkSimulator GET_FIELD_SUM       <sparseField>"; 
+    qDebug() << "./networkSimulator XYZ_FROM_VOXELID    <sparseField> <voxelId>";
     qDebug() << "";
     qDebug() << "The <initSpecFile> contains the neuron selection to be used for"
              << "simulation.";
@@ -739,6 +741,24 @@ main(int argc, char** argv)
             return 0;
         }
     }
+    else if (mode == "EXTRACT_BRANCHES")
+    {
+        if (argc != 3)
+        {
+            printUsage();
+            return 1;
+        }
+        else
+        {
+            const QString dataRoot = argv[2];
+            NetworkProps networkProps(true);
+            networkProps.setDataRoot(dataRoot);
+            networkProps.loadFilesForSynapseComputation();
+            FeatureProvider featureProvider;
+            featureProvider.preprocessBranches(networkProps);
+            return 0;
+        }
+    }
     else if (mode == "COMPUTE_SPATIAL")
     {
         if (argc != 3)
@@ -806,6 +826,25 @@ main(int argc, char** argv)
             return 0;
         }
     }
+    else if (mode == "XYZ_FROM_VOXELID")
+    {
+        if (argc != 4)
+        {
+            printUsage();
+            return 1;
+        }
+        else
+        {
+            const QString filePath = argv[2];
+            const QString voxelIdString = argv[3];
+            const int voxelId = voxelIdString.toInt();
+            SparseField* field = SparseField::load(filePath);
+            Vec3f spatialLocation  = field->getSpatialLocation(voxelId);
+            qDebug() << spatialLocation[0] << spatialLocation[1] << spatialLocation[2];
+            return 0;
+        }
+    }
+
     else
     {
         printUsage();

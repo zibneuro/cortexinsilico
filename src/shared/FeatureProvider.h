@@ -94,4 +94,8 @@ private:
     bool mUniquePre;
     QString mPostApicalFolder;
     QString mPostBasalFolder;
+    QString mBranchesPreFolder;
+    QString mBranchesPostFolder;
+    QString mBranchesPostApicalFolder;
+    QString mBranchesPostBasalFolder;
 };
