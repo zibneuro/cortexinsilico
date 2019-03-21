@@ -2,6 +2,10 @@
 #include <QDebug>
 #include <iostream>
 
+FormulaCalculator::FormulaCalculator()
+{
+}
+
 FormulaCalculator::FormulaCalculator(QJsonObject formulas)
 {
     mSynapseDistributionFormula = formulas["synapseDistributionFormula"].toString().toStdString();
@@ -24,7 +28,7 @@ factorial(T arg)
 
 bool
 FormulaCalculator::init()
-{    
+{
     bool valid = true;
     mSymbolTable.add_variable("i", mCurrentValue_i);
     mSymbolTable.add_variable("k", mCurrentValue_k);

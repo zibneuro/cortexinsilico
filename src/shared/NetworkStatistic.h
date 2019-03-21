@@ -15,30 +15,21 @@
 #include "SparseVectorCache.h"
 #include "Typedefs.h"
 #include "FormulaCalculator.h"
+#include "QueryHandler.h"
 
 /**
     Serves as base class for any summary statistic about the neural network.
     Provides interfaces to integrate statistic into the webframework.
 */
-class NetworkStatistic : public QObject
-{
-    Q_OBJECT
-
+class NetworkStatistic {
+    
 public:
     /**
         Constructor.
         @param networkProps The model data of the network.
         @param parent The Qt parent object. Empty by default.
     */
-    NetworkStatistic(const NetworkProps& networkProps, FormulaCalculator& calculator, QObject* parent = 0);
-
-    /**
-        Constructor.
-        @param networkProps The model data of the network.
-        @param cache Cache of preloaded innervation values.
-        @param parent The Qt parent object. Empty by default.
-    */
-    NetworkStatistic(const NetworkProps& networkProps,  const SparseVectorCache& cache, FormulaCalculator& calculator, QObject* parent = 0);
+    NetworkStatistic(const NetworkProps& networkProps, FormulaCalculator& calculator, QueryHandler* handler);
 
     /**
         Destructor.
@@ -117,15 +108,8 @@ public:
 
     void setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC);
 
-signals:
-    // Signals intermediate results are available
-    //
-    // param stat: the statistic being computed
     void update(NetworkStatistic* stat);
 
-    // Signals that the computation has been completed
-    //
-    // param stat: the statistic being computed
     void complete(NetworkStatistic* stat);
 
 protected:
@@ -189,6 +173,8 @@ protected:
     InnervationMatrix* mInnervationMatrix;
 
     bool mAborted;
+
+    QueryHandler* mQueryHandler;
     
 };
 

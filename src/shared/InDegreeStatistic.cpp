@@ -22,8 +22,9 @@
 
 InDegreeStatistic::InDegreeStatistic(const NetworkProps& networkProps,
                                      int sampleSize,
-                                     FormulaCalculator& calculator)
-    : NetworkStatistic(networkProps, calculator)
+                                     FormulaCalculator& calculator,
+                                     QueryHandler* handler)
+    : NetworkStatistic(networkProps, calculator, handler)
     , mSampleSize(sampleSize)
 {
     this->mNumConnections = mSampleSize;

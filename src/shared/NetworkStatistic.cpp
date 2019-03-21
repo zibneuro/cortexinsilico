@@ -5,28 +5,12 @@
     @param networkProps The model data of the network.
     @param parent The Qt parent object. Empty by default.
 */
-NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, FormulaCalculator& calculator, QObject* parent)
-    : QObject(parent)    
-    , mNetwork(networkProps)
+NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, FormulaCalculator& calculator, QueryHandler* handler)
+    : mNetwork(networkProps)
     , mCalculator(calculator)
+    , mQueryHandler(handler)
 {
     mCache = SparseVectorCache();
-    mInnervationMatrix = new InnervationMatrix(networkProps);
-    mAborted = false;
-};
-
-/**
-    Constructor.
-    @param networkProps The model data of the network.
-    @param cache Cache of preloaded innervation values.
-    @param parent The Qt parent object. Empty by default.
-*/
-NetworkStatistic::NetworkStatistic(const NetworkProps& networkProps, const SparseVectorCache& cache, FormulaCalculator& calculator, QObject* parent)
-    : QObject(parent)    
-    , mNetwork(networkProps)    
-    , mCache(cache)
-    , mCalculator(calculator)
-{
     mInnervationMatrix = new InnervationMatrix(networkProps);
     mAborted = false;
 };
@@ -51,7 +35,9 @@ NetworkStatistic::calculate(const NeuronSelection& selection)
     this->doCalculate(selection);
 }
 
-float NetworkStatistic::calculateProbability(float innervation){
+float
+NetworkStatistic::calculateProbability(float innervation)
+{
     return mCalculator.calculateConnectionProbability(innervation);
 }
 
@@ -202,7 +188,7 @@ NetworkStatistic::doCreateCSV(QTextStream& /*out*/, const QChar /*sep*/) const
 void
 NetworkStatistic::reportUpdate()
 {
-    emit update(this);
+    mQueryHandler->reportUpdate(this);
 }
 
 // Signals that the computation has been completed
@@ -211,7 +197,7 @@ NetworkStatistic::reportUpdate()
 void
 NetworkStatistic::reportComplete()
 {
-    emit complete(this);
+    mQueryHandler->reportComplete(this);
 }
 
 /**

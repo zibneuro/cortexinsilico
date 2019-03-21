@@ -17,9 +17,10 @@
 */
 InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
                                            FormulaCalculator& calculator,
+                                           QueryHandler* handler,
                                            const float innervationBinSize,
                                            const float connProbBinSize)
-    : NetworkStatistic(networkProps, calculator)
+    : NetworkStatistic(networkProps, calculator, handler)
 {
     innervationHisto = Histogram(innervationBinSize);
     connProbHisto = Histogram(connProbBinSize);
@@ -28,26 +29,6 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
     numPreNeuronsUnique = 0;
 }
 
-/**
-    Constructor.
-    @param networkProps The model data of the network.
-    @param innervation BinSize Bin size of the innervation histogram.
-    @param conProbBinSize Bin size of the connectionProbability histogram.
-    @param cache Cache of preloaded innervation values.
-*/
-InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
-                                           const SparseVectorCache& cache,
-                                           FormulaCalculator& calculator,
-                                           const float innervationBinSize,
-                                           const float connProbBinSize)
-    : NetworkStatistic(networkProps, cache, calculator)
-{
-    innervationHisto = Histogram(innervationBinSize);
-    connProbHisto = Histogram(connProbBinSize);
-    numPreNeurons = 0;
-    numPostNeurons = 0;
-    numPreNeuronsUnique = 0;
-}
 
 /**
     Performs the actual computation based on the specified neurons.
@@ -114,8 +95,8 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
                 this->innervation.addSample(innervation);
                 this->connProb.addSample(connProb);
                 postInnervation[postId] += innervation;
-            }            
-        }        
+            }
+        }
 
         for (int k = 0; k < itPre->second; k++)
         {

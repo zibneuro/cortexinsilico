@@ -20,7 +20,8 @@ public:
     */
     TripletStatistic(const NetworkProps& networkProps,
                      int sampleSize,
-                     FormulaCalculator& calculator);
+                     FormulaCalculator& calculator,
+                     QueryHandler* handler);
 
     /**
         Writes result to file, for testing purposes.

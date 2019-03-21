@@ -108,6 +108,8 @@ public:
 
     void setDataRoot(QString dataRoot);
 
+    bool isValid(QJsonObject& query, QString errorMessage);
+
 private:
     static bool inSliceBand(double somaX, double min, double max);
 

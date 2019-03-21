@@ -1,33 +1,16 @@
 #include <QDebug>
 #include <QtCore>
+#include "DataUploadHandler.h"
+#include "QueryHandler.h"
+#include "SelectionQueryHandler.h"
 #include "EvaluationQueryHandler.h"
+#include "InnervationQueryHandler.h"
 #include "MotifQueryHandler.h"
 #include "InDegreeQueryHandler.h"
-#include "NetworkDataUploadHandler.h"
-#include "SelectionQueryHandler.h"
 #include "SpatialInnervationQueryHandler.h"
 #include "VoxelQueryHandler.h"
+#include "UtilIO.h"
 
-QJsonObject
-parseSpecFile(const QString& fileName)
-{
-    QFile jsonFile(fileName);
-    if (!jsonFile.open(QIODevice::ReadOnly))
-    {
-        const QString msg = QString("Cannot open file for reading: %1").arg(fileName);
-        throw std::runtime_error(qPrintable(msg));
-    }
-    QByteArray data = jsonFile.readAll();
-    QJsonDocument doc(QJsonDocument::fromJson(data));
-    return doc.object();
-}
-
-void
-printUsage()
-{
-    qDebug() << "Usage: ./processCIS3DQuery <config-file> "
-                "[evaluationQuery|selectionQuery|networkDataUpload] <query-id>";
-}
 
 void
 myMessageOutput(QtMsgType, const QMessageLogContext&, const QString& msg)
@@ -42,88 +25,43 @@ main(int argc, char* argv[])
     qInstallMessageHandler(myMessageOutput);
     QCoreApplication app(argc, argv);
 
-    if (app.arguments().size() < 3 || app.arguments().size() > 4)
+    if (app.arguments().size() != 4)
     {
         qDebug() << "Wrong number of arguments.";
-        printUsage();
         return 1;
     }
 
     const QString specFile = app.arguments().at(1);
-    const QJsonObject config = parseSpecFile(specFile);
+    const QJsonObject config = UtilIO::parseSpecFile(specFile);
+    const QString operation = app.arguments().at(2);
+    const QString queryId = app.arguments().at(3);
 
-    const QString queryType = app.arguments().at(2);
-    if (queryType != "evaluationQuery" && queryType != "motifQuery" && queryType != "inDegreeQuery" &&
-        queryType != "selectionQuery" && queryType != "networkDataUpload" && queryType != "spatialInnervationQuery" && queryType != "voxelQuery")
+    if (operation == "uploadNetworkData")
     {
-        qDebug() << "Invalid query type." << queryType;
-        printUsage();
-        return 1;
-    }
-
-    qDebug() << "[*] Processing" << queryType;
-
-    if (queryType == "networkDataUpload" && app.arguments().size() == 4)
-    {
-        qDebug() << "Wrong number of arguments for networkDataUpload." << app.arguments().at(2);
-        printUsage();
-        return 1;
-    }
-
-    if (queryType != "networkDataUpload" && app.arguments().size() == 3)
-    {
-        qDebug() << "Wrong number of arguments for" << queryType;
-        printUsage();
-        return 1;
-    }
-
-    QString queryId;
-    if (queryType != "networkDataUpload")
-    {
-        queryId = app.arguments().at(3);
-    }
-
-    if (queryType == "evaluationQuery")
-    {
-        EvaluationQueryHandler* handler = new EvaluationQueryHandler();
+        DataUploadHandler* handler = new DataUploadHandler();
         QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
-        handler->process(queryId, config);
+        handler->uploadNetworkData(config);
     }
-    else if (queryType == "motifQuery")
+    else if (operation == "uploadQueryResults")
     {
-        MotifQueryHandler* handler = new MotifQueryHandler();
+        DataUploadHandler* handler = new DataUploadHandler();
         QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
-        handler->process(queryId, config);
+        handler->uploadQueryData(config, queryId);
     }
-    else if (queryType == "inDegreeQuery")
+    else if (operation == "processQuery")
     {
-        InDegreeQueryHandler* handler = new InDegreeQueryHandler();
-        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
-        handler->process(queryId, config);
-    }
-    else if (queryType == "selectionQuery")
-    {
-        SelectionQueryHandler* handler = new SelectionQueryHandler();
-        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
-        handler->process(queryId, config);
-    }
-    else if (queryType == "networkDataUpload")
-    {
-        NetworkDataUploadHandler* handler = new NetworkDataUploadHandler();
-        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
-        handler->process(config);
-    }
-    else if (queryType == "spatialInnervationQuery")
-    {
-        SpatialInnervationQueryHandler* handler = new SpatialInnervationQueryHandler();
-        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
-        handler->process(queryId, config);
-    }
-    else if (queryType == "voxelQuery")
-    {
-        VoxelQueryHandler* handler = new VoxelQueryHandler();
-        QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
-        handler->process(queryId, config);
+        QueryHandler* handler;
+        const QString queryFile = config["QUERY_DIRECTORY"].toString() + "/" + queryId + "/" + queryId + ".json"; 
+        const QJsonObject query = UtilIO::parseSpecFile(queryFile);
+        const QString queryType = query["queryType"].toString();
+        if(queryType == "innervation"){
+            handler = new InnervationQueryHandler();
+        } else {
+            throw std::runtime_error("Invalid query type.");
+        }                
+        handler->processQuery(config, queryId, query);
+    } else {
+        throw std::runtime_error("Invalid mode.");
     }
     return app.exec();
 }

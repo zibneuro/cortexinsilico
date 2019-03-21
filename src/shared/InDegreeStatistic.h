@@ -9,7 +9,8 @@ class InDegreeStatistic : public NetworkStatistic
 public:
     InDegreeStatistic(const NetworkProps& networkProps,
                       int sampleSize,
-                      FormulaCalculator& calculator);
+                      FormulaCalculator& calculator,
+                      QueryHandler* handler);
 
 protected:
     void doCalculate(const NeuronSelection& selection) override;

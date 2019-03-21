@@ -1,5 +1,5 @@
-#ifndef NETWORKDATAUPLOADHANDLER_H
-#define NETWORKDATAUPLOADYHANDLER_H
+#ifndef DATAUPLOADHANDLER_H
+#define DATAUPLOADYHANDLER_H
 
 #include "CIS3DNetworkProps.h"
 #include "QueryHelpers.h"
@@ -10,14 +10,15 @@
 
 
 
-class NetworkDataUploadHandler : public QObject {
+class DataUploadHandler : public QObject {
 
     Q_OBJECT
 
 public:
-    NetworkDataUploadHandler(QObject* parent = 0);
+    DataUploadHandler(QObject* parent = 0);
 
-    void process(const QJsonObject& config);
+    void uploadNetworkData(const QJsonObject& config);
+    void uploadQueryData(const QJsonObject& config, const QString& queryId);
 
 signals:
     void completedProcessing();
@@ -39,4 +40,4 @@ private:
 };
 
 
-#endif // NETWORKDATAUPLOADHANDLER_H
+#endif // DATAUPLOADHANDLER_H

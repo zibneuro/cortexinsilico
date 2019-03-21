@@ -16,7 +16,6 @@
 #include "CIS3DSparseVectorSet.h"
 #include "CIS3DVec3.h"
 #include "Histogram.h"
-#include "InnervationStatistic.h"
 #include "NeuronSelection.h"
 #include "SparseFieldCalculator.h"
 #include "SparseVectorCache.h"

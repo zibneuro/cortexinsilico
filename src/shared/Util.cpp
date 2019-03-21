@@ -669,7 +669,7 @@ Util::getMinMedMax(std::vector<float> in, float& min, float& med, float& max)
 }
 
 QString
-Util::getAdvancedSettingsString(QJsonObject& spec, bool hasSynapseDistribution, bool hasConnectionProbability)
+Util::getAdvancedSettingsString(const QJsonObject& spec, bool hasSynapseDistribution, bool hasConnectionProbability)
 {
     QJsonObject query = spec["query"].toObject();
     QJsonObject networkSelection = query["networkSelection"].toObject();

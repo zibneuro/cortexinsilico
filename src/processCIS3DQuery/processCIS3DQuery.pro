@@ -55,15 +55,11 @@ SOURCES += \
     ../shared/InnervationMatrix.cpp \
     ../shared/RandomGenerator.cpp \
     ../shared/FeatureProvider.cpp \
-    ../shared/FormulaCalculator.cpp \
-    EvaluationQueryHandler.cpp \
-    MotifQueryHandler.cpp \
-    InDegreeQueryHandler.cpp \
-    SelectionQueryHandler.cpp \
-    NetworkDataUploadHandler.cpp \
-    SpatialInnervationQueryHandler.cpp \
-    VoxelQueryHandler.cpp \    
-    QueryHelpers.cpp
+    ../shared/FormulaCalculator.cpp \    
+    DataUploadHandler.cpp \
+    QueryHelpers.cpp \
+    ../shared/QueryHandler.cpp \
+    InnervationQueryHandler.cpp
 
 HEADERS += \
     ../shared/CIS3DAxonRedundancyMap.h \
@@ -95,12 +91,8 @@ HEADERS += \
     ../shared/RandomGenerator.h \
     ../shared/FormulaParser.h \
     ../shared/FeatureProvider.h \
-    ../shared/FormulaCalculator.h \
-    EvaluationQueryHandler.h \
-    MotifQueryHandler.h \
-    InDegreeQueryHandler.h \
-    SelectionQueryHandler.h \
-    NetworkDataUploadHandler.h \
-    SpatialInnervationQueryHandler.h \
-    VoxelQueryHandler.h \    
-    QueryHelpers.h
+    ../shared/FormulaCalculator.h \    
+    DataUploadHandler.h \        
+    QueryHelpers.h \
+    ../shared/QueryHandler.h \
+    InnervationQueryHandler.h \

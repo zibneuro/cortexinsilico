@@ -1,4 +1,4 @@
-#include "NetworkDataUploadHandler.h"
+#include "DataUploadHandler.h"
 #include "QueryHelpers.h"
 #include "CIS3DCellTypes.h"
 #include "CIS3DNeurons.h"
@@ -12,7 +12,7 @@
 #include <QtNetwork/QNetworkReply>
 #include <stdexcept>
 
-NetworkDataUploadHandler::NetworkDataUploadHandler(QObject* parent)
+DataUploadHandler::DataUploadHandler(QObject* parent)
     : QObject(parent)
 {
 }
@@ -148,10 +148,8 @@ getPostsynapticTargetsAsJson()
     return arr;
 }
 
-
-
 void
-NetworkDataUploadHandler::process(const QJsonObject& config)
+DataUploadHandler::uploadNetworkData(const QJsonObject& config)
 {
     mConfig = config;
 
@@ -268,7 +266,7 @@ NetworkDataUploadHandler::process(const QJsonObject& config)
 }
 
 void
-NetworkDataUploadHandler::replyGetQueryFinished(QNetworkReply* reply)
+DataUploadHandler::replyGetQueryFinished(QNetworkReply* reply)
 {
     QNetworkReply::NetworkError error = reply->error();
     const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
@@ -309,4 +307,10 @@ NetworkDataUploadHandler::replyGetQueryFinished(QNetworkReply* reply)
         reply->deleteLater();
         QCoreApplication::exit(1);
     }
+}
+
+void
+DataUploadHandler::uploadQueryData(const QJsonObject& config, const QString& queryId)
+{
+
 }

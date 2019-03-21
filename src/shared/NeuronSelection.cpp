@@ -339,7 +339,7 @@ NeuronSelection::setSelectionFromQuery(const QJsonObject& query, NetworkProps& n
     QJsonObject selectionA = cellSelection["selectionA"].toObject();
     QJsonObject selectionB = cellSelection["selectionB"].toObject();
     QJsonObject selectionC = cellSelection["selectionC"].toObject();
-    QString queryType = query["queryType"].toString();    
+    QString queryType = query["queryType"].toString();
 
     QString dataRoot = Util::getDatasetPath(networkName, config);
 
@@ -387,6 +387,7 @@ NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkP
     mSelectionB.clear();
     IdList pre = UtilIO::getPreSynapticNeurons(spec, networkProps);
     IdList post = UtilIO::getPostSynapticNeuronIds(spec, networkProps);
+    qDebug() << "set innervation selection" << post.size();
     if (samplingFactor == 1)
     {
         mSelectionA.append(pre);
@@ -641,6 +642,12 @@ void
 NeuronSelection::setDataRoot(QString dataRoot)
 {
     mDataRoot = dataRoot;
+}
+
+bool
+NeuronSelection::isValid(QJsonObject& /*query*/, QString /*errorMessage*/)
+{
+    return true;
 }
 
 bool

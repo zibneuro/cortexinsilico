@@ -111,6 +111,7 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
         neuron_pre[neuronId] = preField->getModifiedCopy(1, eps, applyLog);
     }
 
+
     // ########### POST ###########
     qDebug() << "[*] Loading postsynaptic. Mode:" << (normalized ? "normalized" : "unnormalized");
     for (int i = 0; i < selection.SelectionB().size(); i++)
@@ -223,9 +224,9 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
         writeMapInt(neuron_morph, mMetaFolder, "neuron_morph.dat");
         writeMapInt(neuron_regio, mMetaFolder, "neuron_regio.dat");
         qDebug() << "[*] Write index files.";
-        writeIndex(voxel_neuronsPre, mMetaFolder, "voxel_neuronsPre.dat");
-        writeIndex(voxel_neuronsPostExc, mMetaFolder, "voxel_neuronsPostExc.dat");
-        writeIndex(voxel_neuronsPostInh, mMetaFolder, "voxel_neuronsPostInh.dat");
+        //writeIndex(voxel_neuronsPre, mMetaFolder, "voxel_neuronsPre.dat");
+        //writeIndex(voxel_neuronsPostExc, mMetaFolder, "voxel_neuronsPostExc.dat");
+        //writeIndex(voxel_neuronsPostInh, mMetaFolder, "voxel_neuronsPostInh.dat");
     }
     writeVoxels(postAllExcField, voxel, mMetaFolder, "voxel_pos.dat");
     qDebug() << "[*] Finished writing features.";

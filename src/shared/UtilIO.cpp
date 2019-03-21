@@ -38,6 +38,23 @@ UtilIO::parseSpecFile(const QString& fileName)
     return doc.object();
 }
 
+void
+UtilIO::writeJson(QJsonObject& obj, QString& fileName)
+{
+    QFile jsonFile(fileName);
+    if (!jsonFile.open(QIODevice::WriteOnly))
+    {
+        const QString msg =
+            QString("Cannot open file for writing: %1").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    QJsonDocument doc(obj);
+    QByteArray data = doc.toBinaryData();
+
+    jsonFile.write(data);
+    jsonFile.close();
+}
+
 /**
     Retrieves postsynaptic neurons and their properties (e.g., bounding box)
     that meet the filter definition.
@@ -58,7 +75,7 @@ UtilIO::getPostSynapticNeurons(const QJsonObject& spec,
     const QString dataRoot = spec["DATA_ROOT"].toString();
 
     QDir rootDir(dataRoot);
-    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir,networkProps.useLegacyPath);
+    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir, networkProps.useLegacyPath);
 
     QList<int> selectedNeuronIds = getPostSynapticNeuronIds(spec, networkProps);
 
@@ -179,7 +196,7 @@ UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec,
         throw std::runtime_error("Invalid data root in specification");
     }
 
-    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir,networkProps.useLegacyPath);
+const QDir modelDataDir = CIS3D::getModelDataDir(rootDir, networkProps.useLegacyPath);
     const QDir pstDir = CIS3D::getNormalizedPSTRootDir(modelDataDir);
     if (!pstDir.exists())
     {
@@ -190,6 +207,7 @@ UtilIO::getPostSynapticNeuronIds(const QJsonObject& spec,
 
     QList<int> selectedNeuronIds = networkProps.neurons.getFilteredNeuronIds(
         selectedCellTypes, selectedRegions, CIS3D::POSTSYNAPTIC);
+
 
     for (int i = 0; i < neuronIds.size(); ++i)
     {
@@ -231,9 +249,11 @@ UtilIO::getNeuronIds(const QJsonObject& spec,
             selectedCellTypes.append(cellTypeId);
         }
     }
-    if(selectedCellTypes.size() == 0){
+    if (selectedCellTypes.size() == 0)
+    {
         QList<int> exc = networkProps.cellTypes.getAllCellTypeIds(true);
-        for(int i=0; i<exc.size(); i++){
+        for (int i = 0; i < exc.size(); i++)
+        {
             selectedCellTypes.append(exc[i]);
         }
     }
@@ -314,7 +334,7 @@ UtilIO::getPreSynapticNeurons(const QJsonObject& spec,
         throw std::runtime_error("Invalid data root in specification");
     }
 
-    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir,networkProps.useLegacyPath);
+    const QDir modelDataDir = CIS3D::getModelDataDir(rootDir, networkProps.useLegacyPath);
     const QDir boutonDir = CIS3D::getBoutonsRootDir(modelDataDir);
     if (!boutonDir.exists())
     {
@@ -410,4 +430,3 @@ UtilIO::makeDir(QString dirname)
     }
     dir.mkdir(dirname);
 }
-

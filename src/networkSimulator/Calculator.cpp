@@ -36,7 +36,7 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, QString
     bool parallelLoop = false; //!mRandomGenerator.hasUserSeed();
     float maxInnervation = propsFloat["MAX_INNERVATION"];
     float maxInnervationLog = maxInnervation == 0 ? -100 : log(maxInnervation);
-    float boutonPSTRatio = propsFloat["BOUTON_PST_RATIO"];
+    float boutonPSTRatio = propsFloat["BOUTON_PST_RATIO"] * log(10);
     float innervationCutoff = propsFloat["ABSOLUTE_INNERVATION_CUTOFF"];
     float innervationCutoffLog = innervationCutoff == 0 ? -100 : log(innervationCutoff);
     bool checkMaxInnervation = propsBoolean["APPLY_CONSTRAINT_MAX_INNERVATION"];
@@ -178,13 +178,13 @@ Calculator::calculateBatch(std::vector<QVector<float> > parametersBatch, QString
                                 if (mode == "h0_intercept_pre_pst_pstAll" || mode == "h0_pre_pst_pstAll")
                                 {
                                     arg = b0 + b1 * preVal + b2 * postVal + b3 * postAllVal;
-                                    boundArg1 = std::fabs(b1 * preVal - (b2 * postVal + b3 * postAllVal));
+                                    boundArg1 = b1 * preVal - (b2 * postVal + b3 * postAllVal);
                                     boundArg2 = b2 * postVal + b3 * postAllVal;
                                 }
                                 else
                                 {
                                     arg = b0 + b1 * preVal + b2 * postNormVal;
-                                    boundArg1 = std::fabs(b1 * preVal - b2 * postNormVal);
+                                    boundArg1 = b1 * preVal - b2 * postNormVal;
                                     boundArg2 = b2 * postNormVal;
                                 }
 
