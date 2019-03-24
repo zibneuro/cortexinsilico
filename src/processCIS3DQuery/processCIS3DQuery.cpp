@@ -56,10 +56,11 @@ main(int argc, char* argv[])
         const QString queryType = query["queryType"].toString();
         if(queryType == "innervation"){
             handler = new InnervationQueryHandler();
+            handler->processQuery(config, queryId, query);
         } else {
-            throw std::runtime_error("Invalid query type.");
+            //throw std::runtime_error("Invalid query type.");
         }                
-        handler->processQuery(config, queryId, query);
+        
     } else {
         throw std::runtime_error("Invalid mode.");
     }
