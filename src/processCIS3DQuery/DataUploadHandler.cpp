@@ -11,6 +11,7 @@
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
 #include <stdexcept>
+#include "UtilIO.h"
 
 DataUploadHandler::DataUploadHandler(QObject* parent)
     : QObject(parent)
@@ -277,7 +278,8 @@ DataUploadHandler::replyGetQueryFinished(QNetworkReply* reply)
             requestId == "Regions" ||
             requestId == "LaminarLocations" ||
             requestId == "Networks" ||
-            requestId == "PostsynapticTargets")
+            requestId == "PostsynapticTargets" ||
+            requestId == "Update")
         {
             qDebug() << "[*] Successful upload of" << requestId;
             reply->deleteLater();
@@ -310,7 +312,39 @@ DataUploadHandler::replyGetQueryFinished(QNetworkReply* reply)
 }
 
 void
-DataUploadHandler::uploadQueryData(const QJsonObject& config, const QString& queryId)
+DataUploadHandler::uploadFile(const QJsonObject& config, const QString& queryId, const QString& filename)
 {
+    mConfig = config;
 
+    const QString baseUrl = mConfig["METEOR_URL_CIS3D"].toString();
+
+    const QString loginEndPoint = mConfig["METEOR_LOGIN_ENDPOINT"].toString();
+    const QString logoutEndPoint = mConfig["METEOR_LOGOUT_ENDPOINT"].toString();
+    const QString updateEndpoint = mConfig["METEOR_EVALUATIONQUERY_ENDPOINT"].toString();
+
+    mLoginUrl = baseUrl + loginEndPoint;
+    mLogoutUrl = baseUrl + logoutEndPoint;
+    const QString updateUrl = baseUrl + updateEndpoint + queryId;
+
+    mAuthInfo = QueryHelpers::login(mLoginUrl,
+                                    mConfig["WORKER_USERNAME"].toString(),
+                                    mConfig["WORKER_PASSWORD"].toString(),
+                                    mNetworkManager,
+                                    mConfig);
+
+    mPendingRequestIds.append("Update");
+
+    QNetworkRequest updateRequest;
+    updateRequest.setUrl(updateUrl);
+    updateRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
+    updateRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
+    updateRequest.setAttribute(QNetworkRequest::User, QVariant("Update"));
+    updateRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+    QueryHelpers::setAuthorization(mConfig, updateRequest);
+    QJsonObject fileData = UtilIO::parseSpecFile(filename);
+    QJsonDocument doc(fileData);
+    QString updateData(doc.toJson());
+
+    connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
+    mNetworkManager.put(updateRequest, updateData.toLocal8Bit());    
 }

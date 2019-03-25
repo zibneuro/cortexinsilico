@@ -25,12 +25,6 @@ main(int argc, char* argv[])
     qInstallMessageHandler(myMessageOutput);
     QCoreApplication app(argc, argv);
 
-    if (app.arguments().size() != 4)
-    {
-        qDebug() << "Wrong number of arguments.";
-        return 1;
-    }
-
     const QString specFile = app.arguments().at(1);
     const QJsonObject config = UtilIO::parseSpecFile(specFile);
     const QString operation = app.arguments().at(2);
@@ -42,11 +36,12 @@ main(int argc, char* argv[])
         QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
         handler->uploadNetworkData(config);
     }
-    else if (operation == "uploadQueryResults")
+    else if (operation == "uploadFile")
     {
+        const QString filePath = app.arguments().at(4);
         DataUploadHandler* handler = new DataUploadHandler();
         QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
-        handler->uploadQueryData(config, queryId);
+        handler->uploadFile(config, queryId, filePath);
     }
     else if (operation == "processQuery")
     {

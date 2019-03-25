@@ -202,7 +202,8 @@ SelectionQueryHandler::doProcessQuery()
     {
         const QString key = QString("selection_%1_A.json.zip").arg(mQueryId);
         QString geometryFile = createGeometryJSON(key, selectionA, mNetwork, mConfig["WORKER_TMP_DIR"].toString());
-        if(uploadToS3(key, geometryFile) != 0){
+        if (uploadToS3(key, geometryFile) != 0)
+        {
             abort("Failed uploading to S3 " + geometryFile);
             return;
         }
@@ -215,7 +216,8 @@ SelectionQueryHandler::doProcessQuery()
     {
         const QString key = QString("selection_%1_B.json.zip").arg(mQueryId);
         QString geometryFile = createGeometryJSON(key, selectionB, mNetwork, mConfig["WORKER_TMP_DIR"].toString());
-        if(uploadToS3(key, geometryFile) != 0){
+        if (uploadToS3(key, geometryFile) != 0)
+        {
             abort("Failed uploading to S3 " + geometryFile);
             return;
         }
@@ -228,7 +230,8 @@ SelectionQueryHandler::doProcessQuery()
     {
         const QString key = QString("selection_%1_C.json.zip").arg(mQueryId);
         QString geometryFile = createGeometryJSON(key, selectionC, mNetwork, mConfig["WORKER_TMP_DIR"].toString());
-        if(uploadToS3(key, geometryFile) != 0){
+        if (uploadToS3(key, geometryFile) != 0)
+        {
             abort("Failed uploading to S3 " + geometryFile);
             return;
         }
@@ -239,7 +242,9 @@ SelectionQueryHandler::doProcessQuery()
     }
 
     mUpdateCount++;
-    writeResult(result);
+    mQuery.insert(getResultKey(), result);
+    mQuery.insert("status", getCompletedStatus());
+    writeResult(mQuery);
 };
 
 QString

@@ -18,7 +18,7 @@ public:
     DataUploadHandler(QObject* parent = 0);
 
     void uploadNetworkData(const QJsonObject& config);
-    void uploadQueryData(const QJsonObject& config, const QString& queryId);
+    void uploadFile(const QJsonObject& config, const QString& queryId, const QString& filename);
 
 signals:
     void completedProcessing();

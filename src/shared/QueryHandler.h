@@ -37,8 +37,11 @@ protected:
     void abort(QString error);
     virtual QString getResultKey() = 0;
     QString getQueryResultDir();
+    QString getQueryStatusDir();
     int uploadToS3(const QString& key,
                    const QString& filename);
+    QJsonObject getCompletedStatus();
+    QJsonObject getAbortedStatus(QString message);
 
     QJsonObject mConfig;
     QString mQueryId;

@@ -35,7 +35,7 @@ QueryHandler::processQuery(const QJsonObject& config, const QString& queryId, co
     mUpdateCount = 0;
     mCompleted = false;
     mAdvancedSettings = Util::getAdvancedSettingsString(query);
-    mNetworkNumber = mQuery["mNetworkNumber"].toInt();
+    mNetworkNumber = mQuery["networkNumber"].toInt();
 
     setSelection();
 
@@ -113,14 +113,27 @@ QueryHandler::setFormulas()
 void
 QueryHandler::writeResult(QJsonObject& query)
 {
-    QString filename = getQueryResultDir() + mQueryId + "_" + QString::number(mUpdateCount);
+    QString queryStatus = mQueryId + "_" + QString::number(mUpdateCount);
+    QString filename = getQueryResultDir() + queryStatus;
     UtilIO::writeJson(query, filename);
+    
+    QString statusFilename = getQueryStatusDir() + queryStatus;
+    QJsonObject foo;
+    UtilIO::writeJson(foo, statusFilename);
 }
 
 void
 QueryHandler::abort(QString message)
 {
-    qDebug() << "abort" << message;
+    QString queryStatus = mQueryId + "_" + QString::number(mUpdateCount);
+    QString filename = getQueryResultDir() + queryStatus;    
+    QJsonObject query = mQuery;
+    query.insert("status", getAbortedStatus(message));
+    UtilIO::writeJson(query, filename);
+
+    QString statusFilename = getQueryStatusDir() + queryStatus;
+    QJsonObject foo;
+    UtilIO::writeJson(foo, statusFilename);
 }
 
 QString
@@ -130,10 +143,17 @@ QueryHandler::getQueryResultDir()
     return queryDir + "/" + mQueryId + "/results/";
 }
 
+QString
+QueryHandler::getQueryStatusDir()
+{
+    QString queryDir = mConfig["QUERY_DIRECTORY"].toString();
+    return queryDir + "/status/";
+}
+
 int
 QueryHandler::uploadToS3(const QString& key,
                          const QString& filename)
-{    
+{
     const QString program = mConfig["WORKER_PYTHON_BIN"].toString();
     QStringList arguments;
     arguments.append(mConfig["WORKER_S3UPLOAD_SCRIPT"].toString());
@@ -146,4 +166,22 @@ QueryHandler::uploadToS3(const QString& key,
     arguments.append(mConfig["AWS_S3_BUCKET_CIS3D"].toString());
 
     return QProcess::execute(program, arguments);
+}
+
+QJsonObject
+QueryHandler::getCompletedStatus()
+{
+    QJsonObject status;
+    status.insert("progress", 100);
+    status.insert("statusMessage", "");
+    return status;
+}
+
+QJsonObject
+QueryHandler::getAbortedStatus(QString message)
+{
+    QJsonObject status;
+    status.insert("progress", -1);
+    status.insert("statusMessage", message);
+    return status;
 }
