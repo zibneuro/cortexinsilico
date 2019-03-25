@@ -103,7 +103,7 @@ QueryHandler::setFormulas()
         formulas = formulaSelection["formulasNetwork2"].toObject();
     }
     mCalculator = FormulaCalculator(formulas);
-    mAborted = mCalculator.init();
+    mAborted = !mCalculator.init();
     if (mAborted)
     {
         abort("Failed parsing formula.");
@@ -120,6 +120,7 @@ QueryHandler::writeResult(QJsonObject& query)
 void
 QueryHandler::abort(QString message)
 {
+    qDebug() << "abort" << message;
 }
 
 QString
@@ -127,4 +128,22 @@ QueryHandler::getQueryResultDir()
 {
     QString queryDir = mConfig["QUERY_DIRECTORY"].toString();
     return queryDir + "/" + mQueryId + "/results/";
+}
+
+int
+QueryHandler::uploadToS3(const QString& key,
+                         const QString& filename)
+{    
+    const QString program = mConfig["WORKER_PYTHON_BIN"].toString();
+    QStringList arguments;
+    arguments.append(mConfig["WORKER_S3UPLOAD_SCRIPT"].toString());
+    arguments.append("UPLOAD");
+    arguments.append(key);
+    arguments.append(filename);
+    arguments.append(mConfig["AWS_ACCESS_KEY_CIS3D"].toString());
+    arguments.append(mConfig["AWS_SECRET_KEY_CIS3D"].toString());
+    arguments.append(mConfig["AWS_S3_REGION_CIS3D"].toString());
+    arguments.append(mConfig["AWS_S3_BUCKET_CIS3D"].toString());
+
+    return QProcess::execute(program, arguments);
 }

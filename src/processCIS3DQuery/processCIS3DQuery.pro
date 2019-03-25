@@ -59,7 +59,8 @@ SOURCES += \
     DataUploadHandler.cpp \
     QueryHelpers.cpp \
     ../shared/QueryHandler.cpp \
-    InnervationQueryHandler.cpp
+    InnervationQueryHandler.cpp \
+    SelectionQueryHandler.cpp
 
 HEADERS += \
     ../shared/CIS3DAxonRedundancyMap.h \
@@ -96,3 +97,4 @@ HEADERS += \
     QueryHelpers.h \
     ../shared/QueryHandler.h \
     InnervationQueryHandler.h \
+    SelectionQueryHandler.h

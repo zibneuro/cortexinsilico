@@ -57,10 +57,12 @@ main(int argc, char* argv[])
         if(queryType == "innervation"){
             handler = new InnervationQueryHandler();
             handler->processQuery(config, queryId, query);
+        } else if (queryType == "selection") {
+            handler = new SelectionQueryHandler();
+            handler->processQuery(config, queryId, query);            
         } else {
             //throw std::runtime_error("Invalid query type.");
-        }                
-        
+        }
     } else {
         throw std::runtime_error("Invalid mode.");
     }

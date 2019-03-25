@@ -20,6 +20,11 @@
 #include <QDebug>
 #include "RandomGenerator.h"
 
+SelectionQueryHandler::SelectionQueryHandler()
+    : QueryHandler()
+{
+}
+
 QJsonObject
 createJsonResult(const IdsPerCellTypeRegion& idsPerCellTypeRegion,
                  const NetworkProps& network,
@@ -180,192 +185,65 @@ createGeometryJSON(const QString& zipFileName,
     return zipFullPath;
 }
 
-SelectionQueryHandler::SelectionQueryHandler(QObject* parent)
-    : QObject(parent)
-{
-}
-
 void
-SelectionQueryHandler::process(const QString& selectionQueryId,
-                               const QJsonObject& config)
+SelectionQueryHandler::doProcessQuery()
 {
-    qDebug() << "Process selection query" << selectionQueryId;
-    mConfig = config;
-    mQueryId = selectionQueryId;
+    IdList selectionA = mSelection.SelectionA();
+    IdList selectionB = mSelection.SelectionB();
+    IdList selectionC = mSelection.SelectionC();
 
-    const QString baseUrl = mConfig["METEOR_URL_CIS3D"].toString();
-    const QString queryEndPoint = mConfig["METEOR_SELECTIONQUERYFILTER_ENDPOINT"].toString();
-    const QString loginEndPoint = mConfig["METEOR_LOGIN_ENDPOINT"].toString();
-    const QString logoutEndPoint = mConfig["METEOR_LOGOUT_ENDPOINT"].toString();
+    QJsonObject cellSelection = mQuery["cellSelection"].toObject();
+    bool selectionAEnabled = cellSelection["selectionA"].toObject()["enabled"].toBool();
+    bool selectionBEnabled = cellSelection["selectionB"].toObject()["enabled"].toBool();
+    bool selectionCEnabled = cellSelection["selectionC"].toObject()["enabled"].toBool();
 
-    if (baseUrl.isEmpty())
+    QJsonObject result;
+    if (selectionAEnabled)
     {
-        throw std::runtime_error("SelectionQueryHandler: Cannot find METEOR_URL_CIS3D");
+        const QString key = QString("selection_%1_A.json.zip").arg(mQueryId);
+        QString geometryFile = createGeometryJSON(key, selectionA, mNetwork, mConfig["WORKER_TMP_DIR"].toString());
+        if(uploadToS3(key, geometryFile) != 0){
+            abort("Failed uploading to S3 " + geometryFile);
+            return;
+        }
+        const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(selectionA, mNetwork);
+        const qint64 fileSizeBytes = QFileInfo(geometryFile).size();
+        QJsonObject selectionAData = createJsonResult(idsPerCellTypeRegion, mNetwork, key, fileSizeBytes);
+        result.insert("selectionA", selectionAData);
     }
-    if (queryEndPoint.isEmpty())
+    if (selectionBEnabled)
     {
-        throw std::runtime_error("SelectionQueryHandler: Cannot find METEOR_SELECTIONQUERYFILTER_ENDPOINT");
+        const QString key = QString("selection_%1_B.json.zip").arg(mQueryId);
+        QString geometryFile = createGeometryJSON(key, selectionB, mNetwork, mConfig["WORKER_TMP_DIR"].toString());
+        if(uploadToS3(key, geometryFile) != 0){
+            abort("Failed uploading to S3 " + geometryFile);
+            return;
+        }
+        const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(selectionB, mNetwork);
+        const qint64 fileSizeBytes = QFileInfo(geometryFile).size();
+        QJsonObject selectionBData = createJsonResult(idsPerCellTypeRegion, mNetwork, key, fileSizeBytes);
+        result.insert("selectionB", selectionBData);
     }
-    if (loginEndPoint.isEmpty())
+    if (selectionCEnabled)
     {
-        throw std::runtime_error("SelectionQueryHandler: Cannot find METEOR_LOGIN_ENDPOINT");
+        const QString key = QString("selection_%1_C.json.zip").arg(mQueryId);
+        QString geometryFile = createGeometryJSON(key, selectionC, mNetwork, mConfig["WORKER_TMP_DIR"].toString());
+        if(uploadToS3(key, geometryFile) != 0){
+            abort("Failed uploading to S3 " + geometryFile);
+            return;
+        }
+        const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(selectionC, mNetwork);
+        const qint64 fileSizeBytes = QFileInfo(geometryFile).size();
+        QJsonObject selectionCData = createJsonResult(idsPerCellTypeRegion, mNetwork, key, fileSizeBytes);
+        result.insert("selectionC", selectionCData);
     }
-    if (logoutEndPoint.isEmpty())
-    {
-        throw std::runtime_error("SelectionQueryHandler: Cannot find METEOR_LOGOUT_ENDPOINT");
-    }
 
-    mQueryUrl = baseUrl + queryEndPoint + mQueryId;
-    mLoginUrl = baseUrl + loginEndPoint;
-    mLogoutUrl = baseUrl + logoutEndPoint;
+    mUpdateCount++;
+    writeResult(result);
+};
 
-    mAuthInfo = QueryHelpers::login(mLoginUrl,
-                                    mConfig["WORKER_USERNAME"].toString(),
-                                    mConfig["WORKER_PASSWORD"].toString(),
-                                    mNetworkManager,
-                                    mConfig);
-
-    QNetworkRequest request;
-    request.setUrl(mQueryUrl);
-    request.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
-    request.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
-    request.setAttribute(QNetworkRequest::User, QVariant("getSelectionQueryData"));
-    QueryHelpers::setAuthorization(mConfig, request);
-
-    connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyGetQueryFinished(QNetworkReply*)));
-    mNetworkManager.get(request);
-}
-
-void
-SelectionQueryHandler::replyGetQueryFinished(QNetworkReply* reply)
+QString
+SelectionQueryHandler::getResultKey()
 {
-    QNetworkReply::NetworkError error = reply->error();
-    if (error == QNetworkReply::NoError && !reply->request().attribute(QNetworkRequest::User).toString().contains("getSelectionQueryData"))
-    {
-        return;
-    }
-    else if (error == QNetworkReply::NoError)
-    {
-        const QByteArray content = reply->readAll();
-        const QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
-        const QString status = jsonResponse.object().value("status").toString();
-
-        if (status == "success")
-        {
-            // ############ PROCESS SELECTION ############
-
-            const QByteArray content = reply->readAll();
-            QJsonDocument jsonResponse = QJsonDocument::fromJson(content);
-            QJsonObject jsonData = jsonResponse.object().value("data").toObject();
-            
-            NeuronSelection selection;
-            selection.setSelectionFromQuery(jsonData, mNetwork, mConfig);
-            IdList neurons = selection.SelectionA();
-
-            // ############ UPLOAD RESULTS ############
-
-            const QString key = QString("neuronselection_%1.json.zip").arg(mQueryId);
-            QString geometryFile;
-            try
-            {
-                geometryFile = createGeometryJSON(key, neurons, mNetwork, mConfig["WORKER_TMP_DIR"].toString());
-            }
-            catch (std::runtime_error& e)
-            {
-                qDebug() << QString(e.what());
-                logoutAndExit(1);
-            }
-
-            const qint64 fileSizeBytes = QFileInfo(geometryFile).size();
-            if (QueryHelpers::uploadToS3(key, geometryFile, mConfig) != 0)
-            {
-                qDebug() << "Error uploading geometry json file to S3:" << geometryFile;
-                logoutAndExit(1);
-            }
-
-            const IdsPerCellTypeRegion idsPerCellTypeRegion = Util::sortByCellTypeRegionIDs(neurons, mNetwork);
-            const QJsonObject result = createJsonResult(idsPerCellTypeRegion, mNetwork, key, fileSizeBytes);
-            reply->deleteLater();
-
-            QNetworkRequest putRequest;
-            putRequest.setUrl(mQueryUrl);
-            putRequest.setRawHeader(QByteArray("X-User-Id"), mAuthInfo.userId.toLocal8Bit());
-            putRequest.setRawHeader(QByteArray("X-Auth-Token"), mAuthInfo.authToken.toLocal8Bit());
-            putRequest.setAttribute(QNetworkRequest::User, QVariant("putSelectionResult"));
-            putRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-            QueryHelpers::setAuthorization(mConfig, putRequest);
-
-            QJsonDocument putDoc(result);
-            QString putData(putDoc.toJson());
-
-            connect(&mNetworkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(replyPutResultFinished(QNetworkReply*)));
-            mNetworkManager.put(putRequest, putData.toLocal8Bit());
-        }
-        else
-        {
-            qDebug() << "[-] Error obtaining SelectionQuery data (invalid status):";
-            qDebug() << reply->errorString();
-            qDebug() << QString(reply->readAll().replace("\"", ""));
-
-            reply->deleteLater();
-            logoutAndExit(1);
-        }
-    }
-    else
-    {
-        qDebug() << "[-] Error obtaining SelectionQuery data (network error):";
-        qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
-        {
-            qDebug() << QString(reply->readAll().replace("\"", ""));
-        }
-        reply->deleteLater();
-        logoutAndExit(1);
-    }
-}
-
-void
-SelectionQueryHandler::replyPutResultFinished(QNetworkReply* reply)
-{
-    QNetworkReply::NetworkError error = reply->error();
-    const QString requestId = reply->request().attribute(QNetworkRequest::User).toString();
-    if (error == QNetworkReply::NoError && !(requestId == "putSelectionResult"))
-    {
-        return;
-    }
-    else if (error == QNetworkReply::NoError)
-    {
-        qDebug() << "    Completed processing Selection query" << mQueryId;
-        reply->deleteLater();
-        logoutAndExit(0);
-    }
-    else
-    {
-        qDebug() << "[-] Error putting Selection result (queryId" << mQueryId << "):";
-        qDebug() << reply->errorString();
-        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 404)
-        {
-            qDebug() << QString(reply->readAll().replace("\"", ""));
-        }
-        reply->deleteLater();
-        logoutAndExit(1);
-    }
-}
-
-void
-SelectionQueryHandler::logoutAndExit(const int exitCode)
-{
-    QueryHelpers::logout(mLogoutUrl,
-                         mAuthInfo,
-                         mNetworkManager,
-                         mConfig);
-
-    if (exitCode == 0)
-    {
-        emit completedProcessing();
-    }
-    else
-    {
-        QCoreApplication::exit(exitCode);
-    }
+    return "selectionResult";
 }

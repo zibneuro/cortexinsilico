@@ -14,6 +14,7 @@
 #include "FormulaCalculator.h"
 #include "CIS3DNetworkProps.h"
 #include "NeuronSelection.h"
+#include <QProcess>
 
 class NetworkStatistic;
 
@@ -27,7 +28,6 @@ public:
     virtual void reportComplete(NetworkStatistic* stat);
 
 protected:
-
     virtual void doProcessQuery();
     void setSelection();
     void setFormulas();
@@ -35,23 +35,24 @@ protected:
     void complete();
     void writeResult(QJsonObject& query);
     void abort(QString error);
-    virtual QString getResultKey() = 0;    
+    virtual QString getResultKey() = 0;
     QString getQueryResultDir();
-    
+    int uploadToS3(const QString& key,
+                   const QString& filename);
+
     QJsonObject mConfig;
     QString mQueryId;
     QJsonObject mQuery;
     QJsonObject mLatestResult;
     int mUpdateCount;
     bool mCompleted;
-    int mNetworkNumber;    
+    int mNetworkNumber;
     QString mAdvancedSettings;
     QJsonObject mFormulas;
     bool mAborted;
     FormulaCalculator mCalculator;
-    NetworkProps mNetwork;  
+    NetworkProps mNetwork;
     NeuronSelection mSelection;
-
 };
 
 #endif // QUERYHANDLER_H

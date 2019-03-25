@@ -49,9 +49,10 @@ UtilIO::writeJson(QJsonObject& obj, QString& fileName)
         throw std::runtime_error(qPrintable(msg));
     }
     QJsonDocument doc(obj);
-    QByteArray data = doc.toBinaryData();
+    //QByteArray data = doc.toBinaryData();    
+    jsonFile.write(doc.toJson());
 
-    jsonFile.write(data);
+    //jsonFile.write(data);
     jsonFile.close();
 }
 
