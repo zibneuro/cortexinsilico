@@ -332,7 +332,7 @@ NeuronSelection::filterSlice(const NetworkProps& networkProps,
 void
 NeuronSelection::setSelectionFromQuery(const QJsonObject& query, NetworkProps& networkProps, const QJsonObject& config)
 {
-    qDebug() << "set selection from query" << query;
+    //qDebug() << "set selection from query" << query;
     QJsonObject networkSelection = query["networkSelection"].toObject();
     int number = query["networkNumber"].toInt();
     QString networkName = Util::getShortName(networkSelection, number);
