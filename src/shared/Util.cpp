@@ -950,13 +950,17 @@ Util::getLongName(QJsonObject& networkSpec, int number)
 QString
 Util::getShortName(QJsonObject& networkSpec, int number)
 {
+    QString shortName;
     if (number == 1)
     {
-        return networkSpec["network1"].toString();
+        shortName = networkSpec["network1"].toString();
     }
     else
     {
-        return networkSpec["network2"].toString();
+        shortName = networkSpec["network2"].toString();
+    }
+    if(shortName == "RBCk"){
+        return "RBC";
     }
 }
 
@@ -1001,8 +1005,6 @@ QString
 Util::getDatasetPath(const QString& datasetShortName,
                      const QJsonObject& config)
 {
-    qDebug() << datasetShortName;
-
     const QJsonValue datasetsJson = config["WORKER_DATASETS_CIS3D"];
     if (!datasetsJson.isArray())
     {
