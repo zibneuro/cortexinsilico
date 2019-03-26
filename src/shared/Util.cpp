@@ -961,6 +961,8 @@ Util::getShortName(QJsonObject& networkSpec, int number)
     }
     if(shortName == "RBCk"){
         return "RBC";
+    } else {
+        return shortName;
     }
 }
 
