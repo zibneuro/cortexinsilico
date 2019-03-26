@@ -323,7 +323,7 @@ NeuronSelection::filterSlice(const NetworkProps& networkProps,
     getTissueDepthParameters(tissueA, lowA, highA, modeA);
     getTissueDepthParameters(tissueB, lowB, highB, modeB);
     getTissueDepthParameters(tissueC, lowC, highC, modeC);
-    
+
     applyTissueDepthFilter(mSelectionA, mBandA, networkProps, sliceRef, lowA, highA, modeA);
     applyTissueDepthFilter(mSelectionB, mBandB, networkProps, sliceRef, lowB, highB, modeB);
     applyTissueDepthFilter(mSelectionC, mBandC, networkProps, sliceRef, lowC, highC, modeC);
@@ -343,9 +343,6 @@ NeuronSelection::setSelectionFromQuery(const QJsonObject& query, NetworkProps& n
     QString queryType = query["queryType"].toString();
 
     QString dataRoot = Util::getDatasetPath(networkName, config);
-
-    qDebug() << dataRoot;
-
     networkProps.setDataRoot(dataRoot);
     networkProps.loadFilesForQuery();
 
@@ -356,8 +353,6 @@ NeuronSelection::setSelectionFromQuery(const QJsonObject& query, NetworkProps& n
         selectionA,
         selectionB,
         selectionC);
-
-    qDebug() << mSelectionA.size();
 
     if (Util::matchCells(networkSelection, number))
     {
@@ -392,7 +387,6 @@ NeuronSelection::setInnervationSelection(const QJsonObject& spec, const NetworkP
     mSelectionB.clear();
     IdList pre = UtilIO::getPreSynapticNeurons(spec, networkProps);
     IdList post = UtilIO::getPostSynapticNeuronIds(spec, networkProps);
-    qDebug() << "set innervation selection" << post.size();
     if (samplingFactor == 1)
     {
         mSelectionA.append(pre);
@@ -755,7 +749,7 @@ std::map<int, int>
 NeuronSelection::readMapping(NeuronSelection& selection)
 {
     QString networkName = selection.getNetworkName();
-    QDir mappingDir = QDir(mMappingDir);
+    QDir mappingDir = QDir(mMappingDir);    
     QString path = CIS3D::getMappingFilePath(mappingDir, networkName, mNetworkName);
 
     std::map<int, int> mapping;

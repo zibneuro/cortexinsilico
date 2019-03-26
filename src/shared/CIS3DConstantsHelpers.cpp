@@ -356,7 +356,7 @@ CIS3D::getAxonRedundancyMapFileName(const QDir& modelDataDir)
 QString
 CIS3D::getMappingFilePath(QDir& dataRootDir, QString& network1, QString& network2)
 {    
-    QString mappingFilePath = QString("mapping_%1_%1").arg(network1, network2);
+    QString mappingFilePath = QString("mapping_%1_%2").arg(network1, network2);
     return QDir::cleanPath(dataRootDir.absolutePath() + QDir::separator() + mappingFilePath);    
 }
 
