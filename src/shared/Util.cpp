@@ -851,7 +851,7 @@ Util::getSliceRef(QString network)
     else
     {
         int refX = network.mid(12, 3).toInt();
-        return refX;
+        return -refX;
     }
 }
 

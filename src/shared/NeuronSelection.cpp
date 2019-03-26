@@ -297,13 +297,13 @@ applyTissueDepthFilter(IdList& selectionIds,
         }
     }
     else
-    {
+    {        
         selectionIds = NeuronSelection::filterTissueDepth(networkProps,
                                                           selectionIds,
                                                           sliceRef,
                                                           low,
                                                           high,
-                                                          CIS3D::SliceBand::FIRST);
+                                                          CIS3D::SliceBand::FIRST);     
         for (auto it = selectionIds.begin(); it != selectionIds.end(); it++)
         {
             selectionBand[*it] = CIS3D::SliceBand::FIRST;
@@ -323,7 +323,7 @@ NeuronSelection::filterSlice(const NetworkProps& networkProps,
     getTissueDepthParameters(tissueA, lowA, highA, modeA);
     getTissueDepthParameters(tissueB, lowB, highB, modeB);
     getTissueDepthParameters(tissueC, lowC, highC, modeC);
-
+    
     applyTissueDepthFilter(mSelectionA, mBandA, networkProps, sliceRef, lowA, highA, modeA);
     applyTissueDepthFilter(mSelectionB, mBandB, networkProps, sliceRef, lowB, highB, modeB);
     applyTissueDepthFilter(mSelectionC, mBandC, networkProps, sliceRef, lowC, highC, modeC);
@@ -344,6 +344,8 @@ NeuronSelection::setSelectionFromQuery(const QJsonObject& query, NetworkProps& n
 
     QString dataRoot = Util::getDatasetPath(networkName, config);
 
+    qDebug() << dataRoot;
+
     networkProps.setDataRoot(dataRoot);
     networkProps.loadFilesForQuery();
 
@@ -354,6 +356,8 @@ NeuronSelection::setSelectionFromQuery(const QJsonObject& query, NetworkProps& n
         selectionA,
         selectionB,
         selectionC);
+
+    qDebug() << mSelectionA.size();
 
     if (Util::matchCells(networkSelection, number))
     {
@@ -462,9 +466,10 @@ NeuronSelection::processSelection(
         neuronsC = networkProps.neurons.getFilteredNeuronIds(filterC);
     }
 
+    double sliceRef;
+
     NeuronSelection tmpSelection(neuronsA, neuronsB, neuronsC);
 
-    double sliceRef;
     if (Util::isSlice(networkSelection, number, sliceRef))
     {
         QJsonObject tissueA = selectionA["tissueDepth"].toObject();
