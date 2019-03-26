@@ -894,10 +894,8 @@ Util::matchCells(QJsonObject& networkSpec, int number)
     double sliceRef;
     bool full = isFull(networkSpec, number);
     bool oppositeSlice = isSlice(networkSpec, getOppositeNetworkNumber(number), sliceRef);
-    bool option = networkSpec["matchCells"].toBool();
-    qDebug() << "matchCells" << full << oppositeSlice << option;
+    bool option = networkSpec["matchmatchCells"].toBool();
     return full && oppositeSlice && option;
-
 }
 
 int

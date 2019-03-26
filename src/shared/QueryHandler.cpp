@@ -56,16 +56,18 @@ QueryHandler::reportUpdate(NetworkStatistic* stat)
     long long connectionsDone = stat->getConnectionsDone();
     const double percent = double(connectionsDone) * 100.0 / double(numConnections);
 
+    qDebug() << "update" << percent;
+
     QJsonObject result = stat->createJson("", 0);
 
     QJsonObject queryStatus;
-    queryStatus.insert("statusMessage", "Running");
+    queryStatus.insert("statusMessage", "");
     queryStatus.insert("progress", percent);
 
     QJsonObject query = mQuery;
     QString resultKey = getResultKey();
 
-    query.insert("queryStatus", queryStatus);
+    query.insert("status", queryStatus);
     query.insert(resultKey, result);
 
     writeResult(query);
@@ -74,6 +76,19 @@ QueryHandler::reportUpdate(NetworkStatistic* stat)
 void
 QueryHandler::reportComplete(NetworkStatistic* stat)
 {
+    QJsonObject result = stat->createJson("", 0);
+
+    QJsonObject queryStatus;
+    queryStatus.insert("statusMessage", "");
+    queryStatus.insert("progress", 100);
+
+    QJsonObject query = mQuery;
+    QString resultKey = getResultKey();
+
+    query.insert("status", queryStatus);
+    query.insert(resultKey, result);
+
+    writeResult(query);
 }
 
 void QueryHandler::doProcessQuery(){};
