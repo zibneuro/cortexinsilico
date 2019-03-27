@@ -26,11 +26,13 @@
 */
 TripletStatistic::TripletStatistic(const NetworkProps& networkProps,
                                    int sampleSize,
+                                   int sampleSeed,
                                    FormulaCalculator& calculator,
                                    QueryHandler* handler)
     : NetworkStatistic(networkProps, calculator, handler)
 {
     mSampleSize = 30;
+    mSampleSeed = sampleSeed;
     mOverallSampleSize = sampleSize;
     mOverallCompletedSamples = 0;
     mIterations = (int)std::ceil((double)sampleSize / (double)mSampleSize);

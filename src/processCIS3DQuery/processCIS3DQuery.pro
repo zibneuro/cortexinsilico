@@ -60,7 +60,11 @@ SOURCES += \
     QueryHelpers.cpp \
     ../shared/QueryHandler.cpp \
     InnervationQueryHandler.cpp \
-    SelectionQueryHandler.cpp
+    SelectionQueryHandler.cpp \
+    SpatialInnervationQueryHandler.cpp \
+    VoxelQueryHandler.cpp \
+    InDegreeQueryHandler.cpp \
+    MotifQueryHandler.cpp 
 
 HEADERS += \
     ../shared/CIS3DAxonRedundancyMap.h \
@@ -97,4 +101,8 @@ HEADERS += \
     QueryHelpers.h \
     ../shared/QueryHandler.h \
     InnervationQueryHandler.h \
-    SelectionQueryHandler.h
+    SelectionQueryHandler.h \ 
+    SpatialInnervationQueryHandler.h \
+    VoxelQueryHandler.h \
+    InDegreeQueryHandler.h \
+    MotifQueryHandler.h

@@ -20,6 +20,7 @@ public:
     */
     TripletStatistic(const NetworkProps& networkProps,
                      int sampleSize,
+                     int sampleSeed,
                      FormulaCalculator& calculator,
                      QueryHandler* handler);
 
@@ -171,6 +172,7 @@ private:
     QList<Statistics> mMotifExpectedProbabilities;
     std::vector<std::vector<Statistics> > mConvergences;
     int mSampleSize;
+    int mSampleSeed;
     int mOverallSampleSize;
     int mOverallCompletedSamples;
     int mIterations;

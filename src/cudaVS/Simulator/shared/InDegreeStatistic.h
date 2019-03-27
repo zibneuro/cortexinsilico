@@ -9,7 +9,9 @@ class InDegreeStatistic : public NetworkStatistic
 public:
     InDegreeStatistic(const NetworkProps& networkProps,
                       int sampleSize,
-                      FormulaCalculator& calculator);
+                      int sampleSeed,
+                      FormulaCalculator& calculator,
+                      QueryHandler* handler);
 
 protected:
     void doCalculate(const NeuronSelection& selection) override;
@@ -28,6 +30,7 @@ private:
     std::vector<double> mValuesBC;
     double mCorrelation;
     int mSampleSize;
+    int mSampleSeed;
     int mIterations;
 };
 

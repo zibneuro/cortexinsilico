@@ -669,29 +669,29 @@ Util::getMinMedMax(std::vector<float> in, float& min, float& med, float& max)
 }
 
 QString
-Util::getAdvancedSettingsString(const QJsonObject& spec, bool hasSynapseDistribution, bool hasConnectionProbability)
+Util::getAdvancedSettingsString(const QJsonObject& query, bool hasSynapseDistribution, bool hasConnectionProbability)
 {
-    QJsonObject query = spec["query"].toObject();
     QJsonObject networkSelection = query["networkSelection"].toObject();
-    QJsonObject preSelection = query["preSelection"].toObject();
-    QJsonObject postSelection = query["postSelection"].toObject();
+//    QJsonObject preSelection = query["preSelection"].toObject();
+//    QJsonObject postSelection = query["postSelection"].toObject();
     int networkNumber = query["networkNumber"].toInt();
     int oppositeNumber = getOppositeNetworkNumber(networkNumber);
 
     // ######### WRITE NETWORK SELECTION #########
 
     QString s = "";
-    s += writeNetworkDescription(networkSelection, networkNumber, preSelection, postSelection);
+//    s += writeNetworkDescription(networkSelection, networkNumber, preSelection, postSelection);
 
     if (matchCells(networkSelection, networkNumber))
     {
         s += "Match cells to network:\n";
-        s += writeNetworkDescription(networkSelection, oppositeNumber, preSelection, postSelection);
+//        s += writeNetworkDescription(networkSelection, oppositeNumber, preSelection, postSelection);
     }
 
     // ######### WRITE FORMULA DESCRIPTION #########
 
-    QJsonObject formulas = query["formulas"].toObject();
+    QJsonObject formulaSelection = query["formulasNetwork1"].toObject();
+    QJsonObject formulas = formulaSelection["formulasNetwork1"].toObject();
 
     QString synapseDistributionFormula = formulas["synapseDistributionFormula"].toString();
     bool useCustomConnectionProbabilityFormula = formulas["connectionProbabilityMode"].toString() == "formula";

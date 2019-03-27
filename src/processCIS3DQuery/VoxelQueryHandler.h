@@ -1,87 +1,66 @@
 #ifndef VOXELQUERYHANDLER_H
 #define VOXELQUERYHANDLER_H
 
+#include "QueryHandler.h"
 #include "CIS3DNetworkProps.h"
 #include "CIS3DStatistics.h"
+#include "FeatureProvider.h"
 #include "Histogram.h"
 #include "QueryHelpers.h"
-#include "FeatureProvider.h"
 #include "RandomGenerator.h"
 #include <QJsonObject>
-#include <QObject>
 #include <QString>
-#include <QtNetwork/QNetworkAccessManager>
 
-class VoxelQueryHandler : public QObject
-{
-    Q_OBJECT
+class VoxelQueryHandler : public QueryHandler {
 
 public:
-    VoxelQueryHandler(QObject* parent = 0);
-
-    void process(const QString& voxelQueryId, const QJsonObject& config);
-    void setFilterString(QString mode,
-                         QString preFilter,
-                         QString postFilter,
-                         QString advancedSettings,
-                         std::vector<double> origin,
-                         std::vector<int> dimensions);
-
-signals:
-    void completedProcessing();
-    void exitWithError(int);
-
-private slots:
-    void replyGetQueryFinished(QNetworkReply* reply);
-    void replyPutResultFinished(QNetworkReply* reply);
+  VoxelQueryHandler();
 
 private:
-    QJsonObject
-    createJsonResult(bool createFile);
-    float calculateSynapseProbability(float innervation, int k);
-    void readIndex(QString indexFile, std::vector<double> origin, std::vector<int> dimensions, std::set<int>& voxelIds, std::set<int>& neuronIds);
-    template <typename T>
-    void createStatistics(std::map<int, T>& values, Statistics& stat, Histogram& histogram);
+  void doProcessQuery() override;
+  QString getResultKey() override;
+  bool initSelection() override;
 
-    QString mQueryId;
-    QJsonObject mConfig;
-    QString mDataRoot;
-    QNetworkAccessManager mNetworkManager;
-    NetworkProps mNetwork;
-    QString mLoginUrl;
-    QString mLogoutUrl;
-    QString mQueryUrl;
-    AuthInfo mAuthInfo;
-    QJsonObject mCurrentJsonData;
-    Statistics mStatistics;
-    QString mTempFolder;
+  void setFilterString(QString mode, QString preFilter, QString postFilter,
+                       QString advancedSettings, std::vector<double> origin,
+                       std::vector<int> dimensions);
 
-    int mNumberInnervatedVoxels;
-    int mNumberTotalVoxels;
-    Statistics mPresynapticCellsPerVoxel;
-    Histogram mPresynapticCellsPerVoxelH;
-    Statistics mPostsynapticCellsPerVoxel;
-    Histogram mPostsynapticCellsPerVoxelH;
-    Statistics mBoutonsPerVoxel;
-    Histogram mBoutonsPerVoxelH;
-    Statistics mPostsynapticSitesPerVoxel;
-    Histogram mPostsynapticSitesPerVoxelH;
+  QJsonObject createJsonResult(bool createFile);
+  float calculateSynapseProbability(float innervation, int k);
+  void readIndex(QString indexFile, std::vector<double> origin,
+                 std::vector<int> dimensions, std::set<int> &voxelIds,
+                 std::set<int> &neuronIds);
+  template <typename T>
+  void createStatistics(std::map<int, T> &values, Statistics &stat,
+                        Histogram &histogram);
 
-    std::map<int, float> mMapBoutonsPerVoxel;
-    std::map<int, int> mMapPreCellsPerVoxel;
-    std::map<int, float> mMapPostsynapticSitesPerVoxel;
-    std::map<int, int> mMapPostCellsPerVoxel;
-    std::set<int> mSelectedVoxels;
-    std::set<int> mPreInnervatedVoxels;
-    std::set<int> mPostInnervatedVoxels;
-    std::map<int, float> mSynapsesPerVoxel;
-    Statistics mSynapsesPerConnection;
-    std::map<int, std::vector<float> > mSynapsesPerConnectionOccurrences;
-    QString mFilterString;
+  Statistics mStatistics;
+  QString mTempFolder;
 
-    bool mAborted;
+  int mNumberInnervatedVoxels;
+  int mNumberTotalVoxels;
+  Statistics mPresynapticCellsPerVoxel;
+  Histogram mPresynapticCellsPerVoxelH;
+  Statistics mPostsynapticCellsPerVoxel;
+  Histogram mPostsynapticCellsPerVoxelH;
+  Statistics mBoutonsPerVoxel;
+  Histogram mBoutonsPerVoxelH;
+  Statistics mPostsynapticSitesPerVoxel;
+  Histogram mPostsynapticSitesPerVoxelH;
 
-    void logoutAndExit(const int exitCode);
+  std::map<int, float> mMapBoutonsPerVoxel;
+  std::map<int, int> mMapPreCellsPerVoxel;
+  std::map<int, float> mMapPostsynapticSitesPerVoxel;
+  std::map<int, int> mMapPostCellsPerVoxel;
+  std::set<int> mSelectedVoxels;
+  std::set<int> mPreInnervatedVoxels;
+  std::set<int> mPostInnervatedVoxels;
+  std::map<int, float> mSynapsesPerVoxel;
+  Statistics mSynapsesPerConnection;
+  std::map<int, std::vector<float>> mSynapsesPerConnectionOccurrences;
+  QString mFilterString;
+
+
 };
 
 #endif // VOXELQUERYHANDLER_H

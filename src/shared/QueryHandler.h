@@ -1,61 +1,64 @@
 #ifndef QUERYHANDLER_H
 #define QUERYHANDLER_H
 
-#include "CIS3DNeurons.h"
 #include "CIS3DNetworkProps.h"
+#include "CIS3DNeurons.h"
 #include "CIS3DStatistics.h"
+#include "FormulaCalculator.h"
 #include "Histogram.h"
-#include "Typedefs.h"
+#include "NeuronSelection.h"
 #include <QJsonArray>
 #include <QNetworkAccessManager>
-#include <QTextStream>
-#include <QString>
 #include <QObject>
-#include "FormulaCalculator.h"
-#include "CIS3DNetworkProps.h"
-#include "NeuronSelection.h"
 #include <QProcess>
+#include <QString>
+#include <QTextStream>
 
 class NetworkStatistic;
 
-class QueryHandler
-{
+class QueryHandler {
 public:
-    QueryHandler();
+  QueryHandler();
 
-    void processQuery(const QJsonObject& config, const QString& queryId, const QJsonObject& query);
-    virtual void reportUpdate(NetworkStatistic* stat);
-    virtual void reportComplete(NetworkStatistic* stat);
+  void processQuery(const QJsonObject &config, const QString &queryId,
+                    const QJsonObject &query);
+  virtual void reportUpdate(NetworkStatistic *stat);
+  virtual void reportComplete(NetworkStatistic *stat);
 
 protected:
-    virtual void doProcessQuery();
-    void setSelection();
-    void setFormulas();
-    void update();
-    void complete();
-    void writeResult(QJsonObject& query);
-    void abort(QString error);
-    virtual QString getResultKey() = 0;
-    QString getQueryResultDir();
-    QString getQueryStatusDir();
-    int uploadToS3(const QString& key,
-                   const QString& filename);
-    QJsonObject getCompletedStatus();
-    QJsonObject getAbortedStatus(QString message);
+  virtual void doProcessQuery();
+  void setSelection();
+  virtual bool initSelection();
+  void setFormulas();
+  void updateQuery(QJsonObject &result, double progress);
+  void writeResult(QJsonObject &query);
+  void abort(QString error);
+  virtual QString getResultKey() = 0;
+  QString getQueryResultDir();
+  QString getQueryStatusDir();
+  int uploadToS3(const QString &key, const QString &filename);
+  QJsonObject getCompletedStatus();
+  QJsonObject getAbortedStatus(QString message);
+  QJsonObject getStatus(double progress);
 
-    QJsonObject mConfig;
-    QString mQueryId;
-    QJsonObject mQuery;
-    QJsonObject mLatestResult;
-    int mUpdateCount;
-    bool mCompleted;
-    int mNetworkNumber;
-    QString mAdvancedSettings;
-    QJsonObject mFormulas;
-    bool mAborted;
-    FormulaCalculator mCalculator;
-    NetworkProps mNetwork;
-    NeuronSelection mSelection;
+  QJsonObject mConfig;
+  QString mQueryId;
+  QJsonObject mQuery;
+  QString mDataRoot;
+  QJsonObject mLatestResult;
+  int mUpdateCount;
+  bool mCompleted;
+  QJsonObject mNetworkSelection;
+  int mNetworkNumber;
+  QString mAdvancedSettings;
+  QJsonObject mFormulas;
+  QJsonObject mSampleSettings;
+  int mSampleNumber;
+  int mSampleSeed;
+  bool mAborted;
+  FormulaCalculator mCalculator;
+  NetworkProps mNetwork;
+  NeuronSelection mSelection;
 };
 
 #endif // QUERYHANDLER_H

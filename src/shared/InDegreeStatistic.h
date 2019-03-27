@@ -9,6 +9,7 @@ class InDegreeStatistic : public NetworkStatistic
 public:
     InDegreeStatistic(const NetworkProps& networkProps,
                       int sampleSize,
+                      int sampleSeed,
                       FormulaCalculator& calculator,
                       QueryHandler* handler);
 
@@ -29,6 +30,7 @@ private:
     std::vector<double> mValuesBC;
     double mCorrelation;
     int mSampleSize;
+    int mSampleSeed;
     int mIterations;
 };
 
