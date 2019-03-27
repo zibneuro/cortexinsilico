@@ -167,8 +167,11 @@ SpatialInnervationQueryHandler::doProcessQuery()
         // ###################### REPORT UPDATE ######################
 
         const double percent = double(i + 1) * 100.0 / double(preIds.size());
-        QJsonObject intermediateResult = createJsonResult("", 0, "", 0, 0);
-        updateQuery(intermediateResult, percent);
+        if (percent < 100)
+        {
+            QJsonObject intermediateResult = createJsonResult("", 0, "", 0, 0);
+            updateQuery(intermediateResult, percent);
+        }
     }
 
     if (!mAborted)

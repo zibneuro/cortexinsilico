@@ -21,181 +21,225 @@
 #include <QtNetwork/QNetworkRequest>
 #include <stdexcept>
 
-QueryHandler::QueryHandler() {}
-
-void QueryHandler::processQuery(const QJsonObject &config,
-                                const QString &queryId,
-                                const QJsonObject &query) {
-  mAborted = false;
-  mConfig = config;
-  mQueryId = queryId;
-  mQuery = query;
-  mUpdateCount = 0;
-  mCompleted = false;
-  mAdvancedSettings = Util::getAdvancedSettingsString(query);
-  mNetworkNumber = mQuery["networkNumber"].toInt();
-  mNetworkSelection = mQuery["networkSelection"].toObject();
-  QString datasetName = Util::getShortName(mNetworkSelection, mNetworkNumber);
-  mDataRoot = Util::getDatasetPath(datasetName, mConfig);
-  mSampleSettings = mQuery["sampleSelection"].toObject();
-  Util::getSampleSettings(mSampleSettings, mNetworkNumber, mSampleNumber,
-                    mSampleNumber);
-
-  if (initSelection()) {
-    setSelection();
-  }
-
-  if (!mAborted) {
-    setFormulas();
-  }
-  if (!mAborted) {
-    doProcessQuery();
-  }
+QueryHandler::QueryHandler()
+{
 }
 
-void QueryHandler::reportUpdate(NetworkStatistic *stat) {
-  mUpdateCount++;
+void
+QueryHandler::processQuery(const QJsonObject& config,
+                           const QString& queryId,
+                           const QJsonObject& query)
+{
+    mAborted = false;
+    mConfig = config;
+    mQueryId = queryId;
+    mQuery = query;
+    mUpdateCount = 0;
+    mCompleted = false;
+    mAdvancedSettings = Util::getAdvancedSettingsString(query);
+    mNetworkNumber = mQuery["networkNumber"].toInt();
+    mNetworkSelection = mQuery["networkSelection"].toObject();
+    QString datasetName = Util::getShortName(mNetworkSelection, mNetworkNumber);
+    mDataRoot = Util::getDatasetPath(datasetName, mConfig);
+    mSampleSettings = mQuery["sampleSelection"].toObject();
+    Util::getSampleSettings(mSampleSettings, mNetworkNumber, mSampleNumber, mSampleNumber);
 
-  long long numConnections = stat->getNumConnections();
-  long long connectionsDone = stat->getConnectionsDone();
-  const double percent =
-      double(connectionsDone) * 100.0 / double(numConnections);
+    if (initSelection())
+    {
+        setSelection();
+    }
 
-  qDebug() << "update" << percent;
-
-  QJsonObject result = stat->createJson("", 0);
-
-  QJsonObject queryStatus;
-  queryStatus.insert("statusMessage", "");
-  queryStatus.insert("progress", percent);
-
-  QJsonObject query = mQuery;
-  QString resultKey = getResultKey();
-
-  query.insert("status", queryStatus);
-  query.insert(resultKey, result);
-
-  writeResult(query);
+    if (!mAborted)
+    {
+        setFormulas();
+    }
+    if (!mAborted)
+    {
+        doProcessQuery();
+    }
 }
 
-void QueryHandler::reportComplete(NetworkStatistic *stat) {
-  mUpdateCount++;
+void
+QueryHandler::reportUpdate(NetworkStatistic* stat)
+{
+    mUpdateCount++;
 
-  QJsonObject result = stat->createJson("", 0);
+    long long numConnections = stat->getNumConnections();
+    long long connectionsDone = stat->getConnectionsDone();
+    const double percent =
+        double(connectionsDone) * 100.0 / double(numConnections);
 
-  QJsonObject queryStatus;
-  queryStatus.insert("statusMessage", "");
-  queryStatus.insert("progress", 100);
+    qDebug() << "update" << percent;
 
-  QJsonObject query = mQuery;
-  QString resultKey = getResultKey();
+    QJsonObject result = stat->createJson("", 0);
 
-  query.insert("status", queryStatus);
-  query.insert(resultKey, result);
+    QJsonObject queryStatus;
+    queryStatus.insert("statusMessage", "");
+    queryStatus.insert("progress", percent);
 
-  writeResult(query);
+    QJsonObject query = mQuery;
+    QString resultKey = getResultKey();
+
+    query.insert("status", queryStatus);
+    query.insert(resultKey, result);
+
+    writeResult(query);
+}
+
+void
+QueryHandler::reportComplete(NetworkStatistic* stat)
+{
+    mUpdateCount++;
+
+    QJsonObject result = stat->createJson("", 0);
+
+    QJsonObject queryStatus;
+    queryStatus.insert("statusMessage", "");
+    queryStatus.insert("progress", 100);
+
+    QJsonObject query = mQuery;
+    QString resultKey = getResultKey();
+
+    query.insert("status", queryStatus);
+    query.insert(resultKey, result);
+
+    writeResult(query);
 }
 
 void QueryHandler::doProcessQuery(){};
 
-void QueryHandler::setSelection() {
-  mSelection.setSelectionFromQuery(mQuery, mNetwork, mConfig);
-  QString error;
-  if (!mSelection.isValid(mQuery, error)) {
-    abort(error);
-  }
+void
+QueryHandler::setSelection()
+{
+    mSelection.setSelectionFromQuery(mQuery, mNetwork, mConfig);
+    QString error;
+    if (!mSelection.isValid(mQuery, error))
+    {
+        abort(error);
+    }
 }
 
-bool QueryHandler::initSelection() { return true; }
-
-void QueryHandler::setFormulas() {
-  QJsonObject formulaSelection = mQuery["formulaSelection"].toObject();
-  QJsonObject formulas;
-  if (mNetworkNumber == 1) {
-    formulas = formulaSelection["formulasNetwork1"].toObject();
-  } else {
-    formulas = formulaSelection["formulasNetwork2"].toObject();
-  }
-  mCalculator = FormulaCalculator(formulas);
-  mAborted = !mCalculator.init();
-  if (mAborted) {
-    abort("Failed parsing formula.");
-  }
+bool
+QueryHandler::initSelection()
+{
+    return true;
 }
 
-void QueryHandler::updateQuery(QJsonObject &result, double progress) {
-  if (!mAborted) {
+void
+QueryHandler::setFormulas()
+{
+    QJsonObject formulaSelection = mQuery["formulaSelection"].toObject();
+    QJsonObject formulas;
+    if (mNetworkNumber == 1)
+    {
+        formulas = formulaSelection["formulasNetwork1"].toObject();
+    }
+    else
+    {
+        formulas = formulaSelection["formulasNetwork2"].toObject();
+    }
+    mCalculator = FormulaCalculator(formulas);
+    mAborted = !mCalculator.init();
+    if (mAborted)
+    {
+        abort("Failed parsing formula.");
+    }
+}
+
+void
+QueryHandler::updateQuery(QJsonObject& result, double progress)
+{
+    if (!mAborted)
+    {
+        mUpdateCount++;
+        //qDebug() << progress << result["voxelS3key"];
+        QJsonObject query = mQuery;
+        query.insert(getResultKey(), result);
+        query.insert("status", getStatus(progress));
+        writeResult(query);
+    }
+}
+
+void
+QueryHandler::writeResult(QJsonObject& query)
+{
+    QString queryStatus = mQueryId + "_" + QString::number(mUpdateCount);
+    QString filename = getQueryResultDir() + queryStatus;
+    UtilIO::writeJson(query, filename);
+
+    QString statusFilename = getQueryStatusDir() + queryStatus;
+    QJsonObject foo;
+    UtilIO::writeJson(foo, statusFilename);
+}
+
+void
+QueryHandler::abort(QString message)
+{
+    QString queryStatus = mQueryId + "_" + QString::number(mUpdateCount);
+    QString filename = getQueryResultDir() + queryStatus;
     QJsonObject query = mQuery;
-    query.insert(getResultKey(), result);
-    query.insert("status", getStatus(progress));
-    writeResult(query);
-  }
+    query.insert("status", getAbortedStatus(message));
+    UtilIO::writeJson(query, filename);
+
+    QString statusFilename = getQueryStatusDir() + queryStatus;
+    QJsonObject foo;
+    UtilIO::writeJson(foo, statusFilename);
 }
 
-void QueryHandler::writeResult(QJsonObject &query) {
-  QString queryStatus = mQueryId + "_" + QString::number(mUpdateCount);
-  QString filename = getQueryResultDir() + queryStatus;
-  UtilIO::writeJson(query, filename);
-
-  QString statusFilename = getQueryStatusDir() + queryStatus;
-  QJsonObject foo;
-  UtilIO::writeJson(foo, statusFilename);
+QString
+QueryHandler::getQueryResultDir()
+{
+    QString queryDir = mConfig["QUERY_DIRECTORY"].toString();
+    return queryDir + "/" + mQueryId + "/results/";
 }
 
-void QueryHandler::abort(QString message) {
-  QString queryStatus = mQueryId + "_" + QString::number(mUpdateCount);
-  QString filename = getQueryResultDir() + queryStatus;
-  QJsonObject query = mQuery;
-  query.insert("status", getAbortedStatus(message));
-  UtilIO::writeJson(query, filename);
-
-  QString statusFilename = getQueryStatusDir() + queryStatus;
-  QJsonObject foo;
-  UtilIO::writeJson(foo, statusFilename);
+QString
+QueryHandler::getQueryStatusDir()
+{
+    QString queryDir = mConfig["QUERY_DIRECTORY"].toString();
+    return queryDir + "/status/";
 }
 
-QString QueryHandler::getQueryResultDir() {
-  QString queryDir = mConfig["QUERY_DIRECTORY"].toString();
-  return queryDir + "/" + mQueryId + "/results/";
+int
+QueryHandler::uploadToS3(const QString& key, const QString& filename)
+{
+    const QString program = mConfig["WORKER_PYTHON_BIN"].toString();
+    QStringList arguments;
+    arguments.append(mConfig["WORKER_S3UPLOAD_SCRIPT"].toString());
+    arguments.append("UPLOAD");
+    arguments.append(key);
+    arguments.append(filename);
+    arguments.append(mConfig["AWS_ACCESS_KEY_CIS3D"].toString());
+    arguments.append(mConfig["AWS_SECRET_KEY_CIS3D"].toString());
+    arguments.append(mConfig["AWS_S3_REGION_CIS3D"].toString());
+    arguments.append(mConfig["AWS_S3_BUCKET_CIS3D"].toString());
+
+    return QProcess::execute(program, arguments);
 }
 
-QString QueryHandler::getQueryStatusDir() {
-  QString queryDir = mConfig["QUERY_DIRECTORY"].toString();
-  return queryDir + "/status/";
+QJsonObject
+QueryHandler::getCompletedStatus()
+{
+    QJsonObject status;
+    status.insert("progress", 100);
+    status.insert("statusMessage", "");
+    return status;
 }
 
-int QueryHandler::uploadToS3(const QString &key, const QString &filename) {
-  const QString program = mConfig["WORKER_PYTHON_BIN"].toString();
-  QStringList arguments;
-  arguments.append(mConfig["WORKER_S3UPLOAD_SCRIPT"].toString());
-  arguments.append("UPLOAD");
-  arguments.append(key);
-  arguments.append(filename);
-  arguments.append(mConfig["AWS_ACCESS_KEY_CIS3D"].toString());
-  arguments.append(mConfig["AWS_SECRET_KEY_CIS3D"].toString());
-  arguments.append(mConfig["AWS_S3_REGION_CIS3D"].toString());
-  arguments.append(mConfig["AWS_S3_BUCKET_CIS3D"].toString());
-
-  return QProcess::execute(program, arguments);
+QJsonObject
+QueryHandler::getAbortedStatus(QString message)
+{
+    QJsonObject status;
+    status.insert("progress", -1);
+    status.insert("statusMessage", message);
+    return status;
 }
 
-QJsonObject QueryHandler::getCompletedStatus() {
-  QJsonObject status;
-  status.insert("progress", 100);
-  status.insert("statusMessage", "");
-  return status;
-}
-
-QJsonObject QueryHandler::getAbortedStatus(QString message) {
-  QJsonObject status;
-  status.insert("progress", -1);
-  status.insert("statusMessage", message);
-  return status;
-}
-
-QJsonObject QueryHandler::getStatus(double progress) {
-  QJsonObject status;
-  status.insert("progress", progress);
-  status.insert("statusMessage", "");
-  return status;
+QJsonObject
+QueryHandler::getStatus(double progress)
+{
+    QJsonObject status;
+    status.insert("progress", progress);
+    status.insert("statusMessage", "");
+    return status;
 }
