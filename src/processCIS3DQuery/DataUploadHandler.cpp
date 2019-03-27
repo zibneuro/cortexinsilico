@@ -281,7 +281,11 @@ DataUploadHandler::replyGetQueryFinished(QNetworkReply* reply)
             requestId == "PostsynapticTargets" ||
             requestId == "Update")
         {
-            qDebug() << "[*] Successful upload of" << requestId;
+            if(requestId == "Update"){
+                qDebug() << "[*] Successful upload of" << mUploadedFile;
+            } else {
+                qDebug() << "[*] Successful upload of" << requestId;
+            }            
             reply->deleteLater();
             mPendingRequestIds.removeOne(requestId);
             if (mPendingRequestIds.isEmpty())
@@ -341,6 +345,7 @@ DataUploadHandler::uploadFile(const QJsonObject& config, const QString& queryId,
     updateRequest.setAttribute(QNetworkRequest::User, QVariant("Update"));
     updateRequest.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     QueryHelpers::setAuthorization(mConfig, updateRequest);
+    mUploadedFile = filename;
     QJsonObject fileData = UtilIO::parseSpecFile(filename);
     QJsonDocument doc(fileData);
     QString updateData(doc.toJson());

@@ -36,6 +36,7 @@ private:
     QString               mLoginUrl;
     QString               mLogoutUrl;
     QStringList           mPendingRequestIds;
+    QString               mUploadedFile;
 
 };
 

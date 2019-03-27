@@ -52,6 +52,8 @@ QueryHandler::processQuery(const QJsonObject& config, const QString& queryId, co
 void
 QueryHandler::reportUpdate(NetworkStatistic* stat)
 {
+    mUpdateCount++;
+
     long long numConnections = stat->getNumConnections();
     long long connectionsDone = stat->getConnectionsDone();
     const double percent = double(connectionsDone) * 100.0 / double(numConnections);
@@ -76,6 +78,8 @@ QueryHandler::reportUpdate(NetworkStatistic* stat)
 void
 QueryHandler::reportComplete(NetworkStatistic* stat)
 {
+    mUpdateCount++;
+    
     QJsonObject result = stat->createJson("", 0);
 
     QJsonObject queryStatus;
