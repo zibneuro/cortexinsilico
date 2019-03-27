@@ -11,7 +11,6 @@
 #include "VoxelQueryHandler.h"
 #include "UtilIO.h"
 
-
 void
 myMessageOutput(QtMsgType, const QMessageLogContext&, const QString& msg)
 {
@@ -46,19 +45,41 @@ main(int argc, char* argv[])
     else if (operation == "processQuery")
     {
         QueryHandler* handler;
-        const QString queryFile = config["QUERY_DIRECTORY"].toString() + "/" + queryId + "/" + queryId + ".json"; 
+        const QString queryFile = config["QUERY_DIRECTORY"].toString() + "/" + queryId + "/" + queryId + ".json";
         const QJsonObject query = UtilIO::parseSpecFile(queryFile);
         const QString queryType = query["queryType"].toString();
-        if(queryType == "innervation"){
+        if (queryType == "innervation")
+        {
             handler = new InnervationQueryHandler();
-            handler->processQuery(config, queryId, query);
-        } else if (queryType == "selection") {
-            handler = new SelectionQueryHandler();
-            handler->processQuery(config, queryId, query);            
-        } else {
-            //throw std::runtime_error("Invalid query type.");
         }
-    } else {
+        else if (queryType == "selection")
+        {
+            handler = new SelectionQueryHandler();
+        }
+        else if (queryType == "spatialInnervation")
+        {
+            handler = new SpatialInnervationQueryHandler();
+        }
+        else if (queryType == "triplet")
+        {
+            handler = new MotifQueryHandler();
+        }
+        else if (queryType == "inDegree")
+        {
+            handler = new InDegreeQueryHandler();
+        }
+        else if (queryType == "voxel")
+        {
+            handler = new VoxelQueryHandler();
+        }
+        else
+        {
+            throw std::runtime_error("Invalid query type.");
+        }
+        handler->processQuery(config, queryId, query);
+    }
+    else
+    {
         throw std::runtime_error("Invalid mode.");
     }
     return app.exec();
