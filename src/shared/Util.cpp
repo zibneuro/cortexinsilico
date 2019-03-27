@@ -672,20 +672,20 @@ QString
 Util::getAdvancedSettingsString(const QJsonObject& query, bool hasSynapseDistribution, bool hasConnectionProbability)
 {
     QJsonObject networkSelection = query["networkSelection"].toObject();
-//    QJsonObject preSelection = query["preSelection"].toObject();
-//    QJsonObject postSelection = query["postSelection"].toObject();
+    //    QJsonObject preSelection = query["preSelection"].toObject();
+    //    QJsonObject postSelection = query["postSelection"].toObject();
     int networkNumber = query["networkNumber"].toInt();
     int oppositeNumber = getOppositeNetworkNumber(networkNumber);
 
     // ######### WRITE NETWORK SELECTION #########
 
     QString s = "";
-//    s += writeNetworkDescription(networkSelection, networkNumber, preSelection, postSelection);
+    //    s += writeNetworkDescription(networkSelection, networkNumber, preSelection, postSelection);
 
     if (matchCells(networkSelection, networkNumber))
     {
         s += "Match cells to network:\n";
-//        s += writeNetworkDescription(networkSelection, oppositeNumber, preSelection, postSelection);
+        //        s += writeNetworkDescription(networkSelection, oppositeNumber, preSelection, postSelection);
     }
 
     // ######### WRITE FORMULA DESCRIPTION #########
@@ -807,6 +807,23 @@ Util::getIndexFileName(CIS3D::Structure target)
 }
 
 QString
+Util::getBranchIndexFileName(CIS3D::Structure target)
+{
+    if (target == CIS3D::APICAL)
+    {
+        return "voxel_indexApical";
+    }
+    else if (target == CIS3D::BASAL)
+    {
+        return "voxel_indexBasal";
+    }
+    else
+    {
+        return "voxel_indexBranchAll";
+    }
+}
+
+QString
 Util::getInnervationFolderName(CIS3D::Structure target)
 {
     if (target == CIS3D::APICAL)
@@ -894,7 +911,7 @@ Util::matchCells(QJsonObject& networkSpec, int number)
     double sliceRef;
     bool full = isFull(networkSpec, number);
     bool oppositeSlice = isSlice(networkSpec, getOppositeNetworkNumber(number), sliceRef);
-    bool option = networkSpec["matchCells"].toBool();    
+    bool option = networkSpec["matchCells"].toBool();
     return full && oppositeSlice && option;
 }
 
@@ -957,9 +974,12 @@ Util::getShortName(QJsonObject& networkSpec, int number)
     {
         shortName = networkSpec["network2"].toString();
     }
-    if(shortName == "RBCk"){
+    if (shortName == "RBCk")
+    {
         return "RBC";
-    } else {
+    }
+    else
+    {
         return shortName;
     }
 }

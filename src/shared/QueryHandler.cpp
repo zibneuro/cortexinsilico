@@ -168,8 +168,8 @@ QueryHandler::writeResult(QJsonObject& query)
     UtilIO::writeJson(query, filename);
 
     QString statusFilename = getQueryStatusDir() + queryStatus;
-    QJsonObject foo;
-    UtilIO::writeJson(foo, statusFilename);
+    QJsonObject status = query["status"].toObject();        
+    UtilIO::writeJson(status, statusFilename);
 }
 
 void
@@ -182,8 +182,8 @@ QueryHandler::abort(QString message)
     UtilIO::writeJson(query, filename);
 
     QString statusFilename = getQueryStatusDir() + queryStatus;
-    QJsonObject foo;
-    UtilIO::writeJson(foo, statusFilename);
+    QJsonObject status = query["status"].toObject();    
+    UtilIO::writeJson(status, statusFilename);
 }
 
 QString

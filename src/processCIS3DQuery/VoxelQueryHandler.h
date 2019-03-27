@@ -42,7 +42,7 @@ private:
   Statistics mPresynapticCellsPerVoxel;
   Histogram mPresynapticCellsPerVoxelH;
   Statistics mPostsynapticCellsPerVoxel;
-  Histogram mPostsynapticCellsPerVoxelH;
+  Histogram mPostsynapticCellsPerVoxelH;  
   Statistics mBoutonsPerVoxel;
   Histogram mBoutonsPerVoxelH;
   Statistics mPostsynapticSitesPerVoxel;
@@ -50,8 +50,10 @@ private:
 
   std::map<int, float> mMapBoutonsPerVoxel;
   std::map<int, int> mMapPreCellsPerVoxel;
+  std::map<int, int> mMapPreBranchesPerVoxel;
   std::map<int, float> mMapPostsynapticSitesPerVoxel;
   std::map<int, int> mMapPostCellsPerVoxel;
+  std::map<int, int> mMapPostBranchesPerVoxel;
   std::set<int> mSelectedVoxels;
   std::set<int> mPreInnervatedVoxels;
   std::set<int> mPostInnervatedVoxels;

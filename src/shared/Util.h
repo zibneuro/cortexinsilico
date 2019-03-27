@@ -121,6 +121,8 @@ namespace Util
 
     QString getIndexFileName(CIS3D::Structure target);
 
+    QString getBranchIndexFileName(CIS3D::Structure target);
+
     QString getInnervationFolderName(CIS3D::Structure target);
 
     QString getNetwork(QJsonObject& spec, int& samplingFactor);
