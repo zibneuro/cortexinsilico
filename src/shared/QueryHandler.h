@@ -40,6 +40,7 @@ protected:
   QJsonObject getCompletedStatus();
   QJsonObject getAbortedStatus(QString message);
   QJsonObject getStatus(double progress);
+  bool stallUpdate(double progress);
 
   QJsonObject mConfig;
   QString mQueryId;
@@ -59,6 +60,7 @@ protected:
   FormulaCalculator mCalculator;
   NetworkProps mNetwork;
   NeuronSelection mSelection;
+  double mLastUpdateTime;
 };
 
 #endif // QUERYHANDLER_H

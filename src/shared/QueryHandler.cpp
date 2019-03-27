@@ -20,9 +20,11 @@
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
 #include <stdexcept>
+#include <ctime>
 
 QueryHandler::QueryHandler()
 {
+    mLastUpdateTime = std::clock();
 }
 
 void
@@ -168,8 +170,12 @@ QueryHandler::writeResult(QJsonObject& query)
     UtilIO::writeJson(query, filename);
 
     QString statusFilename = getQueryStatusDir() + queryStatus;
-    QJsonObject status = query["status"].toObject();        
-    UtilIO::writeJson(status, statusFilename);
+    QJsonObject status = query["status"].toObject();
+    double progress = status["progress"].toDouble();
+    if (!stallUpdate(progress))
+    {
+        UtilIO::writeJson(status, statusFilename);
+    }
 }
 
 void
@@ -182,7 +188,7 @@ QueryHandler::abort(QString message)
     UtilIO::writeJson(query, filename);
 
     QString statusFilename = getQueryStatusDir() + queryStatus;
-    QJsonObject status = query["status"].toObject();    
+    QJsonObject status = query["status"].toObject();
     UtilIO::writeJson(status, statusFilename);
 }
 
@@ -242,4 +248,24 @@ QueryHandler::getStatus(double progress)
     status.insert("progress", progress);
     status.insert("statusMessage", "");
     return status;
+}
+
+bool
+QueryHandler::stallUpdate(double progress)
+{
+    if (progress == 100)
+    {
+        return false;
+    }
+    double currentTime = std::clock();
+    double delta = currentTime - mLastUpdateTime;
+    if ((delta / (double)CLOCKS_PER_SEC) >= 1.5)
+    {
+        mLastUpdateTime = currentTime;
+        return false;
+    }
+    else
+    {
+        return true;
+    }
 }
