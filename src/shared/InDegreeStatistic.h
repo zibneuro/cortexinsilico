@@ -25,6 +25,8 @@ private:
     double calculateMean(std::vector<double>& values);
     void writeDiagram(QTextStream& out) const;
 
+void calculateStatistics(); 
+
     Statistics mStatisticsAC;
     Statistics mStatisticsBC;
     std::vector<int> mPostNeuronId;
