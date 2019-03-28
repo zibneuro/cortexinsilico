@@ -64,28 +64,28 @@ QueryHandler::processQuery(const QJsonObject& config,
 void
 QueryHandler::reportUpdate(NetworkStatistic* stat)
 {
-    mUpdateCount++;
-
     long long numConnections = stat->getNumConnections();
     long long connectionsDone = stat->getConnectionsDone();
     const double percent =
         double(connectionsDone) * 100.0 / double(numConnections);
 
-    qDebug() << "update" << percent;
+    if (percent < 100)
+    {
+        mUpdateCount++;
+        QJsonObject result = stat->createJson("", 0);
 
-    QJsonObject result = stat->createJson("", 0);
+        QJsonObject queryStatus;
+        queryStatus.insert("statusMessage", "");
+        queryStatus.insert("progress", percent);
 
-    QJsonObject queryStatus;
-    queryStatus.insert("statusMessage", "");
-    queryStatus.insert("progress", percent);
+        QJsonObject query = mQuery;
+        QString resultKey = getResultKey();
 
-    QJsonObject query = mQuery;
-    QString resultKey = getResultKey();
+        query.insert("status", queryStatus);
+        query.insert(resultKey, result);
 
-    query.insert("status", queryStatus);
-    query.insert(resultKey, result);
-
-    writeResult(query);
+        writeResult(query);
+    }
 }
 
 void
@@ -93,7 +93,21 @@ QueryHandler::reportComplete(NetworkStatistic* stat)
 {
     mUpdateCount++;
 
-    QJsonObject result = stat->createJson("", 0);
+    QString downloadFile = "results_" + mQueryId + ".csv";
+    QString downloadFilePath = stat->createCSVFile(downloadFile, "", "", getQueryResultDir(), "");
+
+    qDebug() << "DOWNLOAD" << downloadFilePath;
+
+    QJsonObject result;
+    if (uploadToS3(downloadFile, downloadFilePath) == 0)
+    {
+        const qint64 fileSizeBytes = QFileInfo(downloadFilePath).size();
+        result = stat->createJson(downloadFile, fileSizeBytes);
+    }
+    else
+    {
+        result = stat->createJson("", 0);
+    }
 
     QJsonObject queryStatus;
     queryStatus.insert("statusMessage", "");

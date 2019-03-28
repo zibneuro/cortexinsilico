@@ -809,6 +809,8 @@ Util::getIndexFileName(CIS3D::Structure target)
 QString
 Util::getBranchIndexFileName(CIS3D::Structure target)
 {
+    return "voxel_indexBranchAll";
+    /*
     if (target == CIS3D::APICAL)
     {
         return "voxel_indexApical";
@@ -821,6 +823,7 @@ Util::getBranchIndexFileName(CIS3D::Structure target)
     {
         return "voxel_indexBranchAll";
     }
+    */
 }
 
 QString
