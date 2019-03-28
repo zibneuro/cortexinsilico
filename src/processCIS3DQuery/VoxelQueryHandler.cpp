@@ -155,21 +155,24 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
         out << "Voxels meeting spatial filter condition:" << sep
             << (int)mSelectedVoxels.size() << "\n";
-        out << "Voxels innervated by presyn. cells:" << sep
+        out << "Voxels with presynaptic cells:" << sep
             << (int)mPreInnervatedVoxels.size() << "\n";
-        out << "Voxels innervated by postsyn. cells:" << sep
+        out << "Voxels with postsynaptic cells:" << sep
             << (int)mPostInnervatedVoxels.size() << "\n";
         out << "\n";
 
         preCellsPerVoxel.write(out, "Presynaptic cells per voxel");
         postCellsPerVoxel.write(out, "Postsynaptic cells per voxel");
-        // boutonsPerVoxel.write(out, "Boutons per voxel");
-        // postsynapticSitesPerVoxel.write(out, "Postsynaptic sites per voxel");
+        preBranchesPerVoxel.write(out, "Axon branches per voxel");
+        postBranchesPerVoxel.write(out, "Dendrite branches per voxel");
         synapsesPerVoxel.write(out, "Synapses per voxel");
 
         out << "\n";
         preCellsPerVoxelH.write(out, "Presynaptic cells per voxel");
-        postCellsPerVoxelH.write(out, "Postsynaptic cells per voxel");
+        postCellsPerVoxelH.write(out, "Postsynaptic cells per voxel");        
+        preBranchesPerVoxelH.write(out, "Axon branches per voxel");
+        postBranchesPerVoxelH.write(out, "Dendrite branches per voxel");
+ 
         // boutonsPerVoxelH.write(out, "Boutons per voxel");
         // postsynapticSitesPerVoxelH.write(out, "Postsynaptic sites per voxel");
         synapsesPerVoxelH.write(out, "Synapses per voxel");

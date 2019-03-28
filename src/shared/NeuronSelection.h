@@ -108,7 +108,7 @@ public:
 
     void setDataRoot(QString dataRoot);
 
-    bool isValid(QJsonObject& query, QString errorMessage);
+    bool isValid(QJsonObject& query, QString& errorMessage);
 
 private:
     static bool inSliceBand(double somaX, double min, double max);
@@ -141,6 +141,8 @@ private:
     void pruneIds(IdList& selection, std::set<int>& allowed);
 
     std::map<int, int> readMapping(NeuronSelection& selection);
+
+bool isSelectionValid(QJsonObject& selection, QString index, QString errorMessage);
 
     IdList mSelectionA;
     IdList mSelectionB;

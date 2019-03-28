@@ -124,13 +124,13 @@ InDegreeStatistic::doCalculate(const NeuronSelection& selection)
                 }
             }
 
+            mPostNeuronId.push_back(postId);
             mStatisticsAC.addSample(perPostAC.getSum());
             mValuesAC.push_back(perPostAC.getSum());
             mStatisticsBC.addSample(perPostBC.getSum());
             mValuesBC.push_back(perPostBC.getSum());
 
             mConnectionsDone++;
-            calculateCorrelation();
             if (mConnectionsDone % 20 == 0)
             {
                 reportUpdate();
@@ -197,14 +197,24 @@ InDegreeStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
     out << "Number of postsynaptic neuron samples (from selection C):" << sep << mSampleSize
         << "\n\n";
 
-    out << "Innervation A->C" << sep << mStatisticsAC.getMean() << sep << "StDev" << sep
+    out << "Dense structural overlap A->C" << sep << mStatisticsAC.getMean() << sep << "StDev" << sep
         << mStatisticsAC.getStandardDeviation() << sep << "Min" << sep
         << mStatisticsAC.getMinimum() << sep << "Max" << sep
         << mStatisticsAC.getMaximum() << "\n";
-    out << "Innervation B->C" << sep << mStatisticsBC.getMean() << sep << "StDev" << sep
+    out << "Dense structural overlap B->C" << sep << mStatisticsBC.getMean() << sep << "StDev" << sep
         << mStatisticsBC.getStandardDeviation() << sep << "Min" << sep
         << mStatisticsBC.getMinimum() << sep << "Max" << sep
         << mStatisticsBC.getMaximum() << "\n";
 
     out << "Correlation" << sep << mCorrelation;
+    out << "\n";
+    writeDiagram(out);
 }
+
+    void InDegreeStatistic::writeDiagram(QTextStream& out) const{
+        out << "Correlation diagram\n";
+        out << "postNeuronID overlap_A->C overlap_B->C\n";
+        for(unsigned int i=0; i<mPostNeuronId.size(); i++){
+            out << mPostNeuronId[i] << " " << mValuesAC[i] << " " << mValuesBC[i];   
+        }
+    };

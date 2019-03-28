@@ -23,9 +23,11 @@ private:
     QList<int> samplePostIds(QList<int> selectionC);
     void calculateCorrelation();
     double calculateMean(std::vector<double>& values);
+    void writeDiagram(QTextStream& out) const;
 
     Statistics mStatisticsAC;
     Statistics mStatisticsBC;
+    std::vector<int> mPostNeuronId;
     std::vector<double> mValuesAC;
     std::vector<double> mValuesBC;
     double mCorrelation;

@@ -130,7 +130,7 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
     out << "Number of non-overlapping neuron pairs:" << sep << innervationHisto.getNumberOfZeros() << "\n";
     out << "\n";
 
-    out << "Innervation" << sep
+    out << "Dense structural overlap" << sep
         << "Average" << sep << innervation.getMean() << sep
         << "StDev" << sep << innervation.getStandardDeviation() << sep
         << "Min" << sep << innervation.getMinimum() << sep
@@ -155,7 +155,7 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
         << "Min" << sep << connProbUnique.getMinimum() << sep
         << "Max" << sep << connProbUnique.getMaximum() << "\n";
     */
-    out << "Innervation per presynaptic neuron" << sep
+    out << "Dense structural overlap per presynaptic neuron" << sep
         << "Average" << sep << innervationPerPre.getMean() << sep
         << "StDev" << sep << innervationPerPre.getStandardDeviation() << sep
         << "Min" << sep << innervationPerPre.getMinimum() << sep
@@ -179,7 +179,7 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
         << "Min" << sep << divergenceUnique.getMinimum() << sep
         << "Max" << sep << divergenceUnique.getMaximum() << "\n";
     */
-    out << "Innervation per postsynaptic neuron" << sep
+    out << "Dense structural overlap per postsynaptic neuron" << sep
         << "Average" << sep << innervationPerPost.getMean() << sep
         << "StDev" << sep << innervationPerPost.getStandardDeviation() << sep
         << "Min" << sep << innervationPerPost.getMinimum() << sep
@@ -194,7 +194,7 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
     */
     out << "\n";
 
-    out << "Innervation histogram\n";
+    out << "Dense structural overlap histogram\n";
     out << "Number of non-zero values:" << sep << innervationHisto.getNumberOfValues() << "\n";
     out << "Number of zero values:" << sep << innervationHisto.getNumberOfZeros() << "\n";
     out << "\n";
