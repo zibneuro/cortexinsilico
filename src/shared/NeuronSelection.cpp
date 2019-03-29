@@ -276,9 +276,9 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
                      selectionA, selectionB, selectionC, true);
   }
 
-  if (queryType == "spatialInnervation") {
+/*  if (queryType == "spatialInnervation") {
     filterUniquePre(networkProps);
-  }
+  }*/
 }
 
 void NeuronSelection::setInnervationSelection(const QJsonObject &spec,
@@ -492,34 +492,40 @@ QString NeuronSelection::getDataRoot() { return mDataRoot; }
 
 void NeuronSelection::setDataRoot(QString dataRoot) { mDataRoot = dataRoot; }
 
-bool NeuronSelection::isSelectionValid(QJsonObject& selection, QString index, QString errorMessage){
-    if(!selection["enabled"].toBool()){
-        return true;
-    } else {
-        int count = 0;
-         if(index == "A"){
-            count = mSelectionA.size();            
-         }  if(index == "B"){
-            count = mSelectionB.size();            
-         }  if(index == "C"){
-            count = mSelectionC.size();            
-         }
-         if(count == 0){
-             errorMessage += selection["description"].toString() + "is empty (try to modify filter settings).";
-             return false;
-         } else {
-             return true;
-         }
+bool NeuronSelection::isSelectionValid(QJsonObject &selection, QString index,
+                                       QString errorMessage) {
+  if (!selection["enabled"].toBool()) {
+    return true;
+  } else {
+    int count = 0;
+    if (index == "A") {
+      count = mSelectionA.size();
     }
+    if (index == "B") {
+      count = mSelectionB.size();
+    }
+    if (index == "C") {
+      count = mSelectionC.size();
+    }
+    if (count == 0) {
+      errorMessage += selection["description"].toString() +
+                      "is empty (try to modify filter settings).";
+      return false;
+    } else {
+      return true;
+    }
+  }
 }
 
-bool NeuronSelection::isValid(QJsonObject &query, QString& errorMessage) {
+bool NeuronSelection::isValid(QJsonObject &query, QString &errorMessage) {
   QJsonObject cellSelection = query["cellSelection"].toObject();
   QJsonObject selectionA = cellSelection["selectionA"].toObject();
   QJsonObject selectionB = cellSelection["selectionB"].toObject();
   QJsonObject selectionC = cellSelection["selectionC"].toObject();
   errorMessage = "";
-  return isSelectionValid(selectionA, "A", errorMessage) && isSelectionValid(selectionB, "B", errorMessage) && isSelectionValid(selectionC, "C", errorMessage);
+  return isSelectionValid(selectionA, "A", errorMessage) &&
+         isSelectionValid(selectionB, "B", errorMessage) &&
+         isSelectionValid(selectionC, "C", errorMessage);
 }
 
 bool NeuronSelection::inSliceBand(double somaX, double min, double max) {
@@ -628,3 +634,31 @@ std::map<int, int> NeuronSelection::readMapping(NeuronSelection &selection) {
 
   return mapping;
 }
+
+std::map<int, int>
+NeuronSelection::doGetMultiplicities(const NetworkProps &network,
+                                     IdList &selection) {
+  std::map<int, int> multiplicities;
+  for (int i = 0; i < selection.size(); i++) {
+    int preId = selection[i];
+    int mappedId = network.axonRedundancyMap.getNeuronIdToUse(preId);
+    if (multiplicities.find(mappedId) == multiplicities.end()) {
+      multiplicities[mappedId] = 1;
+    } else {
+      multiplicities[mappedId] += 1;
+    }
+  }
+  return multiplicities;
+}
+
+std::map<int, int>
+NeuronSelection::getMultiplicities(const NetworkProps &network,
+                                  QString selectionIndex) {
+                                    if(selectionIndex == "A"){
+                                      return doGetMultiplicities(network, mSelectionA);
+                                    } else if (selectionIndex == "B"){
+                                      return doGetMultiplicities(network, mSelectionB);
+                                    } else {
+                                      return doGetMultiplicities(network, mSelectionC);
+                                    }
+                                  }

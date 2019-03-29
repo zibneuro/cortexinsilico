@@ -34,7 +34,7 @@ SpatialInnervationQueryHandler::doProcessQuery()
                                   QDir::separator() + mQueryId);
     UtilIO::makeDir(mTempFolder);
 
-    IdList preIds = mSelection.SelectionA();
+    std::map<int, int> preIds = mSelection.getMultiplicities(mNetwork, "A");
     IdList postIds = mSelection.SelectionB();
 
     // ###################### LOOP OVER NEURONS ######################
@@ -62,8 +62,22 @@ SpatialInnervationQueryHandler::doProcessQuery()
     std::map<int, float> innervationPerVoxel;
     QVector<QString> fileNames;
 
+    /* write multiplicities
+    QString multiplicityFileName = 
+            QDir(dataFolder).filePath("preNeuronID_" + QString::number(it->first));
+    QFile mFile(multiplicityFileName);
+        if (!mFile.open(QIODevice::WriteOnly))
+        {
+            const QString msg =
+                QString("Cannot open file %1 for writing.").arg(dataFileName);
+            throw std::runtime_error(qPrintable(msg));
+        }
+        QTextStream inStream(&dataFile);
+    */
+
     mAborted = false;
-    for (int i = 0; i < preIds.size(); i++)
+    int i = 0;
+    for (auto it = preIds.begin(); it!=preIds.end(); it++, i++)
     {
         if (mAborted)
         {
@@ -71,9 +85,9 @@ SpatialInnervationQueryHandler::doProcessQuery()
         }
 
         QString dataFileName =
-            QDir(dataFolder).filePath("preNeuronID_" + QString::number(preIds[i]));
+            QDir(dataFolder).filePath("preNeuronID_" + QString::number(it->first));
         QString tempFileName =
-            QDir(mTempFolder).filePath("preNeuronID_" + QString::number(preIds[i]));
+            QDir(mTempFolder).filePath("preNeuronID_" + QString::number(it->first));
         fileNames.append(tempFileName);
 
         QFile dataFile(dataFileName);
@@ -106,7 +120,7 @@ SpatialInnervationQueryHandler::doProcessQuery()
             if (isVoxelId)
             {
                 if (postIds.contains(currentPostId) &&
-                    mSelection.getBandA(preIds[i]) ==
+                    mSelection.getBandA(it->first) ==
                         mSelection.getBandB(currentPostId))
                 {
                     outStream << voxelId << " " << QString::number(currentPostId) << " " << parts[1] << "\n";

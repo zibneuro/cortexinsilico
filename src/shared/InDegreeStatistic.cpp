@@ -101,7 +101,7 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
     }
 
     mConnectionsDone++;
-    if (mConnectionsDone % 1000 == 0) {
+    if (mConnectionsDone % 50 == 0) {
       calculateStatistics();
       reportUpdate();
     }
@@ -118,6 +118,7 @@ void InDegreeStatistic::calculateStatistics() {
     mStatisticsAC.addSample(mValuesAC[j]);
     mStatisticsBC.addSample(mValuesBC[j]);
   }
+  calculateCorrelation();
 }
 
 void InDegreeStatistic::calculateCorrelation() {
@@ -185,6 +186,6 @@ void InDegreeStatistic::writeDiagram(QTextStream &out) const {
   out << "Correlation diagram\n";
   out << "postNeuronID overlap_A->C overlap_B->C\n";
   for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
-    out << mPostNeuronId[i] << " " << mValuesAC[i] << " " << mValuesBC[i];
+    out << mPostNeuronId[i] << " " << mValuesAC[i] << " " << mValuesBC[i] << "\n";
   }
 };

@@ -110,6 +110,10 @@ public:
 
     bool isValid(QJsonObject& query, QString& errorMessage);
 
+    std::map<int, int> doGetMultiplicities(const NetworkProps& network, IdList& selection);
+    
+    std::map<int, int> getMultiplicities(const NetworkProps& network, QString selectionIndex);
+
 private:
     static bool inSliceBand(double somaX, double min, double max);
 
