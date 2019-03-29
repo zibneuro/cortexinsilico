@@ -26,6 +26,13 @@ factorial(T arg)
     return f;
 }
 
+template <typename T>
+inline T
+nCk(T n, T k)
+{
+    return factorial(n) / (factorial(k) * factorial(n-k));
+}
+
 bool
 FormulaCalculator::init()
 {
@@ -33,6 +40,7 @@ FormulaCalculator::init()
     mSymbolTable.add_variable("i", mCurrentValue_i);
     mSymbolTable.add_variable("k", mCurrentValue_k);
     mSymbolTable.add_function("fact", factorial);
+    mSymbolTable.add_function("nCk", nCk);
     mSymbolTable.add_constants();
     mSynapseExpression.register_symbol_table(mSymbolTable);
     mConnectionProbabilityExpression.register_symbol_table(mSymbolTable);
