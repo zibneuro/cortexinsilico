@@ -149,7 +149,7 @@ void SpatialInnervationQueryHandler::doProcessQuery() {
       arguments2.append("-ju");
     }
     arguments2.append(dataZipFullPath);
-    arguments2.append(fileNames[i]);
+    arguments2.append(fileNames[i+1]);
 
     zip2.start("zip", arguments2);
 
@@ -241,6 +241,7 @@ void SpatialInnervationQueryHandler::doProcessQuery() {
 
     arguments3.append(dataZipFullPath);
     arguments3.append(voxelFileName);
+    arguments3.append(multiplicityFileName);
 
     zip3.start("zip", arguments3);
 
