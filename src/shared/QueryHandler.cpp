@@ -155,8 +155,7 @@ QueryHandler::setFormulas()
         formulas = formulaSelection["formulasNetwork2"].toObject();
     }
     mCalculator = FormulaCalculator(formulas);
-    mAborted = !mCalculator.init();
-    if (mAborted)
+    if (!mCalculator.init())
     {
         abort("Failed parsing formula.");
     }
@@ -195,6 +194,7 @@ QueryHandler::writeResult(QJsonObject& query)
 void
 QueryHandler::abort(QString message)
 {
+    mAborted = true;
     QString queryStatus = mQueryId + "_" + QString::number(mUpdateCount);
     QString filename = getQueryResultDir() + queryStatus;
     QJsonObject query = mQuery;
