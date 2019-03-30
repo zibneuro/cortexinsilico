@@ -228,6 +228,8 @@ TripletStatistic::doCalculate(const NeuronSelection& selection)
         //double dt5 = (t5 - t4) / (double)CLOCKS_PER_SEC;
         //qDebug() << "MOTIF TIME" << dt1 << dt2 << dt3 << dt4 << dt5;
 
+        calculateConcentration();
+
         mConnectionsDone += 1;
         reportUpdate();
     }
@@ -469,8 +471,8 @@ TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
             << mMotifProbabilities[dataIndex].getMean() << sep << "StDev" << sep
             << mMotifProbabilities[dataIndex].getStandardDeviation() << sep << "Min" << sep
             << mMotifProbabilities[dataIndex].getMinimum() << sep << "Max" << sep
-            << mMotifProbabilities[dataIndex].getMaximum() << sep << "Motif deviation" << sep
-            << getDeviation(dataIndex) << "\n";
+            << mMotifProbabilities[dataIndex].getMaximum() << sep << "Deviation (expected probability)" << sep
+            << getDeviation(dataIndex) << sep << "Deviation (expected concentration)" << getConcentrationDeviation(i) "\n";
     }
 }
 
@@ -508,9 +510,16 @@ TripletStatistic::writeResult() const
 double
 TripletStatistic::getDeviation(int motif) const
 {
-    double deviation;
     double d = mMotifProbabilities[motif].getMean();
     double dRef = mMotifExpectedProbabilities[motif].getMean();
+    double deviation = getNumericDeviation(d, dRef);
+    return deviation;
+}
+
+double TripletStatistic::getNumericDeviation(double observed, double expected) const{
+    double deviation;
+    double d = observed;
+    double dRef = expected;
     if (Util::almostEqual(dRef, 0, 0.0001))
     {
         deviation = Util::almostEqual(d, 0, 0.0001) ? 0 : 1;
@@ -609,4 +618,60 @@ TripletStatistic::getMotifPermutation() const
 void
 TripletStatistic::calculateConcentration()
 {
+    // Get reordered probabilities (observed and expected)
+    std::vector<int> permutation = getMotifPermutation();
+    std::vector<double> probabilities;
+    std::vector<double> expectedProbabilities;
+
+    for(int i=0; i<15; i++){
+        int dataIndex = permutation[i] - 1;
+        probabilities.push_back(mMotifProbabilities[dataIndex].getMean());
+        expectedProbabilities.push_back(mMotifExpectedProbabilities[dataIndex].getMean());
+    }
+
+    // Calculate group probabilities (observed and expected)
+    std::vector<double> groupProbability(3,0.0);
+    std::vector<double> expectedGroupProbability(3,0.0);
+
+    for(int i=0; i<15; i++){
+        int groupIndex = getGroupIndex(i);
+        groupProbability[groupIndex] += probabilities[i];
+        expectedGroupProbability[groupIndex] += expectedProbabilities[i];
+    }
+
+    // Calculate concentrations (observed and expected)
+    mConcentrations = std::vector<double>(15,0.0);
+    mExpectedConcentrations = std::vector<double>(15,0.0);
+    
+    for(int i=0; i<15; i++){
+        int groupIndex = getGroupIndex(i);
+        double concentration = getNumericConcentration(probabilities[i], groupProbability[groupIndex]);
+        mConcentrations.push_back(concentration);
+        double expectedConcentration = getNumericConcentration(expectedProbabilities[i], expectedGroupProbability[groupIndex]);
+        mExpectedConcentrations.push_back(expectedConcentration);
+    }
+}
+
+double TripletStatistic::getConcentrationDeviation(int motif) const {
+    double observed = mConcentrations[motif];
+    double expected = mExpectedConcentrations[motif];
+    return getNumericDeviation(observed, expected);
+};
+
+int TripletStatistic::getGroupIndex(const int motif) const {
+    if(motif < 7){
+        return 0;
+    } else if (motif < 13) {
+        return 1;
+    } else {
+        return 2;
+    }
+};
+
+double TripletStatistic::getNumericConcentration(double probability, double groupProbability){
+    if(groupProbability == 0){
+        return 0;
+    } else {
+        return probability / groupProbability;
+    }
 }
