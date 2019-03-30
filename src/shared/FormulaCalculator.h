@@ -16,6 +16,7 @@ public:
     bool init();
     float calculateSynapseProbability(float innervation, int k);
     float calculateConnectionProbability(float innervation);
+    float clampProbability(float probability);
 
 private:
     std::string mSynapseDistributionFormula;

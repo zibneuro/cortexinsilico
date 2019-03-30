@@ -63,19 +63,11 @@ FormulaCalculator::calculateSynapseProbability(float innervation, int k)
     if (mValid)
     {
         float synapseProb = mSynapseExpression.value();
-        return synapseProb;
+        return clampProbability(synapseProb);
     }
     else
     {
-        int nfak = 1;
-        float innervationPow = 1;
-        for (int i = 1; i <= k; i++)
-        {
-            innervationPow *= innervation;
-            nfak *= i;
-        }
-        float synapseProb = innervationPow * exp(-innervation) / nfak;
-        return synapseProb;
+        return 0;
     }
 }
 
@@ -96,22 +88,14 @@ FormulaCalculator::calculateConnectionProbability(float innervation)
             mCurrentValue_k = 0;
             prob = 1 - mSynapseExpression.value();
         }
-
-        if (prob < 0)
-        {
-            return 0;
-        }
-        else if (prob > 1)
-        {
-            return 1;
-        }
-        else
-        {
-            return prob;
-        }
+        return clampProbability(prob);
     }
     else
     {
-        return 1 - exp(-innervation);
+        return 0;
     }
 }
+
+    float FormulaCalculator::clampProbability(float probability){
+        return std::min(1f, std::max(0f, probability));
+    }
