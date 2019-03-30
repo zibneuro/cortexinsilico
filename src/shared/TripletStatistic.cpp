@@ -472,7 +472,7 @@ TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
             << mMotifProbabilities[dataIndex].getStandardDeviation() << sep << "Min" << sep
             << mMotifProbabilities[dataIndex].getMinimum() << sep << "Max" << sep
             << mMotifProbabilities[dataIndex].getMaximum() << sep << "Deviation (expected probability)" << sep
-            << getDeviation(dataIndex) << sep << "Deviation (expected concentration)" << getConcentrationDeviation(i) "\n";
+            << getDeviation(dataIndex) << sep << "Deviation (expected concentration)" << getConcentrationDeviation(i) << "\n";
     }
 }
 
