@@ -1,11 +1,12 @@
 #include "NeuronSelection.h"
-#include "Columns.h"
-#include "Util.h"
-#include "UtilIO.h"
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <iostream>
+#include "Columns.h"
+#include "Util.h"
+#include "UtilIO.h"
+
 
 /**
   Empty constructor.
@@ -19,7 +20,8 @@ NeuronSelection::NeuronSelection() {
 NeuronSelection::NeuronSelection(const IdList &selectionA,
                                  const IdList &selectionB,
                                  const IdList &selectionC)
-    : mSelectionA(selectionA), mSelectionB(selectionB),
+    : mSelectionA(selectionA),
+      mSelectionB(selectionB),
       mSelectionC(selectionC) {
   mPostTarget.push_back(CIS3D::DEND);
   mPostTarget.push_back(CIS3D::DEND);
@@ -276,9 +278,9 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
                      selectionA, selectionB, selectionC, true);
   }
 
-/*  if (queryType == "spatialInnervation") {
-    filterUniquePre(networkProps);
-  }*/
+  /*  if (queryType == "spatialInnervation") {
+      filterUniquePre(networkProps);
+    }*/
 }
 
 void NeuronSelection::setInnervationSelection(const QJsonObject &spec,
@@ -493,7 +495,7 @@ QString NeuronSelection::getDataRoot() { return mDataRoot; }
 void NeuronSelection::setDataRoot(QString dataRoot) { mDataRoot = dataRoot; }
 
 bool NeuronSelection::isSelectionValid(QJsonObject &selection, QString index,
-                                       QString errorMessage) {
+                                       QString &errorMessage) {
   if (!selection["enabled"].toBool()) {
     return true;
   } else {
@@ -523,9 +525,13 @@ bool NeuronSelection::isValid(QJsonObject &query, QString &errorMessage) {
   QJsonObject selectionB = cellSelection["selectionB"].toObject();
   QJsonObject selectionC = cellSelection["selectionC"].toObject();
   errorMessage = "";
-  return isSelectionValid(selectionA, "A", errorMessage) &&
-         isSelectionValid(selectionB, "B", errorMessage) &&
-         isSelectionValid(selectionC, "C", errorMessage);
+  if (isSelectionValid(selectionA, "A", errorMessage) &&
+      isSelectionValid(selectionB, "B", errorMessage) &&
+      isSelectionValid(selectionC, "C", errorMessage)) {
+    return true;
+  } else {
+    return false;
+  };
 }
 
 bool NeuronSelection::inSliceBand(double somaX, double min, double max) {
@@ -635,9 +641,8 @@ std::map<int, int> NeuronSelection::readMapping(NeuronSelection &selection) {
   return mapping;
 }
 
-std::map<int, int>
-NeuronSelection::doGetMultiplicities(const NetworkProps &network,
-                                     IdList &selection) {
+std::map<int, int> NeuronSelection::doGetMultiplicities(
+    const NetworkProps &network, IdList &selection) {
   std::map<int, int> multiplicities;
   for (int i = 0; i < selection.size(); i++) {
     int preId = selection[i];
@@ -651,14 +656,13 @@ NeuronSelection::doGetMultiplicities(const NetworkProps &network,
   return multiplicities;
 }
 
-std::map<int, int>
-NeuronSelection::getMultiplicities(const NetworkProps &network,
-                                  QString selectionIndex) {
-                                    if(selectionIndex == "A"){
-                                      return doGetMultiplicities(network, mSelectionA);
-                                    } else if (selectionIndex == "B"){
-                                      return doGetMultiplicities(network, mSelectionB);
-                                    } else {
-                                      return doGetMultiplicities(network, mSelectionC);
-                                    }
-                                  }
+std::map<int, int> NeuronSelection::getMultiplicities(
+    const NetworkProps &network, QString selectionIndex) {
+  if (selectionIndex == "A") {
+    return doGetMultiplicities(network, mSelectionA);
+  } else if (selectionIndex == "B") {
+    return doGetMultiplicities(network, mSelectionB);
+  } else {
+    return doGetMultiplicities(network, mSelectionC);
+  }
+}
