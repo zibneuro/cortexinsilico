@@ -97,5 +97,5 @@ FormulaCalculator::calculateConnectionProbability(float innervation)
 }
 
     float FormulaCalculator::clampProbability(float probability){
-        return std::min(1f, std::max(0f, probability));
+        return std::min((float)1, std::max(float(0), probability));
     }

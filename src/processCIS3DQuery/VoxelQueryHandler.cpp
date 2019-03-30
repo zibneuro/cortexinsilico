@@ -474,7 +474,7 @@ VoxelQueryHandler::doProcessQuery()
                                 float synap =
                                     mCalculator.calculateSynapseProbability(innervation, k);
                                 synPerVoxel[k] += multipl * synap;
-                                mSynapsesPerVoxel[voxelId] += /*k*/ * multipl * synap;
+                                mSynapsesPerVoxel[voxelId] += k * multipl * synap;
                             }
 
                             for (int j = 1; j < multipl; j++)
