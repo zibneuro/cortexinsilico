@@ -510,8 +510,8 @@ bool NeuronSelection::isSelectionValid(QJsonObject &selection, QString index,
       count = mSelectionC.size();
     }
     if (count == 0) {
-      errorMessage += selection["description"].toString() +
-                      "is empty (try to modify filter settings).";
+      errorMessage += selection["label"].toString() +
+                      " is empty (try to modify filter settings).";
       return false;
     } else {
       return true;
