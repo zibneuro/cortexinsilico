@@ -137,6 +137,8 @@ private:
     */
     double getDeviation(int motif) const;
 
+    double getNumericDeviation(double observed, double expected) const;
+
     /**
         Draws a random selection of neuron IDs.
         @param neuronIds The complete ID list.
@@ -168,6 +170,12 @@ private:
 
     void calculateConcentration();
 
+    double getConcentrationDeviation(int motif) const;
+
+    int getGroupIndex(const int motif) const; 
+
+    double getNumericConcentration(double probability, double groupProbability);
+
     QList<Statistics> mMotifProbabilities;
     QList<Statistics> mMotifExpectedProbabilities;
     std::vector<std::vector<Statistics> > mConvergences;
@@ -177,8 +185,8 @@ private:
     int mOverallCompletedSamples;
     int mIterations;
     std::vector<CIS3D::Structure> mPostTargets;
-    std::vector<float> mConcentrations;
-    std::vector<float> mExpectedConcentrations;
+    std::vector<double> mConcentrations;
+    std::vector<double> mExpectedConcentrations;
 };
 
 #endif // TRIPLETSTATISTIC
