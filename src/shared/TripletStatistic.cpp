@@ -18,7 +18,6 @@
 #include "Typedefs.h"
 #include "Util.h"
 
-
 /**
     Constructor.
     @param networkProps The model data of the network.
@@ -421,13 +420,21 @@ void TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const {
 
   for (int i = 0; i < mMotifProbabilities.size() - 1; i++) {
     int dataIndex = permutation[i] - 1;
-    out << QString("Motif %1").arg(i + 1) << sep << "Probability" << sep
-        << mMotifProbabilities[dataIndex].getMean() << sep << "StDev" << sep
-        << mMotifProbabilities[dataIndex].getStandardDeviation() << sep << "Min"
-        << sep << mMotifProbabilities[dataIndex].getMinimum() << sep << "Max"
-        << sep << mMotifProbabilities[dataIndex].getMaximum() << sep
-        << "Deviation (expected probability)" << sep << getDeviation(dataIndex)
-        << sep << "Deviation (expected concentration)" << sep
+    out << QString("Motif %1").arg(i + 1) << sep << "Probability Avg" << sep
+        << mMotifProbabilities[dataIndex].getMean() << sep
+        << "Probability StDev" << sep
+        << mMotifProbabilities[dataIndex].getStandardDeviation() << sep
+        << "Probability Min" << sep
+        << mMotifProbabilities[dataIndex].getMinimum() << sep
+        << "Probability Max" << sep
+        << mMotifProbabilities[dataIndex].getMaximum() << sep
+        << "Expected probability" << sep
+        << mMotifExpectedProbabilities[dataIndex].getMean() << sep
+        << "Deviation (to expected probability)" << sep
+        << getDeviation(dataIndex) << sep << "Concentration" << sep
+        << mConcentrations[i] << sep << "Expected concentration" << sep
+        << mExpectedConcentrations[i] << sep
+        << "Deviation (to expected concentration)" << sep
         << getConcentrationDeviation(i) << "\n";
   }
 }
@@ -592,7 +599,11 @@ void TripletStatistic::calculateConcentration() {
 double TripletStatistic::getConcentrationDeviation(int motif) const {
   double observed = mConcentrations[motif];
   double expected = mExpectedConcentrations[motif];
-  return getNumericDeviation(observed, expected);
+  if(expected == 0){
+    return 0;
+  } else {
+    return observed / expected;
+  };
 };
 
 int TripletStatistic::getGroupIndex(const int motif) const {
