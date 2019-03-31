@@ -398,13 +398,32 @@ void TripletStatistic::deleteMotifCombinations(
 void TripletStatistic::doCreateJson(QJsonObject& obj) const {
   obj["sampleSize"] = mOverallCompletedSamples;
 
-  for (int i = 0; i < 16; i++) {
-    const QString key = QString("motif%1").arg(i + 1);
-    const QString keyRef = QString("motif%1Ref").arg(i + 1);
-    obj.insert(key, Util::createJsonStatistic(mMotifProbabilities[i]));
-    obj.insert(keyRef,
-               Util::createJsonStatistic(mMotifExpectedProbabilities[i]));
+  std::vector<int> permutation = getMotifPermutation();
+  QJsonArray probabilities;
+  QJsonArray expectedProbabilities;
+  QJsonArray probabilityDeviations;
+  QJsonArray concentrations;
+  QJsonArray expectedConcentrations;
+  QJsonArray concentrationDeviations;
+
+  for (int i = 0; i < 15; i++) {
+    int dataIndex = permutation[i] - 1;
+    probabilities.push_back(
+        Util::createJsonStatistic(mMotifProbabilities[dataIndex]));
+    expectedProbabilities.push_back(
+        mMotifExpectedProbabilities[dataIndex].getMean());
+    probabilityDeviations.push_back(getDeviation(dataIndex));
+    concentrations.push_back(mConcentrations[i]);
+    expectedConcentrations.push_back(mExpectedConcentrations[i]);
+    concentrationDeviations.push_back(getConcentrationDeviation(i));
   }
+
+  obj.insert("probabilities", probabilities);
+  obj.insert("expectedProbabilities", expectedProbabilities);
+  obj.insert("probabilityDeviations", probabilityDeviations);
+  obj.insert("concentrations", concentrations);
+  obj.insert("expectedConcentrations", expectedConcentrations);
+  obj.insert("concentrationDeviations", concentrationDeviations);
 }
 
 /**
@@ -487,10 +506,10 @@ double TripletStatistic::getNumericDeviation(double observed,
   }
   return deviation;
   */
-  if(expected == 0){
+  if (expected == 0) {
     return 0;
   } else {
-    return observed /expected;
+    return observed / expected;
   }
 }
 
@@ -606,7 +625,7 @@ void TripletStatistic::calculateConcentration() {
 double TripletStatistic::getConcentrationDeviation(int motif) const {
   double observed = mConcentrations[motif];
   double expected = mExpectedConcentrations[motif];
-  if(expected == 0){
+  if (expected == 0) {
     return 0;
   } else {
     return observed / expected;
