@@ -44,7 +44,7 @@ QueryHandler::processQuery(const QJsonObject& config,
     QString datasetName = Util::getShortName(mNetworkSelection, mNetworkNumber);
     mDataRoot = Util::getDatasetPath(datasetName, mConfig);
     mSampleSettings = mQuery["sampleSelection"].toObject();
-    Util::getSampleSettings(mSampleSettings, mNetworkNumber, mSampleNumber, mSampleNumber);
+    Util::getSampleSettings(mSampleSettings, mNetworkNumber, mSampleNumber, mSampleSeed);
 
     if (initSelection())
     {
