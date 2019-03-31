@@ -476,6 +476,7 @@ double TripletStatistic::getDeviation(int motif) const {
 
 double TripletStatistic::getNumericDeviation(double observed,
                                              double expected) const {
+  /*
   double deviation;
   double d = observed;
   double dRef = expected;
@@ -485,6 +486,12 @@ double TripletStatistic::getNumericDeviation(double observed,
     deviation = (d - dRef) / dRef;
   }
   return deviation;
+  */
+  if(expected == 0){
+    return 0;
+  } else {
+    return observed /expected;
+  }
 }
 
 /**
