@@ -143,6 +143,11 @@ void TripletStatistic::initializeStatistics() {
     Statistics stat2;
     mMotifExpectedProbabilities.append(stat);
   }
+  mConvergences.clear();
+  for(int i=0; i<3; i++){
+    std::vector<double> empty(3,0.0);
+    mConvergences.push_back(empty);
+  }
 }
 
 /**
@@ -366,6 +371,7 @@ void TripletStatistic::computeProbabilities(
 */
 void TripletStatistic::computeExpectedProbabilities(
     std::map<unsigned int, std::list<TripletMotif*> > tripletMotifs) {
+      /*
   std::vector<std::vector<double> > avgConvergence;
   for (int i = 0; i < 3; i++) {
     std::vector<double> emptyRow;
@@ -373,7 +379,7 @@ void TripletStatistic::computeExpectedProbabilities(
     for (int j = 0; j < 3; j++) {
       avgConvergence[i].push_back(mConvergences[i][j]);
     }
-  }
+  }*/
   mMotifExpectedProbabilities.clear();
   // Go through all 16 main motifs
   for (unsigned int j = 0; j < tripletMotifs.size(); j++) {
@@ -388,7 +394,7 @@ void TripletStatistic::computeExpectedProbabilities(
       TripletMotif* currentMotif = *motifListIt;
       expectedProb +=
           currentMotif->computeOccurrenceProbabilityGivenInputProbability(
-              avgConvergence);
+              mConvergences);
     }
     Statistics stat;
     stat.addSample(expectedProb);
@@ -453,7 +459,7 @@ void TripletStatistic::doCreateJson(QJsonObject& obj) const {
     @param sep The separator between parameter name and value.
 */
 void TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const {
-  out << "Number of triplet samples:" << sep << mSampleSize * mConnectionsDone
+  out << "Number of triplet samples:" << sep << mOverallCompletedSamples
       << "\n\n";
 
   std::vector<int> permutation = getMotifPermutation();
