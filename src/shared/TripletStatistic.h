@@ -50,6 +50,9 @@ protected:
     void doCreateCSV(QTextStream& out, const QChar sep) const override;
 
 private:
+
+    void calculateConnectionProbability(const NeuronSelection& selection, IdList& a, IdList& b, int b_idx, IdList& c, int c_idx, double& ab, double& ac);
+
     /**
         Checks wheter the neuron selectio is valid.
         @throws runtime_error if selection is ncot valid.
@@ -105,16 +108,6 @@ private:
     */
     void computeProbabilities(QList<CellTriplet>& triplets,
                               std::map<unsigned int, std::list<TripletMotif*> > tripletMotifs);
-
-    /**
-        Computes the expected occurrence probability of each motif based
-        on the average connection probability between the neuron subselections.
-        @param avgInnervation The average connection probabilties.
-        @param tripletMotifs The motif combinations.
-    */
-    void computeExpectedProbabilities(
-        std::vector<std::vector<double> > avgInnervation,
-        std::map<unsigned int, std::list<TripletMotif*> > tripletMotifs);
 
     /**
         Computes the expected occurrence probability of each motif based
@@ -178,7 +171,8 @@ private:
 
     QList<Statistics> mMotifProbabilities;
     QList<Statistics> mMotifExpectedProbabilities;
-    std::vector<std::vector<Statistics> > mConvergences;
+    std::vector<std::vector<double> > mConvergences;
+    std::vector<std::vector<double> > mAverageConnectionProbabilities;
     int mSampleSize;
     int mSampleSeed;
     int mOverallSampleSize;

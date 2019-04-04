@@ -143,14 +143,6 @@ void TripletStatistic::initializeStatistics() {
     Statistics stat2;
     mMotifExpectedProbabilities.append(stat);
   }
-  for (int i = 0; i < 3; i++) {
-    std::vector<Statistics> emptyRow;
-    mConvergences.push_back(emptyRow);
-    for (int j = 0; j < 3; j++) {
-      Statistics stat;
-      mConvergences[i].push_back(stat);
-    }
-  }
 }
 
 /**
@@ -170,6 +162,8 @@ void TripletStatistic::doCalculate(const NeuronSelection& selection) {
   std::map<unsigned int, std::list<TripletMotif*> > motifs =
       combinations.initializeNonRedundantTripletMotifs();
 
+  calculateAverageConvergence(selection);
+
   while (mOverallCompletedSamples < mOverallSampleSize &&
          mConnectionsDone < mIterations) {
     if (mAborted) {
@@ -188,7 +182,6 @@ void TripletStatistic::doCalculate(const NeuronSelection& selection) {
     // double t2 = std::clock();
     computeProbabilities(triplets, motifs);
     // double t3 = std::clock();
-    calculateAverageConvergence(selection);
     // double t4 = std::clock();
     // printAverageConvergence();
     computeExpectedProbabilities(motifs);
@@ -244,6 +237,59 @@ double TripletStatistic::calculateConvergence(IdList& presynapticNeurons,
   return connectionProbability.getMean();
 }
 
+void TripletStatistic::calculateConnectionProbability(const NeuronSelection& selection, IdList& a, IdList& b, int b_idx, IdList& c, int c_idx, double& ab, double& ac){
+
+    Statistics stat_ab;
+    Statistics stat_ac;
+
+    std::map<int, int> preIds; // unique ID, multiplicity
+    std::map<int, float> postInnervation;
+
+    CIS3D::Structure b_postTarget = selection.getPostTarget(b_idx);
+    CIS3D::Structure c_postTarget = selection.getPostTarget(c_idx);
+
+    // get pre neurons with multiplicity
+    for (int i = 0; i < a.size(); ++i)
+    {
+        const int preId = a[i];
+        if(mNetwork.neurons.getSynapticSide(preId) != CIS3D::POSTSYNAPTIC){
+            const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
+            if (preIds.find(mappedPreId) == preIds.end())
+            {
+                preIds[mappedPreId] = 1;
+            }
+            else
+            {
+                preIds[mappedPreId] += 1;
+            }
+        }
+    }
+
+    // iterate over pre neurons
+    for (auto itPre = preIds.begin(); itPre != preIds.end(); itPre++)
+    {
+        // iterate over post neurons b
+        for (int j = 0; j < b.size(); ++j)
+        {
+            const int postId = b[j];
+            const float innervation = mInnervationMatrix->getValue(itPre->first, postId, b_postTarget);
+            float connProb = mCalculator.calculateConnectionProbability(innervation);
+            stat_ab.addSample(connProb);
+        }
+        // iterate over post neurons c
+        for (int j = 0; j < c.size(); ++j)
+        {
+            const int postId = c[j];
+            const float innervation = mInnervationMatrix->getValue(itPre->first, postId, c_postTarget);
+            float connProb = mCalculator.calculateConnectionProbability(innervation);
+            stat_ac.addSample(connProb);
+        }
+    }
+
+    ab = stat_ab.getMean();
+    ac = stat_ac.getMean();
+}
+
 /**
     Calculates the average convergence for by sampling a subset of the
    postsynaptic neurons in each group.
@@ -251,30 +297,32 @@ double TripletStatistic::calculateConvergence(IdList& presynapticNeurons,
 */
 void TripletStatistic::calculateAverageConvergence(
     const NeuronSelection& selection) {
-  int preLimit = 3000;
-  std::vector<IdList> pre;
-  pre.push_back(drawRandomlyExceeds(selection.SelectionA(), preLimit));
-  pre.push_back(drawRandomlyExceeds(selection.SelectionB(), preLimit));
-  pre.push_back(drawRandomlyExceeds(selection.SelectionC(), preLimit));
-  std::vector<IdList> post;
-  post.push_back(drawRandomly(selection.SelectionA(), mSampleSize));
-  post.push_back(drawRandomly(selection.SelectionB(), mSampleSize));
-  post.push_back(drawRandomly(selection.SelectionC(), mSampleSize));
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      if (i != j) {
-        for (int k = 0; k < post[j].size(); k++) {
-          /*
-          if (mConvergences[i][j].hasConverged(0.0001)) {
-              break;
-          } else {
-          */
-          mConvergences[i][j].addSample(
-              calculateConvergence(pre[i], post[j][k], i, j));
-          //}
-        }
+
+  IdList selA = selection.SelectionA(); // 0
+  IdList selB = selection.SelectionB(); // 1
+  IdList selC = selection.SelectionC(); // 2
+
+  double ab, ac, ba, bc, ca, cb;
+
+  calculateConnectionProbability(selection, selA, selB, 1, selC, 2, ab, ac);
+  calculateConnectionProbability(selection, selB, selA, 0, selC, 2, ba, bc);
+  calculateConnectionProbability(selection, selC, selA, 0, selB, 1, ca, cb);
+
+  mConvergences[0][0] = 0;
+  mConvergences[0][1] = ab;
+  mConvergences[0][2] = ac;
+  mConvergences[1][0] = ba;
+  mConvergences[1][1] = 0;
+  mConvergences[1][2] = bc;
+  mConvergences[2][0] = ca;
+  mConvergences[2][1] = cb;
+  mConvergences[2][2] = 0;
+
+  qDebug() << "TRIPLET CONN PROB";
+  for(int i=0; i<3; i++){
+      for(int j=0; j<3; j++){
+        qDebug() << i << " " << j << " " << mConvergences[i][j];
       }
-    }
   }
 }
 
@@ -312,33 +360,6 @@ void TripletStatistic::computeProbabilities(
 }
 
 /**
-        Computes the expected occurrence probability of each motif based
-        on the average connection probability between the neuron subselections.
-        @param avgInnervation The average connection probabilties.
-        @param tripletMotifs The motif combinations.
-*/
-void TripletStatistic::computeExpectedProbabilities(
-    std::vector<std::vector<double> > avgInnervation,
-    std::map<unsigned int, std::list<TripletMotif*> > tripletMotifs) {
-  // Go through all 16 main motifs
-  for (unsigned int j = 0; j < tripletMotifs.size(); j++) {
-    // Go through all possible configurations of the current motif and sum up
-    // probabilities
-    std::list<TripletMotif*> motifList = tripletMotifs[j];
-    std::list<TripletMotif*>::const_iterator motifListIt;
-    double expectedProb = 0;
-
-    for (motifListIt = motifList.begin(); motifListIt != motifList.end();
-         ++motifListIt) {
-      TripletMotif* currentMotif = *motifListIt;
-      expectedProb +=
-          currentMotif->computeOccurrenceProbability(avgInnervation, this);
-    }
-    mMotifExpectedProbabilities[j].addSample(expectedProb);
-  }
-}
-
-/**
     Computes the expected occurrence probability of each motif based
     on the average convergence between the neuron subselections.
     @param tripletMotifs The motif combinations.
@@ -350,7 +371,7 @@ void TripletStatistic::computeExpectedProbabilities(
     std::vector<double> emptyRow;
     avgConvergence.push_back(emptyRow);
     for (int j = 0; j < 3; j++) {
-      avgConvergence[i].push_back(mConvergences[i][j].getMean());
+      avgConvergence[i].push_back(mConvergences[i][j]);
     }
   }
   mMotifExpectedProbabilities.clear();
@@ -553,7 +574,7 @@ void TripletStatistic::printAverageConvergence() {
   qDebug() << "====== CONVERGENCE ======";
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
-      qDebug() << i << j << mConvergences[i][j].getMean();
+      qDebug() << i << j << mConvergences[i][j];
     }
   }
 }
