@@ -31,12 +31,13 @@ TripletStatistic::TripletStatistic(const NetworkProps& networkProps,
     : NetworkStatistic(networkProps, calculator, handler) {
   mSampleSize = 30;
   mSampleSeed = sampleSeed;
-  qDebug() << "TRIPLET SAMPLE SEED" << sampleSeed;
   mOverallSampleSize = sampleSize;
   mOverallCompletedSamples = 0;
   mIterations = (int)std::ceil((double)sampleSize / (double)mSampleSize);
   this->mNumConnections = (long long)mIterations;
   mConnectionsDone = 0;
+
+  mRandomGenerator = RandomGenerator(mSampleSeed);
 }
 
 /**
@@ -459,7 +460,8 @@ void TripletStatistic::doCreateJson(QJsonObject& obj) const {
 */
 void TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const {
   out << "Number of triplet samples:" << sep << mOverallCompletedSamples
-      << "\n\n";
+      << "\n";
+  out << "Random seed:" << sep << mSampleSeed << "\n";
 
   std::vector<int> permutation = getMotifPermutation();
 
