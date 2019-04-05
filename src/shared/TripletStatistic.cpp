@@ -496,6 +496,8 @@ void TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const {
         << "Deviation (to expected concentration)" << sep
         << getConcentrationDeviation(i) << "\n";
   }
+  out << "motif 16 prob" << mMotifProbabilities[15].getMean() << "\n";
+  out << "motif 16 exp. prob" << mMotifExpectedProbabilities[15].getMean() << "\n";
 }
 
 /**
