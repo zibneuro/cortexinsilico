@@ -467,7 +467,7 @@ void TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const {
 
   for(int i = 0; i<3; i++){
       for(int j = 0; j<3; j++){
-        out << i << " " << j << " " << mConvergences[i][j];
+        out << i << " " << j << " " << mConvergences[i][j] << "\n";
       }
   }
 
