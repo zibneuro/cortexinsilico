@@ -463,6 +463,14 @@ void TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const {
       << "\n";
   out << "Random seed:" << sep << mSampleSeed << "\n";
 
+  out << "DEBUG conn prob" << "\n";
+
+  for(int i = 0; i<3; i++){
+      for(int j = 0; j<3; j++){
+        out << i << " " << j << " " << mConvergences[i][j];
+      }
+  }
+
   std::vector<int> permutation = getMotifPermutation();
 
   for (int i = 0; i < mMotifProbabilities.size() - 1; i++) {
