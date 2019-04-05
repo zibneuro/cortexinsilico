@@ -5,6 +5,7 @@
 #include "NetworkStatistic.h"
 #include "TripletMotif.h"
 #include "Util.h"
+#include "RandomGenerator.h"
 
 /**
     Computes the probability distribution of triplet motifs.
@@ -133,23 +134,6 @@ private:
     double getNumericDeviation(double observed, double expected) const;
 
     /**
-        Draws a random selection of neuron IDs.
-        @param neuronIds The complete ID list.
-        @param number The number of neurons to draw.
-        @return The selected IDs.
-    */
-    IdList drawRandomly(const IdList& neuronIds, int number);
-
-    /**
-        Draws a random selection of neuron IDs, if the number of elements 
-        in the specified list exceeds a certain limit.
-        @param neuronIds The complete ID list.        
-        @param limit The permissible number of elements.
-        @return The selected IDs.
-    */
-    IdList drawRandomlyExceeds(const IdList& neuronIds, int limit);
-
-    /**
         Prints the average convergence values between the subselections.
     */
     void printAverageConvergence();
@@ -181,6 +165,7 @@ private:
     std::vector<CIS3D::Structure> mPostTargets;
     std::vector<double> mConcentrations;
     std::vector<double> mExpectedConcentrations;
+    RandomGenerator mRandomGenerator;
 };
 
 #endif // TRIPLETSTATISTIC

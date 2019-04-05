@@ -69,8 +69,6 @@ QList<CellTriplet> TripletStatistic::drawTriplets(
 
   // qDebug() << "[*] Selecting " << mSampleSize << " random neuron triplets.";
 
-  std::srand(std::time(NULL));
-
   const unsigned int NMAX1 = selection.SelectionA().size();
   const unsigned int NMAX2 = selection.SelectionB().size();
   const unsigned int NMAX3 = selection.SelectionC().size();
@@ -85,15 +83,15 @@ QList<CellTriplet> TripletStatistic::drawTriplets(
     unsigned int index1, index2, index3;
 
     // Cell1 randomly drawn from Seleciton1
-    index1 = std::rand() % NMAX1;
+    index1 = mRandomGenerator.drawNumber(NMAX1-1);
     int neuron1 = selection.SelectionA()[index1];
 
     // Cell2 randomly drawn from Selection2
-    index2 = std::rand() % NMAX2;
+    index2 = mRandomGenerator.drawNumber(NMAX2-1);
     int neuron2 = selection.SelectionB()[index2];
 
     // Cell3 randomly drawn from Selection3
-    index3 = std::rand() % NMAX3;
+    index3 = mRandomGenerator.drawNumber(NMAX3-1);
     int neuron3 = selection.SelectionC()[index3];
 
     // If drawn CellIDs are identical, draw again
@@ -537,39 +535,6 @@ double TripletStatistic::getNumericDeviation(double observed,
     return 0;
   } else {
     return observed / expected;
-  }
-}
-
-/**
-    Draws a random selection of neuron IDs.
-    @param neuronIds The complete ID list.
-    @param number The number of neurons to draw.
-    @return The selected IDs.
-*/
-IdList TripletStatistic::drawRandomly(const IdList& neuronIds, int number) {
-  IdList selection;
-  std::srand(std::time(NULL));
-  const unsigned int NMAX = neuronIds.size();
-  for (int i = 0; i < number; i++) {
-    unsigned int index = std::rand() % NMAX;
-    selection.push_back(neuronIds[index]);
-  }
-  return selection;
-}
-
-/**
-    Draws a random selection of neuron IDs, if the number of elements
-    in the specified list exceeds a certain limit.
-    @param neuronIds The complete ID list.
-    @param limit The permissible number of elements.
-    @return The selected IDs.
-*/
-IdList TripletStatistic::drawRandomlyExceeds(const IdList& neuronIds,
-                                             int limit) {
-  if (neuronIds.size() <= limit) {
-    return neuronIds;
-  } else {
-    return drawRandomly(neuronIds, limit);
   }
 }
 

@@ -20,6 +20,13 @@ public:
     */
     RandomGenerator(int userSeed);
 
+    /*
+        Constructor.
+
+        A seed from a random source is used.
+    */
+    RandomGenerator();
+
     ~RandomGenerator();
 
     /*
@@ -48,9 +55,9 @@ public:
     static void testMersenne(int seed);
 
     /*
-        Returns a random number.
-    */
-    int drawNumber();
+     * Returns a random number between 0 and the specified value.
+     */
+    unsigned int drawNumber(unsigned int max);
 
 private:
     unsigned int getRandomSeed();

@@ -19,6 +19,10 @@ RandomGenerator::RandomGenerator(int userSeed)
     mRandomGenerator = std::mt19937(seed);
 }
 
+RandomGenerator::RandomGenerator(){
+    mUserSeed = false;
+}
+
 RandomGenerator::~RandomGenerator()
 {
     //qDebug() << "destroy random generator";
@@ -72,6 +76,8 @@ void RandomGenerator::testMersenne(int seed){
     qDebug() << generator();
 }
 
-int RandomGenerator::drawNumber(){
-    return mRandomGenerator();
+unsigned int RandomGenerator::drawNumber(unsigned int max){
+    std::uniform_int_distribution<unsigned int> uniformDistribution(0,max);
+    unsigned int randomNumber = uniformDistribution(mRandomGenerator);
+    return randomNumber;
 }
