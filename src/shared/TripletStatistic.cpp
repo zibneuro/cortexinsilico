@@ -279,7 +279,9 @@ void TripletStatistic::calculateConnectionProbability(const NeuronSelection& sel
             const int postId = b[j];
             const float innervation = mInnervationMatrix->getValue(itPre->first, postId, b_postTarget);
             float connProb = mCalculator.calculateConnectionProbability(innervation);
-            stat_ab.addSample(connProb);
+            for(int k = 0; k<itPre->second; k++){
+                stat_ab.addSample(connProb);
+            }
         }
         // iterate over post neurons c
         for (int j = 0; j < c.size(); ++j)
@@ -287,7 +289,9 @@ void TripletStatistic::calculateConnectionProbability(const NeuronSelection& sel
             const int postId = c[j];
             const float innervation = mInnervationMatrix->getValue(itPre->first, postId, c_postTarget);
             float connProb = mCalculator.calculateConnectionProbability(innervation);
-            stat_ac.addSample(connProb);
+             for(int k = 0; k<itPre->second; k++){
+                stat_ac.addSample(connProb);
+             }
         }
     }
 
