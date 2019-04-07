@@ -29,6 +29,8 @@ public:
 
     ~RandomGenerator();
 
+    unsigned int getSeed();
+
     /*
         Shuffles the entries of the specified list.
         @param list. A list of integers. 
@@ -44,15 +46,19 @@ public:
     */
     int drawPoisson(float mu);
 
+    long drawPoissonDouble(double lamda);
+
     /*
         Returns whether a fixed random seed was specified by the user.
     */
     bool hasUserSeed();
 
     /*
-        Prints first random value for specified seed.
+        Prints random seed, mt19937 max number, and
+        sequence of first 5 random numbers. Checks, if
+        list [1,20] is permuted in expected way.
     */
-    static void testMersenne(int seed);
+    void testMersenne();
 
     /*
      * Returns a random number between 0 and the specified value.
@@ -60,8 +66,20 @@ public:
     unsigned int drawNumber(unsigned int max);
 
 private:
-    unsigned int getRandomSeed();
+
+    long drawPoissonKnuth(double lambda);
+
+    long drawPoissonHoermann(double lambda);
+
+    unsigned int createRandomSeed();
+
+    unsigned int drawNumberRange(unsigned int max);
+
+    double drawNumberZeroOne();
+
+    void permute(QList<int>& list);
 
     std::mt19937 mRandomGenerator;
     bool mUserSeed;
+    unsigned int mSeed;
 };

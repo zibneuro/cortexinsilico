@@ -61,6 +61,7 @@ printUsage()
     qDebug() << "./networkSimulator SHOW_DIMENSIONS     <sparseField>";
     qDebug() << "./networkSimulator GET_FIELD_SUM       <sparseField>"; 
     qDebug() << "./networkSimulator XYZ_FROM_VOXELID    <sparseField> <voxelId>";
+    qDebug() << "./networkSimulator TEST_RANDOM_GENERATOR    <seed>";
     qDebug() << "";
     qDebug() << "The <initSpecFile> contains the neuron selection to be used for"
              << "simulation.";
@@ -841,6 +842,23 @@ main(int argc, char** argv)
             return 0;
         }
     }
+    else if (mode == "TEST_RANDOM_GENERATOR")
+    {
+        if (argc != 3)
+        {
+            printUsage();
+            return 1;
+        }
+        else
+        {
+            const QString seedString = argv[2];
+            const int seed = seedString.toInt();
+            RandomGenerator generator(seed);
+            generator.testMersenne();
+            return 0;
+        }
+    }
+
 
     else
     {
