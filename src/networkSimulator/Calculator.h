@@ -40,7 +40,7 @@ private:
         float postAll;
         float postNorm;
         float innervation;
-        int synapses;
+        long synapses;
         bool magnitudeBound;
         bool probabilityBound;
         bool innervationBound;    
@@ -48,7 +48,7 @@ private:
     };
 
     double calculateProbability(double innervationMean);
-    void writeSynapseMatrix(int runIndex, std::vector<std::vector<int> >& contacts);
+    void writeSynapseMatrix(int runIndex, std::vector<std::vector<long> >& contacts);
     void writeInnervationMatrix(int runIndex, std::vector<std::vector<float> >& innervation);
     void writeStatistics(int runIndex,
                          double connectionProbability,

@@ -219,6 +219,16 @@ RandomGenerator::createRandomSeed()
     return rd();
 }
 
+static double getDev(long a, long b){
+    double aDouble = static_cast<double>(a);
+    double bDouble = static_cast<double>(b);
+    if(a == 0){
+        return bDouble;
+    } else {
+        return 1 - bDouble / aDouble;
+    }
+}
+
 void RandomGenerator::testMersenne(){
     qDebug() << "seed:" << mSeed;
     qDebug() << "mt19937 min value:" << mRandomGenerator.min();
@@ -250,6 +260,32 @@ void RandomGenerator::testMersenne(){
         l4.append(drawPoissonDouble(77));
     }
     qDebug() << "Poisson draws (lambda=77):" << l4;
+
+    qDebug() << "Custom poisson implementation vs. std::poisson_distribution";
+    std::vector<long> customImpl(101,0);
+    std::vector<long> stdImpl(101,0);
+    int nRuns = 5000000;
+    float lambda = 15;
+    for(int i=0; i<nRuns; i++){
+        // custom
+        long r = drawPoissonDouble(static_cast<double>(lambda));
+        if(r < 100){
+            customImpl[static_cast<unsigned int>(r)] += 1;
+        } else {
+            customImpl[100] += 1;
+        }
+        // std
+        long r2 = static_cast<long>(drawPoisson(lambda));
+        if(r2 < 100){
+            stdImpl[static_cast<unsigned int>(r2)] += 1;
+        } else {
+            stdImpl[100] += 1;
+        }
+    }
+    for(unsigned int i=0; i<customImpl.size(); i++){
+        qDebug() << i << customImpl[i] << stdImpl[i] << stdImpl[i] - customImpl[i] << getDev(customImpl[i], stdImpl[i]);
+    }
+
 
 }
 

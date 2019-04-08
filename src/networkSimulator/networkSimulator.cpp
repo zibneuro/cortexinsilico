@@ -551,6 +551,7 @@ getPropsBoolean(const QJsonObject spec)
     props["APPLY_CONSTRAINT_PST_PROBABILITY"] = extractBoolean(spec, "APPLY_CONSTRAINT_PST_PROBABILITY", false);
     props["DISCARD_SINGLE"] = extractBoolean(spec, "DISCARD_SINGLE", false);
     props["WRITE_RAW_DATA"] = extractBoolean(spec, "WRITE_RAW_DATA", false);
+    props["SYNAPSE_PER_VOXEL"] = extractBoolean(spec, "SYNAPSE_PER_VOXEL", true);
     return props;
 }
 
