@@ -35,7 +35,7 @@ unsigned int RandomGenerator::getSeed(){
 void
 RandomGenerator::shuffleList(QList<int>& list)
 {
-    std::shuffle(list.begin(), list.end(), mRandomGenerator);
+    permute(list);
 }
 
 int
@@ -43,7 +43,7 @@ RandomGenerator::getRandomEntry(QList<int> list){
     if(list.size() == 0){
         return -1;
     } else {
-        shuffleList(list);
+        permute(list);
         return list[0];
     }
 }
@@ -121,7 +121,9 @@ long RandomGenerator::drawPoissonKnuth(double lambda){
  * algorithm comes from SPECFUN by Shanjie Zhang and Jianming Jin and their
  * book "Computation of Special Functions", 1996, John Wiley & Sons, Inc.
  */
+#ifndef M_PI
 #define M_PI 3.14159265358979323846264338328
+#endif
 static double loggam(double x)
 {
     double x0, x2, xp, gl, gl0;

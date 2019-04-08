@@ -675,7 +675,7 @@ Util::getAdvancedSettingsString(const QJsonObject& query, bool hasSynapseDistrib
     //    QJsonObject preSelection = query["preSelection"].toObject();
     //    QJsonObject postSelection = query["postSelection"].toObject();
     int networkNumber = query["networkNumber"].toInt();
-    int oppositeNumber = getOppositeNetworkNumber(networkNumber);
+    //int oppositeNumber = getOppositeNetworkNumber(networkNumber);
 
     // ######### WRITE NETWORK SELECTION #########
 
@@ -807,7 +807,7 @@ Util::getIndexFileName(CIS3D::Structure target)
 }
 
 QString
-Util::getBranchIndexFileName(CIS3D::Structure target)
+Util::getBranchIndexFileName(CIS3D::Structure /*target*/)
 {
     return "voxel_indexBranchAll";
     /*
