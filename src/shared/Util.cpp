@@ -673,10 +673,10 @@ Util::getResultFileHeader(const QJsonObject& query)
 {
     int networkNumber = query["networkNumber"].toInt();
     QString queryType = query["queryType"].toString();
-    bool isVoxel = queryType == "voxel";
+    //bool isVoxel = queryType == "voxel";
 
-    bool hasSynapseDistribution = isVoxel;
-    bool hasConnectionProbability = !isVoxel;
+    //bool hasSynapseDistribution = isVoxel;
+    //bool hasConnectionProbability = !isVoxel;
 
     QJsonObject networkSelection = query["networkSelection"].toObject();
 
@@ -747,7 +747,7 @@ QString Util::writeSelectionDescription(QJsonObject& selection, bool isSlice){
     }
     QString label = selection["label"].toString();
     s += label + ":\n";
-    s += "Filter:," + writeFilterConditions(selection["conditions"].toArray());
+    s += "Filter:," + writeFilterConditions(selection["conditions"].toArray()) + "\n";
     if(isSlice){
         QJsonObject tissueDepth = selection["tissueDepth"].toObject();
         s+= writeTissueDepthDescription(tissueDepth);
