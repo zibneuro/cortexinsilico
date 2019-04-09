@@ -165,8 +165,8 @@ void InDegreeStatistic::doCreateJson(QJsonObject &obj) const {
 }
 
 void InDegreeStatistic::doCreateCSV(QTextStream &out, const QChar sep) const {
-  out << "Number of postsynaptic neuron samples (from selection C):" << sep
-      << mSampleSize << "\n\n";
+  out << "Actual Sample size (selection C):" << sep
+      << mSampleSize << "\n";
 
   out << "Dense structural overlap A->C" << sep << mStatisticsAC.getMean()
       << sep << "StDev" << sep << mStatisticsAC.getStandardDeviation() << sep

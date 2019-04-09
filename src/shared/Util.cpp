@@ -1144,7 +1144,7 @@ Util::getDatasetPath(const QString& datasetShortName,
 }
 
 QString Util::writeVoxelSelectionDescription(QJsonObject& voxelSelection){
-    QJsonObject filter = voxelSelection["filter"].toObject();
+    QJsonObject filter = voxelSelection["voxelFilter"].toObject();
     QString mode = filter["mode"].toString();
     QString s = "";
 

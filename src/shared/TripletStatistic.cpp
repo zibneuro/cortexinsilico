@@ -463,17 +463,6 @@ void TripletStatistic::doCreateJson(QJsonObject& obj) const {
     @param sep The separator between parameter name and value.
 */
 void TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const {
-  out << "Number of triplet samples:" << sep << mOverallCompletedSamples
-      << "\n";
-  out << "Random seed:" << sep << mSampleSeed << "\n";
-
-  out << "DEBUG conn prob" << "\n";
-
-  for(int i = 0; i<3; i++){
-      for(int j = 0; j<3; j++){
-        out << i << " " << j << " " << mConvergences[i][j] << "\n";
-      }
-  }
 
   std::vector<int> permutation = getMotifPermutation();
 
@@ -496,8 +485,6 @@ void TripletStatistic::doCreateCSV(QTextStream& out, const QChar sep) const {
         << "Deviation (to expected concentration)" << sep
         << getConcentrationDeviation(i) << "\n";
   }
-  out << "motif 16 prob" << mMotifProbabilities[15].getMean() << "\n";
-  out << "motif 16 exp. prob" << mMotifExpectedProbabilities[15].getMean() << "\n";
 }
 
 /**
