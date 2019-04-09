@@ -207,7 +207,7 @@ Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
         else
         {
             const QString msg =
-                QString("[-] Invalid selection filter value (IsExcitatory): %1").arg(value);
+                    QString("[-] Invalid selection filter value (IsExcitatory): %1").arg(value);
             std::runtime_error(qPrintable(msg));
         }
     }
@@ -294,7 +294,7 @@ Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
             else
             {
                 const QString msg =
-                    QString("[-] Invalid selection filter value (Laminar Location): %1").arg(v);
+                        QString("[-] Invalid selection filter value (Laminar Location): %1").arg(v);
                 std::runtime_error(qPrintable(msg));
             }
         }
@@ -669,27 +669,38 @@ Util::getMinMedMax(std::vector<float> in, float& min, float& med, float& max)
 }
 
 QString
-Util::getAdvancedSettingsString(const QJsonObject& query, bool hasSynapseDistribution, bool hasConnectionProbability)
+Util::getResultFileHeader(const QJsonObject& query)
 {
-    QJsonObject networkSelection = query["networkSelection"].toObject();
-    //    QJsonObject preSelection = query["preSelection"].toObject();
-    //    QJsonObject postSelection = query["postSelection"].toObject();
     int networkNumber = query["networkNumber"].toInt();
-    //int oppositeNumber = getOppositeNetworkNumber(networkNumber);
+    QString queryType = query["queryType"].toString();
+    bool isVoxel = queryType == "voxel";
+
+    bool hasSynapseDistribution = isVoxel;
+    bool hasConnectionProbability = !isVoxel;
+
+    QJsonObject networkSelection = query["networkSelection"].toObject();
+
+    int oppositeNumber = getOppositeNetworkNumber(networkNumber);
 
     // ######### WRITE NETWORK SELECTION #########
 
     QString s = "";
-    //    s += writeNetworkDescription(networkSelection, networkNumber, preSelection, postSelection);
+    s += writeNetworkDescription(networkSelection, networkNumber);
 
     if (matchCells(networkSelection, networkNumber))
     {
         s += "Match cells to network:\n";
-        //        s += writeNetworkDescription(networkSelection, oppositeNumber, preSelection, postSelection);
+        s += writeNetworkDescription(networkSelection, oppositeNumber);
     }
+
+    QJsonObject cellSelection = query["cellSelection"].toObject();
+    double sliceRef;
+    bool showSlice = isSlice(networkSelection, networkNumber, sliceRef) || matchCells(networkSelection, networkNumber);
+    s+= writeCellSelectionDescription(cellSelection, showSlice);
 
     // ######### WRITE FORMULA DESCRIPTION #########
 
+    /*
     QJsonObject formulaSelection = query["formulasNetwork1"].toObject();
     QJsonObject formulas = formulaSelection["formulasNetwork1"].toObject();
 
@@ -713,47 +724,81 @@ Util::getAdvancedSettingsString(const QJsonObject& query, bool hasSynapseDistrib
             s += "\"1-P_i(0)\"\n";
         }
     }
+    */
 
     return s;
 }
 
+QString Util::writeFilterConditions(QJsonArray conditions){
+    QString s = "";
+    for(int i=0; i<conditions.size(); i++){
+        if (i != 0){
+            s += " AND ";
+        }
+        s += conditions[i].toObject()["valueAsText"].toString();
+    }
+    return s;
+}
+
+QString Util::writeSelectionDescription(QJsonObject& selection, bool isSlice){
+    QString s = "";
+    if(!selection["enabled"].toBool()){
+        return s;
+    }
+    QString label = selection["label"].toString();
+    s += label + ":\n";
+    s += "Filter:," + writeFilterConditions(selection["conditions"].toArray());
+    if(isSlice){
+        QJsonObject tissueDepth = selection["tissueDepth"].toObject();
+        s+= writeTissueDepthDescription(tissueDepth);
+    }
+    return s;
+}
+
+QString Util::writeCellSelectionDescription(QJsonObject& cellSelection, bool isSlice){
+    QString s = "";
+    QJsonObject selectionA = cellSelection["selectionA"].toObject();
+    s+= writeSelectionDescription(selectionA, isSlice);
+    QJsonObject selectionB = cellSelection["selectionB"].toObject();
+    s+= writeSelectionDescription(selectionB, isSlice);
+    QJsonObject selectionC = cellSelection["selectionC"].toObject();
+    s+= writeSelectionDescription(selectionC, isSlice);
+    return s;
+}
+
 QString
-Util::writeNetworkDescription(QJsonObject& networkSelection, int number, QJsonObject& preSelection, QJsonObject& postSelection)
+Util::writeNetworkDescription(QJsonObject& networkSelection, int number)
 {
     QString s = "";
 
-    s += "Neural network,";
+    s += "Neural network:,";
     s += getLongName(networkSelection, number) + "\n";
 
     int samplingFactor = -1;
     int randomSeed = -1;
     if (isSampled(networkSelection, number, samplingFactor, randomSeed))
     {
-        s += "Sampling factor,";
+        s += "Sampling factor:,";
         s += QString::number(samplingFactor) + "\n";
+        s += "Random seed:,";
         s += QString::number(randomSeed) + "\n";
     }
 
-    double sliceRef;
-    if (isSlice(networkSelection, number, sliceRef))
-    {
-        const double tissueLowPre = preSelection["tissueLowPre"].toDouble();
-        const double tissueHighPre = preSelection["tissueHighPre"].toDouble();
-        QString tissueModePre = preSelection["tissueModePre"].toString();
-        const double tissueLowPost = postSelection["tissueLowPost"].toDouble();
-        const double tissueHighPost = postSelection["tissueHighPost"].toDouble();
-        QString tissueModePost = postSelection["tissueModePost"].toString();
+    return s;
+}
 
-        QString modePre = tissueModePre == "oneSided" ? "one-sided" : "two-sided";
-        s += "Presyn. tissue depth mode," + modePre + "\n";
-        s += "Presyn. tissue depth low," + QString::number(tissueLowPre) + "\n";
-        s += "Presyn. tissue depth high," + QString::number(tissueHighPre) + "\n";
+QString
+Util::writeTissueDepthDescription(QJsonObject& tissueDepth) {
+    QString s = "";
 
-        QString modePost = tissueModePost == "oneSided" ? "one-sided" : "two-sided";
-        s += "Postsyn. tissue depth mode," + modePost + "\n";
-        s += "Postsyn. tissue depth low," + QString::number(tissueLowPost) + "\n";
-        s += "Postsyn. tissue depth high," + QString::number(tissueHighPost) + "\n";
-    }
+    const double tissueLow = tissueDepth["low"].toDouble();
+    const double tissueHigh = tissueDepth["high"].toDouble();
+    QString tissueMode = tissueDepth["mode"].toString();
+
+    QString mode = tissueMode == "oneSided" ? "one-sided" : "two-sided";
+    s += "Tissue depth mode," + mode + "\n";
+    s += "Tissue depth low," + QString::number(tissueLow) + "\n";
+    s += "Tissue depth high," + QString::number(tissueHigh) + "\n";
 
     return s;
 }
@@ -1078,4 +1123,48 @@ Util::getDatasetPath(const QString& datasetShortName,
     }
 
     throw std::runtime_error("QueryHelpers::getDatasetPath: no path found for dataset shortName");
+}
+
+QString
+Util::setFilterString(QString mode, QString preFilter, QString postFilter, QString advancedSettings, std::vector<double> origin, std::vector<int> dimensions)
+{
+    QString mFilterString;
+    const QChar sep(',');
+    mFilterString += "Selection:\n";
+    mFilterString += "Mode:,";
+    if (mode == "voxel")
+    {
+        mFilterString += "Explicit voxel selection\n";
+    }
+    else if (mode == "prePostVoxel")
+    {
+        mFilterString += "Explicit voxel selection with neuron filter\n";
+    }
+    else
+    {
+        mFilterString += "Implicit voxel selection with neuron filter\n";
+    }
+
+    if (mode == "voxel" || mode == "prePostVoxel")
+    {
+        mFilterString += "Voxel cube origin:,";
+        mFilterString +=
+                QString("%1 %2 %3\n").arg(origin[0]).arg(origin[1]).arg(origin[2]);
+        mFilterString += "Voxel cube dimensions:,";
+        mFilterString += QString("%1 %2 %3\n")
+                .arg(dimensions[0])
+                .arg(dimensions[1])
+                .arg(dimensions[2]);
+    }
+    if (mode == "prePost" || mode == "prePostVoxel")
+    {
+        mFilterString += "Presynaptic selection:,";
+        mFilterString += preFilter;
+        mFilterString += "\n";
+        mFilterString += "Postsynaptic selection:,";
+        mFilterString += postFilter;
+        mFilterString += "\n";
+    }
+    mFilterString += advancedSettings;
+    return mFilterString;
 }

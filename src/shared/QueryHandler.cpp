@@ -38,7 +38,7 @@ QueryHandler::processQuery(const QJsonObject& config,
     mQuery = query;
     mUpdateCount = 0;
     mCompleted = false;
-    mAdvancedSettings = Util::getAdvancedSettingsString(query);
+    mResultFileHeader = Util::getResultFileHeader(query);
     mNetworkNumber = mQuery["networkNumber"].toInt();
     mNetworkSelection = mQuery["networkSelection"].toObject();
     QString datasetName = Util::getShortName(mNetworkSelection, mNetworkNumber);
@@ -94,9 +94,7 @@ QueryHandler::reportComplete(NetworkStatistic* stat)
     mUpdateCount++;
 
     QString downloadFile = "results_" + mQueryId + ".csv";
-    QString downloadFilePath = stat->createCSVFile(downloadFile, "", "", getQueryResultDir(), "");
-
-    qDebug() << "DOWNLOAD" << downloadFilePath;
+    QString downloadFilePath = stat->createCSVFile(downloadFile, mResultFileHeader, getQueryResultDir());
 
     QJsonObject result;
     if (uploadToS3(downloadFile, downloadFilePath) == 0)
@@ -283,3 +281,4 @@ QueryHandler::stallUpdate(double progress)
         return true;
     }
 }
+

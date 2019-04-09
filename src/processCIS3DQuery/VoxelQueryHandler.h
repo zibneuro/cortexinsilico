@@ -60,7 +60,6 @@ private:
   std::map<int, float> mSynapsesPerVoxel;
   Statistics mSynapsesPerConnection;
   std::map<int, std::vector<float>> mSynapsesPerConnectionOccurrences;
-  QString mFilterString;
 
 
 };

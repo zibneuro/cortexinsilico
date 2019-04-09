@@ -82,10 +82,8 @@ NetworkStatistic::createJson()
 */
 QString
 NetworkStatistic::createCSVFile(const QString& key,
-                                const QString& presynSelectionText,
-                                const QString& postsynSelectionText,
-                                const QString& tmpDir,
-                                const QString advancedSettings) const
+                                const QString& fileHeader,
+                                const QString& tmpDir) const
 {
     QString filename = QString("%1/%2.csv").arg(tmpDir).arg(key);
     QFile csv(filename);
@@ -97,52 +95,7 @@ NetworkStatistic::createCSVFile(const QString& key,
     const QChar sep(',');
 
     QTextStream out(&csv);
-    out << "Presynaptic selection:" << sep << "\"" << presynSelectionText << "\""
-        << "\n";
-    out << "Postsynaptic selection:" << sep << "\"" << postsynSelectionText << "\""
-        << "\n";
-    out << advancedSettings;
-    out << "\n";
-
-    doCreateCSV(out, sep);
-
-    return filename;
-}
-
-/**
-    Creates a csv-file of the statistic.
-    @param key The S3 key under which the csv-file is stored.
-    @param motifASelectionText Textual description of the first filter.
-    @param motifBSelectionText Textual description of the second filter.
-    @param motifCSelectionText Textual description of the third filter.
-    @param tmpDir Folder where the file is initially created.
-    @returns The file name.
-*/
-QString
-NetworkStatistic::createCSVFile(const QString& key,
-                                const QString& motifASelectionText,
-                                const QString& motifBSelectionText,
-                                const QString& motifCSelectionText,
-                                const QString& tmpDir,
-                                const QString advancedSettings) const
-{
-    QString filename = QString("%1/%2.csv").arg(tmpDir).arg(key);
-    QFile csv(filename);
-    if (!csv.open(QIODevice::WriteOnly))
-    {
-        QString msg = QString("Cannot open file for saving csv: %1").arg(filename);
-        throw std::runtime_error(qPrintable(msg));
-    }
-    const QChar sep(',');
-
-    QTextStream out(&csv);
-    out << "Neuron selection A:" << sep << "\"" << motifASelectionText << "\""
-        << "\n";
-    out << "Neuron selection B:" << sep << "\"" << motifBSelectionText << "\""
-        << "\n";
-    out << "Neuron selection C:" << sep << "\"" << motifCSelectionText << "\""
-        << "\n";
-    out << advancedSettings;
+    out << fileHeader;
 
     doCreateCSV(out, sep);
 

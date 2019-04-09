@@ -41,6 +41,7 @@ protected:
   QJsonObject getAbortedStatus(QString message);
   QJsonObject getStatus(double progress);
   bool stallUpdate(double progress);
+  QString createHeader();
 
   QJsonObject mConfig;
   QString mQueryId;
@@ -51,7 +52,7 @@ protected:
   bool mCompleted;
   QJsonObject mNetworkSelection;
   int mNetworkNumber;
-  QString mAdvancedSettings;
+  QString mResultFileHeader;
   QJsonObject mFormulas;
   QJsonObject mSampleSettings;
   int mSampleNumber;

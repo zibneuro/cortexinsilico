@@ -149,7 +149,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         const QChar sep(',');
 
         QTextStream out(&csv);
-        out << mFilterString;
+        out << mResultFileHeader;
         out << "\n";
         out << "\n";
 
@@ -246,9 +246,6 @@ VoxelQueryHandler::doProcessQuery()
              << voxelOrigin[2] << voxelDimensions[0] << voxelDimensions[1]
              << voxelDimensions[2];
 
-    QString advancedSettings =
-        Util::getAdvancedSettingsString(mQuery, true, false);
-
     // ################# DETERMINE NEURON IDS #################
 
     CIS3D::Structure postTarget = CIS3D::DEND;
@@ -262,8 +259,6 @@ VoxelQueryHandler::doProcessQuery()
         mNetwork.setDataRoot(mDataRoot);
         mNetwork.loadFilesForQuery();
         mSelection.setFullModel(mNetwork, false);
-        // setFilterString(mode, "", "", advancedSettings, voxelOrigin,
-        //                voxelDimensions);
         int samplingFactor = -1;
         int randomSeed = -1;
         if (Util::isSampled(mNetworkSelection, mNetworkNumber, samplingFactor, randomSeed))
@@ -564,48 +559,6 @@ VoxelQueryHandler::initSelection()
 {
     return false;
 };
-
-void
-VoxelQueryHandler::setFilterString(QString mode, QString preFilter, QString postFilter, QString advancedSettings, std::vector<double> origin, std::vector<int> dimensions)
-{
-    const QChar sep(',');
-    mFilterString += "Selection:\n";
-    mFilterString += "Mode:,";
-    if (mode == "voxel")
-    {
-        mFilterString += "Explicit voxel selection\n";
-    }
-    else if (mode == "prePostVoxel")
-    {
-        mFilterString += "Explicit voxel selection with neuron filter\n";
-    }
-    else
-    {
-        mFilterString += "Implicit voxel selection with neuron filter\n";
-    }
-
-    if (mode == "voxel" || mode == "prePostVoxel")
-    {
-        mFilterString += "Voxel cube origin:,";
-        mFilterString +=
-            QString("%1 %2 %3\n").arg(origin[0]).arg(origin[1]).arg(origin[2]);
-        mFilterString += "Voxel cube dimensions:,";
-        mFilterString += QString("%1 %2 %3\n")
-                             .arg(dimensions[0])
-                             .arg(dimensions[1])
-                             .arg(dimensions[2]);
-    }
-    if (mode == "prePost" || mode == "prePostVoxel")
-    {
-        mFilterString += "Presynaptic selection:,";
-        mFilterString += preFilter;
-        mFilterString += "\n";
-        mFilterString += "Postsynaptic selection:,";
-        mFilterString += postFilter;
-        mFilterString += "\n";
-    }
-    mFilterString += advancedSettings;
-}
 
 QString
 VoxelQueryHandler::getResultKey()

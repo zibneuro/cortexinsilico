@@ -113,7 +113,7 @@ namespace Util
 
     void getMinMedMax(std::vector<float> in, float& min, float& med, float& max);
 
-    QString getAdvancedSettingsString(const QJsonObject& spec, bool hasSynapseDistribution = false, bool hasConnectionProbability = true);
+    QString getResultFileHeader(const QJsonObject& spec);
 
     CIS3D::Structure getPostsynapticTarget(QString selectionString);
 
@@ -143,7 +143,15 @@ namespace Util
 
     QString getShortName(QJsonObject& networkSpec, int number);
 
-    QString writeNetworkDescription(QJsonObject& networkSelection, int number, QJsonObject& preSelection, QJsonObject& postSelection);
+    QString writeNetworkDescription(QJsonObject& networkSelection, int number);
+
+    QString writeFilterConditions(QJsonArray conditions);
+
+    QString writeSelectionDescription(QJsonObject& selection, bool isSlice);
+
+    QString writeCellSelectionDescription(QJsonObject& cellSelection, bool isSlice);
+
+    QString writeTissueDepthDescription(QJsonObject& tissueDepth);
 
     void getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed);
 
@@ -151,6 +159,9 @@ namespace Util
 
     QString getDatasetPath(const QString& datasetShortName,
                            const QJsonObject& config);
+
+    QString setFilterString(QString mode, QString preFilter, QString postFilter, QString advancedSettings, std::vector<double> origin, std::vector<int> dimensions);
+
 
 } // namespace Util
 

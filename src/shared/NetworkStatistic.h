@@ -71,26 +71,8 @@ public:
         @returns The file name.
     */
     virtual QString createCSVFile(const QString& key,
-                                  const QString& presynSelectionText,
-                                  const QString& postsynSelectionText,
-                                  const QString& tmpDir,
-                                  const QString advancedSettings) const;
-
-    /**
-        Creates a csv-file of the statistic.
-        @param key The S3 key under which the csv-file is stored.
-        @param motifASelectionText Textual description of the first filter.
-        @param motifBSelectionText Textual description of the second filter.
-        @param motifCSelectionText Textual description of the third filter.
-        @param tmpDir Folder where the file is initially created.
-        @returns The file name.
-    */
-    virtual QString createCSVFile(const QString& key,
-                                  const QString& motifASelectionText,
-                                  const QString& motifBSelectionText,
-                                  const QString& motifCSelectionText,
-                                  const QString& tmpDir,
-                                  const QString advancedSettings) const;
+                                  const QString& fileHeader,
+                                  const QString& tmpDir) const;
 
     /**
         Retrieves the total number of connections to be analysed.
