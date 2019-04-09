@@ -151,6 +151,10 @@ namespace Util
 
     QString writeCellSelectionDescription(QJsonObject& cellSelection, bool isSlice);
 
+    QString writeFormulaDescription(QJsonObject& formula);
+
+    QString writeFormulaSelectionDescription(QJsonObject& formulaSelection, int number);
+
     QString writeTissueDepthDescription(QJsonObject& tissueDepth);
 
     void getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed);
@@ -160,7 +164,9 @@ namespace Util
     QString getDatasetPath(const QString& datasetShortName,
                            const QJsonObject& config);
 
-    QString setFilterString(QString mode, QString preFilter, QString postFilter, QString advancedSettings, std::vector<double> origin, std::vector<int> dimensions);
+    QString writeSampleSelectionDescription(QJsonObject& sampleSelection, int network);
+
+    QString writeVoxelSelectionDescription(QJsonObject& voxelSelection);
 
 
 } // namespace Util

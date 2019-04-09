@@ -668,15 +668,44 @@ Util::getMinMedMax(std::vector<float> in, float& min, float& med, float& max)
     }
 }
 
+QString Util::writeFormulaDescription(QJsonObject& formula){
+    QString s = "";
+    if(formula["synapseDistributionFormulaEnabled"].toBool()){
+        s += "Synapse probability distribution formula:,";
+        s = s + "\"" + formula["synapseDistributionFormula"].toString()+ "\"";
+    }
+    if(formula["connectionProbabilityFormulaEnabled"].toBool()){
+        s += "Neuron-to-neuron connection probability formula:,";
+        if(formula["connectionProbabilityMode"].toString() == "derive"){
+            s = s +  "\"" + "p(i)=1-P_i(0)" + "\"";
+        } else {
+            s = s +  "\"" + formula["connectionProbabilityFormula"].toString() + "\"";
+        }
+    }
+
+    s += "\n";
+    return s;
+}
+
+QString Util::writeFormulaSelectionDescription(QJsonObject& formulaSelection, int number){
+    QJsonObject formulas;
+    if(number == 1){
+        formulas = formulaSelection["formulasNetwork1"].toObject();
+    }
+    else {
+        formulas = formulaSelection["formulasNetwork2"].toObject();
+    }
+    return writeFormulaDescription(formulas);
+}
+
 QString
 Util::getResultFileHeader(const QJsonObject& query)
 {
     int networkNumber = query["networkNumber"].toInt();
     QString queryType = query["queryType"].toString();
-    //bool isVoxel = queryType == "voxel";
-
-    //bool hasSynapseDistribution = isVoxel;
-    //bool hasConnectionProbability = !isVoxel;
+    bool isVoxel = queryType == "voxel";
+    bool isTriplet = queryType == "triplet";
+    bool isInDegree = queryType == "inDegree";
 
     QJsonObject networkSelection = query["networkSelection"].toObject();
 
@@ -693,38 +722,27 @@ Util::getResultFileHeader(const QJsonObject& query)
         s += writeNetworkDescription(networkSelection, oppositeNumber);
     }
 
+    // ######### CELL SELECTION #########
     QJsonObject cellSelection = query["cellSelection"].toObject();
     double sliceRef;
     bool showSlice = isSlice(networkSelection, networkNumber, sliceRef) || matchCells(networkSelection, networkNumber);
     s+= writeCellSelectionDescription(cellSelection, showSlice);
 
+    if(isVoxel){
+        QJsonObject voxelSelection = query["voxelSelection"].toObject();
+        s += writeVoxelSelectionDescription(voxelSelection);
+    }
+
+    if(isTriplet || isInDegree){
+        QJsonObject sampleSelection = query["sampleSelection"].toObject();
+        s +=  writeSampleSelectionDescription(sampleSelection, networkNumber);
+    }
+
     // ######### WRITE FORMULA DESCRIPTION #########
+    QJsonObject formulaSelection = query["formulaSelection"].toObject();
+    s += writeFormulaSelectionDescription(formulaSelection, networkNumber);
 
-    /*
-    QJsonObject formulaSelection = query["formulasNetwork1"].toObject();
-    QJsonObject formulas = formulaSelection["formulasNetwork1"].toObject();
-
-    QString synapseDistributionFormula = formulas["synapseDistributionFormula"].toString();
-    bool useCustomConnectionProbabilityFormula = formulas["connectionProbabilityMode"].toString() == "formula";
-    QString connectionProbabilityFormula = formulas["connectionProbabilityFormula"].toString();
-
-    if (hasSynapseDistribution)
-    {
-        s += "Synapse distribution formula,\"" + synapseDistributionFormula + "\"\n";
-    }
-    if (hasConnectionProbability)
-    {
-        s += "Connection probability formula,";
-        if (useCustomConnectionProbabilityFormula)
-        {
-            s += "\"" + connectionProbabilityFormula + "\"" + "\n";
-        }
-        else
-        {
-            s += "\"1-P_i(0)\"\n";
-        }
-    }
-    */
+    s+="\n\n";
 
     return s;
 }
@@ -1125,46 +1143,48 @@ Util::getDatasetPath(const QString& datasetShortName,
     throw std::runtime_error("QueryHelpers::getDatasetPath: no path found for dataset shortName");
 }
 
-QString
-Util::setFilterString(QString mode, QString preFilter, QString postFilter, QString advancedSettings, std::vector<double> origin, std::vector<int> dimensions)
-{
-    QString mFilterString;
-    const QChar sep(',');
-    mFilterString += "Selection:\n";
-    mFilterString += "Mode:,";
+QString Util::writeVoxelSelectionDescription(QJsonObject& voxelSelection){
+    QJsonObject filter = voxelSelection["filter"].toObject();
+    QString mode = filter["mode"].toString();
+    QString s = "";
+
+    s += "Mode:,";
     if (mode == "voxel")
     {
-        mFilterString += "Explicit voxel selection\n";
+        s += "Explicit voxel selection\n";
     }
     else if (mode == "prePostVoxel")
     {
-        mFilterString += "Explicit voxel selection with neuron filter\n";
+        s += "Explicit voxel selection with neuron filter\n";
     }
     else
     {
-        mFilterString += "Implicit voxel selection with neuron filter\n";
+        s += "Implicit voxel selection with neuron filter\n";
     }
 
     if (mode == "voxel" || mode == "prePostVoxel")
     {
-        mFilterString += "Voxel cube origin:,";
-        mFilterString +=
-                QString("%1 %2 %3\n").arg(origin[0]).arg(origin[1]).arg(origin[2]);
-        mFilterString += "Voxel cube dimensions:,";
-        mFilterString += QString("%1 %2 %3\n")
-                .arg(dimensions[0])
-                .arg(dimensions[1])
-                .arg(dimensions[2]);
+        s += "Voxel cube origin:,";
+        s +=
+                QString("%1 %2 %3\n").arg(filter["originX"].toDouble()).arg(filter["originY"].toDouble()).arg(filter["originZ"].toDouble());
+        s += "Voxel cube dimensions:,";
+        s += QString("%1 %2 %3\n")
+                .arg(filter["dimX"].toDouble())
+                .arg(filter["dimY"].toDouble())
+                .arg(filter["dimZ"].toDouble());
     }
-    if (mode == "prePost" || mode == "prePostVoxel")
-    {
-        mFilterString += "Presynaptic selection:,";
-        mFilterString += preFilter;
-        mFilterString += "\n";
-        mFilterString += "Postsynaptic selection:,";
-        mFilterString += postFilter;
-        mFilterString += "\n";
-    }
-    mFilterString += advancedSettings;
-    return mFilterString;
+
+    return s;
+}
+
+QString Util::writeSampleSelectionDescription(QJsonObject& sampleSelection, int network){
+    QString description = sampleSelection["description"].toString();
+    QString s = "";
+
+    int nSamples = network == 1 ? sampleSelection["samplesNetwork1"].toInt() : sampleSelection["samplesNetwork2"].toInt();
+    int seed = network == 1 ? sampleSelection["randomSeedNetwork1"].toInt() : sampleSelection["randomSeedNetwork2"].toInt();
+    s = s + description +":," + QString::number(nSamples) + "\n";
+    s = s +  "Random seed:" +"," + QString::number(seed) + "\n";
+
+    return s;
 }

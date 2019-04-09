@@ -150,8 +150,6 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
         QTextStream out(&csv);
         out << mResultFileHeader;
-        out << "\n";
-        out << "\n";
 
         out << "Voxels meeting spatial filter condition:" << sep
             << (int)mSelectedVoxels.size() << "\n";
