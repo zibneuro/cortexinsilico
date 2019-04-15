@@ -113,20 +113,35 @@ getLaminarLocationsAsJson()
 {
     QJsonArray arr;
 
-    QJsonObject supraObj;
-    supraObj.insert("ID", int(CIS3D::SUPRAGRANULAR));
-    supraObj.insert("name", "Supragranular");
-    arr.append(supraObj);
+    QJsonObject l1;
+    l1.insert("ID", int(CIS3D::LAYER1));
+    l1.insert("name", "I");
+    arr.append(l1);
 
-    QJsonObject granularObj;
-    granularObj.insert("ID", int(CIS3D::GRANULAR));
-    granularObj.insert("name", "Granular");
-    arr.append(granularObj);
+    QJsonObject l2;
+    l2.insert("ID", int(CIS3D::LAYER2));
+    l2.insert("name", "II");
+    arr.append(l2);
 
-    QJsonObject infraObj;
-    infraObj.insert("ID", int(CIS3D::INFRAGRANULAR));
-    infraObj.insert("name", "Infragranular");
-    arr.append(infraObj);
+    QJsonObject l3;
+    l3.insert("ID", int(CIS3D::LAYER3));
+    l3.insert("name", "III");
+    arr.append(l3);
+
+    QJsonObject l4;
+    l4.insert("ID", int(CIS3D::LAYER4));
+    l4.insert("name", "IV");
+    arr.append(l4);
+
+    QJsonObject l5;
+    l5.insert("ID", int(CIS3D::LAYER5));
+    l5.insert("name", "V");
+    arr.append(l5);
+
+    QJsonObject l6;
+    l6.insert("ID", int(CIS3D::LAYER6));
+    l6.insert("name", "VI");
+    arr.append(l6);
 
     return arr;
 }
@@ -152,6 +167,8 @@ getPostsynapticTargetsAsJson()
 void
 DataUploadHandler::uploadNetworkData(const QJsonObject& config)
 {
+    qDebug() << "UPLOAD NW DATA";
+
     mConfig = config;
 
     const QString baseUrl = mConfig["METEOR_URL_CIS3D"].toString();
