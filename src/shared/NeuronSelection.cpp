@@ -283,11 +283,31 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
     }*/
 }
 
+IdList getExplicitIds(const QJsonObject &spec, QString key){
+    IdList ids;
+    if(spec[key] != QJsonValue::Undefined){
+      QJsonArray jsonIds = spec[key].toArray();
+      for (int i=0; i<jsonIds.size(); i++) {
+        ids.append(jsonIds[i].toInt());
+      }
+    }
+    return ids;
+}
+
 void NeuronSelection::setInnervationSelection(const QJsonObject &spec,
                                               const NetworkProps &networkProps,
                                               int samplingFactor, int seed) {
-  mSelectionA.clear();
-  mSelectionB.clear();
+   mSelectionA.clear();
+   mSelectionB.clear();
+
+   IdList explicitA = getExplicitIds(spec, "PRE_NEURON_IDS");
+   IdList explicitB = getExplicitIds(spec, "POST_NEURON_IDS");
+   if(explicitA.size() > 0 && explicitB.size() > 0){
+       mSelectionA.append(explicitA);
+       mSelectionB.append(explicitB);
+       return;
+   }
+
   IdList pre = UtilIO::getPreSynapticNeurons(spec, networkProps);
   IdList post = UtilIO::getPostSynapticNeuronIds(spec, networkProps);
   if (samplingFactor == 1) {
