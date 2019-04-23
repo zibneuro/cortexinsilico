@@ -64,7 +64,13 @@ namespace CIS3D
         UNKNOWN_LL = 0,
         INFRAGRANULAR = 1,
         GRANULAR = 2,
-        SUPRAGRANULAR = 3
+        SUPRAGRANULAR = 3,
+        LAYER1 = 4,
+        LAYER2 = 5,
+        LAYER3 = 6,
+        LAYER4 = 7,
+        LAYER5 = 8,
+        LAYER6 = 9,
     };
 
     /**
