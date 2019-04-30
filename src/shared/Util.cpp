@@ -291,6 +291,30 @@ Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
             {
                 filter.laminarLocations.append(CIS3D::SUPRAGRANULAR);
             }
+            else if (v == "I")
+            {
+                filter.laminarLocations.append(CIS3D::LAYER1);
+            }
+            else if (v == "II")
+            {
+                filter.laminarLocations.append(CIS3D::LAYER2);
+            }
+            else if (v == "III")
+            {
+                filter.laminarLocations.append(CIS3D::LAYER3);
+            }
+            else if (v == "IV")
+            {
+                filter.laminarLocations.append(CIS3D::LAYER4);
+            }
+            else if (v == "V")
+            {
+                filter.laminarLocations.append(CIS3D::LAYER5);
+            }
+            else if (v == "VI")
+            {
+                filter.laminarLocations.append(CIS3D::LAYER6);
+            }
             else
             {
                 const QString msg =

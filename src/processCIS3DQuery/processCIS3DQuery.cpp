@@ -26,6 +26,7 @@ main(int argc, char* argv[])
 
     const QString specFile = app.arguments().at(1);
     const QJsonObject config = UtilIO::parseSpecFile(specFile);
+
     const QString operation = app.arguments().at(2);
     const QString queryId = app.arguments().at(3);
 
