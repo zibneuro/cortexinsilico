@@ -6,6 +6,7 @@
 #include "Typedefs.h"
 #include "NeuronSelection.h"
 #include <QTextStream>
+#include <set>
 
 class QString;
 class QJsonObject;
@@ -81,6 +82,13 @@ int getPreNeuronIdFromFile(const QString& fileName);
     @throws runtime_error if ID cannot be extracted from file name.
 */
 int getPostNeuronIdFromFile(const QString& fileName);
+
+/**
+ * @brief Retrieves explicitly defined voxel IDs from the selection specification.
+ * @param spec The selection specification.
+ * @return Set of voxel IDs.
+ */
+std::set<int> getVoxelWhitelist(const QJsonObject& spec);
 
 /**
     Determines whether the specfied file mame represents excitatory

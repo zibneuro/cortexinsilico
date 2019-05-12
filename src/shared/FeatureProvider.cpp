@@ -172,6 +172,12 @@ FeatureProvider::preprocessFeatures(NetworkProps& networkProps,
             voxel.insert(it->first);
         }
     }
+
+    std::set<int> voxelWhitelist = selection.getVoxelWhitelist();
+    if(!voxelWhitelist.empty()){
+        intersectSets(voxel, voxelWhitelist);
+    }
+
     std::set<int> voxel_unionPre = createUnion(neuron_pre);
     intersectSets(voxel, voxel_unionPre);
     std::set<int> voxel_unionPostExc = createUnion(neuron_postExc);

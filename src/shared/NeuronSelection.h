@@ -125,6 +125,12 @@ class NeuronSelection {
   std::map<int, int> getMultiplicities(const NetworkProps& network,
                                        QString selectionIndex);
 
+  /**
+   * @brief Returns a set of explicitly selected voxels (specification parameter VOXEL_WHITELIST).
+   * @return The selected voxels. Empty by default.
+   */
+  std::set<int> getVoxelWhitelist();
+
  private:
   static bool inSliceBand(double somaX, double min, double max);
 
@@ -177,6 +183,7 @@ class NeuronSelection {
   QString mNetworkName;
   QString mDataRoot;
   QString mMappingDir;
+  std::set<int> mVoxelWhitelist;
 };
 
 #endif

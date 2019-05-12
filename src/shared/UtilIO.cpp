@@ -404,6 +404,23 @@ UtilIO::getPostNeuronIdFromFile(const QString& fileName)
 }
 
 /**
+ * @brief Retrieves explicitly defined voxel IDs from the selection specification.
+ * @param spec The selection specification.
+ * @return Set of voxel IDs.
+ */
+std::set<int> UtilIO::getVoxelWhitelist(const QJsonObject& spec){
+    std::set<int> whitelist;
+    if(spec["VOXEL_WHITELIST"] != QJsonValue::Undefined){
+        const QJsonArray voxelIndices = spec["VOXEL_WHITELIST"].toArray();
+        for(int i=0; i < voxelIndices.size(); i++){
+            whitelist.insert(voxelIndices.at(i).toInt());
+        }
+    }
+    return whitelist;
+}
+
+
+/**
     Determines whether the specfied file mame represents excitatory
     or inhibitory postsynaptic data.
     @param file A PST_inhibitoryPre_*.dat OR PST_excitatoryPre_*.dat file name.

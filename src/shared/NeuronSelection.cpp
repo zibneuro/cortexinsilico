@@ -176,6 +176,7 @@ void NeuronSelection::setFullModel(const NetworkProps &networkProps,
       mSelectionB.append(postNeurons[i]);
     }
   }
+
 }
 
 void NeuronSelection::filterPiaSoma(IdList &neuronIds, QVector<float> range,
@@ -297,8 +298,9 @@ IdList getExplicitIds(const QJsonObject &spec, QString key){
 void NeuronSelection::setInnervationSelection(const QJsonObject &spec,
                                               const NetworkProps &networkProps,
                                               int samplingFactor, int seed) {
-   mSelectionA.clear();
-   mSelectionB.clear();
+    mVoxelWhitelist = UtilIO::getVoxelWhitelist(spec);
+
+    qDebug() << "whitelist size" << mVoxelWhitelist.size();
 
    IdList explicitA = getExplicitIds(spec, "PRE_NEURON_IDS");
    IdList explicitB = getExplicitIds(spec, "POST_NEURON_IDS");
@@ -537,6 +539,14 @@ bool NeuronSelection::isSelectionValid(QJsonObject &selection, QString index,
       return true;
     }
   }
+}
+
+/**
+ * @brief Returns a set of explicitly selected voxels (specification parameter VOXEL_WHITELIST).
+ * @return The selected voxels. Empty by default.
+ */
+std::set<int> NeuronSelection::getVoxelWhitelist(){
+    return mVoxelWhitelist;
 }
 
 bool NeuronSelection::isValid(QJsonObject &query, QString &errorMessage) {
