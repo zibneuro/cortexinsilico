@@ -34,6 +34,8 @@ createJsonResult(const IdsPerCellTypeRegion& idsPerCellTypeRegion,
     QJsonArray entries;
     int total = 0;
 
+    std::vector<SelectionQueryHandler::CellProps> cellProps;
+
     for (IdsPerCellTypeRegion::const_iterator it = idsPerCellTypeRegion.constBegin(); it != idsPerCellTypeRegion.constEnd(); ++it)
     {
         const CellTypeRegion ctr = it.key();
@@ -60,13 +62,25 @@ createJsonResult(const IdsPerCellTypeRegion& idsPerCellTypeRegion,
             region = QString("%1 Barreloid").arg(parts[0]);
         }
 
-        QJsonObject obj;
-        obj["cellType"] = cellType;
-        obj["column"] = region;
-        obj["count"] = numNeurons;
+        SelectionQueryHandler::CellProps cp;
 
-        entries.append(obj);
+        cp.region = region;
+        cp.cellType = cellType;
+        cp.numNeurons = numNeurons;
+
+        cellProps.push_back(cp);
+
         total += numNeurons;
+    }
+
+    std::sort(cellProps.begin(), cellProps.end());
+
+    for(auto it = cellProps.begin(); it != cellProps.end(); it++){
+        QJsonObject obj;
+        obj["cellType"] = it->cellType;
+        obj["column"] = it->region;
+        obj["count"] = it->numNeurons;
+        entries.append(obj);
     }
 
     QJsonObject selection;
