@@ -13,6 +13,8 @@ TEMPLATE = app
 
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
+QMAKE_CXXFLAGS += -bigobj
+
 
 INCLUDEPATH += ../shared
 
