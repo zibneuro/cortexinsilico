@@ -12,14 +12,14 @@ class CacheEntry
 public:
     CacheEntry(int preId);
     void load(QString filePath);
-    float getValue(int postId);
+    float getValue(int postId, unsigned long long currentHit);
     int getPreId();
-    long getHits() const;
+    unsigned long long getHits() const;
 
 private:
     int mPreId;
     std::map<int, float> mInnervation;
-    long mHits;
+    unsigned long long mHits;
 };
 
 /**
@@ -69,6 +69,7 @@ private:
     std::map<int, CacheEntry*> mInnervationBasal;
     std::map<int, CacheEntry*> mInnervationApical;
     std::set<int> mPreIds;
+    unsigned long long mCurrentHit;
 };
 
 #endif // INNERVATIONMATRIX_H

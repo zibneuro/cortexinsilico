@@ -39,9 +39,9 @@ CacheEntry::load(QString filePath)
 }
 
 float
-CacheEntry::getValue(int postId)
+CacheEntry::getValue(int postId, unsigned long long currentHit)
 {
-    mHits++;
+    mHits = currentHit;
     return mInnervation[postId];
 }
 
@@ -49,7 +49,7 @@ int CacheEntry::getPreId(){
     return mPreId;
 }
 
-long
+unsigned long long
 CacheEntry::getHits() const
 {
     return mHits;
@@ -62,7 +62,8 @@ CacheEntry::getHits() const
 InnervationMatrix::InnervationMatrix(const NetworkProps& networkProps)
     : mNetwork(networkProps)
     , mCacheLimit(100)
-    , mRandomGenerator(-1){};
+    , mRandomGenerator(-1)
+    , mCurrentHit(0){};
 
 /**
     Destructor.
@@ -108,9 +109,10 @@ InnervationMatrix::getValue(int preId, int postId, int selectionIndex, CIS3D::St
 float
 InnervationMatrix::getValue(int preId, int postId, CIS3D::Structure target)
 {
+    mCurrentHit++;
     const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
     CacheEntry* entry = getEntry(mappedPreId, target);
-    return entry->getValue(postId);
+    return entry->getValue(postId, mCurrentHit);
 }
 
 void
@@ -200,15 +202,19 @@ void
 InnervationMatrix::pruneCache(std::map<int, CacheEntry*>& cache)
 {
     //qDebug() << "Prune" << cache.size();
-    std::map<long, int> hitsPreId;
+    std::map<unsigned long long, int> hitsPreId;
     for(auto it = cache.begin(); it != cache.end(); it++){
         hitsPreId[it->second->getHits()] = it->first;
     }
 
-    int toDelete = hitsPreId.begin()->second;
-    //qDebug() << "Delete" << toDelete << hitsPreId.begin()->first;
-    delete cache[toDelete];
-    cache.erase(toDelete);
-    //qDebug() << "After delete" << cache.size();
-
+    int i = 0;
+    for(auto it = hitsPreId.begin(); it != hitsPreId.end(); it++){
+        if(i > 0.5 * static_cast<float>(cache.size())){
+            break;
+        }
+        int toDelete = it->second;
+        delete cache[toDelete];
+        cache.erase(toDelete);
+        i++;
+    }
 }
