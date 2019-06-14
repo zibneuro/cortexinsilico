@@ -65,6 +65,8 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
     mPostNeuronId.push_back(postIds[i]);
     mValuesAC.push_back(0);
     mValuesBC.push_back(0);
+    mValuesACProb.push_back(0);
+    mValuesBCProb.push_back(0);
   }
   const IdList preIdListA = selection.SelectionA();
   const IdList preIdListB = selection.SelectionB();
@@ -124,8 +126,10 @@ void InDegreeStatistic::calculateStatistics() {
 void InDegreeStatistic::calculateCorrelation() {
   if (mValuesAC.size() < 2) {
     mCorrelation = 0;
+    mCorrelationProb = 0;
     return;
   }
+  mCorrelationProb = 0;
 
   double stdAC = mStatisticsAC.getStandardDeviation();
   double stdBC = mStatisticsBC.getStandardDeviation();
@@ -161,7 +165,10 @@ void InDegreeStatistic::doCreateJson(QJsonObject &obj) const {
              Util::createJsonStatistic(mStatisticsBC));
   obj.insert("innervationValuesAC", Util::createJsonArray(mValuesAC));
   obj.insert("innervationValuesBC", Util::createJsonArray(mValuesBC));
+  obj.insert("probabilityValuesAC", Util::createJsonArray(mValuesACProb));
+  obj.insert("probabilityValuesBC", Util::createJsonArray(mValuesBCProb));
   obj.insert("correlation", mCorrelation);
+  obj.insert("correlationProbability", mCorrelationProb);
 }
 
 void InDegreeStatistic::doCreateCSV(QTextStream &out, const QChar sep) const {

@@ -19,6 +19,8 @@ public:
     float clampProbability(float probability);
 
 private:
+    bool mUseCustomSynapseDistributionFormula;
+    std::string mDefaultSynapseDistributionFormula;
     std::string mSynapseDistributionFormula;
     bool mUseCustomConnectionProbabilityFormula;
     std::string mConnectionProbabilityFormula;

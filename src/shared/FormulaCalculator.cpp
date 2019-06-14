@@ -8,6 +8,8 @@ FormulaCalculator::FormulaCalculator()
 
 FormulaCalculator::FormulaCalculator(QJsonObject formulas)
 {
+    mUseCustomSynapseDistributionFormula = formulas["synapseDistributionMode"].toString() == "custom";
+    mDefaultSynapseDistributionFormula = "(DSO^k)/fact(k)*exp(-DSO)";
     mSynapseDistributionFormula = formulas["synapseDistributionFormula"].toString().toStdString();
     mUseCustomConnectionProbabilityFormula = formulas["connectionProbabilityMode"].toString() == "formula";
     mConnectionProbabilityFormula = formulas["connectionProbabilityFormula"].toString().toStdString();
@@ -37,7 +39,8 @@ bool
 FormulaCalculator::init()
 {
     bool valid = true;
-    mSymbolTable.add_variable("i", mCurrentValue_i);
+    mSymbolTable.add_variable("dso", mCurrentValue_i);
+    mSymbolTable.add_variable("DSO", mCurrentValue_i);
     mSymbolTable.add_variable("k", mCurrentValue_k);
     mSymbolTable.add_function("fact", factorial);
     mSymbolTable.add_function("nCk", nCk);
@@ -45,7 +48,14 @@ FormulaCalculator::init()
     mSynapseExpression.register_symbol_table(mSymbolTable);
     mConnectionProbabilityExpression.register_symbol_table(mSymbolTable);
     parser_t parser;
-    valid &= parser.compile(mSynapseDistributionFormula, mSynapseExpression);
+    if (mUseCustomSynapseDistributionFormula)
+    {
+        valid &= parser.compile(mSynapseDistributionFormula, mSynapseExpression);
+    }
+    else 
+    {
+        valid &= parser.compile(mDefaultSynapseDistributionFormula, mSynapseExpression);
+    }
     if (mUseCustomConnectionProbabilityFormula)
     {
         valid &= parser.compile(mConnectionProbabilityFormula, mConnectionProbabilityExpression);
