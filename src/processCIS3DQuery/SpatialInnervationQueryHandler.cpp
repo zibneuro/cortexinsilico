@@ -105,7 +105,7 @@ void SpatialInnervationQueryHandler::doProcessQuery() {
       throw std::runtime_error(qPrintable(msg));
     }
     QTextStream outStream(&tempFile);
-    outStream << "voxel_id "
+    outStream << "subvolume_id "
               << "postneuron_id "
               << "overlap\n";
     QString line = inStream.readLine();
@@ -211,7 +211,7 @@ void SpatialInnervationQueryHandler::doProcessQuery() {
       line = in.readLine();
     }
 
-    QString voxelFileName = QDir(mTempFolder).filePath("voxel_position");
+    QString voxelFileName = QDir(mTempFolder).filePath("subvolume_position");
     fileNames.append(voxelFileName);
     QFile voxelFile(voxelFileName);
     if (!voxelFile.open(QIODevice::WriteOnly)) {
@@ -220,7 +220,7 @@ void SpatialInnervationQueryHandler::doProcessQuery() {
       throw std::runtime_error(qPrintable(msg));
     }
     QTextStream stream(&voxelFile);
-    stream << "voxel_id x y z\n";
+    stream << "subvolume_id x y z\n";
     for (unsigned int i = 0; i < voxelIds.size(); i++) {
       // qDebug() << i;
       stream << voxelIds[i] << " " << x[i] << " " << y[i] << " " << z[i]

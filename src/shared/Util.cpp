@@ -8,6 +8,7 @@
 #include "Histogram.h"
 #include "Typedefs.h"
 #include <cmath>
+#include <math.h>       
 #include <iostream>
 
 /**
@@ -701,7 +702,7 @@ QString Util::writeFormulaDescription(QJsonObject& formula){
     if(formula["connectionProbabilityFormulaEnabled"].toBool()){
         s += "Neuron-to-neuron connection probability formula:,";
         if(formula["connectionProbabilityMode"].toString() == "derive"){
-            s = s +  "\"" + "p(i)=1-P_i(0)" + "\"";
+            s = s +  "\"" + "p(DSO)=1-P_DSO(0)" + "\"";
         } else {
             s = s +  "\"" + formula["connectionProbabilityFormula"].toString() + "\"";
         }
@@ -742,20 +743,20 @@ Util::getResultFileHeader(const QJsonObject& query)
 
     if (matchCells(networkSelection, networkNumber))
     {
-        s += "Match cells to network:\n";
-        s += writeNetworkDescription(networkSelection, oppositeNumber);
+        s += "   match cells to " + writeNetworkDescription(networkSelection, oppositeNumber, false);                
     }
 
     // ######### CELL SELECTION #########
-    QJsonObject cellSelection = query["cellSelection"].toObject();
-    double sliceRef;
-    bool showSlice = isSlice(networkSelection, networkNumber, sliceRef) || matchCells(networkSelection, networkNumber);
-    s+= writeCellSelectionDescription(cellSelection, showSlice);
 
     if(isVoxel){
         QJsonObject voxelSelection = query["voxelSelection"].toObject();
         s += writeVoxelSelectionDescription(voxelSelection);
     }
+
+    QJsonObject cellSelection = query["cellSelection"].toObject();
+    double sliceRef;
+    bool showSlice = isSlice(networkSelection, networkNumber, sliceRef) || matchCells(networkSelection, networkNumber);
+    s+= writeCellSelectionDescription(cellSelection, showSlice);    
 
     if(isTriplet || isInDegree){
         QJsonObject sampleSelection = query["sampleSelection"].toObject();
@@ -789,7 +790,7 @@ QString Util::writeSelectionDescription(QJsonObject& selection, bool isSlice){
     }
     QString label = selection["label"].toString();
     s += label + ":\n";
-    s += "Filter:," + writeFilterConditions(selection["conditions"].toArray()) + "\n";
+    s += "   Filter:," + writeFilterConditions(selection["conditions"].toArray()) + "\n";
     if(isSlice){
         QJsonObject tissueDepth = selection["tissueDepth"].toObject();
         s+= writeTissueDepthDescription(tissueDepth);
@@ -809,12 +810,16 @@ QString Util::writeCellSelectionDescription(QJsonObject& cellSelection, bool isS
 }
 
 QString
-Util::writeNetworkDescription(QJsonObject& networkSelection, int number)
+Util::writeNetworkDescription(QJsonObject& networkSelection, int number, bool capital)
 {
     QString s = "";
 
-    s += "Neural network:,";
-    s += getLongName(networkSelection, number) + "\n";
+    if(capital){
+        s += "Neural network:,";
+    } else {
+        s += "neural network:,";
+    }
+    s += "\"" + getLongName(networkSelection, number) + "\"\n";
 
     int samplingFactor = -1;
     int randomSeed = -1;
@@ -838,9 +843,9 @@ Util::writeTissueDepthDescription(QJsonObject& tissueDepth) {
     QString tissueMode = tissueDepth["mode"].toString();
 
     QString mode = tissueMode == "oneSided" ? "one-sided" : "two-sided";
-    s += "Tissue depth mode," + mode + "\n";
-    s += "Tissue depth low," + QString::number(tissueLow) + "\n";
-    s += "Tissue depth high," + QString::number(tissueHigh) + "\n";
+    s += "   Tissue depth mode:," + mode + "\n";
+    s += "   Tissue depth low:," + QString::number(tissueLow) + "\n";
+    s += "   Tissue depth high:," + QString::number(tissueHigh) + "\n";
 
     return s;
 }
@@ -1172,26 +1177,27 @@ QString Util::writeVoxelSelectionDescription(QJsonObject& voxelSelection){
     QString mode = filter["mode"].toString();
     QString s = "";
 
-    s += "Mode:,";
+    s += "Filter mode:,";
     if (mode == "voxel")
     {
-        s += "Explicit voxel selection\n";
+        s += "All neurons in sub-volume (A)\n";
     }
     else if (mode == "prePostVoxel")
     {
-        s += "Explicit voxel selection with neuron filter\n";
+        s += "Neurons meeting filter conditions in sub-volume (A & B & C)\n";
     }
     else
     {
-        s += "Implicit voxel selection with neuron filter\n";
+        s += "Neurons meeting filter conditions in complete volume (B & C)\n";
     }
 
     if (mode == "voxel" || mode == "prePostVoxel")
     {
-        s += "Voxel cube origin:,";
+        s += "Sub-volume selection (A):\n";
+        s += "  Sub-volume origin (x y z) in \u00B5m:,";
         s +=
                 QString("%1 %2 %3\n").arg(filter["originX"].toDouble()).arg(filter["originY"].toDouble()).arg(filter["originZ"].toDouble());
-        s += "Voxel cube dimensions:,";
+        s += "  Sub-volume dimensions (nx ny nz) x 50\u00B5m:,";
         s += QString("%1 %2 %3\n")
                 .arg(filter["dimX"].toDouble())
                 .arg(filter["dimY"].toDouble())
@@ -1208,7 +1214,16 @@ QString Util::writeSampleSelectionDescription(QJsonObject& sampleSelection, int 
     int nSamples = network == 1 ? sampleSelection["samplesNetwork1"].toInt() : sampleSelection["samplesNetwork2"].toInt();
     int seed = network == 1 ? sampleSelection["randomSeedNetwork1"].toInt() : sampleSelection["randomSeedNetwork2"].toInt();
     s = s + description +":," + QString::number(nSamples) + "\n";
-    s = s +  "Random seed:" +"," + QString::number(seed) + "\n";
+    s = s +  "   Random seed for sample:" +"," + QString::number(seed) + "\n";
 
     return s;
+}
+
+QString Util::formatVolume(int nVoxels){
+    if(isnan(nVoxels)){
+        return "---";
+    } else {
+        double volume = 0.05 * 0.05 * 0.05 * nVoxels;
+        return QString::number(volume, 'f', 6);
+    }
 }

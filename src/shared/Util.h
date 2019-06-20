@@ -143,7 +143,7 @@ namespace Util
 
     QString getShortName(QJsonObject& networkSpec, int number);
 
-    QString writeNetworkDescription(QJsonObject& networkSelection, int number);
+    QString writeNetworkDescription(QJsonObject& networkSelection, int number, bool capital = true);
 
     QString writeFilterConditions(QJsonArray conditions);
 
@@ -167,6 +167,8 @@ namespace Util
     QString writeSampleSelectionDescription(QJsonObject& sampleSelection, int network);
 
     QString writeVoxelSelectionDescription(QJsonObject& voxelSelection);
+
+    QString formatVolume(int nVoxels);
 
 
 } // namespace Util
