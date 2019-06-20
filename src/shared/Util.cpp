@@ -1191,18 +1191,17 @@ QString Util::writeVoxelSelectionDescription(QJsonObject& voxelSelection){
         s += "Neurons meeting filter conditions in complete volume (B & C)\n";
     }
 
-    if (mode == "voxel" || mode == "prePostVoxel")
-    {
-        s += "Sub-volume selection (A):\n";
-        s += "  Sub-volume origin (x y z) in \u00B5m:,";
-        s +=
-                QString("%1 %2 %3\n").arg(filter["originX"].toDouble()).arg(filter["originY"].toDouble()).arg(filter["originZ"].toDouble());
-        s += "  Sub-volume dimensions (nx ny nz) x 50\u00B5m:,";
-        s += QString("%1 %2 %3\n")
-                .arg(filter["dimX"].toDouble())
-                .arg(filter["dimY"].toDouble())
-                .arg(filter["dimZ"].toDouble());
-    }
+    
+    s += "Sub-volume selection (A):\n";
+    s += "  Sub-volume origin (x y z) in \u00B5m:,";
+    s +=
+            QString("%1 %2 %3\n").arg(filter["originX"].toDouble()).arg(filter["originY"].toDouble()).arg(filter["originZ"].toDouble());
+    s += "  Sub-volume dimensions (nx ny nz) x 50\u00B5m:,";
+    s += QString("%1 %2 %3\n")
+            .arg(filter["dimX"].toDouble())
+            .arg(filter["dimY"].toDouble())
+            .arg(filter["dimZ"].toDouble());
+    
 
     return s;
 }

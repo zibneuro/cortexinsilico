@@ -191,8 +191,8 @@ void InDegreeStatistic::doCreateCSV(QTextStream &out, const QChar sep) const {
 
 void InDegreeStatistic::writeDiagram(QTextStream &out) const {
   out << "Correlation diagram\n";
-  out << "postNeuronID overlap_A->C overlap_B->C\n";
+  out << "postNeuronID,overlap_A->C,overlap_B->C\n";
   for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
-    out << mPostNeuronId[i] << " " << mValuesAC[i] << " " << mValuesBC[i] << "\n";
+    out << mPostNeuronId[i] << "," << mValuesAC[i] << "," << mValuesBC[i] << "\n";
   }
 };
