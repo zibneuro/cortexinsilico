@@ -1006,8 +1006,13 @@ Util::matchCells(QJsonObject& networkSpec, int number)
     double sliceRef;
     bool full = isFull(networkSpec, number);
     bool oppositeSlice = isSlice(networkSpec, getOppositeNetworkNumber(number), sliceRef);
-    bool option = networkSpec["matchCells"].toBool();
+    bool option = networkSpec["matchCells"].toBool();    
     return full && oppositeSlice && option;
+}
+
+bool Util::matchCellOptionSet(QJsonObject& networkSpec){
+    bool option = networkSpec["matchCells"].toBool();
+    return option;
 }
 
 int
@@ -1225,4 +1230,8 @@ QString Util::formatVolume(int nVoxels){
         double volume = 0.05 * 0.05 * 0.05 * nVoxels;
         return QString::number(volume, 'f', 6);
     }
+}
+
+bool Util::isSlice(QString networkName){
+    return networkName.contains("Truncated");
 }

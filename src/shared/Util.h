@@ -135,6 +135,8 @@ namespace Util
 
     bool matchCells(QJsonObject& networkSpec, int number);
 
+    bool matchCellOptionSet(QJsonObject& networkSpec);
+
     int getOppositeNetworkNumber(int number);
 
     bool isSampled(QJsonObject& networkSpec, int number, int& samplingFactor, int& randomSeed);
@@ -170,6 +172,7 @@ namespace Util
 
     QString formatVolume(int nVoxels);
 
+    bool isSlice(QString networkName);
 
 } // namespace Util
 
