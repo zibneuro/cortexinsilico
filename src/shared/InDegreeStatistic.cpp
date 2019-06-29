@@ -60,11 +60,13 @@ QList<int> InDegreeStatistic::samplePostIds(QList<int> selectionC) {
 void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
   checkInput(selection);
   QList<int> postIds = samplePostIds(selection.SelectionC());
-
   for (int i = 0; i < postIds.size(); i++) {
     mPostNeuronId.push_back(postIds[i]);
     mValuesAC.push_back(0);
     mValuesBC.push_back(0);
+    std::vector<double> a, b;
+    mACProbFlat.push_back(a);
+    mBCProbFlat.push_back(b);
     mValuesACProb.push_back(0);
     mValuesBCProb.push_back(0);
   }
@@ -75,7 +77,6 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
   this->mNumConnections = nPre;
 
   for (int i = 0; i < nPre; i++) {
-
     for (unsigned int j = 0; j < mPostNeuronId.size(); j++) {
       int postId = mPostNeuronId[j];
       CIS3D::SliceBand postSliceBand = selection.getBandC(postId);
@@ -87,7 +88,8 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
               mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
           const float innervation = mInnervationMatrix->getValue(
               mappedPreId, postId, selection.getPostTarget(2));
-          mValuesAC[j] += (double)innervation;
+          mValuesAC[j] += static_cast<double>(innervation);
+          mACProbFlat[j].push_back(static_cast<double>(mCalculator.calculateConnectionProbability(innervation)));
         }
       }
       if (i < preIdListB.size()) {
@@ -97,7 +99,8 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
               mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
           const float innervation = mInnervationMatrix->getValue(
               mappedPreId, postId, selection.getPostTarget(2));
-          mValuesBC[j] += (double)innervation;
+          mValuesBC[j] += static_cast<double>(innervation);
+          mBCProbFlat[j].push_back(static_cast<double>(mCalculator.calculateConnectionProbability(innervation)));
         }
       }
     }
@@ -114,39 +117,55 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
 }
 
 void InDegreeStatistic::calculateStatistics() {
+
+  for (unsigned int j = 0; j < mPostNeuronId.size(); j++) {
+    mValuesACProb[j] = calculateMean(mACProbFlat[j]);
+    mValuesBCProb[j] = calculateMean(mBCProbFlat[j]);
+  }
+
   mStatisticsAC = Statistics();
   mStatisticsBC = Statistics();
+  mStatisticsACProb = Statistics();
+  mStatisticsBCProb = Statistics();
   for (unsigned int j = 0; j < mPostNeuronId.size(); j++) {
     mStatisticsAC.addSample(mValuesAC[j]);
     mStatisticsBC.addSample(mValuesBC[j]);
+    mStatisticsACProb.addSample(mValuesACProb[j]);
+    mStatisticsBCProb.addSample(mValuesBCProb[j]);
   }
-  calculateCorrelation();
-}
-
-void InDegreeStatistic::calculateCorrelation() {
-  if (mValuesAC.size() < 2) {
-    mCorrelation = 0;
-    mCorrelationProb = 0;
-    return;
-  }
-  mCorrelationProb = 0;
-
   double stdAC = mStatisticsAC.getStandardDeviation();
   double stdBC = mStatisticsBC.getStandardDeviation();
+  double stdACProb = mStatisticsACProb.getStandardDeviation();
+  double stdBCProb = mStatisticsBCProb.getStandardDeviation();
+
+  mCorrelation = calculateCorrelation(mValuesAC, mValuesBC, stdAC, stdBC);
+  mCorrelationProb = calculateCorrelation(mValuesACProb, mValuesBCProb, stdACProb, stdBCProb);
+}
+
+double InDegreeStatistic::calculateCorrelation(std::vector<double>& valuesAC, std::vector<double>& valuesBC,  double stdAC, double stdBC) {
+  if (valuesAC.size() < 2) {
+    return 0;
+  }  
+
   double eps = 0.0001;
   if (std::abs(stdAC) < eps || std::abs(stdBC) < eps) {
-    mCorrelation = 0;
-    return;
+      double meanAC = calculateMean(valuesAC);
+      double meanBC = calculateMean(valuesBC);
+      if(std::abs(meanAC - meanBC) < eps){
+          return 1;
+      } else {
+          return 0;
+      }
   }
 
   double sum = 0;
-  double meanAC = calculateMean(mValuesAC);
-  double meanBC = calculateMean(mValuesBC);
-  for (unsigned long i = 0; i < mValuesAC.size(); i++) {
-    sum += (mValuesAC[i] - meanAC) * (mValuesBC[i] - meanBC);
+  double meanAC = calculateMean(valuesAC);
+  double meanBC = calculateMean(valuesBC);
+  for (unsigned long i = 0; i < valuesAC.size(); i++) {
+    sum += (valuesAC[i] - meanAC) * (valuesBC[i] - meanBC);
   }
-  sum /= mValuesAC.size();
-  mCorrelation = sum / (stdAC * stdBC);
+  sum /= valuesAC.size();
+  return sum / (stdAC * stdBC);
 }
 
 double InDegreeStatistic::calculateMean(std::vector<double> &values) {
@@ -163,6 +182,10 @@ void InDegreeStatistic::doCreateJson(QJsonObject &obj) const {
              Util::createJsonStatistic(mStatisticsAC));
   obj.insert("innervationStatisticsBC",
              Util::createJsonStatistic(mStatisticsBC));
+  obj.insert("probabilityStatisticsAC",
+             Util::createJsonStatistic(mStatisticsACProb));
+  obj.insert("probabilityStatisticsBC",
+             Util::createJsonStatistic(mStatisticsBCProb));
   obj.insert("innervationValuesAC", Util::createJsonArray(mValuesAC));
   obj.insert("innervationValuesBC", Util::createJsonArray(mValuesBC));
   obj.insert("probabilityValuesAC", Util::createJsonArray(mValuesACProb));
@@ -183,16 +206,40 @@ void InDegreeStatistic::doCreateCSV(QTextStream &out, const QChar sep) const {
       << sep << "StDev" << sep << mStatisticsBC.getStandardDeviation() << sep
       << "Min" << sep << mStatisticsBC.getMinimum() << sep << "Max" << sep
       << mStatisticsBC.getMaximum() << "\n";
-
-  out << "Correlation" << sep << mCorrelation;
+  /*
+  out << "Connection probability A->C" << sep << mStatisticsACProb.getMean()
+      << sep << "StDev" << sep << mStatisticsACProb.getStandardDeviation() << sep
+      << "Min" << sep << mStatisticsACProb.getMinimum() << sep << "Max" << sep
+      << mStatisticsACProb.getMaximum() << "\n";
+  out << "Connection probability B->C" << sep << mStatisticsBCProb.getMean()
+      << sep << "StDev" << sep << mStatisticsBCProb.getStandardDeviation() << sep
+      << "Min" << sep << mStatisticsBCProb.getMinimum() << sep << "Max" << sep
+      << mStatisticsBCProb.getMaximum() << "\n";
+  */
+  out << "Correlation (based on overlap)" << sep << mCorrelation;
   out << "\n";
-  writeDiagram(out);
+  out << "Correlation (based on connection probability)" << sep << mCorrelationProb;
+  out << "\n";
+  out << "\n";
+  writeDiagramOverlap(out);
+  out << "\n";
+
+  writeDiagramProbability(out);
+
 }
 
-void InDegreeStatistic::writeDiagram(QTextStream &out) const {
-  out << "Correlation diagram\n";
+void InDegreeStatistic::writeDiagramOverlap(QTextStream &out) const {
+  out << "Correlation diagram (overlap)\n";
   out << "postNeuronID,overlap_A->C,overlap_B->C\n";
   for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
     out << mPostNeuronId[i] << "," << mValuesAC[i] << "," << mValuesBC[i] << "\n";
+  }
+};
+
+void InDegreeStatistic::writeDiagramProbability(QTextStream &out) const {
+  out << "Correlation diagram (connection probability)\n";
+  out << "postNeuronID,connectionProbability_A->C,connectionProbability_B->C\n";
+  for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
+    out << mPostNeuronId[i] << "," << mValuesACProb[i] << "," << mValuesBCProb[i] << "\n";
   }
 };
