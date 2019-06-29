@@ -47,17 +47,14 @@ public:
         @param post The postsynaptic neuron ID.
         @return The innervation from presynaptic to postsynaptic neuron.
     */
-    float getValue(int preID, int postID, int selectionIndex, CIS3D::Structure target);
     float getValue(int preID, int postID, CIS3D::Structure target);
-    void setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC);
+
     void clearCache(std::map<int, CacheEntry*>& cache);
     CacheEntry* getEntry(int preId, CIS3D::Structure target);
     CacheEntry* getOrLoad(std::map<int, CacheEntry*>& cache, int preId, CIS3D::Structure target);
     void pruneCache(std::map<int, CacheEntry*>& cache);
 
-private:
-    int getRandomDuplicatedPreId(int selectionIndex);
-    //void loadFile(int preId, CIS3D::Structure target);
+private:    
 
     const NetworkProps& mNetwork;
     unsigned int mCacheLimit;

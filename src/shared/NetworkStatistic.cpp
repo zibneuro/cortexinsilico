@@ -108,12 +108,6 @@ NetworkStatistic::abort()
     mAborted = true;
 }
 
-void
-NetworkStatistic::setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC)
-{
-    mInnervationMatrix->setOriginalPreIds(preIdsA, preIdsB, preIdsC);
-}
-
 /**
     Adds the result values to a JSON object
     @param obj: JSON object to which the values are appended

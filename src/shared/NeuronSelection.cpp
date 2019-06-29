@@ -720,18 +720,11 @@ void NeuronSelection::correctSynapticSide(CIS3D::SynapticSide &sideA,
   }
 
   if(mQueryType == "selection" && evaluationQuery == "innervation" && !mSliceUniquePre){
-      sideA = CIS3D::POSTSYNAPTIC;    
+      sideA = CIS3D::BOTH_SIDES;
   }
-  /*
-  else if (evaluationQuery == "inDegree") {
-    if(!mSliceUniquePre){
-      sideA = CIS3D::POSTSYNAPTIC;
-      sideB = CIS3D::POSTSYNAPTIC;
-    }
-  } else {
-    sideA = CIS3D::POSTSYNAPTIC;
-    sideB = CIS3D::POSTSYNAPTIC;
-    sideC = CIS3D::POSTSYNAPTIC;
+
+  if(evaluationQuery == "inDegree" && !mSliceUniquePre){
+    sideA = CIS3D::BOTH_SIDES;
+    sideB = CIS3D::BOTH_SIDES;
   }
-  */
 }

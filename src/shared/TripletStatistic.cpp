@@ -218,30 +218,6 @@ double TripletStatistic::calculateConnectionProbability(double innervation) {
   return (double)mCalculator.calculateConnectionProbability((float)innervation);
 }
 
-/**
-    Calculates the convergence to the specified postsynaptic neuron.
-    @param presynapticNeurons The IDs of the presynaptic neurons.
-    @param postsynapticNeuronId The ID of the postsynaptic neuron.
-    @return  The convergence to the postsynaptic neuron.
-*/
-double TripletStatistic::calculateConvergence(IdList& presynapticNeurons,
-                                              int postsynapticNeuronId,
-                                              int preSelectionIndex,
-                                              int postSelectionIndex) {
-  int presynapticSamplingFactor = 1;
-  Statistics connectionProbability;
-  CIS3D::Structure postTarget = mPostTargets[postSelectionIndex];
-  for (int i = 0; i < presynapticNeurons.size();
-       i += presynapticSamplingFactor) {
-    int preId = presynapticNeurons[i];
-    double innervation = mInnervationMatrix->getValue(
-        preId, postsynapticNeuronId, preSelectionIndex, postTarget);
-    double probability = calculateConnectionProbability(innervation);
-    connectionProbability.addSample(probability);
-  }
-  return connectionProbability.getMean();
-}
-
 void TripletStatistic::calculateConnectionProbability(const NeuronSelection& selection, IdList& a, IdList& b, int b_idx, IdList& c, int c_idx, double& ab, double& ac){
 
     Statistics stat_ab;
@@ -256,17 +232,15 @@ void TripletStatistic::calculateConnectionProbability(const NeuronSelection& sel
     // get pre neurons with multiplicity
     for (int i = 0; i < a.size(); ++i)
     {
-        const int preId = a[i];
-        if(mNetwork.neurons.getSynapticSide(preId) != CIS3D::POSTSYNAPTIC){
-            const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
-            if (preIds.find(mappedPreId) == preIds.end())
-            {
-                preIds[mappedPreId] = 1;
-            }
-            else
-            {
-                preIds[mappedPreId] += 1;
-            }
+        const int preId = a[i];        
+        const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
+        if (preIds.find(mappedPreId) == preIds.end())
+        {
+            preIds[mappedPreId] = 1;
+        }
+        else
+        {
+            preIds[mappedPreId] += 1;
         }
     }
 

@@ -21,16 +21,7 @@
 MotifQueryHandler::MotifQueryHandler() : QueryHandler() {}
 
 void MotifQueryHandler::doProcessQuery() {
-
-  TripletStatistic statistic(mNetwork, mSampleNumber, mSampleSeed, mCalculator, this);
-
-  double sliceRef;
-  if (Util::isSlice(mNetworkSelection, mNetworkNumber, sliceRef)) {
-    statistic.setOriginalPreIds(
-        NeuronSelection::filterPreOrBoth(mNetwork, mSelection.SelectionA()),
-        NeuronSelection::filterPreOrBoth(mNetwork, mSelection.SelectionB()),
-        NeuronSelection::filterPreOrBoth(mNetwork, mSelection.SelectionC()));
-  }
+  TripletStatistic statistic(mNetwork, mSampleNumber, mSampleSeed, mCalculator, this);  
   statistic.calculate(mSelection);
 }
 

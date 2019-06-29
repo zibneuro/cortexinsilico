@@ -172,7 +172,7 @@ CellTriplet::setInnervation(InnervationMatrix* connectome, std::vector<CIS3D::St
             {
                 int preId = preCellIndex[ii];
                 int postId = postCellIndex[jj];
-                this->innervation[ii].push_back(connectome->getValue(preId, postId, ii, postTargets[jj]));
+                this->innervation[ii].push_back(connectome->getValue(preId, postId, postTargets[jj]));
             }
         }
     }
