@@ -16,15 +16,15 @@
 #include <algorithm>
 #include <ctime>
 #include <math.h>
-#include <random>
 #include <stdexcept>
+#include "RandomGenerator.h"
 
 InDegreeStatistic::InDegreeStatistic(const NetworkProps &networkProps,
-                                     int sampleSize, int sampleSeed,
+                                     int sampleSize, int sampleSeed, bool sampleEnabled,
                                      FormulaCalculator &calculator,
                                      QueryHandler *handler)
     : NetworkStatistic(networkProps, calculator, handler),
-      mSampleSize(sampleSize), mSampleSeed(sampleSeed) {}
+      mSampleSize(sampleSize), mSampleSeed(sampleSeed), mSampleEnabled(sampleEnabled) {}
 
 void InDegreeStatistic::checkInput(const NeuronSelection &selection) {
   if (selection.SelectionA().size() == 0) {
@@ -42,18 +42,12 @@ void InDegreeStatistic::checkInput(const NeuronSelection &selection) {
 }
 
 QList<int> InDegreeStatistic::samplePostIds(QList<int> selectionC) {
-  if (selectionC.size() <= mSampleSize) {
-    mSampleSize = selectionC.size();
+  if (selectionC.size() <= mSampleSize || !mSampleEnabled) {
+      mSampleSize = selectionC.size();
     return selectionC;
-  } else {
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::shuffle(selectionC.begin(), selectionC.end(), g);
-    QList<int> postIds;
-    for (int i = 0; i < mSampleSize; i++) {
-      postIds.append(selectionC[i]);
-    }
-    return postIds;
+  } else {    
+    RandomGenerator generator(mSampleSeed);
+    return generator.getSample(selectionC, mSampleSize);
   }
 }
 

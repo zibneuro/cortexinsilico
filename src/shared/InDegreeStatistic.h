@@ -10,6 +10,7 @@ public:
     InDegreeStatistic(const NetworkProps& networkProps,
                       int sampleSize,
                       int sampleSeed,
+                      bool sampleEnabled,
                       FormulaCalculator& calculator,
                       QueryHandler* handler);
 
@@ -43,6 +44,7 @@ void calculateStatistics();
     double mCorrelationProb;
     int mSampleSize;
     int mSampleSeed;
+    bool mSampleEnabled;
     int mIterations;
 };
 

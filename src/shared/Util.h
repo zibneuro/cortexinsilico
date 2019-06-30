@@ -159,7 +159,7 @@ namespace Util
 
     QString writeTissueDepthDescription(QJsonObject& tissueDepth);
 
-    void getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed);
+    void getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed, bool& enabled);
 
     CIS3D::SynapticSide getSynapticSide(QJsonObject& selectionFilter);
 

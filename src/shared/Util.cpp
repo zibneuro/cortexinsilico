@@ -1085,17 +1085,19 @@ Util::getShortName(QJsonObject& networkSpec, int number)
 }
 
 void
-Util::getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed)
+Util::getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed, bool& enabled)
 {
     if (network == 1)
     {
         sampleSize = sampleSettings["samplesNetwork1"].toInt();
         randomSeed = sampleSettings["randomSeedNetwork1"].toInt();
+        enabled = sampleSettings["enabledNetwork1"].toBool();
     }
     else
     {
         sampleSize = sampleSettings["samplesNetwork2"].toInt();
         randomSeed = sampleSettings["randomSeedNetwork2"].toInt();
+        enabled = sampleSettings["enabledNetwork2"].toBool();
     }
 }
 

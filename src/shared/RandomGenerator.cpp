@@ -2,6 +2,7 @@
 #include <ctime>
 #include <QDebug>
 #include <math.h>
+#include <algorithm>
 #include <stdexcept>
 
 RandomGenerator::RandomGenerator(int userSeed)
@@ -36,6 +37,16 @@ void
 RandomGenerator::shuffleList(QList<int>& list)
 {
     permute(list);
+}
+
+QList<int> RandomGenerator::getSample(const QList<int> list, int nSamples){
+    QList<int> copy = list;
+    shuffleList(copy);
+    QList<int> sampledList;
+    for(int i=0; i<std::min(nSamples, copy.length()); i++){
+        sampledList.append(copy[i]);
+    }
+    return sampledList;
 }
 
 int

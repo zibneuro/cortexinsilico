@@ -37,6 +37,8 @@ public:
     */
     void shuffleList(QList<int>& list);
 
+    QList<int> getSample(const QList<int> list, int nSamples);
+
     int getRandomEntry(QList<int> list);
 
     /*
