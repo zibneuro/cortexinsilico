@@ -192,11 +192,11 @@ void InDegreeStatistic::doCreateCSV(QTextStream &out, const QChar sep) const {
   out << "Actual Sample size (selection C):" << sep
       << mSampleSize << "\n";
 
-  out << "Dense structural overlap A->C" << sep << mStatisticsAC.getMean()
+  out << "Dense structural overlap (summed A to C)" << sep << mStatisticsAC.getMean()
       << sep << "StDev" << sep << mStatisticsAC.getStandardDeviation() << sep
       << "Min" << sep << mStatisticsAC.getMinimum() << sep << "Max" << sep
       << mStatisticsAC.getMaximum() << "\n";
-  out << "Dense structural overlap B->C" << sep << mStatisticsBC.getMean()
+  out << "Dense structural overlap (summed B to C)" << sep << mStatisticsBC.getMean()
       << sep << "StDev" << sep << mStatisticsBC.getStandardDeviation() << sep
       << "Min" << sep << mStatisticsBC.getMinimum() << sep << "Max" << sep
       << mStatisticsBC.getMaximum() << "\n";
@@ -210,9 +210,9 @@ void InDegreeStatistic::doCreateCSV(QTextStream &out, const QChar sep) const {
       << "Min" << sep << mStatisticsBCProb.getMinimum() << sep << "Max" << sep
       << mStatisticsBCProb.getMaximum() << "\n";
   */
-  out << "Correlation (based on overlap)" << sep << mCorrelation;
+  out << "Correlation (summed overlap)" << sep << mCorrelation;
   out << "\n";
-  out << "Correlation (based on connection probability)" << sep << mCorrelationProb;
+  out << "Correlation (avg. connection probability)" << sep << mCorrelationProb;
   out << "\n";
   out << "\n";
   writeDiagramOverlap(out);
@@ -223,16 +223,16 @@ void InDegreeStatistic::doCreateCSV(QTextStream &out, const QChar sep) const {
 }
 
 void InDegreeStatistic::writeDiagramOverlap(QTextStream &out) const {
-  out << "Correlation diagram (overlap)\n";
-  out << "postNeuronID,overlap_A->C,overlap_B->C\n";
+  out << "Correlation diagram (summed overlap)\n";
+  out << "postNeuronID,summedOverlap_A->C,summedOverlap_B->C\n";
   for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
     out << mPostNeuronId[i] << "," << mValuesAC[i] << "," << mValuesBC[i] << "\n";
   }
 };
 
 void InDegreeStatistic::writeDiagramProbability(QTextStream &out) const {
-  out << "Correlation diagram (connection probability)\n";
-  out << "postNeuronID,connectionProbability_A->C,connectionProbability_B->C\n";
+  out << "Correlation diagram (avg. connection probability)\n";
+  out << "postNeuronID,avgConnectionProbability_A->C,avgConnectionProbability_B->C\n";
   for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
     out << mPostNeuronId[i] << "," << mValuesACProb[i] << "," << mValuesBCProb[i] << "\n";
   }
