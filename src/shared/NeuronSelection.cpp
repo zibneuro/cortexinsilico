@@ -699,7 +699,7 @@ NeuronSelection::getMultiplicities(const NetworkProps &network,
 
 void NeuronSelection::correctSynapticSide(CIS3D::SynapticSide &sideA,
                                           CIS3D::SynapticSide &sideB,
-                                          CIS3D::SynapticSide &sideC,
+                                          CIS3D::SynapticSide & /*sideC*/,
                                           bool /*aEnabled*/, bool /*bEnabled*/,
                                           bool cEnabled) {
 
