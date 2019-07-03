@@ -115,7 +115,7 @@ namespace Util
 
     QString getResultFileHeader(const QJsonObject& spec);
 
-    CIS3D::Structure getPostsynapticTarget(QString selectionString);
+    CIS3D::Structure getPostsynapticTarget(QJsonArray& conditions);
 
     QString getPostFolderName(CIS3D::Structure target);
 
@@ -173,6 +173,8 @@ namespace Util
     QString formatVolume(int nVoxels);
 
     bool isSlice(QString networkName);
+
+    QJsonObject getCondition(QJsonArray& conditions, QString id, bool& exists);
 
 } // namespace Util
 

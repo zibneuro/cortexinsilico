@@ -851,17 +851,24 @@ Util::writeTissueDepthDescription(QJsonObject& tissueDepth) {
 }
 
 CIS3D::Structure
-Util::getPostsynapticTarget(QString selectionString)
+Util::getPostsynapticTarget(QJsonArray& conditions)
 {
-    if (selectionString.contains("Basal") && !selectionString.contains("Apical"))
-    {
-        return CIS3D::BASAL;
-    }
-    if (!selectionString.contains("Basal") && selectionString.contains("Apical"))
-    {
-        return CIS3D::APICAL;
-    }
-    return CIS3D::DEND;
+    bool exists;
+    QJsonObject condition = getCondition(conditions, "postsynapticTarget", exists);
+    if(exists) {
+        QJsonArray values = condition["value"].toArray();         
+        if(values.size() != 1){
+            return CIS3D::DEND;
+        } else {
+            if (values[0].toString() == "Basal") {
+                return CIS3D::BASAL;
+            } else {
+                return CIS3D::APICAL;
+            }
+        }
+    } else {
+        return CIS3D::DEND;
+    }    
 }
 
 QString
@@ -1236,4 +1243,17 @@ QString Util::formatVolume(int nVoxels){
 
 bool Util::isSlice(QString networkName){
     return networkName.contains("Truncated");
+}
+
+QJsonObject Util::getCondition(QJsonArray& conditions, QString id, bool& exists){
+    exists = false;
+    for(int i=0; i<conditions.size(); i++){
+        QJsonObject condition = conditions[i].toObject();
+        if(condition["ID"].toString() == id){
+            exists = true;
+            return condition;
+        }
+    }
+    QJsonObject foo;
+    return foo;    
 }

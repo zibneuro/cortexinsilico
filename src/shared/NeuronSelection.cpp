@@ -329,10 +329,7 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
                                        QJsonObject &selectionA,
                                        QJsonObject &selectionB,
                                        QJsonObject &selectionC, bool prune) {
-  QString selectionAString = selectionA["filterAsText"].toString();
-  QString selectionBString = selectionB["filterAsText"].toString();
-  QString selectionCString = selectionC["filterAsText"].toString();
-
+  
   QJsonArray conditionsA = selectionA["conditions"].toArray();
   QJsonArray conditionsB = selectionB["conditions"].toArray();
   QJsonArray conditionsC = selectionC["conditions"].toArray();
@@ -400,11 +397,11 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
     mNetworkName = Util::getShortName(networkSelection, number);
     copySelection(tmpSelection);
     CIS3D::Structure postTargetA =
-        Util::getPostsynapticTarget(selectionAString);
+        Util::getPostsynapticTarget(conditionsA);
     CIS3D::Structure postTargetB =
-        Util::getPostsynapticTarget(selectionBString);
+        Util::getPostsynapticTarget(conditionsB);
     CIS3D::Structure postTargetC =
-        Util::getPostsynapticTarget(selectionCString);
+        Util::getPostsynapticTarget(conditionsC);
     setPostTarget(postTargetA, postTargetB, postTargetC);
   }
 }
