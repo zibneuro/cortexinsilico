@@ -360,6 +360,12 @@ CIS3D::getMappingFilePath(QDir& dataRootDir, QString& network1, QString& network
     return QDir::cleanPath(dataRootDir.absolutePath() + QDir::separator() + mappingFilePath);    
 }
 
+QString 
+CIS3D::getRemappedAxonFilePath(QDir& dataRootDir, QString& network1, QString& network2){
+    QString axonMappingFilePath = QString("axon_mapping_%1_%2").arg(network1, network2);    
+    return QDir::cleanPath(dataRootDir.absolutePath() + QDir::separator() + axonMappingFilePath);    
+}
+
 QDir
 CIS3D::getPSTAllDir(const QDir& modelDataDir)
 {

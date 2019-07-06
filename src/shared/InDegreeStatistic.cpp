@@ -70,6 +70,9 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
 
   this->mNumConnections = nPre;
 
+  std::set<int> uniquePreA;
+  std::set<int> uniquePreB;
+
   for (int i = 0; i < nPre; i++) {
     for (unsigned int j = 0; j < mPostNeuronId.size(); j++) {
       int postId = mPostNeuronId[j];
@@ -80,6 +83,7 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
         if (selection.getBandA(preId) == postSliceBand) {
           const int mappedPreId =
               mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
+          uniquePreA.insert(mappedPreId);
           const float innervation = mInnervationMatrix->getValue(
               mappedPreId, postId, selection.getPostTarget(2));
           mValuesAC[j] += static_cast<double>(innervation);
@@ -91,6 +95,7 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
         if (selection.getBandB(preId) == postSliceBand) {
           const int mappedPreId =
               mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
+          uniquePreB.insert(mappedPreId);
           const float innervation = mInnervationMatrix->getValue(
               mappedPreId, postId, selection.getPostTarget(2));
           mValuesBC[j] += static_cast<double>(innervation);
@@ -105,6 +110,17 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
       reportUpdate();
     }
   }
+
+  qDebug() << "UNIQUE PRE A";
+  for(auto it = uniquePreA.begin(); it != uniquePreA.end(); it++){
+    qDebug() << *it;
+  }
+
+  qDebug() << "UNIQUE PRE B";
+  for(auto it = uniquePreB.begin(); it != uniquePreB.end(); it++){
+    qDebug() << *it;
+  }
+
 
   calculateStatistics();
   reportComplete();

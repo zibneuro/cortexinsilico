@@ -254,8 +254,7 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
   QJsonObject selectionA = cellSelection["selectionA"].toObject();
   QJsonObject selectionB = cellSelection["selectionB"].toObject();
   QJsonObject selectionC = cellSelection["selectionC"].toObject();
-  mQueryType = query["queryType"].toString();  
-  mIsSlice = Util::isSlice(networkName);
+  mQueryType = query["queryType"].toString();    
   mSliceUniquePre = Util::matchCells(networkSelection, Util::getOppositeNetworkNumber(number));
 
   QString dataRoot = Util::getDatasetPath(networkName, config);
@@ -266,6 +265,7 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
                    selectionB, selectionC);
 
   if (Util::matchCells(networkSelection, number)) {
+    mSliceUniquePre = true;
     int oppositeNumber = Util::getOppositeNetworkNumber(number);
     QString networkName2 = Util::getShortName(networkSelection, oppositeNumber);
     QString dataRoot2 = Util::getDatasetPath(networkName2, config);
@@ -276,6 +276,10 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
 
     processSelection(networkSelection, oppositeNumber, networkProps2,
                      selectionA, selectionB, selectionC, true);
+
+    QDir mappingDir = QDir(mMappingDir);
+    QString remappedAxonFile = CIS3D::getRemappedAxonFilePath(mappingDir, networkName, networkName2);
+    //networkProps.axonRedundancyMap.loadFlatFile(remappedAxonFile);    
   }
 }
 
@@ -341,7 +345,9 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
   CIS3D::SynapticSide sideA = Util::getSynapticSide(selectionA);
   CIS3D::SynapticSide sideB = Util::getSynapticSide(selectionB);
   CIS3D::SynapticSide sideC = Util::getSynapticSide(selectionC);
-  if (mIsSlice) {
+
+  QString networkName = Util::getShortName(networkSelection, number);
+  if (Util::isSlice(networkName)) {
     correctSynapticSide(sideA, sideB, sideC, enabledA, enabledB, enabledC);
   }
 
@@ -699,10 +705,10 @@ NeuronSelection::getMultiplicities(const NetworkProps &network,
 
 void NeuronSelection::correctSynapticSide(CIS3D::SynapticSide &sideA,
                                           CIS3D::SynapticSide &sideB,
-                                          CIS3D::SynapticSide & /*sideC*/,
+                                          CIS3D::SynapticSide &sideC,
                                           bool /*aEnabled*/, bool /*bEnabled*/,
-                                          bool cEnabled) {
-
+                                          bool cEnabled) {  
+  
   QString evaluationQuery = "innervation";
   if (mQueryType == "selection") {    
     if(cEnabled){
@@ -716,12 +722,22 @@ void NeuronSelection::correctSynapticSide(CIS3D::SynapticSide &sideA,
     evaluationQuery = mQueryType;
   }
 
-  if(mQueryType == "selection" && evaluationQuery == "innervation" && !mSliceUniquePre){
-      sideA = CIS3D::BOTH_SIDES;
+  CIS3D::SynapticSide remappedSide = mSliceUniquePre ? CIS3D::POSTSYNAPTIC_MAPPED : CIS3D::POSTSYNAPTIC;
+
+
+  if(evaluationQuery == "innervation" || evaluationQuery == "spatialInnervation"){
+      sideA = remappedSide;
   }
 
-  if(evaluationQuery == "inDegree" && !mSliceUniquePre){
-    sideA = CIS3D::BOTH_SIDES;
-    sideB = CIS3D::BOTH_SIDES;
+  if(evaluationQuery == "inDegree"){    
+      sideA = remappedSide;
+      sideB = remappedSide;    
   }
+
+  if(evaluationQuery == "triplet"){
+    sideA = remappedSide;
+    sideB = remappedSide;
+    sideC = remappedSide;
+  }
+
 }

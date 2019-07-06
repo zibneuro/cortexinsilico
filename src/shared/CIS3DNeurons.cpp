@@ -315,7 +315,7 @@ Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const
                                            selectedNearestColumns.at(props.nearestColumnId))) &&
             (allLaminarLocationsIncluded || selectedLaminarLocations.at(int(props.loc))) &&
             ((filter.synapticSide == CIS3D::BOTH_SIDES) ||
-             (getSynapticSide(neuronId) == CIS3D::BOTH_SIDES) ||
+             (getSynapticSide(neuronId) == CIS3D::BOTH_SIDES) || (getSynapticSide(neuronId) == CIS3D::POSTSYNAPTIC_MAPPED && filter.synapticSide == CIS3D::POSTSYNAPTIC) ||
              (filter.synapticSide == getSynapticSide(neuronId))))
         {
             result.append(neuronId);

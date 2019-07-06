@@ -8,7 +8,6 @@
 #include "Histogram.h"
 #include "Typedefs.h"
 #include <cmath>
-#include <math.h>       
 #include <iostream>
 
 /**
@@ -1233,7 +1232,7 @@ QString Util::writeSampleSelectionDescription(QJsonObject& sampleSelection, int 
 }
 
 QString Util::formatVolume(int nVoxels){
-    if(isnan(nVoxels)){
+    if(std::isnan(nVoxels)){
         return "---";
     } else {
         double volume = 0.05 * 0.05 * 0.05 * nVoxels;
