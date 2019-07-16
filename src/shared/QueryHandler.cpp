@@ -271,7 +271,7 @@ QueryHandler::stallUpdate(double progress)
     }
     double currentTime = std::clock();
     double delta = currentTime - mLastUpdateTime;
-    if ((delta / (double)CLOCKS_PER_SEC) >= 1.5)
+    if ((delta / (double)CLOCKS_PER_SEC) >= 5)
     {
         mLastUpdateTime = currentTime;
         return false;
