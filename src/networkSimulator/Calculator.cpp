@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <mutex>
 #include <omp.h>
+#include <QTime>
 
 /*
     Constructor.
@@ -155,6 +156,10 @@ void Calculator::calculateBatch(std::vector<QVector<float>> parametersBatch,
     Statistics connProbSynapse;
     Statistics connProbInnervation;
 
+    QTime t;
+    t.start();
+    long matched_pairs = 0; 
+
     // ###################### LOOP OVER NEURONS ######################
 
     for (unsigned int i = 0; i < preIndices.size(); i++) {
@@ -173,6 +178,8 @@ void Calculator::calculateBatch(std::vector<QVector<float>> parametersBatch,
               float arg;
               float boundArg1;
               float boundArg2;
+
+              matched_pairs++;
 
               if (mode == "h0_intercept_pre_pst_pstAll" ||
                   mode == "h0_pre_pst_pstAll") {
@@ -261,6 +268,11 @@ void Calculator::calculateBatch(std::vector<QVector<float>> parametersBatch,
         }
       }
     }
+
+    qDebug("----- Time elapsed: %d ms", t.elapsed());
+    qDebug() << "matched pairs" << matched_pairs;
+
+
 
     // ###################### DETERMINE STATISTICS ######################
 
