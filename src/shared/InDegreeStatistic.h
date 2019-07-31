@@ -46,6 +46,7 @@ void calculateStatistics();
     int mSampleSeed;
     bool mSampleEnabled;
     int mIterations;
+    std::map<int,int> mMappingSliceRBC;
 };
 
 #endif // INDEGREESTATISTIC

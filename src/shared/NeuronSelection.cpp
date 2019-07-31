@@ -246,7 +246,8 @@ void NeuronSelection::filterSlice(const NetworkProps &networkProps,
 void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
                                             NetworkProps &networkProps,
                                             const QJsonObject &config) {
-  // qDebug() << "set selection from query" << query;
+
+  mMappingDir = config["NEURON_MAPPING_DIRECTORY"].toString();
   QJsonObject networkSelection = query["networkSelection"].toObject();
   int number = query["networkNumber"].toInt();
   QString networkName = Util::getShortName(networkSelection, number);
@@ -269,7 +270,7 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
     int oppositeNumber = Util::getOppositeNetworkNumber(number);
     QString networkName2 = Util::getShortName(networkSelection, oppositeNumber);
     QString dataRoot2 = Util::getDatasetPath(networkName2, config);
-    mMappingDir = config["NEURON_MAPPING_DIRECTORY"].toString();
+
     NetworkProps networkProps2;
     networkProps2.setDataRoot(dataRoot2);
     networkProps2.loadFilesForQuery();
@@ -279,7 +280,16 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
 
     QDir mappingDir = QDir(mMappingDir);
     QString remappedAxonFile = CIS3D::getRemappedAxonFilePath(mappingDir, networkName, networkName2);
-    //networkProps.axonRedundancyMap.loadFlatFile(remappedAxonFile);    
+    //networkProps.axonRedundancyMap.loadFlatFile(remappedAxonFile);        
+  }
+
+  double foo;
+  if(Util::isSlice(networkSelection, number, foo)){
+      QDir mappingDir = QDir(mMappingDir);
+      QString rbc = "RBC";
+      QString path =
+              CIS3D::getMappingFilePath(mappingDir, networkName, rbc);
+      mMappingSliceRBC = readMapping(path);
   }
 }
 
@@ -568,6 +578,15 @@ bool NeuronSelection::useSliceUniquePre(){
     return mSliceUniquePre;
 }
 
+int NeuronSelection::getRBCId(int neuronId) const{
+    auto it = mMappingSliceRBC.find(neuronId);
+    if(it != mMappingSliceRBC.end()){
+        return it->second;
+    } else {
+        return neuronId;
+    }
+}
+
 bool NeuronSelection::inSliceBand(double somaX, double min, double max) {
   return somaX >= min && somaX <= max;
 }
@@ -646,14 +665,18 @@ void NeuronSelection::pruneIds(IdList &selection, std::set<int> &allowed) {
   selection = prunedSelection;
 }
 
+
+
 std::map<int, int> NeuronSelection::readMapping(NeuronSelection &selection) {
   QString networkName = selection.getNetworkName();
   QDir mappingDir = QDir(mMappingDir);
   QString path =
       CIS3D::getMappingFilePath(mappingDir, networkName, mNetworkName);
+  return readMapping(path);
+}
 
+std::map<int, int> NeuronSelection::readMapping(QString path) {
   std::map<int, int> mapping;
-
   QFile mappingFile(path);
   if (mappingFile.open(QIODevice::ReadOnly)) {
     QTextStream in(&mappingFile);

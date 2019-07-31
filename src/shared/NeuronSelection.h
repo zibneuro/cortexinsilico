@@ -136,6 +136,8 @@ public:
 
   bool useSliceUniquePre();
 
+  int getRBCId(int neuronId) const;
+
 private:
   static bool inSliceBand(double somaX, double min, double max);
 
@@ -169,6 +171,8 @@ private:
 
   std::map<int, int> readMapping(NeuronSelection &selection);
 
+  std::map<int, int> readMapping(QString path);
+
   bool isSelectionValid(QJsonObject &selection, QString index,
                         QString &errorMessage);
 
@@ -199,6 +203,7 @@ private:
   QString mQueryType;
   bool mIsSlice; 
   bool mSliceUniquePre;
+  std::map<int, int> mMappingSliceRBC;
 };
 
 #endif

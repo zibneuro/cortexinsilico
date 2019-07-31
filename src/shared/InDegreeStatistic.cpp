@@ -63,6 +63,7 @@ void InDegreeStatistic::doCalculate(const NeuronSelection &selection) {
     mBCProbFlat.push_back(b);
     mValuesACProb.push_back(0);
     mValuesBCProb.push_back(0);
+    mMappingSliceRBC[postIds[i]] = selection.getRBCId(postIds[i]);
   }
   const IdList preIdListA = selection.SelectionA();
   const IdList preIdListB = selection.SelectionB();
@@ -239,17 +240,19 @@ void InDegreeStatistic::doCreateCSV(QTextStream &out, const QChar sep) const {
 }
 
 void InDegreeStatistic::writeDiagramOverlap(QTextStream &out) const {
-  out << "Correlation diagram (summed overlap)\n";
-  out << "postNeuronID,summedOverlap_A->C,summedOverlap_B->C\n";
-  for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
-    out << mPostNeuronId[i] << "," << mValuesAC[i] << "," << mValuesBC[i] << "\n";
-  }
+    out << "Correlation diagram (summed overlap)\n";
+    out << "postNeuronID,summedOverlap_A->C,summedOverlap_B->C\n";
+    for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
+        auto it = mMappingSliceRBC.find(mPostNeuronId[i]);
+        out << it->second << "," << mValuesAC[i] << "," << mValuesBC[i] << "\n";
+    }
 };
 
 void InDegreeStatistic::writeDiagramProbability(QTextStream &out) const {
-  out << "Correlation diagram (avg. connection probability)\n";
-  out << "postNeuronID,avgConnectionProbability_A->C,avgConnectionProbability_B->C\n";
-  for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
-    out << mPostNeuronId[i] << "," << mValuesACProb[i] << "," << mValuesBCProb[i] << "\n";
-  }
+    out << "Correlation diagram (avg. connection probability)\n";
+    out << "postNeuronID,avgConnectionProbability_A->C,avgConnectionProbability_B->C\n";
+    for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
+        auto it = mMappingSliceRBC.find(mPostNeuronId[i]);
+        out << it->second << "," << mValuesACProb[i] << "," << mValuesBCProb[i] << "\n";
+    }
 };
