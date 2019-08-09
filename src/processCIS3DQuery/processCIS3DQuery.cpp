@@ -10,6 +10,7 @@
 #include "SpatialInnervationQueryHandler.h"
 #include "VoxelQueryHandler.h"
 #include "UtilIO.h"
+#include "RandomGenerator.h"
 
 void
 myMessageOutput(QtMsgType, const QMessageLogContext&, const QString& msg)
@@ -17,6 +18,8 @@ myMessageOutput(QtMsgType, const QMessageLogContext&, const QString& msg)
     QTextStream cout(stdout, QIODevice::WriteOnly);
     cout << msg << endl;
 }
+
+SingletonRandom *SingletonRandom::instance = 0;
 
 int
 main(int argc, char* argv[])
