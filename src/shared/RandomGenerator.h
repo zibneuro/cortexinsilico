@@ -9,7 +9,7 @@
 */
 class RandomGenerator
 {
-public:
+  public:
     /*
         Constructor.
 
@@ -35,7 +35,7 @@ public:
         Shuffles the entries of the specified list.
         @param list. A list of integers. 
     */
-    void shuffleList(QList<int>& list);
+    void shuffleList(QList<int> &list);
 
     QList<int> getSample(const QList<int> list, int nSamples);
 
@@ -67,8 +67,11 @@ public:
      */
     unsigned int drawNumber(unsigned int max);
 
-private:
+    double drawNumberZeroOne();
 
+    std::vector<double> drawRandomPoisson(int n);
+
+  private:
     long drawPoissonKnuth(double lambda);
 
     long drawPoissonHoermann(double lambda);
@@ -77,11 +80,48 @@ private:
 
     unsigned int drawNumberRange(unsigned int max);
 
-    double drawNumberZeroOne();
-
-    void permute(QList<int>& list);
+    void permute(QList<int> &list);
 
     std::mt19937 mRandomGenerator;
     bool mUserSeed;
     unsigned int mSeed;
+};
+
+class SingletonRandom
+{
+    static SingletonRandom *instance;
+    std::mt19937 mGen;
+
+    SingletonRandom()
+    {
+        std::random_device rd;
+        unsigned int seed = rd();
+        mGen = std::mt19937(seed);
+    }
+
+  public:
+    static SingletonRandom *getInstance()
+    {
+        if (!instance)
+            instance = new SingletonRandom;
+        return instance;
+    }
+
+    float getNumberUniformDistribution(float a, float b)
+    {
+        std::uniform_real_distribution<float> distribution(a, b);
+        return distribution(mGen);
+    }
+
+    float getNumberNormalDistribution(float mu, float sigma)
+    {
+        std::normal_distribution<float> distribution (mu, sigma);
+        return distribution(mGen);
+    }
+
+    float getNumberBernoulliDistribution(float p)
+    {
+        std::bernoulli_distribution distribution (p);
+        return distribution(mGen) ? 1 : 0;
+    }
 };

@@ -306,6 +306,29 @@ unsigned int RandomGenerator::drawNumber(unsigned int max){
     return randomNumber;
 }
 
+std::vector<double> RandomGenerator::drawRandomPoisson(int n){
+    std::vector<double> lambda;
+    std::vector<double> poisson;
+    for(int i=0; i<n; i++){
+        lambda.push_back(100 * drawNumberZeroOne());
+        poisson.push_back(0);
+    }
+
+    clock_t begin = std::clock();
+#pragma omp parallel
+#pragma omp for
+
+    for(int i=0; i<lambda.size(); i++){
+        poisson[i] = drawPoissonDouble(lambda[i]);
+    }
+
+    clock_t end = std::clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    qDebug() << "time for " << n << ": " << elapsed_secs << "sec";
+
+    return poisson;
+}
+
 unsigned int RandomGenerator::drawNumberRange(unsigned int max){
     if(max == 0){
         return 0;
