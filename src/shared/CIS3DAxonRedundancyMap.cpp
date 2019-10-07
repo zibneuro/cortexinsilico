@@ -2,6 +2,8 @@
 #include <QDataStream>
 #include <QDebug>
 #include <QFile>
+#include <QDir>
+#include <QFileInfo>
 #include <QIODevice>
 #include <QString>
 #include <QTextStream>
@@ -19,7 +21,7 @@ void AxonRedundancyMap::add(const int neuronId, const int neuronIdToUse) {
                 .arg(neuronId);
         throw std::runtime_error(qPrintable(msg));
     }
-    mMap.insert(neuronId, neuronIdToUse);
+    mMap.insert(neuronId, neuronIdToUse);    
 }
 
 /**
@@ -84,16 +86,48 @@ void AxonRedundancyMap::saveCSV(const QString &fileName) const {
     @throws: runtime_error in case of failure.
 */
 int AxonRedundancyMap::loadBinary(const QString &fileName) {
-    QFile redundancyMapFile(fileName);
-    QTextStream(stdout) << "[*] Reading axon redundancy map from " << fileName << "\n";
+    QString flatFileName = QDir(QFileInfo(fileName).path()).absoluteFilePath("axon_mapping");
+    QFileInfo flatFileInfo(flatFileName);
+    if(flatFileInfo.exists()){
+        loadFlatFile(flatFileName);
+        return 1;
+    } else {
 
-    if (!redundancyMapFile.open(QIODevice::ReadOnly)) {
-        throw std::runtime_error("Cannot open axon morphology redundancy file");
+        QFile redundancyMapFile(fileName);
+        QTextStream(stdout) << "[*] Reading axon redundancy map from " << fileName << "\n";
+
+        if (!redundancyMapFile.open(QIODevice::ReadOnly)) {
+            throw std::runtime_error("Cannot open axon morphology redundancy file");
+        }
+        QDataStream stream(&redundancyMapFile);
+        stream >> mMap;
+
+        QTextStream(stdout) << "[*] Completed reading " << mMap.size() << " entries.\n";
+
+        return 1;
     }
-    QDataStream stream(&redundancyMapFile);
-    stream >> mMap;
+}
 
-    QTextStream(stdout) << "[*] Completed reading " << mMap.size() << " entries.\n";
+void AxonRedundancyMap::loadFlatFile(QString fileName){
+    mMap.clear();
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        const QString msg =
+            QString("Error reading file. Could not open file %1").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    QTextStream in(&file);
+    QString line = in.readLine();
+    while (!line.isNull())
+    {
+        QStringList parts = line.split(' ');
+        mMap[parts[0].toInt()] = parts[1].toInt();
+        line = in.readLine();
+    }
+}
 
-    return 1;
+bool AxonRedundancyMap::isUnique(int neuronId){
+    int mappedId = getNeuronIdToUse(neuronId);
+    return mappedId == neuronId;
 }

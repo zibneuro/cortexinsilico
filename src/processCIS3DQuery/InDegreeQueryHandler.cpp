@@ -22,7 +22,7 @@
 InDegreeQueryHandler::InDegreeQueryHandler() : QueryHandler() {}
 
 void InDegreeQueryHandler::doProcessQuery() {
-    InDegreeStatistic stat(mNetwork, mSampleNumber, mSampleSeed, mCalculator, this);
+    InDegreeStatistic stat(mNetwork, mSampleNumber, mSampleSeed, mSampleEnabled, mCalculator, this);
     stat.calculate(mSelection);
 }
 

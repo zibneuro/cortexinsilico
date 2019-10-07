@@ -87,14 +87,6 @@ private:
     double calculateConnectionProbability(double innervation);
 
     /**
-        Calculates the convergence to the specified postsynaptic neuron.
-        @param presynapticNeurons The IDs of the presynaptic neurons.
-        @param postsynapticNeuronId The ID of the postsynaptic neuron.
-        @return  The convergence to the postsynaptic neuron.
-    */
-    double calculateConvergence(IdList& presynapticNeurons, int postsynapticNeuronId, int preSelectionIndex, int postSelectionIndex);
-
-    /**
         Calculates the average convergence to for all combinations by
         sampling a subset of the postsynaptic neurons in each group.
         @param selection The selected neuron groups.

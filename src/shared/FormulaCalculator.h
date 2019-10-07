@@ -8,6 +8,7 @@ typedef exprtk::symbol_table<float> symbol_table_t;
 typedef exprtk::expression<float> expression_t;
 typedef exprtk::parser<float> parser_t;
 
+
 class FormulaCalculator
 {
 public:    
@@ -19,6 +20,8 @@ public:
     float clampProbability(float probability);
 
 private:
+    bool mUseCustomSynapseDistributionFormula;
+    std::string mDefaultSynapseDistributionFormula;
     std::string mSynapseDistributionFormula;
     bool mUseCustomConnectionProbabilityFormula;
     std::string mConnectionProbabilityFormula;

@@ -1,4 +1,5 @@
 #include "FormulaCalculator.h"
+#include "RandomGenerator.h"
 #include <QDebug>
 #include <iostream>
 
@@ -8,6 +9,8 @@ FormulaCalculator::FormulaCalculator()
 
 FormulaCalculator::FormulaCalculator(QJsonObject formulas)
 {
+    mUseCustomSynapseDistributionFormula = formulas["synapseDistributionMode"].toString() == "custom";
+    mDefaultSynapseDistributionFormula = "(DSO^k)/fact(k)*exp(-DSO)";
     mSynapseDistributionFormula = formulas["synapseDistributionFormula"].toString().toStdString();
     mUseCustomConnectionProbabilityFormula = formulas["connectionProbabilityMode"].toString() == "formula";
     mConnectionProbabilityFormula = formulas["connectionProbabilityFormula"].toString().toStdString();
@@ -33,19 +36,51 @@ nCk(T n, T k)
     return factorial(n) / (factorial(k) * factorial(n-k));
 }
 
+template <typename T>
+inline T
+getRandom(float a, float b)
+{    
+    return (float)SingletonRandom::getInstance()->getNumberUniformDistribution(a, b);
+}
+
+template <typename T>
+inline T
+getRandomGauss(float mu, float sigma)
+{    
+    return (float)SingletonRandom::getInstance()->getNumberNormalDistribution(mu, sigma);
+}
+
+template <typename T>
+inline T
+getRandomBernoulli(float p)
+{    
+    return (float)SingletonRandom::getInstance()->getNumberBernoulliDistribution(p);
+}
+
 bool
 FormulaCalculator::init()
 {
     bool valid = true;
-    mSymbolTable.add_variable("i", mCurrentValue_i);
+    mSymbolTable.add_variable("dso", mCurrentValue_i);
+    mSymbolTable.add_variable("DSO", mCurrentValue_i);
     mSymbolTable.add_variable("k", mCurrentValue_k);
     mSymbolTable.add_function("fact", factorial);
     mSymbolTable.add_function("nCk", nCk);
+    mSymbolTable.add_function("rand", getRandom);
+    mSymbolTable.add_function("gauss", getRandomGauss);
+    mSymbolTable.add_function("bernoulli", getRandomBernoulli);
     mSymbolTable.add_constants();
     mSynapseExpression.register_symbol_table(mSymbolTable);
     mConnectionProbabilityExpression.register_symbol_table(mSymbolTable);
     parser_t parser;
-    valid &= parser.compile(mSynapseDistributionFormula, mSynapseExpression);
+    if (mUseCustomSynapseDistributionFormula)
+    {
+        valid &= parser.compile(mSynapseDistributionFormula, mSynapseExpression);
+    }
+    else 
+    {
+        valid &= parser.compile(mDefaultSynapseDistributionFormula, mSynapseExpression);
+    }
     if (mUseCustomConnectionProbabilityFormula)
     {
         valid &= parser.compile(mConnectionProbabilityFormula, mConnectionProbabilityExpression);

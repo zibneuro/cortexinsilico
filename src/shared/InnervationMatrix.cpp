@@ -39,9 +39,9 @@ CacheEntry::load(QString filePath)
 }
 
 float
-CacheEntry::getValue(int postId)
+CacheEntry::getValue(int postId, unsigned long long currentHit)
 {
-    mHits++;
+    mHits = currentHit;
     return mInnervation[postId];
 }
 
@@ -49,7 +49,7 @@ int CacheEntry::getPreId(){
     return mPreId;
 }
 
-long
+unsigned long long
 CacheEntry::getHits() const
 {
     return mHits;
@@ -62,7 +62,8 @@ CacheEntry::getHits() const
 InnervationMatrix::InnervationMatrix(const NetworkProps& networkProps)
     : mNetwork(networkProps)
     , mCacheLimit(100)
-    , mRandomGenerator(-1){};
+    , mRandomGenerator(-1)
+    , mCurrentHit(0){};
 
 /**
     Destructor.
@@ -74,69 +75,14 @@ InnervationMatrix::~InnervationMatrix()
     clearCache(mInnervationBasal);
 }
 
-/**
-    Retrieves innervation between the specified neurons.
-    @param pre The presynaptic neuron ID.
-    @param post The postsynaptic neuron ID.
-    @return The innervation from presynaptic to postsynaptic neuron.
-*/
-float
-InnervationMatrix::getValue(int preId, int postId, int selectionIndex, CIS3D::Structure target)
-{
-    CIS3D::SynapticSide preSide = mNetwork.neurons.getSynapticSide(preId);
-    CIS3D::SynapticSide postSide = mNetwork.neurons.getSynapticSide(postId);
-    if (preSide == CIS3D::SynapticSide::POSTSYNAPTIC)
-    {
-        int mappedId = getRandomDuplicatedPreId(selectionIndex);
-        if (mappedId != -1)
-        {
-            preId = mappedId;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-    if (postSide == CIS3D::SynapticSide::PRESYNAPTIC)
-    {
-        return 0;
-    }
-
-    return getValue(preId, postId, target);
-}
 
 float
 InnervationMatrix::getValue(int preId, int postId, CIS3D::Structure target)
 {
+    mCurrentHit++;
     const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
     CacheEntry* entry = getEntry(mappedPreId, target);
-    return entry->getValue(postId);
-}
-
-void
-InnervationMatrix::setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC)
-{
-    mOriginalPreIdsA = preIdsA;
-    mOriginalPreIdsB = preIdsB;
-    mOriginalPreIdsC = preIdsC;
-    mRandomGenerator = RandomGenerator(-1);
-}
-
-int
-InnervationMatrix::getRandomDuplicatedPreId(int selectionIndex)
-{
-    if (selectionIndex == 0)
-    {
-        return mRandomGenerator.getRandomEntry(mOriginalPreIdsA);
-    }
-    else if (selectionIndex == 1)
-    {
-        return mRandomGenerator.getRandomEntry(mOriginalPreIdsB);
-    }
-    else
-    {
-        return mRandomGenerator.getRandomEntry(mOriginalPreIdsC);
-    }
+    return entry->getValue(postId, mCurrentHit);
 }
 
 void
@@ -200,15 +146,19 @@ void
 InnervationMatrix::pruneCache(std::map<int, CacheEntry*>& cache)
 {
     //qDebug() << "Prune" << cache.size();
-    std::map<long, int> hitsPreId;
+    std::map<unsigned long long, int> hitsPreId;
     for(auto it = cache.begin(); it != cache.end(); it++){
         hitsPreId[it->second->getHits()] = it->first;
     }
 
-    int toDelete = hitsPreId.begin()->second;
-    //qDebug() << "Delete" << toDelete << hitsPreId.begin()->first;
-    delete cache[toDelete];
-    cache.erase(toDelete);
-    //qDebug() << "After delete" << cache.size();
-
+    int i = 0;
+    for(auto it = hitsPreId.begin(); it != hitsPreId.end(); it++){
+        if(i > 0.5 * static_cast<float>(cache.size())){
+            break;
+        }
+        int toDelete = it->second;
+        delete cache[toDelete];
+        cache.erase(toDelete);
+        i++;
+    }
 }

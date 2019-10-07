@@ -115,7 +115,7 @@ namespace Util
 
     QString getResultFileHeader(const QJsonObject& spec);
 
-    CIS3D::Structure getPostsynapticTarget(QString selectionString);
+    CIS3D::Structure getPostsynapticTarget(QJsonArray& conditions);
 
     QString getPostFolderName(CIS3D::Structure target);
 
@@ -135,6 +135,8 @@ namespace Util
 
     bool matchCells(QJsonObject& networkSpec, int number);
 
+    bool matchCellOptionSet(QJsonObject& networkSpec);
+
     int getOppositeNetworkNumber(int number);
 
     bool isSampled(QJsonObject& networkSpec, int number, int& samplingFactor, int& randomSeed);
@@ -143,7 +145,7 @@ namespace Util
 
     QString getShortName(QJsonObject& networkSpec, int number);
 
-    QString writeNetworkDescription(QJsonObject& networkSelection, int number);
+    QString writeNetworkDescription(QJsonObject& networkSelection, int number, bool capital = true);
 
     QString writeFilterConditions(QJsonArray conditions);
 
@@ -157,7 +159,7 @@ namespace Util
 
     QString writeTissueDepthDescription(QJsonObject& tissueDepth);
 
-    void getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed);
+    void getSampleSettings(QJsonObject& sampleSettings, int network, int& sampleSize, int& randomSeed, bool& enabled);
 
     CIS3D::SynapticSide getSynapticSide(QJsonObject& selectionFilter);
 
@@ -168,6 +170,11 @@ namespace Util
 
     QString writeVoxelSelectionDescription(QJsonObject& voxelSelection);
 
+    QString formatVolume(int nVoxels);
+
+    bool isSlice(QString networkName);
+
+    QJsonObject getCondition(QJsonArray& conditions, QString id, bool& exists);
 
 } // namespace Util
 

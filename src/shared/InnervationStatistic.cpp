@@ -66,6 +66,10 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
         postInnervation[postId] = 0;
     }
 
+    for (auto itPre = preIds.begin(); itPre != preIds.end(); itPre++) {
+        qDebug() << "PRE ID" << itPre->first << itPre->second;
+    }
+
     for (auto itPre = preIds.begin(); itPre != preIds.end(); itPre++)
     {
         if (mAborted)

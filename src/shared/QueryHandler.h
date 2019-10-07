@@ -57,6 +57,7 @@ protected:
   QJsonObject mSampleSettings;
   int mSampleNumber;
   int mSampleSeed;
+  bool mSampleEnabled;
   bool mAborted;
   FormulaCalculator mCalculator;
   NetworkProps mNetwork;

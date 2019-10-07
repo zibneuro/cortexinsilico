@@ -1,12 +1,11 @@
 #include "NeuronSelection.h"
+#include "Columns.h"
+#include "Util.h"
+#include "UtilIO.h"
 #include <QDebug>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <iostream>
-#include "Columns.h"
-#include "Util.h"
-#include "UtilIO.h"
-
 
 /**
   Empty constructor.
@@ -20,8 +19,7 @@ NeuronSelection::NeuronSelection() {
 NeuronSelection::NeuronSelection(const IdList &selectionA,
                                  const IdList &selectionB,
                                  const IdList &selectionC)
-    : mSelectionA(selectionA),
-      mSelectionB(selectionB),
+    : mSelectionA(selectionA), mSelectionB(selectionB),
       mSelectionC(selectionC) {
   mPostTarget.push_back(CIS3D::DEND);
   mPostTarget.push_back(CIS3D::DEND);
@@ -176,7 +174,6 @@ void NeuronSelection::setFullModel(const NetworkProps &networkProps,
       mSelectionB.append(postNeurons[i]);
     }
   }
-
 }
 
 void NeuronSelection::filterPiaSoma(IdList &neuronIds, QVector<float> range,
@@ -249,7 +246,8 @@ void NeuronSelection::filterSlice(const NetworkProps &networkProps,
 void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
                                             NetworkProps &networkProps,
                                             const QJsonObject &config) {
-  // qDebug() << "set selection from query" << query;
+
+  mMappingDir = config["NEURON_MAPPING_DIRECTORY"].toString();
   QJsonObject networkSelection = query["networkSelection"].toObject();
   int number = query["networkNumber"].toInt();
   QString networkName = Util::getShortName(networkSelection, number);
@@ -257,7 +255,8 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
   QJsonObject selectionA = cellSelection["selectionA"].toObject();
   QJsonObject selectionB = cellSelection["selectionB"].toObject();
   QJsonObject selectionC = cellSelection["selectionC"].toObject();
-  QString queryType = query["queryType"].toString();
+  mQueryType = query["queryType"].toString();    
+  mSliceUniquePre = Util::matchCells(networkSelection, Util::getOppositeNetworkNumber(number));
 
   QString dataRoot = Util::getDatasetPath(networkName, config);
   networkProps.setDataRoot(dataRoot);
@@ -267,48 +266,58 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
                    selectionB, selectionC);
 
   if (Util::matchCells(networkSelection, number)) {
+    mSliceUniquePre = true;
     int oppositeNumber = Util::getOppositeNetworkNumber(number);
     QString networkName2 = Util::getShortName(networkSelection, oppositeNumber);
     QString dataRoot2 = Util::getDatasetPath(networkName2, config);
-    mMappingDir = config["NEURON_MAPPING_DIRECTORY"].toString();
+
     NetworkProps networkProps2;
     networkProps2.setDataRoot(dataRoot2);
     networkProps2.loadFilesForQuery();
 
     processSelection(networkSelection, oppositeNumber, networkProps2,
                      selectionA, selectionB, selectionC, true);
+
+    QDir mappingDir = QDir(mMappingDir);
+    QString remappedAxonFile = CIS3D::getRemappedAxonFilePath(mappingDir, networkName, networkName2);
+    //networkProps.axonRedundancyMap.loadFlatFile(remappedAxonFile);        
   }
 
-  /*  if (queryType == "spatialInnervation") {
-      filterUniquePre(networkProps);
-    }*/
+  double foo;
+  if(Util::isSlice(networkSelection, number, foo)){
+      QDir mappingDir = QDir(mMappingDir);
+      QString rbc = "RBC";
+      QString path =
+              CIS3D::getMappingFilePath(mappingDir, networkName, rbc);
+      mMappingSliceRBC = readMapping(path);
+  }
 }
 
-IdList getExplicitIds(const QJsonObject &spec, QString key){
-    IdList ids;
-    if(spec[key] != QJsonValue::Undefined){
-      QJsonArray jsonIds = spec[key].toArray();
-      for (int i=0; i<jsonIds.size(); i++) {
-        ids.append(jsonIds[i].toInt());
-      }
+IdList getExplicitIds(const QJsonObject &spec, QString key) {
+  IdList ids;
+  if (spec[key] != QJsonValue::Undefined) {
+    QJsonArray jsonIds = spec[key].toArray();
+    for (int i = 0; i < jsonIds.size(); i++) {
+      ids.append(jsonIds[i].toInt());
     }
-    return ids;
+  }
+  return ids;
 }
 
 void NeuronSelection::setInnervationSelection(const QJsonObject &spec,
                                               const NetworkProps &networkProps,
                                               int samplingFactor, int seed) {
-    mVoxelWhitelist = UtilIO::getVoxelWhitelist(spec);
+  mVoxelWhitelist = UtilIO::getVoxelWhitelist(spec);
 
-    qDebug() << "whitelist size" << mVoxelWhitelist.size();
+  qDebug() << "whitelist size" << mVoxelWhitelist.size();
 
-   IdList explicitA = getExplicitIds(spec, "PRE_NEURON_IDS");
-   IdList explicitB = getExplicitIds(spec, "POST_NEURON_IDS");
-   if(explicitA.size() > 0 && explicitB.size() > 0){
-       mSelectionA.append(explicitA);
-       mSelectionB.append(explicitB);
-       return;
-   }
+  IdList explicitA = getExplicitIds(spec, "PRE_NEURON_IDS");
+  IdList explicitB = getExplicitIds(spec, "POST_NEURON_IDS");
+  if (explicitA.size() > 0 && explicitB.size() > 0) {
+    mSelectionA.append(explicitA);
+    mSelectionB.append(explicitB);
+    return;
+  }
 
   IdList pre = UtilIO::getPreSynapticNeurons(spec, networkProps);
   IdList post = UtilIO::getPostSynapticNeuronIds(spec, networkProps);
@@ -334,10 +343,7 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
                                        QJsonObject &selectionA,
                                        QJsonObject &selectionB,
                                        QJsonObject &selectionC, bool prune) {
-  QString selectionAString = selectionA["filterAsText"].toString();
-  QString selectionBString = selectionB["filterAsText"].toString();
-  QString selectionCString = selectionC["filterAsText"].toString();
-
+  
   QJsonArray conditionsA = selectionA["conditions"].toArray();
   QJsonArray conditionsB = selectionB["conditions"].toArray();
   QJsonArray conditionsC = selectionC["conditions"].toArray();
@@ -349,6 +355,11 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
   CIS3D::SynapticSide sideA = Util::getSynapticSide(selectionA);
   CIS3D::SynapticSide sideB = Util::getSynapticSide(selectionB);
   CIS3D::SynapticSide sideC = Util::getSynapticSide(selectionC);
+
+  QString networkName = Util::getShortName(networkSelection, number);
+  if (Util::isSlice(networkName)) {
+    correctSynapticSide(sideA, sideB, sideC, enabledA, enabledB, enabledC);
+  }
 
   IdList neuronsA, neuronsB, neuronsC;
 
@@ -402,11 +413,11 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
     mNetworkName = Util::getShortName(networkSelection, number);
     copySelection(tmpSelection);
     CIS3D::Structure postTargetA =
-        Util::getPostsynapticTarget(selectionAString);
+        Util::getPostsynapticTarget(conditionsA);
     CIS3D::Structure postTargetB =
-        Util::getPostsynapticTarget(selectionBString);
+        Util::getPostsynapticTarget(conditionsB);
     CIS3D::Structure postTargetC =
-        Util::getPostsynapticTarget(selectionCString);
+        Util::getPostsynapticTarget(conditionsC);
     setPostTarget(postTargetA, postTargetB, postTargetC);
   }
 }
@@ -542,12 +553,11 @@ bool NeuronSelection::isSelectionValid(QJsonObject &selection, QString index,
 }
 
 /**
- * @brief Returns a set of explicitly selected voxels (specification parameter VOXEL_WHITELIST).
+ * @brief Returns a set of explicitly selected voxels (specification parameter
+ * VOXEL_WHITELIST).
  * @return The selected voxels. Empty by default.
  */
-std::set<int> NeuronSelection::getVoxelWhitelist(){
-    return mVoxelWhitelist;
-}
+std::set<int> NeuronSelection::getVoxelWhitelist() { return mVoxelWhitelist; }
 
 bool NeuronSelection::isValid(QJsonObject &query, QString &errorMessage) {
   QJsonObject cellSelection = query["cellSelection"].toObject();
@@ -562,6 +572,19 @@ bool NeuronSelection::isValid(QJsonObject &query, QString &errorMessage) {
   } else {
     return false;
   };
+}
+
+bool NeuronSelection::useSliceUniquePre(){
+    return mSliceUniquePre;
+}
+
+int NeuronSelection::getRBCId(int neuronId) const{
+    auto it = mMappingSliceRBC.find(neuronId);
+    if(it != mMappingSliceRBC.end()){
+        return it->second;
+    } else {
+        return neuronId;
+    }
 }
 
 bool NeuronSelection::inSliceBand(double somaX, double min, double max) {
@@ -642,14 +665,18 @@ void NeuronSelection::pruneIds(IdList &selection, std::set<int> &allowed) {
   selection = prunedSelection;
 }
 
+
+
 std::map<int, int> NeuronSelection::readMapping(NeuronSelection &selection) {
   QString networkName = selection.getNetworkName();
   QDir mappingDir = QDir(mMappingDir);
   QString path =
       CIS3D::getMappingFilePath(mappingDir, networkName, mNetworkName);
+  return readMapping(path);
+}
 
+std::map<int, int> NeuronSelection::readMapping(QString path) {
   std::map<int, int> mapping;
-
   QFile mappingFile(path);
   if (mappingFile.open(QIODevice::ReadOnly)) {
     QTextStream in(&mappingFile);
@@ -671,8 +698,9 @@ std::map<int, int> NeuronSelection::readMapping(NeuronSelection &selection) {
   return mapping;
 }
 
-std::map<int, int> NeuronSelection::doGetMultiplicities(
-    const NetworkProps &network, IdList &selection) {
+std::map<int, int>
+NeuronSelection::doGetMultiplicities(const NetworkProps &network,
+                                     IdList &selection) {
   std::map<int, int> multiplicities;
   for (int i = 0; i < selection.size(); i++) {
     int preId = selection[i];
@@ -686,8 +714,9 @@ std::map<int, int> NeuronSelection::doGetMultiplicities(
   return multiplicities;
 }
 
-std::map<int, int> NeuronSelection::getMultiplicities(
-    const NetworkProps &network, QString selectionIndex) {
+std::map<int, int>
+NeuronSelection::getMultiplicities(const NetworkProps &network,
+                                   QString selectionIndex) {
   if (selectionIndex == "A") {
     return doGetMultiplicities(network, mSelectionA);
   } else if (selectionIndex == "B") {
@@ -695,4 +724,43 @@ std::map<int, int> NeuronSelection::getMultiplicities(
   } else {
     return doGetMultiplicities(network, mSelectionC);
   }
+}
+
+void NeuronSelection::correctSynapticSide(CIS3D::SynapticSide &sideA,
+                                          CIS3D::SynapticSide &sideB,
+                                          CIS3D::SynapticSide &sideC,
+                                          bool /*aEnabled*/, bool /*bEnabled*/,
+                                          bool cEnabled) {  
+  
+  QString evaluationQuery = "innervation";
+  if (mQueryType == "selection") {    
+    if(cEnabled){
+      if (sideA == CIS3D::PRESYNAPTIC) {
+        evaluationQuery = "inDegree";
+      } else {
+        evaluationQuery = "triplet";
+      }
+    }    
+  } else {
+    evaluationQuery = mQueryType;
+  }
+
+  CIS3D::SynapticSide remappedSide = mSliceUniquePre ? CIS3D::POSTSYNAPTIC_MAPPED : CIS3D::POSTSYNAPTIC;
+
+
+  if(evaluationQuery == "innervation" || evaluationQuery == "spatialInnervation"){
+      sideA = remappedSide;
+  }
+
+  if(evaluationQuery == "inDegree"){    
+      sideA = remappedSide;
+      sideB = remappedSide;    
+  }
+
+  if(evaluationQuery == "triplet"){
+    sideA = remappedSide;
+    sideB = remappedSide;
+    sideC = remappedSide;
+  }
+
 }

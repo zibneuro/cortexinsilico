@@ -49,7 +49,12 @@ public:
     */
     int loadBinary(const QString& fileName);
 
+    void loadFlatFile(QString fileName);
+
+    bool isUnique(int neuronId);
+
 private:
-    QHash<int, int> mMap;
+
+    QHash<int, int> mMap;    
 
 };

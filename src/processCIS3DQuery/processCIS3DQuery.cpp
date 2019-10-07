@@ -10,6 +10,7 @@
 #include "SpatialInnervationQueryHandler.h"
 #include "VoxelQueryHandler.h"
 #include "UtilIO.h"
+#include "RandomGenerator.h"
 
 void
 myMessageOutput(QtMsgType, const QMessageLogContext&, const QString& msg)
@@ -17,6 +18,8 @@ myMessageOutput(QtMsgType, const QMessageLogContext&, const QString& msg)
     QTextStream cout(stdout, QIODevice::WriteOnly);
     cout << msg << endl;
 }
+
+SingletonRandom *SingletonRandom::instance = 0;
 
 int
 main(int argc, char* argv[])
@@ -35,6 +38,7 @@ main(int argc, char* argv[])
         DataUploadHandler* handler = new DataUploadHandler();
         QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
         handler->uploadNetworkData(config);
+        return app.exec();
     }
     else if (operation == "uploadFile")
     {
@@ -42,6 +46,7 @@ main(int argc, char* argv[])
         DataUploadHandler* handler = new DataUploadHandler();
         QObject::connect(handler, SIGNAL(completedProcessing()), &app, SLOT(quit()), Qt::QueuedConnection);
         handler->uploadFile(config, queryId, filePath);
+        return app.exec();
     }
     else if (operation == "processQuery")
     {
@@ -83,5 +88,5 @@ main(int argc, char* argv[])
     {
         throw std::runtime_error("Invalid mode.");
     }
-    return app.exec();
+    return 0;
 }

@@ -14,6 +14,7 @@ TEMPLATE = app
 QMAKE_CXXFLAGS += -fopenmp
 QMAKE_LFLAGS += -fopenmp
 
+
 INCLUDEPATH += ../shared
 
 CONFIG(debug, debug|release) {

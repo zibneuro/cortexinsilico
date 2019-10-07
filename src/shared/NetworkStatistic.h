@@ -88,8 +88,6 @@ public:
 
     void abort();
 
-    void setOriginalPreIds(QList<int> preIdsA, QList<int> preIdsB, QList<int> preIdsC);
-
     void update(NetworkStatistic* stat);
 
     void complete(NetworkStatistic* stat);

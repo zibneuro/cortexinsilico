@@ -104,7 +104,7 @@ createGeometryJSON(const QString& zipFileName,
                    const NetworkProps& network,
                    const QString& tmpDir)
 {
-    const QString zipFullPath = QString("%1/%2").arg(tmpDir).arg(zipFileName);
+    const QString zipFullPath = QDir::cleanPath(tmpDir + QDir::separator() + zipFileName);
     const QString jsonFileName = QString(zipFileName).remove(".zip");
     const QString jsonFullPath = QString(zipFullPath).remove(".zip");
 
@@ -175,14 +175,13 @@ createGeometryJSON(const QString& zipFileName,
     out << doc.toJson(QJsonDocument::Compact);
     jsonFile.close();
 
-    qDebug() << "[*] Zipping geometry file:" << jsonFullPath;
+    qDebug() << "[*] Zipping selection file:" << jsonFullPath;
     QProcess zip;
     zip.setWorkingDirectory(tmpDir);
 
     QStringList arguments;
     arguments.append(zipFileName);
     arguments.append(jsonFileName);
-    qDebug() << "Arguments" << arguments;
     zip.start("zip", arguments);
 
     if (!zip.waitForStarted())
@@ -202,6 +201,7 @@ createGeometryJSON(const QString& zipFileName,
 void
 SelectionQueryHandler::doProcessQuery()
 {
+    qDebug() << "process selection";
     IdList selectionA = mSelection.SelectionA();
     IdList selectionB = mSelection.SelectionB();
     IdList selectionC = mSelection.SelectionC();

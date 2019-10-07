@@ -151,29 +151,30 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         QTextStream out(&csv);
         out << mResultFileHeader;
 
-        out << "Voxels meeting spatial filter condition:" << sep
-            << (int)mSelectedVoxels.size() << "\n";
-        out << "Voxels with presynaptic cells:" << sep
-            << (int)mPreInnervatedVoxels.size() << "\n";
-        out << "Voxels with postsynaptic cells:" << sep
-            << (int)mPostInnervatedVoxels.size() << "\n";
+        //out << "Voxels meeting spatial filter condition:" << sep
+        //    << (int)mSelectedVoxels.size() << "\n";
+        QString unit = "[mm³]";
+        out << "Sub-volume with presynaptic cells " << unit << ":" << sep
+            << Util::formatVolume((int)mPreInnervatedVoxels.size()) << "\n";
+        out << "Sub-volume with postsynaptic cells " << unit << ":" << sep
+            << Util::formatVolume((int)mPostInnervatedVoxels.size()) << "\n";
         out << "\n";
 
-        preCellsPerVoxel.write(out, "Presynaptic cells per voxel");
-        postCellsPerVoxel.write(out, "Postsynaptic cells per voxel");
-        preBranchesPerVoxel.write(out, "Axon branches per voxel");
-        postBranchesPerVoxel.write(out, "Dendrite branches per voxel");
-        synapsesPerVoxel.write(out, "Synapses per voxel");
+        preCellsPerVoxel.write(out, "Presynaptic cells per (50\u00B5m)³");
+        postCellsPerVoxel.write(out, "Postsynaptic cells per (50\u00B5m)³");
+        preBranchesPerVoxel.write(out, "Axon branches per (50\u00B5m)³");
+        postBranchesPerVoxel.write(out, "Dendrite branches per (50\u00B5m)³");
+        synapsesPerVoxel.write(out, "Synapses per (50\u00B5m)³");
 
         out << "\n";
-        preCellsPerVoxelH.write(out, "Presynaptic cells per voxel");
-        postCellsPerVoxelH.write(out, "Postsynaptic cells per voxel");        
-        preBranchesPerVoxelH.write(out, "Axon branches per voxel");
-        postBranchesPerVoxelH.write(out, "Dendrite branches per voxel");
+        preCellsPerVoxelH.write(out, "Presynaptic cells per (50\u00B5m)³");
+        postCellsPerVoxelH.write(out, "Postsynaptic cells per (50\u00B5m)³");        
+        preBranchesPerVoxelH.write(out, "Axon branches per (50\u00B5m)³");
+        postBranchesPerVoxelH.write(out, "Dendrite branches per (50\u00B5m)³");
  
         // boutonsPerVoxelH.write(out, "Boutons per voxel");
         // postsynapticSitesPerVoxelH.write(out, "Postsynaptic sites per voxel");
-        synapsesPerVoxelH.write(out, "Synapses per voxel");
+        synapsesPerVoxelH.write(out, "Synapses per (50\u00B5m)³");
         out << "\n";
 
         out << "Number of synapses (k) per neuron pair:\n";

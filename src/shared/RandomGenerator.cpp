@@ -2,6 +2,7 @@
 #include <ctime>
 #include <QDebug>
 #include <math.h>
+#include <algorithm>
 #include <stdexcept>
 
 RandomGenerator::RandomGenerator(int userSeed)
@@ -36,6 +37,16 @@ void
 RandomGenerator::shuffleList(QList<int>& list)
 {
     permute(list);
+}
+
+QList<int> RandomGenerator::getSample(const QList<int> list, int nSamples){
+    QList<int> copy = list;
+    shuffleList(copy);
+    QList<int> sampledList;
+    for(int i=0; i<std::min(nSamples, copy.length()); i++){
+        sampledList.append(copy[i]);
+    }
+    return sampledList;
 }
 
 int
@@ -293,6 +304,29 @@ unsigned int RandomGenerator::drawNumber(unsigned int max){
     std::uniform_int_distribution<unsigned int> uniformDistribution(0,max);
     unsigned int randomNumber = uniformDistribution(mRandomGenerator);
     return randomNumber;
+}
+
+std::vector<double> RandomGenerator::drawRandomPoisson(int n){
+    std::vector<double> lambda;
+    std::vector<double> poisson;
+    for(int i=0; i<n; i++){
+        lambda.push_back(100 * drawNumberZeroOne());
+        poisson.push_back(0);
+    }
+
+    clock_t begin = std::clock();
+#pragma omp parallel
+#pragma omp for
+
+    for(int i=0; i<lambda.size(); i++){
+        poisson[i] = drawPoissonDouble(lambda[i]);
+    }
+
+    clock_t end = std::clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    qDebug() << "time for " << n << ": " << elapsed_secs << "sec";
+
+    return poisson;
 }
 
 unsigned int RandomGenerator::drawNumberRange(unsigned int max){
