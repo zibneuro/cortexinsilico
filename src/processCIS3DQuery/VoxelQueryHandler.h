@@ -34,6 +34,8 @@ private:
   void createStatistics(std::map<int, T> &values, Statistics &stat,
                         Histogram &histogram);
 
+  QString getMode(QJsonObject& mQuery);
+
   Statistics mStatistics;
   QString mTempFolder;
 

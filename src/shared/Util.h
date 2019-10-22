@@ -5,11 +5,13 @@
 #include <QString>
 #include "CIS3DNetworkProps.h"
 #include "CIS3DNeurons.h"
+#include "CIS3DRegions.h"
 #include "CIS3DStatistics.h"
 #include "Histogram.h"
 #include "Typedefs.h"
 #include "CIS3DConstantsHelpers.h"
 #include <QJsonObject>
+#include <set>
 
 class QJsonObject;
 class QJsonArray;
@@ -175,6 +177,10 @@ namespace Util
     bool isSlice(QString networkName);
 
     QJsonObject getCondition(QJsonArray& conditions, QString id, bool& exists);
+
+    void getRange(QJsonArray& conditions, QString id, double defaultMin, double defaultMax, double& min, double& max);
+
+    std::set<int> getPermittedSubvolumeRegionIds(QJsonArray& conditions, Regions& regions);
 
 } // namespace Util
 

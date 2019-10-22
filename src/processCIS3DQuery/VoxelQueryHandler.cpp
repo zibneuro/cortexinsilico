@@ -22,10 +22,9 @@
 #include <stdexcept>
 
 template <typename T>
-void
-VoxelQueryHandler::createStatistics(std::map<int, T>& values,
-                                    Statistics& stat,
-                                    Histogram& histogram)
+void VoxelQueryHandler::createStatistics(std::map<int, T> &values,
+                                         Statistics &stat,
+                                         Histogram &histogram)
 {
     for (auto it = values.begin(); it != values.end(); it++)
     {
@@ -37,6 +36,25 @@ VoxelQueryHandler::createStatistics(std::map<int, T>& values,
     for (auto it = values.begin(); it != values.end(); it++)
     {
         histogram.addValue(it->second);
+    }
+}
+
+QString VoxelQueryHandler::getMode(QJsonObject &mQuery)
+{
+    bool hasPre = !mQuery["cellSelection"].toObject()["selectionA"].toObject()["conditions"].toArray().empty();
+    bool hasPost = !mQuery["cellSelection"].toObject()["selectionB"].toObject()["conditions"].toArray().empty();
+    bool hasSubvolume = !mQuery["cellSelection"].toObject()["selectionC"].toObject()["conditions"].toArray().empty();
+    if (!hasSubvolume)
+    {
+        return "prePost";
+    }
+    else if (hasPre || hasPost)
+    {
+        return "prePostVoxel";
+    }
+    else
+    {
+        return "voxel";
     }
 }
 
@@ -168,10 +186,10 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
         out << "\n";
         preCellsPerVoxelH.write(out, "Presynaptic cells per (50\u00B5m)³");
-        postCellsPerVoxelH.write(out, "Postsynaptic cells per (50\u00B5m)³");        
+        postCellsPerVoxelH.write(out, "Postsynaptic cells per (50\u00B5m)³");
         preBranchesPerVoxelH.write(out, "Axon branches per (50\u00B5m)³");
         postBranchesPerVoxelH.write(out, "Dendrite branches per (50\u00B5m)³");
- 
+
         // boutonsPerVoxelH.write(out, "Boutons per voxel");
         // postsynapticSitesPerVoxelH.write(out, "Postsynaptic sites per voxel");
         synapsesPerVoxelH.write(out, "Synapses per (50\u00B5m)³");
@@ -214,36 +232,9 @@ VoxelQueryHandler::VoxelQueryHandler()
 {
 }
 
-void
-VoxelQueryHandler::doProcessQuery()
+void VoxelQueryHandler::doProcessQuery()
 {
-    QJsonObject voxelSelection = mQuery["voxelSelection"].toObject();
-    QJsonObject voxelFilter = voxelSelection["voxelFilter"].toObject();
-    QString mode = voxelFilter["mode"].toString();
-    std::vector<double> voxelOrigin;
-    std::vector<int> voxelDimensions;
-    if (mode == "voxel" || mode == "prePostVoxel")
-    {
-        voxelOrigin.push_back(voxelFilter["originX"].toDouble());
-        voxelOrigin.push_back(voxelFilter["originY"].toDouble());
-        voxelOrigin.push_back(voxelFilter["originZ"].toDouble());
-        voxelDimensions.push_back(voxelFilter["dimX"].toInt(1));
-        voxelDimensions.push_back(voxelFilter["dimY"].toInt(1));
-        voxelDimensions.push_back(voxelFilter["dimZ"].toInt(1));
-    }
-    else
-    {
-        voxelOrigin.push_back(-5000);
-        voxelOrigin.push_back(-5000);
-        voxelOrigin.push_back(-5000);
-        voxelDimensions.push_back(500);
-        voxelDimensions.push_back(500);
-        voxelDimensions.push_back(500);
-    }
-
-    qDebug() << "[*] Voxel query: " << mode << voxelOrigin[0] << voxelOrigin[1]
-             << voxelOrigin[2] << voxelDimensions[0] << voxelDimensions[1]
-             << voxelDimensions[2];
+    QString mode = getMode(mQuery);
 
     // ################# DETERMINE NEURON IDS #################
 
@@ -251,6 +242,7 @@ VoxelQueryHandler::doProcessQuery()
 
     if (mode == "prePost" || mode == "prePostVoxel")
     {
+        mQuery["cellSelection"].toObject()["selectionC"].toObject().insert("enabled", false);
         mSelection.setSelectionFromQuery(mQuery, mNetwork, mConfig);
     }
     else
@@ -313,13 +305,23 @@ VoxelQueryHandler::doProcessQuery()
     int voxelCount = -1;
     int totalVoxelCount = 0;
 
-    double minX = voxelOrigin[0];
-    double minY = voxelOrigin[1];
-    double minZ = voxelOrigin[2];
-    double maxX = voxelOrigin[0] + 50 * voxelDimensions[0];
-    double maxY = voxelOrigin[1] + 50 * voxelDimensions[1];
-    double maxZ = voxelOrigin[2] + 50 * voxelDimensions[2];
+    double minX;
+    double minY;
+    double minZ;
+    double maxX;
+    double maxY;
+    double maxZ;
+    double minDepth;
+    double maxDepth;
+    QJsonArray subvolumeConditions = mQuery["cellSelection"].toObject()["selectionC"].toObject()["conditions"].toArray();
+    qDebug() << "conditions" << subvolumeConditions;
+    Util::getRange(subvolumeConditions, "rangeX", -1114, 1408, minX, maxX);
+    Util::getRange(subvolumeConditions, "rangeY", -759, 1497, minY, maxY);
+    Util::getRange(subvolumeConditions, "rangeZ", -1461, 708, minZ, maxZ);
+    Util::getRange(subvolumeConditions, "corticalDepth", -100, 2000, minDepth, maxDepth);
+    qDebug() << "[*] Filtering sub-volumes" << minX << maxX << minY << maxY << minZ << maxZ << minDepth << maxDepth;
 
+    std::set<int> permittedRegionIds = Util::getPermittedSubvolumeRegionIds(subvolumeConditions, mNetwork.regions);
     std::set<int> filteredVoxels;
     QFile posFile(voxelPosFile);
     if (posFile.open(QIODevice::ReadOnly))
@@ -333,10 +335,12 @@ VoxelQueryHandler::doProcessQuery()
             line = line.trimmed();
             QStringList parts = line.split(" ");
 
-            int voxelId = parts[0].toInt();
+            int voxelId = parts[0].toInt() - 1;
             double voxelX = parts[1].toDouble() - 25;
             double voxelY = parts[2].toDouble() - 25;
             double voxelZ = parts[3].toDouble() - 25;
+            double depth = parts[5].toDouble();
+            int regionId = parts[6].toInt();
 
             if (voxelX >= minX && voxelX < maxX)
             {
@@ -344,9 +348,14 @@ VoxelQueryHandler::doProcessQuery()
                 {
                     if (voxelZ >= minZ && voxelZ < maxZ)
                     {
-                        mSelectedVoxels.insert(voxelId);
-                        filteredVoxels.insert(voxelId);
-                        // qDebug() << "[!] voxel ID" << voxelId;
+                        if (depth >= minDepth && depth < maxDepth)
+                        {
+                            if (permittedRegionIds.empty() || permittedRegionIds.find(regionId) != permittedRegionIds.end())
+                            {
+                                mSelectedVoxels.insert(voxelId);
+                                filteredVoxels.insert(voxelId);
+                            }
+                        }
                     }
                 }
             }
@@ -361,6 +370,9 @@ VoxelQueryHandler::doProcessQuery()
     }
 
     totalVoxelCount = filteredVoxels.size();
+
+    qDebug() << "[*] Finished filtering sub-volumes";
+
     int synK = 10;
     for (int q = 1; q <= synK; q++)
     {
@@ -485,11 +497,11 @@ VoxelQueryHandler::doProcessQuery()
                 }
             }
 
-            // Register branch            
+            // Register branch
             if (filteredVoxels.find(voxelIdBranch) != filteredVoxels.end())
             {
                 mMapPreBranchesPerVoxel[voxelIdBranch] = 0;
-                mMapPostBranchesPerVoxel[voxelIdBranch] = 0;                
+                mMapPostBranchesPerVoxel[voxelIdBranch] = 0;
                 for (int i = 4; i < partsBranch.size(); i += 2)
                 {
                     int neuronId = partsBranch[i].toInt();
@@ -506,9 +518,7 @@ VoxelQueryHandler::doProcessQuery()
                         mMapPostBranchesPerVoxel[voxelIdBranch] += branches;
                     }
                 }
-                
             }
-            
 
             // ################ REPORT UPDATE ################
             int updateRate = totalVoxelCount / 20;
@@ -536,8 +546,7 @@ VoxelQueryHandler::doProcessQuery()
     updateQuery(result, 100);
 }
 
-float
-VoxelQueryHandler::calculateSynapseProbability(float innervation, int k)
+float VoxelQueryHandler::calculateSynapseProbability(float innervation, int k)
 {
     int nfak = 1;
     float innervationPow = 1;
@@ -553,8 +562,7 @@ VoxelQueryHandler::calculateSynapseProbability(float innervation, int k)
     return synapseProb;
 }
 
-bool
-VoxelQueryHandler::initSelection()
+bool VoxelQueryHandler::initSelection()
 {
     return false;
 };

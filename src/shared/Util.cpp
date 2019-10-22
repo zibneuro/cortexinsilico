@@ -1256,3 +1256,33 @@ QJsonObject Util::getCondition(QJsonArray& conditions, QString id, bool& exists)
     QJsonObject foo;
     return foo;    
 }
+
+void Util::getRange(QJsonArray& conditions, QString id, double defaultMin, double defaultMax, double& min, double& max){
+    bool exists;
+    min = defaultMin;
+    max = defaultMax;
+    QJsonObject condition = getCondition(conditions, id, exists);
+    if(exists){
+        QJsonArray value = condition["value"].toArray();        
+        min = value[0].toString().toDouble();
+        max = value[1].toString().toDouble();
+    }
+}
+
+std::set<int> Util::getPermittedSubvolumeRegionIds(QJsonArray& conditions, Regions& regions){
+    std::set<int> regionIds;
+    bool exists;
+    QJsonObject condition = getCondition(conditions, "nearestColumn", exists);
+    if(!exists){
+        return regionIds;
+    } else {
+        QJsonArray value = condition["value"].toArray();
+        for(int i=0; i<value.size(); i++){
+            QString columnName = value[i].toString();
+            QString septumName = "S1_Septum_" + columnName;
+            regionIds.insert(regions.getId(columnName));
+            regionIds.insert(regions.getId(septumName));
+        }
+    }
+    return regionIds;
+}
