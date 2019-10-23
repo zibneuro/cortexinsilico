@@ -263,7 +263,7 @@ void VoxelQueryHandler::doProcessQuery()
     QString metaFolder =
         QDir::cleanPath(mDataRoot + QDir::separator() + "features_meta");
     QString voxelPosFile =
-        QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos.dat");
+        QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos_new.dat");
     QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() +
                                         Util::getIndexFileName(postTarget));
     QString indexFileBranch = QDir::cleanPath(metaFolder + QDir::separator() +
