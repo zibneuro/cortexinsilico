@@ -290,9 +290,8 @@ Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const
 
     QBitArray selectedLaminarLocations;
     if (!allLaminarLocationsIncluded)
-    {
-        qDebug() << "laminar locations filter" << filter.laminarLocations;
-        selectedLaminarLocations.resize(7);
+    {        
+        selectedLaminarLocations.resize(9);
         selectedLaminarLocations.fill(false);
         for (int i = 0; i < filter.laminarLocations.size(); ++i)
         {
@@ -305,7 +304,7 @@ Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const
     for (QMap<int, NeuronProperties>::ConstIterator it = mPropsMap.constBegin();
          it != mPropsMap.constEnd();
          ++it)
-    {
+    {        
         const int neuronId = it.key();
         const NeuronProperties& props = it.value();
         if ((allCellTypesIncluded ||
