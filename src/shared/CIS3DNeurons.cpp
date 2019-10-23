@@ -291,7 +291,8 @@ Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const
     QBitArray selectedLaminarLocations;
     if (!allLaminarLocationsIncluded)
     {
-        selectedLaminarLocations.resize(4);
+        qDebug() << "laminar locations filter" << filter.laminarLocations;
+        selectedLaminarLocations.resize(7);
         selectedLaminarLocations.fill(false);
         for (int i = 0; i < filter.laminarLocations.size(); ++i)
         {
@@ -316,7 +317,8 @@ Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const
             (allLaminarLocationsIncluded || selectedLaminarLocations.at(int(props.loc))) &&
             ((filter.synapticSide == CIS3D::BOTH_SIDES) ||
              (getSynapticSide(neuronId) == CIS3D::BOTH_SIDES) || (getSynapticSide(neuronId) == CIS3D::POSTSYNAPTIC_MAPPED && filter.synapticSide == CIS3D::POSTSYNAPTIC) ||
-             (filter.synapticSide == getSynapticSide(neuronId))))
+             (filter.synapticSide == getSynapticSide(neuronId))) 
+             && (filter.corticalDepth.empty() || (props.corticalDepth >= filter.corticalDepth[0] && props.corticalDepth <= filter.corticalDepth[1])))
         {
             result.append(neuronId);
         }
@@ -419,9 +421,9 @@ Neurons::loadCSV(const QString& fileName)
     }
 
     QStringList parts = line.split(sep);
-    if (parts.size() != 9 || parts[0] != "ID" || parts[1] != "SomaX" || parts[2] != "SomaY" ||
+    if (parts.size() != 10 || parts[0] != "ID" || parts[1] != "SomaX" || parts[2] != "SomaY" ||
         parts[3] != "SomaZ" || parts[4] != "CellTypeID" || parts[5] != "NearestColumnID" ||
-        parts[6] != "RegionID" || parts[7] != "LaminarLocation" || parts[8] != "SynapticSide")
+        parts[6] != "RegionID" || parts[7] != "LaminarLocation" || parts[8] != "SynapticSide" || parts[9] != "CorticalDepth")
     {
         const QString msg =
             QString("Error reading neurons file %1. Invalid header columns.").arg(fileName);
@@ -434,7 +436,7 @@ Neurons::loadCSV(const QString& fileName)
     while (!line.isNull())
     {
         parts = line.split(sep);
-        if (parts.size() != 9)
+        if (parts.size() != 10)
         {
             const QString msg =
                 QString("Error reading neurons file %1. Invalid columns.").arg(fileName);
@@ -451,6 +453,7 @@ Neurons::loadCSV(const QString& fileName)
         props.regionId = parts[6].toInt();
         props.loc = static_cast<CIS3D::LaminarLocation>(parts[7].toInt());
         props.synapticSide = static_cast<CIS3D::SynapticSide>(parts[8].toInt());
+        props.corticalDepth = parts[9].toFloat();
 
         addNeuron(props);
 

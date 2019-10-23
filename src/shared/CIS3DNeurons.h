@@ -6,6 +6,7 @@
 #include "CIS3DVec3.h"
 #include "CIS3DConstantsHelpers.h" 
 #include <QSharedMemory>
+#include <vector>
 
 /**
     A filter to select subgroups of neurons based on cell type, region,
@@ -20,7 +21,8 @@ struct SelectionFilter {
     QList<int> regionIds;
     QList<int> nearestColumnIds;
     QList<CIS3D::LaminarLocation> laminarLocations;
-    CIS3D::SynapticSide synapticSide;
+    CIS3D::SynapticSide synapticSide;    
+    std::vector<float> corticalDepth;
 };
 
 /**
@@ -55,6 +57,7 @@ public:
         int regionId;
         int nearestColumnId;
         CIS3D::SynapticSide synapticSide;
+        float corticalDepth;
     };
 
     /**

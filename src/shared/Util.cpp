@@ -9,6 +9,8 @@
 #include "Typedefs.h"
 #include <cmath>
 #include <iostream>
+#include <vector>
+
 
 /**
     Checks whether two neurons overlap based on their bounding box.
@@ -177,6 +179,15 @@ Util::getSelectionFilterFromJson(const QJsonArray& jsonArray,
 
     const QJsonObject ctObj = getFilterItemWithName(QString("cellType"), jsonArray);
     const QJsonObject excObj = getFilterItemWithName(QString("isExcitatory"), jsonArray);
+    
+    double corticalDepthMin;
+    double corticalDepthMax;
+    getRange(jsonArray, "corticalDepth", -99999, -99999, corticalDepthMin, corticalDepthMax);
+    if(corticalDepthMin != -99999 && corticalDepthMax != -99999){
+        filter.corticalDepth.push_back(static_cast<float>(corticalDepthMin));
+        filter.corticalDepth.push_back(static_cast<float>(corticalDepthMax));
+    }
+
 
     QList<int> cellTypeIds;
     CIS3D::NeuronType neuronType = CIS3D::EXC_OR_INH;
@@ -1244,7 +1255,7 @@ bool Util::isSlice(QString networkName){
     return networkName.contains("Truncated");
 }
 
-QJsonObject Util::getCondition(QJsonArray& conditions, QString id, bool& exists){
+QJsonObject Util::getCondition(const QJsonArray& conditions, QString id, bool& exists){
     exists = false;
     for(int i=0; i<conditions.size(); i++){
         QJsonObject condition = conditions[i].toObject();
@@ -1257,7 +1268,7 @@ QJsonObject Util::getCondition(QJsonArray& conditions, QString id, bool& exists)
     return foo;    
 }
 
-void Util::getRange(QJsonArray& conditions, QString id, double defaultMin, double defaultMax, double& min, double& max){
+void Util::getRange(const QJsonArray& conditions, QString id, double defaultMin, double defaultMax, double& min, double& max){
     bool exists;
     min = defaultMin;
     max = defaultMax;

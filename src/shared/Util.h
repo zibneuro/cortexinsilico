@@ -176,9 +176,9 @@ namespace Util
 
     bool isSlice(QString networkName);
 
-    QJsonObject getCondition(QJsonArray& conditions, QString id, bool& exists);
+    QJsonObject getCondition(const QJsonArray& conditions, QString id, bool& exists);
 
-    void getRange(QJsonArray& conditions, QString id, double defaultMin, double defaultMax, double& min, double& max);
+    void getRange(const QJsonArray& conditions, QString id, double defaultMin, double defaultMax, double& min, double& max);
 
     std::set<int> getPermittedSubvolumeRegionIds(QJsonArray& conditions, Regions& regions);
 
