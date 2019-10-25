@@ -336,9 +336,9 @@ void VoxelQueryHandler::doProcessQuery()
             QStringList parts = line.split(" ");
 
             int voxelId = parts[0].toInt() - 1;
-            double voxelX = parts[1].toDouble() - 25;
-            double voxelY = parts[2].toDouble() - 25;
-            double voxelZ = parts[3].toDouble() - 25;
+            double voxelX = parts[1].toDouble();
+            double voxelY = parts[2].toDouble();
+            double voxelZ = parts[3].toDouble();
             double depth = parts[5].toDouble();
             int regionId = parts[6].toInt();
 
