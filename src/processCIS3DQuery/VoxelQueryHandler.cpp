@@ -30,7 +30,7 @@ void VoxelQueryHandler::createStatistics(std::map<int, T> &values,
     {
         stat.addSample(it->second);
     }
-    double binSize = stat.getMaximum() / 5000;
+    double binSize = stat.getMaximum() / 1000;
     binSize = binSize == 0 ? 1 : binSize;
     histogram = Histogram(binSize);
     for (auto it = values.begin(); it != values.end(); it++)
@@ -149,8 +149,8 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     // result.insert("synapsesPerConnection",
     // Util::createJsonStatistic(mSynapsesPerConnection));
     result.insert("synapsesPerConnectionPlot", synapsesPerConnectionPlot);
-    result.insert("synapsesCubicMicron",mSynapsesCubicMicron.getJson());
-    result.insert("axonDendriteRatio",mAxonDendriteRatio.getJson());
+    result.insert("synapsesCubicMicron", mSynapsesCubicMicron.getJson());
+    result.insert("axonDendriteRatio", mAxonDendriteRatio.getJson());
 
     // ################# CREATE CSV FILE #################
 
@@ -522,15 +522,13 @@ void VoxelQueryHandler::doProcessQuery()
                         mMapPostBranchesPerVoxel[voxelIdBranch] += branches;
                     }
                 }
+                double axonBranches = mMapPreBranchesPerVoxel[voxelIdBranch];
+                double dendriteBranches = mMapPostBranchesPerVoxel[voxelIdBranch];
+                if (dendriteBranches != 0)
+                {
+                    mAxonDendriteRatio.addSample(axonBranches / dendriteBranches);
+                }
             }
-
-            double axonBranches = mMapPreBranchesPerVoxel[voxelIdBranch];
-            double dendriteBranches = mMapPostBranchesPerVoxel[voxelIdBranch];
-            if(dendriteBranches != 0){
-                mAxonDendriteRatio.addSample(axonBranches / dendriteBranches);
-            }
-
-            
 
             // ################ REPORT UPDATE ################
             int updateRate = totalVoxelCount / 20;
