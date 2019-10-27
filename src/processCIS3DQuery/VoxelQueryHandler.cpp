@@ -30,7 +30,7 @@ void VoxelQueryHandler::createStatistics(std::map<int, T> &values,
     {
         stat.addSample(it->second);
     }
-    double binSize = stat.getMaximum() / 29;
+    double binSize = stat.getMaximum() / 5000;
     binSize = binSize == 0 ? 1 : binSize;
     histogram = Histogram(binSize);
     for (auto it = values.begin(); it != values.end(); it++)
