@@ -150,6 +150,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     // Util::createJsonStatistic(mSynapsesPerConnection));
     result.insert("synapsesPerConnectionPlot", synapsesPerConnectionPlot);
     result.insert("synapsesCubicMicron",mSynapsesCubicMicron.getJson());
+    result.insert("axonDendriteRatio",mAxonDendriteRatio.getJson());
 
     // ################# CREATE CSV FILE #################
 
@@ -522,6 +523,14 @@ void VoxelQueryHandler::doProcessQuery()
                     }
                 }
             }
+
+            double axonBranches = mMapPreBranchesPerVoxel[voxelIdBranch];
+            double dendriteBranches = mMapPostBranchesPerVoxel[voxelIdBranch];
+            if(dendriteBranches != 0){
+                mAxonDendriteRatio.addSample(axonBranches / dendriteBranches);
+            }
+
+            
 
             // ################ REPORT UPDATE ################
             int updateRate = totalVoxelCount / 20;
