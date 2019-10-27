@@ -56,7 +56,8 @@ SOURCES += \
     ../shared/InnervationMatrix.cpp \
     ../shared/RandomGenerator.cpp \
     ../shared/FeatureProvider.cpp \
-    ../shared/FormulaCalculator.cpp \    
+    ../shared/FormulaCalculator.cpp \
+    ../shared/Distribution.cpp \    
     DataUploadHandler.cpp \
     QueryHelpers.cpp \
     ../shared/QueryHandler.cpp \
@@ -97,7 +98,8 @@ HEADERS += \
     ../shared/RandomGenerator.h \
     ../shared/FormulaParser.h \
     ../shared/FeatureProvider.h \
-    ../shared/FormulaCalculator.h \    
+    ../shared/FormulaCalculator.h \ 
+    ../shared/Distribution.h \    
     DataUploadHandler.h \        
     QueryHelpers.h \
     ../shared/QueryHandler.h \

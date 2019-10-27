@@ -182,6 +182,8 @@ namespace Util
 
     std::set<int> getPermittedSubvolumeRegionIds(QJsonArray& conditions, Regions& regions);
 
+    double convertToCubicMicron(double value);
+
 } // namespace Util
 
 #endif // UTIL_H

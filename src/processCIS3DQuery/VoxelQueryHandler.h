@@ -8,8 +8,10 @@
 #include "Histogram.h"
 #include "QueryHelpers.h"
 #include "RandomGenerator.h"
+#include "Distribution.h"
 #include <QJsonObject>
 #include <QString>
+
 
 class VoxelQueryHandler : public QueryHandler {
 
@@ -49,6 +51,7 @@ private:
   Histogram mBoutonsPerVoxelH;
   Statistics mPostsynapticSitesPerVoxel;
   Histogram mPostsynapticSitesPerVoxelH;
+  Distribution mSynapsesCubicMicron;
 
   std::map<int, float> mMapBoutonsPerVoxel;
   std::map<int, int> mMapPreCellsPerVoxel;

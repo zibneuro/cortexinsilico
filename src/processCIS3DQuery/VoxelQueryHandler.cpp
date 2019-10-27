@@ -149,6 +149,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     // result.insert("synapsesPerConnection",
     // Util::createJsonStatistic(mSynapsesPerConnection));
     result.insert("synapsesPerConnectionPlot", synapsesPerConnectionPlot);
+    result.insert("synapsesCubicMicron",mSynapsesCubicMicron.getJson());
 
     // ################# CREATE CSV FILE #################
 
@@ -455,6 +456,8 @@ void VoxelQueryHandler::doProcessQuery()
                         mPostInnervatedVoxels.insert(voxelId);
                     }
                 }
+
+                mSynapsesCubicMicron.addSample(Util::convertToCubicMicron(mMapBoutonsPerVoxel[voxelId]));
 
                 std::map<int, float> synPerVoxel;
 

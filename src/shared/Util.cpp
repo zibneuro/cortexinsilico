@@ -1297,3 +1297,7 @@ std::set<int> Util::getPermittedSubvolumeRegionIds(QJsonArray& conditions, Regio
     }
     return regionIds;
 }
+
+double Util::convertToCubicMicron(double value){
+    return value * 0.000008;
+}
