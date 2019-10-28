@@ -156,69 +156,52 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
     if (createFile)
     {
-        const QString key = QString("voxel_%1.csv").arg(mQueryId);
-        const QString tmpDir = mConfig["WORKER_TMP_DIR"].toString();
-        QString filename = QString("%1/%2").arg(tmpDir).arg(key);
-        QFile csv(filename);
-        if (!csv.open(QIODevice::WriteOnly))
+        mFileHelper.initFolder(mConfig, mQueryId);
+        mFileHelper.openFile("specification.csv");
+        mFileHelper.write(mResultFileHeader);
+        mFileHelper.closeFile();
+
+        mFileHelper.openFile("subvolumes.csv");
+        mFileHelper.write("subvolume_id,x,y,z,cortical_depth,region_id\n");
+        for (auto it = mSubvolumes.begin(); it != mSubvolumes.end(); it++)
         {
-            QString msg =
-                QString("Cannot open file for saving csv: %1").arg(filename);
-            throw std::runtime_error(qPrintable(msg));
+            mFileHelper.write(*it);
         }
-        const QChar sep(',');
+        mFileHelper.closeFile();
 
-        QTextStream out(&csv);
-        out << mResultFileHeader;
+        mFileHelper.openFile("statistics.csv");
+        mFileHelper.write(Statistics::getHeaderCsv());
+        mFileHelper.write(Statistics::getLineSingleValue("sub-volumes meeting spatial filter condition", (int)mSelectedVoxels.size()));
+        mFileHelper.write(Statistics::getLineSingleValue("sub-volume with presynaptic cells [mm³]", Util::formatVolume((int)mPreInnervatedVoxels.size())));
+        mFileHelper.write(Statistics::getLineSingleValue("sub-volume with postsynaptic cells [mm³]", Util::formatVolume((int)mPostInnervatedVoxels.size())));
+        mFileHelper.write(preCellsPerVoxel.getLineCsv("presynaptic cells per (50\u00B5m)³"));
+        mFileHelper.write(postCellsPerVoxel.getLineCsv("postsynaptic cells per (50\u00B5m)³"));
+        mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branches per (50\u00B5m)³"));
+        mFileHelper.write(postBranchesPerVoxel.getLineCsv("dendrite branches per (50\u00B5m)³"));
+        mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses per (50\u00B5m)³"));
+        mFileHelper.closeFile();
 
-        //out << "Voxels meeting spatial filter condition:" << sep
-        //    << (int)mSelectedVoxels.size() << "\n";
-        QString unit = "[mm³]";
-        out << "Sub-volume with presynaptic cells " << unit << ":" << sep
-            << Util::formatVolume((int)mPreInnervatedVoxels.size()) << "\n";
-        out << "Sub-volume with postsynaptic cells " << unit << ":" << sep
-            << Util::formatVolume((int)mPostInnervatedVoxels.size()) << "\n";
-        out << "\n";
+        preCellsPerVoxelH.writeFile(mFileHelper, "histogram_presynaptic_cells.csv");
+        postCellsPerVoxelH.writeFile(mFileHelper, "histogram_postsynaptic_cells.csv");
+        preBranchesPerVoxelH.writeFile(mFileHelper, "histogram_axon_branches.csv");
+        postBranchesPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_branches.csv");
+        synapsesPerVoxelH.writeFile(mFileHelper, "histogram_synapses.csv");        
 
-        preCellsPerVoxel.write(out, "Presynaptic cells per (50\u00B5m)³");
-        postCellsPerVoxel.write(out, "Postsynaptic cells per (50\u00B5m)³");
-        preBranchesPerVoxel.write(out, "Axon branches per (50\u00B5m)³");
-        postBranchesPerVoxel.write(out, "Dendrite branches per (50\u00B5m)³");
-        synapsesPerVoxel.write(out, "Synapses per (50\u00B5m)³");
-
-        out << "\n";
-        preCellsPerVoxelH.write(out, "Presynaptic cells per (50\u00B5m)³");
-        postCellsPerVoxelH.write(out, "Postsynaptic cells per (50\u00B5m)³");
-        preBranchesPerVoxelH.write(out, "Axon branches per (50\u00B5m)³");
-        postBranchesPerVoxelH.write(out, "Dendrite branches per (50\u00B5m)³");
-
-        // boutonsPerVoxelH.write(out, "Boutons per voxel");
-        // postsynapticSitesPerVoxelH.write(out, "Postsynaptic sites per voxel");
-        synapsesPerVoxelH.write(out, "Synapses per (50\u00B5m)³");
-        out << "\n";
-
-        out << "Number of synapses (k) per neuron pair:\n";
-        out << "k,min,med,max\n";
+        mFileHelper.openFile("linechart_synapse_count.csv");
+        mFileHelper.write("k,min,med,max\n");
         for (int i = 0; i < synapsesPerConnectionMin.size(); i++)
         {
-            out << i + 1 << sep << synapsesPerConnectionMin[i].toDouble() << sep
-                << synapsesPerConnectionMed[i].toDouble() << sep
-                << synapsesPerConnectionMax[i].toDouble() << "\n";
+            mFileHelper.write(QString::number(i + 1) + "," + QString::number(synapsesPerConnectionMin[i].toDouble()) +
+                              "," + QString::number(synapsesPerConnectionMed[i].toDouble()) + "," + QString::number(synapsesPerConnectionMax[i].toDouble()) + "\n");
         }
+        mFileHelper.closeFile();
 
-        out.flush();
-        csv.close();
+        mSynapsesCubicMicron.writeFile(mFileHelper, "boxplot_synapses.csv", "[1/\u00B5m³]");
+        mAxonDendriteRatio.writeFile(mFileHelper, "boxplot_axon_dendrite_ratio.csv", "[1/(50\u00B5m)³]");
 
-        const qint64 fileSizeBytes = QFileInfo(filename).size();
-        qDebug() << filename << fileSizeBytes;
-        if (QueryHelpers::uploadToS3(key, filename, mConfig) != 0)
-        {
-            qDebug() << "Error uploading csv file to S3:" << filename;
-        }
 
-        result.insert("downloadS3key", key);
-        result.insert("fileSize", fileSizeBytes);
-        qDebug() << fileSizeBytes;
+
+        mFileHelper.uploadFolder(result);
     }
     else
     {
@@ -356,6 +339,8 @@ void VoxelQueryHandler::doProcessQuery()
                             {
                                 mSelectedVoxels.insert(voxelId);
                                 filteredVoxels.insert(voxelId);
+                                QString reportLine = QString::number(voxelId) + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[5] + "," + parts[6] + "\n";
+                                mSubvolumes.push_back(reportLine);
                             }
                         }
                     }
@@ -458,7 +443,7 @@ void VoxelQueryHandler::doProcessQuery()
                     }
                 }
 
-                mSynapsesCubicMicron.addSample(Util::convertToCubicMicron(mMapBoutonsPerVoxel[voxelId]));
+                mSynapsesCubicMicron.addSample(voxelId, Util::convertToCubicMicron(mMapBoutonsPerVoxel[voxelId]));
 
                 std::map<int, float> synPerVoxel;
 
@@ -526,7 +511,7 @@ void VoxelQueryHandler::doProcessQuery()
                 double dendriteBranches = mMapPostBranchesPerVoxel[voxelIdBranch];
                 if (dendriteBranches != 0)
                 {
-                    mAxonDendriteRatio.addSample(axonBranches / dendriteBranches);
+                    mAxonDendriteRatio.addSample(voxelIdBranch, axonBranches / dendriteBranches);
                 }
             }
 

@@ -66,6 +66,7 @@ private:
   std::map<int, float> mSynapsesPerVoxel;
   Statistics mSynapsesPerConnection;
   std::map<int, std::vector<float>> mSynapsesPerConnectionOccurrences;
+  std::vector<QString> mSubvolumes;
 
 
 };

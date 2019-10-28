@@ -58,6 +58,7 @@ SOURCES += \
     ../shared/FeatureProvider.cpp \
     ../shared/FormulaCalculator.cpp \
     ../shared/Distribution.cpp \    
+    ../shared/FileHelper.cpp \    
     DataUploadHandler.cpp \
     QueryHelpers.cpp \
     ../shared/QueryHandler.cpp \
@@ -65,7 +66,7 @@ SOURCES += \
     SelectionQueryHandler.cpp \
     SpatialInnervationQueryHandler.cpp \
     VoxelQueryHandler.cpp \
-    InDegreeQueryHandler.cpp \
+    InDegreeQueryHandler.cpp \    
     MotifQueryHandler.cpp 
 
 HEADERS += \
@@ -99,7 +100,8 @@ HEADERS += \
     ../shared/FormulaParser.h \
     ../shared/FeatureProvider.h \
     ../shared/FormulaCalculator.h \ 
-    ../shared/Distribution.h \    
+    ../shared/Distribution.h \      
+    ../shared/FileHelper.h \       
     DataUploadHandler.h \        
     QueryHelpers.h \
     ../shared/QueryHandler.h \
@@ -107,5 +109,5 @@ HEADERS += \
     SelectionQueryHandler.h \ 
     SpatialInnervationQueryHandler.h \
     VoxelQueryHandler.h \
-    InDegreeQueryHandler.h \
+    InDegreeQueryHandler.h \    
     MotifQueryHandler.h
