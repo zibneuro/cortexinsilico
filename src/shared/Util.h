@@ -174,6 +174,8 @@ namespace Util
 
     QString formatVolume(int nVoxels);
 
+    double formatVolumeD(int nVoxels);
+
     bool isSlice(QString networkName);
 
     QJsonObject getCondition(const QJsonArray& conditions, QString id, bool& exists);

@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QTextStream>
 #include <QString>
+#include "FileHelper.h"
 
 /**
     Collects sample values and represents them as a histogram.
@@ -112,6 +113,8 @@ public:
     QJsonObject createJson() const;
 
     void write(QTextStream& out, QString label);
+
+    void writeFile(FileHelper& fileHelper, QString filename);
 
 private:
     float      mBinSize;

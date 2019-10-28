@@ -7,6 +7,7 @@
 #include "FormulaCalculator.h"
 #include "Histogram.h"
 #include "NeuronSelection.h"
+#include "FileHelper.h"
 #include <QJsonArray>
 #include <QNetworkAccessManager>
 #include <QObject>
@@ -46,6 +47,7 @@ protected:
   QJsonObject mConfig;
   QString mQueryId;
   QJsonObject mQuery;
+  FileHelper mFileHelper;
   QString mDataRoot;
   QJsonObject mLatestResult;
   int mUpdateCount;
@@ -62,7 +64,7 @@ protected:
   FormulaCalculator mCalculator;
   NetworkProps mNetwork;
   NeuronSelection mSelection;
-  double mLastUpdateTime;
+  double mLastUpdateTime;  
 };
 
 #endif // QUERYHANDLER_H

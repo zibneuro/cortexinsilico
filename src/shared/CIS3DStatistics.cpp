@@ -8,21 +8,15 @@
     Constructor.
 */
 Statistics::Statistics()
-    : mNumberOfSamples(0)
-    , mMinimum(std::numeric_limits<double>::max())
-    , mMaximum(std::numeric_limits<double>::min())
-    , mSum(0.0)
-    , mSumSquared(0.0)
-    , mWindowSize(100)
-{
-}
+    : mNumberOfSamples(0), mMinimum(std::numeric_limits<double>::max()),
+      mMaximum(std::numeric_limits<double>::min()), mSum(0.0), mSumSquared(0.0),
+      mWindowSize(100) {}
 
 /**
     Adds a sample to the set.
     @param value The sample to add.
 */
-void
-Statistics::addSample(const double value)
+void Statistics::addSample(const double value)
 {
     if (value < mMinimum)
     {
@@ -47,18 +41,13 @@ Statistics::addSample(const double value)
     Calculates sum of all samples.
     @return The sum.
 */
-double
-Statistics::getSum() const
-{
-    return mSum;
-}
+double Statistics::getSum() const { return mSum; }
 
 /**
     Calculates mean value of all samples.
     @return The mean.
 */
-double
-Statistics::getMean() const
+double Statistics::getMean() const
 {
     if (mNumberOfSamples > 0)
     {
@@ -74,28 +63,19 @@ Statistics::getMean() const
     Determines minimum value of all samples.
     @return The minimum value.
 */
-double
-Statistics::getMinimum() const
-{
-    return mMinimum;
-}
+double Statistics::getMinimum() const { return mMinimum; }
 
 /**
     Determines maximum value of all samples.
     @return The maximum value.
 */
-double
-Statistics::getMaximum() const
-{
-    return mMaximum;
-}
+double Statistics::getMaximum() const { return mMaximum; }
 
 /**
     Calculates standard deviation of the samples.
     @return The standard deviation.
 */
-double
-Statistics::getStandardDeviation() const
+double Statistics::getStandardDeviation() const
 {
     if (mMinimum == mMaximum)
     {
@@ -111,8 +91,7 @@ Statistics::getStandardDeviation() const
     Calculates variance of the samples.
     @return The variance.
 */
-double
-Statistics::getVariance() const
+double Statistics::getVariance() const
 {
     if (mNumberOfSamples > 0)
     {
@@ -134,11 +113,7 @@ Statistics::getVariance() const
     Returns the number of samples.
     @return Number of samples.
 */
-unsigned int
-Statistics::getNumberOfSamples() const
-{
-    return mNumberOfSamples;
-}
+unsigned int Statistics::getNumberOfSamples() const { return mNumberOfSamples; }
 
 /**
     Determines whether the statistic has converged based
@@ -146,8 +121,7 @@ Statistics::getNumberOfSamples() const
     @param maxVariance The maximum deviation in the last 50 mean values.
     @return True, if the statistic has converged.
 */
-bool
-Statistics::hasConverged(double maxDeviation)
+bool Statistics::hasConverged(double maxDeviation)
 {
     if (mLastMeans.size() < mWindowSize)
     {
@@ -163,8 +137,8 @@ Statistics::hasConverged(double maxDeviation)
         double delta = stat.getMaximum() - stat.getMinimum();
         if (delta <= maxDeviation)
         {
-            qDebug() << "Mean" << getNumberOfSamples() << stat.getMean() << stat.getVariance()
-                     << delta;
+            qDebug() << "Mean" << getNumberOfSamples() << stat.getMean()
+                     << stat.getVariance() << delta;
             return true;
         }
         return false;
@@ -174,8 +148,7 @@ Statistics::hasConverged(double maxDeviation)
 /**
     Writes the statistics to console.
 */
-void
-Statistics::print() const
+void Statistics::print() const
 {
     printf("----Statistics----\n");
     printf("Num samples:\t%u\n", mNumberOfSamples);
@@ -185,13 +158,31 @@ Statistics::print() const
     printf("------------------\n");
 }
 
-void
-Statistics::write(QTextStream& out, QString label)
+void Statistics::write(QTextStream &out, QString label)
 {
     const QChar sep(',');
-    out << label << sep
-        << "Average" << sep << getMean() << sep
-        << "StDev" << sep << getStandardDeviation() << sep
-        << "Min" << sep << getMinimum() << sep
+    out << label << sep << "Average" << sep << getMean() << sep << "StDev" << sep
+        << getStandardDeviation() << sep << "Min" << sep << getMinimum() << sep
         << "Max" << sep << getMaximum() << "\n";
+}
+
+QString Statistics::getLineCsv(QString description)
+{
+    return description + "," + QString::number(getMean()) + "," +
+           QString::number(getStandardDeviation()) + "," +
+           QString::number(getMinimum()) + "," + QString::number(getMaximum()) +
+           "\n";
+}
+
+QString Statistics::getHeaderCsv()
+{
+    return "description,value,std,min,max,\n";
+}
+
+QString Statistics::getLineSingleValue(QString description, double value){
+    return description + "," + QString::number(value) + ",,,\n";
+}
+
+QString Statistics::getLineSingleValue(QString description, QString value){
+    return description + "," + value + ",,,\n";
 }

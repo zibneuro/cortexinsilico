@@ -4,6 +4,7 @@
 #include <QFlags>
 #include <deque>
 #include <QTextStream>
+#include "FileHelper.h"
 
 /**
     Collects a set of samples and computes basic statistics.
@@ -76,6 +77,14 @@ class Statistics {
     */
     void print() const;
 
+    QString getLineCsv(QString description);
+
+    static QString getHeaderCsv();
+
+    static QString getLineSingleValue(QString description, double value);
+
+    static QString getLineSingleValue(QString description, QString value);
+
     enum Field {
         Sum = 1 << 0,
         Mean = 1 << 1,
@@ -84,6 +93,8 @@ class Statistics {
         StandardDeviation = 1 << 4,
         Variance = 1 << 5
     };
+
+
 
     void write(QTextStream& out, QString label);
 

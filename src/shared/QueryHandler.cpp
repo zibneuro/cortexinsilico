@@ -34,7 +34,7 @@ QueryHandler::processQuery(const QJsonObject& config,
 {
     mAborted = false;
     mConfig = config;
-    mQueryId = queryId;
+    mQueryId = queryId;    
     mQuery = query;
     mUpdateCount = 0;
     mCompleted = false;
