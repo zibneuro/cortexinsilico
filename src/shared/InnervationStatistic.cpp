@@ -22,8 +22,8 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
                                            const float connProbBinSize)
     : NetworkStatistic(networkProps, calculator, handler)
 {
-    innervationHisto = Histogram(innervationBinSize);
-    connProbHisto = Histogram(connProbBinSize);
+    innervationHisto = Histogram(Histogram::getBinSize(10));
+    connProbHisto = Histogram(Histogram::getBinSize(1));
     numPreNeurons = 0;
     numPostNeurons = 0;
     numPreNeuronsUnique = 0;
@@ -195,7 +195,7 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
         << "StDev" << sep << convergence.getStandardDeviation() << sep
         << "Min" << sep << convergence.getMinimum() << sep
         << "Max" << sep << convergence.getMaximum() << "\n";
-    */
+   
     out << "\n";
 
     out << "Dense structural overlap histogram\n";
@@ -226,6 +226,7 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
             << connProbHisto.getBinEnd(b) << sep
             << connProbHisto.getBinValue(b) << "\n";
     }
+     */
     out << "\n";
 }
 
@@ -235,12 +236,9 @@ InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
 */
 void
 InnervationStatistic::doCreateJson(QJsonObject& obj) const
-{
-    QJsonObject innervationHistogram = Util::createJsonHistogram(innervationHisto);
-    obj.insert("innervationHisto", innervationHistogram);
-
-    QJsonObject connProbHistogram = Util::createJsonHistogram(connProbHisto);
-    obj.insert("connectionProbabilityHisto", connProbHistogram);
+{    
+    obj.insert("innervationHisto", innervationHisto.createJson());  
+    obj.insert("connectionProbabilityHisto", connProbHisto.createJson());
 
     obj.insert("innervation", Util::createJsonStatistic(innervation));
     obj.insert("connectionProbability", Util::createJsonStatistic(connProb));

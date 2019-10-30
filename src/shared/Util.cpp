@@ -547,47 +547,6 @@ Util::createJsonArray(const std::vector<double>& vector)
 }
 
 /**
-    Creates a JSON report of a histogram
-
-    @param statistics The histogram to report.
-    @return The JSON object.
-*/
-QJsonObject
-Util::createJsonHistogram(const Histogram& histogram)
-{
-    QJsonArray histArr = QJsonArray();
-    for (int b = 0; b < histogram.getNumberOfBins(); ++b)
-    {
-        QJsonObject binObj;
-        binObj["BinNumber"] = b;
-        binObj["BinStart"] = histogram.getBinStart(b);
-        binObj["BinEnd"] = histogram.getBinEnd(b);
-        binObj["Value"] = histogram.getBinValue(b);
-        histArr.append(binObj);
-    }
-
-    QJsonObject histObj;
-    if (histogram.getNumberOfValues() == 0)
-    {
-        histObj.insert("numberOfValues", 0);
-        histObj.insert("numberOfZeros", 0);
-        histObj.insert("minValue", 0);
-        histObj.insert("maxValue", 0);
-        histObj.insert("histogram", histArr);
-    }
-    else
-    {
-        histObj.insert("numberOfValues", histogram.getNumberOfValues());
-        histObj.insert("numberOfZeros", histogram.getNumberOfZeros());
-        histObj.insert("minValue", histogram.getMinValue());
-        histObj.insert("maxValue", histogram.getMaxValue());
-        histObj.insert("histogram", histArr);
-    }
-
-    return histObj;
-}
-
-/**
     Checks whether two values are almost equal.
     @param a First value.
     @param b Second value.
@@ -598,6 +557,10 @@ bool
 Util::almostEqual(double a, double b, double eps)
 {
     return std::fabs(a - b) <= eps;
+}
+
+bool Util::isZero(double a){
+    return std::fabs(a) < EPSILON;
 }
 
 /*

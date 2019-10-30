@@ -121,31 +121,23 @@ VoxelQueryHandler::createJsonResult(bool createFile)
                   (int)mPostInnervatedVoxels.size());
     result.insert("presynapticCellsPerVoxel",
                   Util::createJsonStatistic(preCellsPerVoxel));
-    result.insert("presynapticCellsPerVoxelHisto",
-                  Util::createJsonHistogram(preCellsPerVoxelH));
-    result.insert("presynapticBranchesPerVoxel",
-                  Util::createJsonStatistic(preBranchesPerVoxel));
-    result.insert("presynapticBranchesPerVoxelHisto",
-                  Util::createJsonHistogram(preBranchesPerVoxelH));
+    result.insert("presynapticCellsPerVoxelHisto",preCellsPerVoxelH.createJson());
+    result.insert("presynapticBranchesPerVoxel",Util::createJsonStatistic(preBranchesPerVoxel));
+    result.insert("presynapticBranchesPerVoxelHisto",preBranchesPerVoxelH.createJson());
     result.insert("postsynapticCellsPerVoxel",
                   Util::createJsonStatistic(postCellsPerVoxel));
-    result.insert("postsynapticCellsPerVoxelHisto",
-                  Util::createJsonHistogram(postCellsPerVoxelH));
+    result.insert("postsynapticCellsPerVoxelHisto",postCellsPerVoxelH.createJson());
     result.insert("postsynapticBranchesPerVoxel",
                   Util::createJsonStatistic(postBranchesPerVoxel));
-    result.insert("postsynapticBranchesPerVoxelHisto",
-                  Util::createJsonHistogram(postBranchesPerVoxelH));
+    result.insert("postsynapticBranchesPerVoxelHisto",postBranchesPerVoxelH.createJson());
     result.insert("boutonsPerVoxel", Util::createJsonStatistic(boutonsPerVoxel));
-    result.insert("boutonsPerVoxelHisto",
-                  Util::createJsonHistogram(boutonsPerVoxelH));
+    result.insert("boutonsPerVoxelHisto",boutonsPerVoxelH.createJson());
     result.insert("postsynapticSitesPerVoxel",
                   Util::createJsonStatistic(postsynapticSitesPerVoxel));
-    result.insert("postsynapticSitesPerVoxelHisto",
-                  Util::createJsonHistogram(postsynapticSitesPerVoxelH));
+    result.insert("postsynapticSitesPerVoxelHisto",postsynapticSitesPerVoxelH.createJson());
     result.insert("synapsesPerVoxel",
                   Util::createJsonStatistic(synapsesPerVoxel));
-    result.insert("synapsesPerVoxelHisto",
-                  Util::createJsonHistogram(synapsesPerVoxelH));
+    result.insert("synapsesPerVoxelHisto",synapsesPerVoxelH.createJson());
     // result.insert("synapsesPerConnection",
     // Util::createJsonStatistic(mSynapsesPerConnection));
     result.insert("synapsesPerConnectionPlot", synapsesPerConnectionPlot);

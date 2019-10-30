@@ -6,13 +6,18 @@
 #include <QTextStream>
 #include <QString>
 #include "FileHelper.h"
+#include <map>
 
 /**
     Collects sample values and represents them as a histogram.
 */
 class Histogram
 {
-public:
+  public:
+
+    static const int REF_BINCOUNT = 10000;
+    static double getBinSize(double expectedMaxValue);
+
     /**
         Constructor.
         Default bin size set to 1.0.
@@ -23,6 +28,7 @@ public:
         @param binSize Width of bins.
     */
     Histogram(const double binSize);
+
 
     /**
         Adds a sample value to the histogram.
@@ -37,32 +43,6 @@ public:
     */
     void addValues(const double v, const int k);
 
-    /**
-        Retrieves the number of bins covering all current samples.
-        @returns Number of bins.
-    */
-    int getNumberOfBins() const;
-
-    /**
-        Retrieves number of samples in specified bin.
-        @param binNum Id of the bin.
-        @returns Number of samples in the bin.
-    */
-    long long int getBinValue(const int binNum) const;
-
-    /**
-        Retrieves lower end of value range for the specified bin.
-        @param binNum Id of the bin.
-        @returns Lower end of value range.
-    */
-    double getBinStart(const int binNum) const;
-
-    /**
-        Retrieves upper end of value range for the specified bin.
-        @param binNum Id of the bin.
-        @returns Upper end of value range.
-    */
-    double getBinEnd(const int binNum) const;
 
     /**
         Retrieves total number of samples.
@@ -77,56 +57,20 @@ public:
     long long getNumberOfZeros() const;
 
     /**
-        Determines average value of samples.
-        @returns Average value.
-    */
-    double getAverage() const;
-
-    /**
-        Determines variance of samples.
-        @returns Variance.
-    */
-    double getVariance() const;
-
-    /**
-        Determines standard deviation of samples.
-        @returns Standard deviation.
-    */
-    double getStandardDeviation() const;
-
-    /**
-        Retrieves minimum sample value.
-        @returns Minimum value.
-    */
-    double getMinValue() const;
-
-    /**
-        Retrieves highest sample value.
-        @returns Maximum value.
-    */
-    double getMaxValue() const;
-
-    /**
         Creates a json representation of the histogram.
         @returns Histogram as json object.
     */
     QJsonObject createJson() const;
 
-    void write(QTextStream& out, QString label);
+    void write(QTextStream &out, QString label);
 
-    void writeFile(FileHelper& fileHelper, QString filename);
+    void writeFile(FileHelper &fileHelper, QString filename);
 
-private:
-    float      mBinSize;
-    QList<long long int> mBins;
-
-    long long  mNumValues;
-    long long  mNumZeros;
-    double     mTotalValue;
-    double     mTotalSquaredValue;
-    double     mMean;
-    double     mMinValue;
-    double     mMaxValue;
+  private:
+    double mBinSize;
+    std::map<long long, long long> mBins;    
+    long long mNumZeros;
+    
 };
 
 #endif // HISTOGRAM_H

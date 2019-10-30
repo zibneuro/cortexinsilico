@@ -22,6 +22,7 @@ class NetworkProps;
 */
 namespace Util
 {
+    const double EPSILON = 0.000000001;
     /**
     Checks whether two neurons overlap based on their bounding box.
     @param n1 Properties of first neurons.
@@ -82,15 +83,7 @@ namespace Util
 */
     QJsonObject createJsonStatistic(const Statistics& statistics);
 
-    QJsonArray createJsonArray(const std::vector<double>& vector);
-
-    /**
-    Creates a JSON report of a histogram
-
-    @param statistics The histogram to report.
-    @return The JSON object.
-*/
-    QJsonObject createJsonHistogram(const Histogram& histogram);
+    QJsonArray createJsonArray(const std::vector<double>& vector);    
 
     /**
     Checks whether two values are almost equal.
@@ -100,6 +93,8 @@ namespace Util
     @return True, if the values are almost equal.
 */
     bool almostEqual(double a, double b, double eps);
+
+    bool isZero(double a);
 
     /*
     Handles case that only VPM is selected in combination with nearest column.
