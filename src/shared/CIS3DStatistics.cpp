@@ -166,23 +166,32 @@ void Statistics::write(QTextStream &out, QString label)
         << "Max" << sep << getMaximum() << "\n";
 }
 
-QString Statistics::getLineCsv(QString description)
+QString Statistics::getLineCsv(QString description, bool noLineBreak) const
 {
-    return description + "," + QString::number(getMean()) + "," +
-           QString::number(getStandardDeviation()) + "," +
-           QString::number(getMinimum()) + "," + QString::number(getMaximum()) +
-           "\n";
+    QString line = description + "," + QString::number(getMean()) + "," +
+                   QString::number(getStandardDeviation()) + "," +
+                   QString::number(getMinimum()) + "," + QString::number(getMaximum());
+    if (!noLineBreak)
+    {
+        line += "\n";
+    }
+    return line;
 }
 
-QString Statistics::getHeaderCsv()
+QString Statistics::getHeaderCsv(bool noLineBreak)
 {
-    return "description,value,std,min,max,\n";
+    QString header = "description,value,std,min,max";
+    if (!noLineBreak)
+        header += "\n";
+    return header;
 }
 
-QString Statistics::getLineSingleValue(QString description, double value){
+QString Statistics::getLineSingleValue(QString description, double value)
+{
     return description + "," + QString::number(value) + ",,,\n";
 }
 
-QString Statistics::getLineSingleValue(QString description, QString value){
+QString Statistics::getLineSingleValue(QString description, QString value)
+{
     return description + "," + value + ",,,\n";
 }

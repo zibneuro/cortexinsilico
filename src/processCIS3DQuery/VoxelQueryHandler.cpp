@@ -149,7 +149,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     if (createFile)
     {
         mFileHelper.initFolder(mConfig, mQueryId);
-        mFileHelper.openFile("specification.csv");
+        mFileHelper.openFile("specifications.csv");
         mFileHelper.write(mResultFileHeader);
         mFileHelper.closeFile();
 

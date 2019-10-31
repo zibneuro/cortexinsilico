@@ -17,15 +17,15 @@ public:
 protected:
     void doCalculate(const NeuronSelection& selection) override;
     void doCreateJson(QJsonObject& obj) const override;
-    void doCreateCSV(QTextStream& out, const QChar sep) const override;
+    void doCreateCSV(FileHelper& fileHelper) const override;
 
 private:
     void checkInput(const NeuronSelection& selection);
     QList<int> samplePostIds(QList<int> selectionC);
     double calculateCorrelation(std::vector<double>& valuesAC, std::vector<double>& valuesBC, double stdAC, double stdBC);
     double calculateMean(std::vector<double>& values);
-    void writeDiagramOverlap(QTextStream& out) const;
-    void writeDiagramProbability(QTextStream& out) const;
+    void writeDiagramOverlap(FileHelper& fileHelper) const;
+    void writeDiagramProbability(FileHelper& fileHelper) const;
 
 void calculateStatistics(); 
 

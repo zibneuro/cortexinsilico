@@ -1,6 +1,7 @@
 #include "InDegreeStatistic.h"
 #include "CIS3DConstantsHelpers.h"
 #include "CIS3DSparseVectorSet.h"
+#include "CIS3DStatistics.h"
 #include "InnervationStatistic.h"
 #include "Typedefs.h"
 #include "Util.h"
@@ -205,54 +206,36 @@ void InDegreeStatistic::doCreateJson(QJsonObject &obj) const {
   obj.insert("correlationProbability", mCorrelationProb);
 }
 
-void InDegreeStatistic::doCreateCSV(QTextStream &out, const QChar sep) const {
-  out << "Actual Sample size (selection C):" << sep
-      << mSampleSize << "\n";
+void InDegreeStatistic::doCreateCSV(FileHelper& fileHelper) const {
+  fileHelper.openFile("statistics.csv");
+  fileHelper.write(Statistics::getHeaderCsv());
+  fileHelper.write(Statistics::getLineSingleValue("sample size (selection C)",mSampleSize));
+  fileHelper.write(mStatisticsAC.getLineCsv("dense strutural overlap (summed A to C)"));
+  fileHelper.write(mStatisticsBC.getLineCsv("dense strutural overlap (summed B to C)"));
+  fileHelper.write(Statistics::getLineSingleValue("corelation (summed overlap)",mCorrelation));
+  fileHelper.write(Statistics::getLineSingleValue("corelation (avg. connection probability)",mCorrelationProb));
+  fileHelper.closeFile();
 
-  out << "Dense structural overlap (summed A to C)" << sep << mStatisticsAC.getMean()
-      << sep << "StDev" << sep << mStatisticsAC.getStandardDeviation() << sep
-      << "Min" << sep << mStatisticsAC.getMinimum() << sep << "Max" << sep
-      << mStatisticsAC.getMaximum() << "\n";
-  out << "Dense structural overlap (summed B to C)" << sep << mStatisticsBC.getMean()
-      << sep << "StDev" << sep << mStatisticsBC.getStandardDeviation() << sep
-      << "Min" << sep << mStatisticsBC.getMinimum() << sep << "Max" << sep
-      << mStatisticsBC.getMaximum() << "\n";
-  /*
-  out << "Connection probability A->C" << sep << mStatisticsACProb.getMean()
-      << sep << "StDev" << sep << mStatisticsACProb.getStandardDeviation() << sep
-      << "Min" << sep << mStatisticsACProb.getMinimum() << sep << "Max" << sep
-      << mStatisticsACProb.getMaximum() << "\n";
-  out << "Connection probability B->C" << sep << mStatisticsBCProb.getMean()
-      << sep << "StDev" << sep << mStatisticsBCProb.getStandardDeviation() << sep
-      << "Min" << sep << mStatisticsBCProb.getMinimum() << sep << "Max" << sep
-      << mStatisticsBCProb.getMaximum() << "\n";
-  */
-  out << "Correlation (summed overlap)" << sep << mCorrelation;
-  out << "\n";
-  out << "Correlation (avg. connection probability)" << sep << mCorrelationProb;
-  out << "\n";
-  out << "\n";
-  writeDiagramOverlap(out);
-  out << "\n";
-
-  writeDiagramProbability(out);
-
+  writeDiagramOverlap(fileHelper);
+  writeDiagramProbability(fileHelper);
 }
 
-void InDegreeStatistic::writeDiagramOverlap(QTextStream &out) const {
-    out << "Correlation diagram (summed overlap)\n";
-    out << "postNeuronID,summedOverlap_A->C,summedOverlap_B->C\n";
+void InDegreeStatistic::writeDiagramOverlap(FileHelper& fileHelper) const {
+    fileHelper.openFile("scatterPlot_overlap.csv");    
+    fileHelper.write("postNeuronID,summedOverlap_A->C,summedOverlap_B->C\n");
     for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
         auto it = mMappingSliceRBC.find(mPostNeuronId[i]);
-        out << it->second << "," << mValuesAC[i] << "," << mValuesBC[i] << "\n";
+        fileHelper.write(QString::number(it->second)  + "," + QString::number(mValuesAC[i]) + "," + QString::number(mValuesBC[i]) + "\n");
     }
+    fileHelper.closeFile();
 };
 
-void InDegreeStatistic::writeDiagramProbability(QTextStream &out) const {
-    out << "Correlation diagram (avg. connection probability)\n";
-    out << "postNeuronID,avgConnectionProbability_A->C,avgConnectionProbability_B->C\n";
+void InDegreeStatistic::writeDiagramProbability(FileHelper& fileHelper) const {
+    fileHelper.openFile("scatterPlot_connectionProbability.csv");
+    fileHelper.write("postNeuronID,avgConnectionProbability_A->C,avgConnectionProbability_B->C\n");
     for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
         auto it = mMappingSliceRBC.find(mPostNeuronId[i]);
-        out << it->second << "," << mValuesACProb[i] << "," << mValuesBCProb[i] << "\n";
+        fileHelper.write(QString::number(it->second)  + "," + QString::number(mValuesACProb[i]) + "," + QString::number(mValuesBCProb[i]) + "\n");        
     }
+    fileHelper.closeFile();
 };

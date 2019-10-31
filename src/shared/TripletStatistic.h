@@ -48,7 +48,7 @@ protected:
         @param out The file stream to which the values are written.
         @param sep The separator between parameter name and value.
     */
-    void doCreateCSV(QTextStream& out, const QChar sep) const override;
+    void doCreateCSV(FileHelper& fileHelper) const override;
 
 private:
 

@@ -26,6 +26,8 @@ public:
   virtual void reportUpdate(NetworkStatistic *stat);
   virtual void reportComplete(NetworkStatistic *stat);
 
+  FileHelper* getFileHelper();
+
 protected:
   virtual void doProcessQuery();
   void setSelection();

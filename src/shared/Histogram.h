@@ -62,9 +62,7 @@ class Histogram
     */
     QJsonObject createJson() const;
 
-    void write(QTextStream &out, QString label);
-
-    void writeFile(FileHelper &fileHelper, QString filename);
+    void writeFile(FileHelper &fileHelper, QString filename) const;
 
   private:
     double mBinSize;

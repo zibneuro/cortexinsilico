@@ -80,9 +80,16 @@ void FileHelper::uploadFolder(QJsonObject &result)
     arguments2.append(mConfig["AWS_SECRET_KEY_CIS3D"].toString());
     arguments2.append(mConfig["AWS_S3_REGION_CIS3D"].toString());
     arguments2.append(mConfig["AWS_S3_BUCKET_CIS3D"].toString());
-    QProcess::execute(program, arguments2);
+    if(!QProcess::execute(program, arguments2)){
+        qint64 fileSizeBytes = QFileInfo(zipFilepath).size();    
+        result.insert("downloadS3key", key);
+        result.insert("fileSize", fileSizeBytes);
+    }
+    else 
+    {
+        result.insert("downloadS3key", "");
+        result.insert("fileSize", 0);
+    }
 
-    qint64 fileSizeBytes = QFileInfo(zipFilepath).size();    
-    result.insert("downloadS3key", key);
-    result.insert("fileSize", fileSizeBytes);
+    
 }

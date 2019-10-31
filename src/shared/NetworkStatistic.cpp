@@ -50,23 +50,8 @@ NetworkStatistic::calculateProbability(float innervation)
     @return The JSON object.
 */
 QJsonObject
-NetworkStatistic::createJson(const QString& key, const qint64 fileSizeBytes)
-{
-    QJsonObject obj;
-    doCreateJson(obj);
-    obj.insert("downloadS3key", key);
-    obj.insert("fileSize", fileSizeBytes);
-    return obj;
-}
-
-/**
-    Creates a JSON object representing the statistic. To be called from
-    the webframework.
-    @return The JSON object.
-*/
-QJsonObject
 NetworkStatistic::createJson()
-{
+{    
     QJsonObject obj;
     doCreateJson(obj);
     return obj;
@@ -80,26 +65,10 @@ NetworkStatistic::createJson()
 `   @param tmpDir Folder where the file is initially created.
     @returns The file name.
 */
-QString
-NetworkStatistic::createCSVFile(const QString& key,
-                                const QString& fileHeader,
-                                const QString& tmpDir) const
+void
+NetworkStatistic::createCSVFile(FileHelper& fileHelper) const
 {
-    QString filename = QString("%1/%2.csv").arg(tmpDir).arg(key);
-    QFile csv(filename);
-    if (!csv.open(QIODevice::WriteOnly))
-    {
-        QString msg = QString("Cannot open file for saving csv: %1").arg(filename);
-        throw std::runtime_error(qPrintable(msg));
-    }
-    const QChar sep(',');
-
-    QTextStream out(&csv);
-    out << fileHeader;
-
-    doCreateCSV(out, sep);
-
-    return filename;
+    doCreateCSV(fileHelper);    
 }
 
 void
@@ -124,7 +93,7 @@ NetworkStatistic::doCreateJson(QJsonObject& /*obj*/) const
     @param sep The separator between parameter name and value.
 */
 void
-NetworkStatistic::doCreateCSV(QTextStream& /*out*/, const QChar /*sep*/) const
+NetworkStatistic::doCreateCSV(FileHelper& /*fileHelper*/) const
 {
     // do nothing by default
 }

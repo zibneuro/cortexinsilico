@@ -738,9 +738,7 @@ Util::getResultFileHeader(const QJsonObject& query)
 
     // ######### WRITE FORMULA DESCRIPTION #########
     QJsonObject formulaSelection = query["formulaSelection"].toObject();
-    s += writeFormulaSelectionDescription(formulaSelection, networkNumber);
-
-    s+="\n\n";
+    s += writeFormulaSelectionDescription(formulaSelection, networkNumber);    
 
     return s;
 }

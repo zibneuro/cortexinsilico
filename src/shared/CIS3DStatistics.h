@@ -77,9 +77,9 @@ class Statistics {
     */
     void print() const;
 
-    QString getLineCsv(QString description);
+    QString getLineCsv(QString description, bool noLineBreak = false) const;
 
-    static QString getHeaderCsv();
+    static QString getHeaderCsv(bool noLineBreak = false);
 
     static QString getLineSingleValue(QString description, double value);
 

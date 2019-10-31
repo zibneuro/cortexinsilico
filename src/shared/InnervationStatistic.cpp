@@ -8,6 +8,8 @@
 #include <QTime>
 #include <math.h>
 #include <iostream>
+#include "FileHelper.h"
+#include "CIS3DStatistics.h"
 
 /**
     Constructor.
@@ -17,9 +19,7 @@
 */
 InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
                                            FormulaCalculator& calculator,
-                                           QueryHandler* handler,
-                                           const float innervationBinSize,
-                                           const float connProbBinSize)
+                                           QueryHandler* handler)
     : NetworkStatistic(networkProps, calculator, handler)
 {
     innervationHisto = Histogram(Histogram::getBinSize(10));
@@ -125,109 +125,22 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
     @param sep The separator between parameter name and value.
 */
 void
-InnervationStatistic::doCreateCSV(QTextStream& out, const QChar sep) const
+InnervationStatistic::doCreateCSV(FileHelper& fileHelper) const
 {
-    out << "Number of presynaptic neurons:" << sep << numPreNeurons << "\n";
-    //out << "Number of unique presynaptic neurons:" << sep << numPreNeuronsUnique << "\n";
-    out << "Number of postsynaptic neurons:" << sep << numPostNeurons << "\n";
-    out << "Number of neuron pairs:" << sep << innervationHisto.getNumberOfValues() << "\n";
-    out << "Number of non-overlapping neuron pairs:" << sep << innervationHisto.getNumberOfZeros() << "\n";
-    out << "\n";
+    fileHelper.openFile("statistics.csv");
+    fileHelper.write(Statistics::getHeaderCsv());
+    fileHelper.write(Statistics::getLineSingleValue("presynaptic neurons",numPreNeurons));
+    fileHelper.write(Statistics::getLineSingleValue("postsynaptic neurons",numPostNeurons));    
+    fileHelper.write(Statistics::getLineSingleValue("neuron pairs",innervationHisto.getNumberOfValues()));
+    fileHelper.write(Statistics::getLineSingleValue("neuron pairs without overlap",innervationHisto.getNumberOfZeros()));   
+    fileHelper.write(innervation.getLineCsv("dense structural overlap"));
+    fileHelper.write(connProb.getLineCsv("connection probability"));
+    fileHelper.write(innervationPerPre.getLineCsv("dense structural overlap per presynaptic neuron"));
+    fileHelper.write(innervationPerPost.getLineCsv("dense structural overlap per postsynaptic neuron"));
+    fileHelper.closeFile();
 
-    out << "Dense structural overlap" << sep
-        << "Average" << sep << innervation.getMean() << sep
-        << "StDev" << sep << innervation.getStandardDeviation() << sep
-        << "Min" << sep << innervation.getMinimum() << sep
-        << "Max" << sep << innervation.getMaximum() << "\n";
-
-    out << "Connection probability" << sep
-        << "Average" << sep << connProb.getMean() << sep
-        << "StDev" << sep << connProb.getStandardDeviation() << sep
-        << "Min" << sep << connProb.getMinimum() << sep
-        << "Max" << sep << connProb.getMaximum() << "\n";
-
-    /*
-    out << "Innervation unique" << sep
-        << "Average" << sep << innervationUnique.getMean() << sep
-        << "StDev" << sep << innervationUnique.getStandardDeviation() << sep
-        << "Min" << sep << innervationUnique.getMinimum() << sep
-        << "Max" << sep << innervationUnique.getMaximum() << "\n";
-
-    out << "Connection probability unique" << sep
-        << "Average" << sep << connProbUnique.getMean() << sep
-        << "StDev" << sep << connProbUnique.getStandardDeviation() << sep
-        << "Min" << sep << connProbUnique.getMinimum() << sep
-        << "Max" << sep << connProbUnique.getMaximum() << "\n";
-    */
-    out << "Dense structural overlap per presynaptic neuron" << sep
-        << "Average" << sep << innervationPerPre.getMean() << sep
-        << "StDev" << sep << innervationPerPre.getStandardDeviation() << sep
-        << "Min" << sep << innervationPerPre.getMinimum() << sep
-        << "Max" << sep << innervationPerPre.getMaximum() << "\n";
-    /*
-    out << "Divergence" << sep
-        << "Average" << sep << divergence.getMean() << sep
-        << "StDev" << sep << divergence.getStandardDeviation() << sep
-        << "Min" << sep << divergence.getMinimum() << sep
-        << "Max" << sep << divergence.getMaximum() << "\n";
-
-    out << "Innervation per presynaptic neuron unique" << sep
-        << "Average" << sep << innervationPerPreUnique.getMean() << sep
-        << "StDev" << sep << innervationPerPreUnique.getStandardDeviation() << sep
-        << "Min" << sep << innervationPerPreUnique.getMinimum() << sep
-        << "Max" << sep << innervationPerPreUnique.getMaximum() << "\n";
-    
-    out << "Divergence unique" << sep
-        << "Average" << sep << divergenceUnique.getMean() << sep
-        << "StDev" << sep << divergenceUnique.getStandardDeviation() << sep
-        << "Min" << sep << divergenceUnique.getMinimum() << sep
-        << "Max" << sep << divergenceUnique.getMaximum() << "\n";
-    */
-    out << "Dense structural overlap per postsynaptic neuron" << sep
-        << "Average" << sep << innervationPerPost.getMean() << sep
-        << "StDev" << sep << innervationPerPost.getStandardDeviation() << sep
-        << "Min" << sep << innervationPerPost.getMinimum() << sep
-        << "Max" << sep << innervationPerPost.getMaximum() << "\n";
-
-    /*
-    out << "Convergence" << sep
-        << "Average" << sep << convergence.getMean() << sep
-        << "StDev" << sep << convergence.getStandardDeviation() << sep
-        << "Min" << sep << convergence.getMinimum() << sep
-        << "Max" << sep << convergence.getMaximum() << "\n";
-   
-    out << "\n";
-
-    out << "Dense structural overlap histogram\n";
-    out << "Number of non-zero values:" << sep << innervationHisto.getNumberOfValues() << "\n";
-    out << "Number of zero values:" << sep << innervationHisto.getNumberOfZeros() << "\n";
-    out << "\n";
-    out << "Bin" << sep << "Bin range min" << sep << "Bin range max" << sep << "Value"
-        << "\n";
-    for (int b = 0; b < innervationHisto.getNumberOfBins(); ++b)
-    {
-        out << b << sep
-            << innervationHisto.getBinStart(b) << sep
-            << innervationHisto.getBinEnd(b) << sep
-            << innervationHisto.getBinValue(b) << "\n";
-    }
-    out << "\n";
-
-    out << "Connection probability histogram\n";
-    out << "Number of non-zero values:" << sep << connProbHisto.getNumberOfValues() << "\n";
-    out << "Number of zero values:" << sep << connProbHisto.getNumberOfZeros() << "\n";
-    out << "\n";
-    out << "Bin" << sep << "Bin range min" << sep << "Bin range max" << sep << "Value"
-        << "\n";
-    for (int b = 0; b < connProbHisto.getNumberOfBins(); ++b)
-    {
-        out << b << sep
-            << connProbHisto.getBinStart(b) << sep
-            << connProbHisto.getBinEnd(b) << sep
-            << connProbHisto.getBinValue(b) << "\n";
-    }
-     */
-    out << "\n";
+    innervationHisto.writeFile(fileHelper,"histogram_dense_structural_overlap.csv");
+    connProbHisto.writeFile(fileHelper,"histogram_connection_probability.csv");
 }
 
 /**

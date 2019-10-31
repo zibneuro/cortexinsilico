@@ -16,6 +16,7 @@
 #include "Typedefs.h"
 #include "FormulaCalculator.h"
 #include "QueryHandler.h"
+#include "FileHelper.h"
 
 /**
     Serves as base class for any summary statistic about the neural network.
@@ -48,16 +49,6 @@ public:
     /**
         Creates a JSON object representing the statistic. To be called from
         the webframework.
-        @param key The S3 key under which JSON object is strored.
-        @param fileSizeBytes The file size (applies, when JSON object
-            references csv file).
-        @return The JSON object.
-    */
-    QJsonObject createJson(const QString& key, const qint64 fileSizeBytes);
-
-    /**
-        Creates a JSON object representing the statistic. To be called from
-        the webframework.
         @return The JSON object.
     */
     QJsonObject createJson();
@@ -70,9 +61,7 @@ public:
         @param tmpDir Folder where the file is initially created.
         @returns The file name.
     */
-    virtual QString createCSVFile(const QString& key,
-                                  const QString& fileHeader,
-                                  const QString& tmpDir) const;
+    void createCSVFile(FileHelper& fileHelper) const;
 
     /**
         Retrieves the total number of connections to be analysed.
@@ -110,7 +99,7 @@ protected:
         @param out The file stream to which the values are written.
         @param sep The separator between parameter name and value.
     */
-    virtual void doCreateCSV(QTextStream& out, const QChar sep) const;
+    virtual void doCreateCSV(FileHelper& fileHelper) const;
 
     /**
      Signals availability of intermediate results, to be called from derived classes
