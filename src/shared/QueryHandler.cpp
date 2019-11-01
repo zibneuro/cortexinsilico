@@ -109,7 +109,6 @@ QueryHandler::reportComplete(NetworkStatistic* stat)
 
     QJsonObject result = stat->createJson();
     fileHelper.uploadFolder(result);    
-    qDebug() << "complete" << result;
 
     QJsonObject queryStatus;
     queryStatus.insert("statusMessage", "");

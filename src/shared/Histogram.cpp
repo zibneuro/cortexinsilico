@@ -2,6 +2,7 @@
 #include <QJsonArray>
 #include <math.h>
 #include "Util.h"
+#include <QDebug>
 
 double Histogram::getBinSize(double expectedMaxValue)
 {
@@ -13,13 +14,13 @@ double Histogram::getBinSize(double expectedMaxValue)
     Default bin size set to 1.0.
 */
 Histogram::Histogram()
-    : mBinSize(1.0), mNumZeros(0) {}
+    : mBinSize(1.0) {}
 
 /** Constructor.
     @param binSize Width of bins.
 */
 Histogram::Histogram(const double binSize)
-    : mBinSize(binSize), mNumZeros(0) {}
+    : mBinSize(binSize) {}
 
 /**
     Adds a sampe value to the histogram.
@@ -143,7 +144,7 @@ void Histogram::writeFile(FileHelper &fileHelper, QString filename) const
     }
     else
     {
-      fileHelper.write("0,-inf,0," + QString::number(mNumZeros) + "\n");
+      fileHelper.write("0,-inf,0," + QString::number(getNumberOfZeros()) + "\n");
     }
   }
   fileHelper.closeFile();

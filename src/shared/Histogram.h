@@ -66,8 +66,7 @@ class Histogram
 
   private:
     double mBinSize;
-    std::map<long long, long long> mBins;    
-    long long mNumZeros;
+    std::map<long long, long long> mBins;        
     
 };
 
