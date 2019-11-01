@@ -132,7 +132,7 @@ void Histogram::writeFile(FileHelper &fileHelper, QString filename) const
 {
 
   fileHelper.openFile(filename);
-  fileHelper.write("bin_index,bin_min_exclusive,bin_max_inclusive,bin_value\n");
+  fileHelper.write("bin_index (empty bins omitted),bin_min (exclusive),bin_max (inclusive),bin_value\n");
   for (auto it = mBins.begin(); it != mBins.end(); it++)
   {
     if (it->first > 0)
