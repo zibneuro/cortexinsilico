@@ -15,7 +15,7 @@ class Histogram
 {
   public:
 
-    static const int REF_BINCOUNT = 10000;
+    static const int REF_BINCOUNT = 1000;
     static double getBinSize(double expectedMaxValue);
 
     /**
