@@ -179,11 +179,11 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         postBranchesPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_branches.csv");
         synapsesPerVoxelH.writeFile(mFileHelper, "histogram_synapses.csv");        
 
-        mFileHelper.openFile("linechart_synapse_count.csv");
+        mFileHelper.openFile("linechart_synapses_perconnection.csv");
         mFileHelper.write("k,min,med,max\n");
         for (int i = 0; i < synapsesPerConnectionMin.size(); i++)
         {
-            mFileHelper.write(QString::number(i + 1) + "," + QString::number(synapsesPerConnectionMin[i].toDouble()) +
+            mFileHelper.write(QString::number(i) + "," + QString::number(synapsesPerConnectionMin[i].toDouble()) +
                               "," + QString::number(synapsesPerConnectionMed[i].toDouble()) + "," + QString::number(synapsesPerConnectionMax[i].toDouble()) + "\n");
         }
         mFileHelper.closeFile();
