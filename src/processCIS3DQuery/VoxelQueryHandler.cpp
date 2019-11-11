@@ -353,7 +353,7 @@ void VoxelQueryHandler::doProcessQuery()
     qDebug() << "[*] Finished filtering sub-volumes";
 
     int synK = 10;
-    for (int q = 1; q <= synK; q++)
+    for (int q = 0; q <= synK; q++)
     {
         std::vector<float> foo;
         mSynapsesPerConnectionOccurrences[q] = foo;
@@ -439,7 +439,7 @@ void VoxelQueryHandler::doProcessQuery()
 
                 std::map<int, float> synPerVoxel;
 
-                for (int k = 1; k <= synK; k++)
+                for (int k = 0; k <= synK; k++)
                 {
                     synPerVoxel[k] = 0;
                 }
@@ -456,7 +456,7 @@ void VoxelQueryHandler::doProcessQuery()
                             float innervation = preIt->second * postIt->second;
                             int multipl = preMultiplicity[preIt->first];
 
-                            for (int k = 1; k <= synK; k++)
+                            for (int k = 0; k <= synK; k++)
                             {
                                 float synap =
                                     mCalculator.calculateSynapseProbability(innervation, k);
@@ -472,7 +472,7 @@ void VoxelQueryHandler::doProcessQuery()
                     }
                 }
 
-                for (int k = 1; k <= synK; k++)
+                for (int k = 0; k <= synK; k++)
                 {
                     mSynapsesPerConnectionOccurrences[k].push_back(synPerVoxel[k]);
                 }
