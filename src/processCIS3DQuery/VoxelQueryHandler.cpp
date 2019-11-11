@@ -166,15 +166,15 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(Statistics::getLineSingleValue("sub-volumes meeting spatial filter condition", (int)mSelectedVoxels.size()));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with presynaptic cells [mm³]", Util::formatVolume((int)mPreInnervatedVoxels.size())));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with postsynaptic cells [mm³]", Util::formatVolume((int)mPostInnervatedVoxels.size())));
-        mFileHelper.write(preCellsPerVoxel.getLineCsv("presynaptic cells per (50\u00B5m)³"));
-        mFileHelper.write(postCellsPerVoxel.getLineCsv("postsynaptic cells per (50\u00B5m)³"));
+        mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells per (50\u00B5m)³"));
+        mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells per (50\u00B5m)³"));
         mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branches per (50\u00B5m)³"));
         mFileHelper.write(postBranchesPerVoxel.getLineCsv("dendrite branches per (50\u00B5m)³"));
         mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses per (50\u00B5m)³"));
         mFileHelper.closeFile();
 
-        preCellsPerVoxelH.writeFile(mFileHelper, "histogram_presynaptic_cells.csv");
-        postCellsPerVoxelH.writeFile(mFileHelper, "histogram_postsynaptic_cells.csv");
+        preCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_presynaptic_cells.csv");
+        postCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_postsynaptic_cells.csv");
         preBranchesPerVoxelH.writeFile(mFileHelper, "histogram_axon_branches.csv");
         postBranchesPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_branches.csv");
         synapsesPerVoxelH.writeFile(mFileHelper, "histogram_synapses.csv");        
