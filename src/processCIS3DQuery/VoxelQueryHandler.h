@@ -39,6 +39,7 @@ private:
 
   QString getMode(QJsonObject& mQuery);
   void determineCellCounts(int voxelId);
+  void determineBranchLengths(int voxelId);
 
   Statistics mStatistics;
   QString mTempFolder;
@@ -70,6 +71,8 @@ private:
   std::map<int, std::vector<float>> mSynapsesPerConnectionOccurrences;
   std::map<int, int> mPreCellbodiesPerVoxel;
   std::map<int, int> mPostCellbodiesPerVoxel;
+  std::map<int, float> mAxonLengthPerVoxel;
+  std::map<int, float> mDendriteLengthPerVoxel;
   std::vector<QString> mSubvolumes;
   std::set<int> mPreIds;
   std::set<int> mPostIds;

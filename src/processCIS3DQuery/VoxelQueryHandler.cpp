@@ -90,11 +90,11 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     createStatistics(mSynapsesPerVoxel, synapsesPerVoxel, synapsesPerVoxelH);
 
     Statistics preCellbodiesPerVoxel;
-    Histogram preCellbodiesPerVoxelH;
+    Histogram preCellbodiesPerVoxelH(50);
     createStatistics(mPreCellbodiesPerVoxel, preCellbodiesPerVoxel, preCellbodiesPerVoxelH);
 
     Statistics postCellbodiesPerVoxel;
-    Histogram postCellbodiesPerVoxelH;
+    Histogram postCellbodiesPerVoxelH(50);
     createStatistics(mPostCellbodiesPerVoxel, postCellbodiesPerVoxel, postCellbodiesPerVoxelH);
 
     // qDebug() << synapsesPerVoxel.getMaximum() << synapsesPerVoxel.getMean() <<
@@ -421,6 +421,7 @@ void VoxelQueryHandler::doProcessQuery()
                 // ################ PROCESS SINGLE VOXEL ################
 
                 determineCellCounts(voxelId + 1);
+                //determineBranchLengths(voxelId + 1);
 
                 std::map<int, float> pre;
                 std::map<int, float> post;
@@ -598,6 +599,26 @@ void VoxelQueryHandler::determineCellCounts(int voxelId){
         }
         if(mPostIds.find(neuronId) != mPostIds.end()){
             mPostCellbodiesPerVoxel[voxelId] += 1;
+        }
+    }
+}
+
+void VoxelQueryHandler::determineBranchLengths(int voxelId){
+    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_neuronIds" + QDir::separator() + QString::number(voxelId));
+    std::vector<std::vector<double> > data = UtilIO::readCsv(filename, true);
+    mAxonLengthPerVoxel[voxelId] = 0;
+    mDendriteLengthPerVoxel[voxelId] = 0;
+
+    for (auto it = data.begin(); it != data.end(); it++){
+        int neuronId = static_cast<int>((*it)[0]);
+        double apicalLength = (*it)[1];
+        double basalLength = (*it)[2];
+        double axonLength = (*it)[3];
+        if(mPreIds.find(neuronId) != mPreIds.end()){
+            mAxonLengthPerVoxel[voxelId] += 0.001 * axonLength;
+        }
+        if(mPostIds.find(neuronId) != mPostIds.end()){
+            mDendriteLengthPerVoxel[voxelId] += 0.001 * (apicalLength + basalLength);
         }
     }
 }
