@@ -97,6 +97,14 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     Histogram postCellbodiesPerVoxelH(50);
     createStatistics(mPostCellbodiesPerVoxel, postCellbodiesPerVoxel, postCellbodiesPerVoxelH);
 
+    Statistics axonLengthPerVoxel;
+    Histogram axonLengthPerVoxelH(50);
+    createStatistics(mAxonLengthPerVoxel, axonLengthPerVoxel, axonLengthPerVoxelH);
+
+    Statistics dendriteLengthPerVoxel;
+    Histogram dendriteLengthPerVoxelH(50);
+    createStatistics(mDendriteLengthPerVoxel, dendriteLengthPerVoxel, dendriteLengthPerVoxelH);
+
     // qDebug() << synapsesPerVoxel.getMaximum() << synapsesPerVoxel.getMean() <<
     // synapsesPerVoxelH.getNumberOfBins();
 
@@ -156,6 +164,12 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     result.insert("postsynapticCellbodiesPerVoxel",Util::createJsonStatistic(postCellbodiesPerVoxel));
     result.insert("presynapticCellbodiesPerVoxelHisto",preCellbodiesPerVoxelH.createJson());
     result.insert("postsynapticCellbodiesPerVoxelHisto",postCellbodiesPerVoxelH.createJson());
+    result.insert("axonLengthPerVoxel",Util::createJsonStatistic(axonLengthPerVoxel));
+    result.insert("dendriteLengthPerVoxel",Util::createJsonStatistic(dendriteLengthPerVoxel));
+    result.insert("axonLengthPerVoxelHisto",axonLengthPerVoxelH.createJson());
+    result.insert("dendriteLengthPerVoxelHisto",dendriteLengthPerVoxelH.createJson());
+
+    qDebug() << "result";
 
     // ################# CREATE CSV FILE #################
 
@@ -185,6 +199,8 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells per (50\u00B5m)³"));
         mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branches per (50\u00B5m)³"));
         mFileHelper.write(postBranchesPerVoxel.getLineCsv("dendrite branches per (50\u00B5m)³"));
+        mFileHelper.write(axonLengthPerVoxel.getLineCsv("axon length per (50\u00B5m)³ [mm]"));
+        mFileHelper.write(dendriteLengthPerVoxel.getLineCsv("dendrite length per (50\u00B5m)³ [mm]"));
         mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses per (50\u00B5m)³"));
         mFileHelper.closeFile();
 
@@ -194,6 +210,8 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         postCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_postsynaptic_cells.csv");
         preBranchesPerVoxelH.writeFile(mFileHelper, "histogram_axon_branches.csv");
         postBranchesPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_branches.csv");
+        axonLengthPerVoxelH.writeFile(mFileHelper, "histogram_axon_length.csv");
+        dendriteLengthPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_length.csv");
         synapsesPerVoxelH.writeFile(mFileHelper, "histogram_synapses.csv");        
 
         mFileHelper.openFile("linechart_synapses_perconnection.csv");
@@ -421,7 +439,7 @@ void VoxelQueryHandler::doProcessQuery()
                 // ################ PROCESS SINGLE VOXEL ################
 
                 determineCellCounts(voxelId + 1);
-                //determineBranchLengths(voxelId + 1);
+                determineBranchLengths(voxelId + 1);
 
                 std::map<int, float> pre;
                 std::map<int, float> post;
@@ -604,7 +622,7 @@ void VoxelQueryHandler::determineCellCounts(int voxelId){
 }
 
 void VoxelQueryHandler::determineBranchLengths(int voxelId){
-    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_neuronIds" + QDir::separator() + QString::number(voxelId));
+    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_stats" + QDir::separator() + QString::number(voxelId));
     std::vector<std::vector<double> > data = UtilIO::readCsv(filename, true);
     mAxonLengthPerVoxel[voxelId] = 0;
     mDendriteLengthPerVoxel[voxelId] = 0;
@@ -615,10 +633,10 @@ void VoxelQueryHandler::determineBranchLengths(int voxelId){
         double basalLength = (*it)[2];
         double axonLength = (*it)[3];
         if(mPreIds.find(neuronId) != mPreIds.end()){
-            mAxonLengthPerVoxel[voxelId] += 0.001 * axonLength;
+            mAxonLengthPerVoxel[voxelId] += 0.001 * axonLength; //convert to [mm]
         }
         if(mPostIds.find(neuronId) != mPostIds.end()){
-            mDendriteLengthPerVoxel[voxelId] += 0.001 * (apicalLength + basalLength);
+            mDendriteLengthPerVoxel[voxelId] += 0.001 * (apicalLength + basalLength); //convert to [mm]
         }
     }
 }

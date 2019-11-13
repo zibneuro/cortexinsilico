@@ -55,8 +55,6 @@ void Histogram::addValue(const double v)
     {
       mBins[binNum] += 1;
     }
-
-    mBins[binNum] += 1;
   }
 }
 
