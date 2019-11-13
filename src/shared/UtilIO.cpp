@@ -401,7 +401,7 @@ std::vector<std::vector<double>> UtilIO::readCsv(QString filename,
     if (ignoreFileNotFound) {
         return data;
     } else {
-      const QString msg
+      const QString msg =
           QString("Error reading file. Could not open file %1").arg(filename);
       throw std::runtime_error(qPrintable(msg));
     }
