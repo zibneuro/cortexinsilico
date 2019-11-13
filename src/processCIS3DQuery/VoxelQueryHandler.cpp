@@ -169,8 +169,6 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     result.insert("axonLengthPerVoxelHisto",axonLengthPerVoxelH.createJson());
     result.insert("dendriteLengthPerVoxelHisto",dendriteLengthPerVoxelH.createJson());
 
-    qDebug() << "result";
-
     // ################# CREATE CSV FILE #################
 
     if (createFile)
