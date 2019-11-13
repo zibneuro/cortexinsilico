@@ -100,6 +100,10 @@ bool isExcitatoryFileName(const QString& fileName);
 
 void makeDir(QString dirname);
 
+std::vector<std::vector<double> > readCsv(QString filename, bool ignoreFileNotFound = false);
+
+QString getCsvName(int id);
+
 
 
 }  // namespace UtilIO

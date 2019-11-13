@@ -88,6 +88,15 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     Statistics synapsesPerVoxel;
     Histogram synapsesPerVoxelH(100);
     createStatistics(mSynapsesPerVoxel, synapsesPerVoxel, synapsesPerVoxelH);
+
+    Statistics preCellbodiesPerVoxel;
+    Histogram preCellbodiesPerVoxelH;
+    createStatistics(mPreCellbodiesPerVoxel, preCellbodiesPerVoxel, preCellbodiesPerVoxelH);
+
+    Statistics postCellbodiesPerVoxel;
+    Histogram postCellbodiesPerVoxelH;
+    createStatistics(mPostCellbodiesPerVoxel, postCellbodiesPerVoxel, postCellbodiesPerVoxelH);
+
     // qDebug() << synapsesPerVoxel.getMaximum() << synapsesPerVoxel.getMean() <<
     // synapsesPerVoxelH.getNumberOfBins();
 
@@ -143,6 +152,10 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     result.insert("synapsesPerConnectionPlot", synapsesPerConnectionPlot);
     result.insert("synapsesCubicMicron", mSynapsesCubicMicron.getJson());
     result.insert("axonDendriteRatio", mAxonDendriteRatio.getJson());
+    result.insert("presynapticCellbodiesPerVoxel",Util::createJsonStatistic(preCellbodiesPerVoxel));
+    result.insert("postsynapticCellbodiesPerVoxel",Util::createJsonStatistic(postCellbodiesPerVoxel));
+    result.insert("presynapticCellbodiesPerVoxelHisto",preCellbodiesPerVoxelH.createJson());
+    result.insert("postsynapticCellbodiesPerVoxelHisto",postCellbodiesPerVoxelH.createJson());
 
     // ################# CREATE CSV FILE #################
 
@@ -166,6 +179,8 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(Statistics::getLineSingleValue("sub-volumes meeting spatial filter condition", (int)mSelectedVoxels.size()));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with presynaptic cells [mm³]", Util::formatVolume((int)mPreInnervatedVoxels.size())));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with postsynaptic cells [mm³]", Util::formatVolume((int)mPostInnervatedVoxels.size())));
+        mFileHelper.write(preCellbodiesPerVoxel.getLineCsv("presynaptic cell bodies per (50\u00B5m)³"));
+        mFileHelper.write(postCellbodiesPerVoxel.getLineCsv("postsynaptic cell bodies per (50\u00B5m)³"));
         mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells per (50\u00B5m)³"));
         mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells per (50\u00B5m)³"));
         mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branches per (50\u00B5m)³"));
@@ -173,6 +188,8 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses per (50\u00B5m)³"));
         mFileHelper.closeFile();
 
+        preCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_presynaptic_cellbodies.csv");
+        postCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_postsynaptic_cellbodies.csv");
         preCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_presynaptic_cells.csv");
         postCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_postsynaptic_cells.csv");
         preBranchesPerVoxelH.writeFile(mFileHelper, "histogram_axon_branches.csv");
@@ -248,6 +265,13 @@ void VoxelQueryHandler::doProcessQuery()
 
     IdList preIds = mSelection.SelectionA();
     IdList postIds = mSelection.SelectionB();
+
+    for(int i=0; i< preIds.size(); i++){
+        mPreIds.insert(preIds[i]);
+    }
+    for(int i=0; i< postIds.size(); i++){
+        mPostIds.insert(postIds[i]);
+    }
 
     std::set<int> mappedPreIds;
     std::set<int> prunedPostIds;
@@ -392,9 +416,11 @@ void VoxelQueryHandler::doProcessQuery()
             int voxelIdBranch = partsBranch[0].toInt();
 
             if (filteredVoxels.find(voxelId) != filteredVoxels.end())
-            {
+            {                
                 voxelCount++;
                 // ################ PROCESS SINGLE VOXEL ################
+
+                determineCellCounts(voxelId + 1);
 
                 std::map<int, float> pre;
                 std::map<int, float> post;
@@ -558,4 +584,20 @@ QString
 VoxelQueryHandler::getResultKey()
 {
     return "voxelResult";
+}
+
+void VoxelQueryHandler::determineCellCounts(int voxelId){
+    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_neuronIds" + QDir::separator() + QString::number(voxelId));
+    std::vector<std::vector<double> > data = UtilIO::readCsv(filename, true);
+    mPreCellbodiesPerVoxel[voxelId] = 0;
+    mPostCellbodiesPerVoxel[voxelId] = 0;
+    for (auto it = data.begin(); it != data.end(); it++){
+        int neuronId = static_cast<int>((*it)[0]);
+        if(mPreIds.find(neuronId) != mPreIds.end()){
+            mPreCellbodiesPerVoxel[voxelId] += 1;
+        }
+        if(mPostIds.find(neuronId) != mPostIds.end()){
+            mPostCellbodiesPerVoxel[voxelId] += 1;
+        }
+    }
 }

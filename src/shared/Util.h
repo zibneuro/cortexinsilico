@@ -12,6 +12,7 @@
 #include "CIS3DConstantsHelpers.h"
 #include <QJsonObject>
 #include <set>
+#include <vector>
 
 class QJsonObject;
 class QJsonArray;
@@ -180,6 +181,7 @@ namespace Util
     std::set<int> getPermittedSubvolumeRegionIds(QJsonArray& conditions, Regions& regions);
 
     double convertToCubicMicron(double value);
+
 
 } // namespace Util
 

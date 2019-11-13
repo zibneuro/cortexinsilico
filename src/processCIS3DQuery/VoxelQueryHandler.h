@@ -11,6 +11,7 @@
 #include "Distribution.h"
 #include <QJsonObject>
 #include <QString>
+#include <vector>
 
 
 class VoxelQueryHandler : public QueryHandler {
@@ -37,6 +38,7 @@ private:
                         Histogram &histogram);
 
   QString getMode(QJsonObject& mQuery);
+  void determineCellCounts(int voxelId);
 
   Statistics mStatistics;
   QString mTempFolder;
@@ -66,7 +68,11 @@ private:
   std::map<int, float> mSynapsesPerVoxel;
   Statistics mSynapsesPerConnection;
   std::map<int, std::vector<float>> mSynapsesPerConnectionOccurrences;
+  std::map<int, int> mPreCellbodiesPerVoxel;
+  std::map<int, int> mPostCellbodiesPerVoxel;
   std::vector<QString> mSubvolumes;
+  std::set<int> mPreIds;
+  std::set<int> mPostIds;
 
 
 };
