@@ -191,8 +191,8 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(Statistics::getLineSingleValue("sub-volumes meeting spatial filter condition", (int)mSelectedVoxels.size()));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with presynaptic cells [mm³]", Util::formatVolume((int)mPreInnervatedVoxels.size())));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with postsynaptic cells [mm³]", Util::formatVolume((int)mPostInnervatedVoxels.size())));
-        mFileHelper.write(preCellbodiesPerVoxel.getLineCsv("presynaptic cell bodies per (50\u00B5m)³"));
-        mFileHelper.write(postCellbodiesPerVoxel.getLineCsv("postsynaptic cell bodies per (50\u00B5m)³"));
+        mFileHelper.write(preCellbodiesPerVoxel.getLineCsv("cell bodies per (50\u00B5m)³"));
+        //mFileHelper.write(postCellbodiesPerVoxel.getLineCsv("postsynaptic cell bodies per (50\u00B5m)³"));
         mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells per (50\u00B5m)³"));
         mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells per (50\u00B5m)³"));
         mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branches per (50\u00B5m)³"));
@@ -202,8 +202,8 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses per (50\u00B5m)³"));
         mFileHelper.closeFile();
 
-        preCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_presynaptic_cellbodies.csv");
-        postCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_postsynaptic_cellbodies.csv");
+        preCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_cellbodies.csv");
+        //postCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_postsynaptic_cellbodies.csv");
         preCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_presynaptic_cells.csv");
         postCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_postsynaptic_cells.csv");
         preBranchesPerVoxelH.writeFile(mFileHelper, "histogram_axon_branches.csv");
@@ -610,12 +610,9 @@ void VoxelQueryHandler::determineCellCounts(int voxelId){
     mPostCellbodiesPerVoxel[voxelId] = 0;
     for (auto it = data.begin(); it != data.end(); it++){
         int neuronId = static_cast<int>((*it)[0]);
-        if(mPreIds.find(neuronId) != mPreIds.end()){
+        if(mPreIds.find(neuronId) != mPreIds.end() || mPostIds.find(neuronId) != mPostIds.end()){
             mPreCellbodiesPerVoxel[voxelId] += 1;
-        }
-        if(mPostIds.find(neuronId) != mPostIds.end()){
-            mPostCellbodiesPerVoxel[voxelId] += 1;
-        }
+        }        
     }
 }
 
