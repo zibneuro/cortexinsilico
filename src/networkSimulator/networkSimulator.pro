@@ -54,7 +54,8 @@ SOURCES += \
     ../shared/InnervationMatrix.cpp \
     ../shared/RandomGenerator.cpp \
     ../shared/FeatureProvider.cpp \ 
-    ../shared/Columns.cpp
+    ../shared/Columns.cpp \
+    ../shared/FileHelper.cpp
 
 HEADERS += \
     FeatureExtractor.h \
@@ -83,4 +84,5 @@ HEADERS += \
     ../shared/InnervationMatrix.h \ 
     ../shared/RandomGenerator.h \
     ../shared/FeatureProvider.h \ 
-    ../shared/Columns.h
+    ../shared/Columns.h \
+    ../shared/FileHelper.h
