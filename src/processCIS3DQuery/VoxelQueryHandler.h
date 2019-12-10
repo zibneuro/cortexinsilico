@@ -76,6 +76,9 @@ private:
   std::vector<QString> mSubvolumes;
   std::set<int> mPreIds;
   std::set<int> mPostIds;
+  std::map<int, float> mVariabilityCellbodies;
+  std::map<int, float> mVariabilityAxon;
+  std::map<int, float> mVariabilityDendrite;
 
 
 };
