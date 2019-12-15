@@ -207,6 +207,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         }
         mFileHelper.closeFile();
 
+        /*
         mFileHelper.openFile("testOutput.csv");
         mFileHelper.write("subvolume_id,cellbodies,variability");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
@@ -215,6 +216,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
             mFileHelper.write(line);
         }
         mFileHelper.closeFile();
+        */
 
         mFileHelper.openFile("statistics.csv");
         mFileHelper.write(Statistics::getHeaderCsv());
@@ -655,8 +657,8 @@ void VoxelQueryHandler::determineCellCounts(int voxelId){
         }        
     }
     mVariabilityCellbodies[voxelId] = static_cast<float>(celltypes.size()) / 10;
-    mTestOutput[voxelId].push_back(static_cast<float>(mPreCellbodiesPerVoxel[voxelId]));
-    mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
+    //mTestOutput[voxelId].push_back(static_cast<float>(mPreCellbodiesPerVoxel[voxelId]));
+    //mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
 }
 
 void VoxelQueryHandler::determineBranchLengths(int voxelId){
