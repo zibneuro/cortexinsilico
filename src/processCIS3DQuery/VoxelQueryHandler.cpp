@@ -207,6 +207,15 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         }
         mFileHelper.closeFile();
 
+        mFileHelper.openFile("testOutput.csv");
+        mFileHelper.write("subvolume_id,cellbodies,variability");
+        for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
+        {
+            QString line = QString::number(it->first) + "," + QString::number(it->second[0]) + "," + QString::number(it->second[1]) + "\n";
+            mFileHelper.write(line);
+        }
+        mFileHelper.closeFile();
+
         mFileHelper.openFile("statistics.csv");
         mFileHelper.write(Statistics::getHeaderCsv());
         mFileHelper.write(Statistics::getLineSingleValue("sub-volumes meeting spatial filter condition", (int)mSelectedVoxels.size()));
@@ -400,6 +409,8 @@ void VoxelQueryHandler::doProcessQuery()
                                 filteredVoxels.insert(voxelId);
                                 QString reportLine = QString::number(voxelId) + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[5] + "," + parts[6] + "\n";
                                 mSubvolumes.push_back(reportLine);
+                                std::vector<float> entries;
+                                mTestOutput[voxelId] = entries;
                             }
                         }
                     }
@@ -644,7 +655,8 @@ void VoxelQueryHandler::determineCellCounts(int voxelId){
         }        
     }
     mVariabilityCellbodies[voxelId] = static_cast<float>(celltypes.size()) / 10;
-    qDebug() << celltypes.size() << mVariabilityCellbodies[voxelId];
+    mTestOutput[voxelId].push_back(static_cast<float>(mPreCellbodiesPerVoxel[voxelId]));
+    mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
 }
 
 void VoxelQueryHandler::determineBranchLengths(int voxelId){

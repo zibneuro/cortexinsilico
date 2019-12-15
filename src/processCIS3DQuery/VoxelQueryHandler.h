@@ -79,8 +79,7 @@ private:
   std::map<int, float> mVariabilityCellbodies;
   std::map<int, float> mVariabilityAxon;
   std::map<int, float> mVariabilityDendrite;
-
-
+  std::map<int, std::vector<float> > mTestOutput; 
 };
 
 #endif // VOXELQUERYHANDLER_H
