@@ -411,8 +411,8 @@ void VoxelQueryHandler::doProcessQuery()
                                 filteredVoxels.insert(voxelId);
                                 QString reportLine = QString::number(voxelId) + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[5] + "," + parts[6] + "\n";
                                 mSubvolumes.push_back(reportLine);
-                                std::vector<float> entries;
-                                mTestOutput[voxelId] = entries;
+                                //std::vector<float> entries;
+                                //mTestOutput[voxelId] = entries;
                             }
                         }
                     }
