@@ -209,10 +209,14 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
         /*
         mFileHelper.openFile("testOutput.csv");
-        mFileHelper.write("subvolume_id,cellbodies,variability");
+        mFileHelper.write("subvolume_id,cellbodies,variability_cellbody,length_dendrite,length_axon,variability_dendrite,variability_axon,branch_dendr,branch_axon\n");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
-        {
-            QString line = QString::number(it->first) + "," + QString::number(it->second[0]) + "," + QString::number(it->second[1]) + "\n";
+        {          
+            int nAxons = mMapPreBranchesPerVoxel[it->first];
+            int nDendr = mMapPostBranchesPerVoxel[it->first];
+            QString line = QString::number(it->first) + "," + QString::number(it->second[0]) + "," + QString::number(it->second[1]) +
+            "," + QString::number(it->second[2]) + "," + QString::number(it->second[3]) + "," + QString::number(it->second[4]) + "," + QString::number(it->second[5]) 
+            + "," + QString::number(nDendr) + "," + QString::number(nAxons) + "\n";
             mFileHelper.write(line);
         }
         mFileHelper.closeFile();
@@ -411,8 +415,8 @@ void VoxelQueryHandler::doProcessQuery()
                                 filteredVoxels.insert(voxelId);
                                 QString reportLine = QString::number(voxelId) + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[5] + "," + parts[6] + "\n";
                                 mSubvolumes.push_back(reportLine);
-                                //std::vector<float> entries;
-                                //mTestOutput[voxelId] = entries;
+                                std::vector<float> entries;
+                                mTestOutput[voxelId] = entries;
                             }
                         }
                     }
@@ -476,8 +480,8 @@ void VoxelQueryHandler::doProcessQuery()
                 voxelCount++;
                 // ################ PROCESS SINGLE VOXEL ################
 
-                determineCellCounts(voxelId + 1);
-                determineBranchLengths(voxelId + 1);
+                determineCellCounts(voxelId);
+                determineBranchLengths(voxelId);
 
                 std::map<int, float> pre;
                 std::map<int, float> post;
@@ -644,7 +648,7 @@ VoxelQueryHandler::getResultKey()
 }
 
 void VoxelQueryHandler::determineCellCounts(int voxelId){
-    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_neuronIds" + QDir::separator() + QString::number(voxelId));
+    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_neuronIds" + QDir::separator() + QString::number(voxelId+1));
     std::vector<std::vector<double> > data = UtilIO::readCsv(filename, true);
     std::set<int> celltypes;
     mPreCellbodiesPerVoxel[voxelId] = 0;
@@ -657,12 +661,12 @@ void VoxelQueryHandler::determineCellCounts(int voxelId){
         }        
     }
     mVariabilityCellbodies[voxelId] = static_cast<float>(celltypes.size()) / 10;
-    //mTestOutput[voxelId].push_back(static_cast<float>(mPreCellbodiesPerVoxel[voxelId]));
-    //mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
+    mTestOutput[voxelId].push_back(static_cast<float>(mPreCellbodiesPerVoxel[voxelId]));
+    mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
 }
 
 void VoxelQueryHandler::determineBranchLengths(int voxelId){
-    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_stats" + QDir::separator() + QString::number(voxelId));
+    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_stats" + QDir::separator() + QString::number(voxelId+1));
     std::vector<std::vector<double> > data = UtilIO::readCsv(filename, true);
     mAxonLengthPerVoxel[voxelId] = 0;
     mDendriteLengthPerVoxel[voxelId] = 0;
@@ -690,4 +694,8 @@ void VoxelQueryHandler::determineBranchLengths(int voxelId){
 
     mVariabilityAxon[voxelId] = static_cast<float>(celltypesAxon.size()) / 11;
     mVariabilityDendrite[voxelId] = static_cast<float>(celltypesDendrite.size()) / 10;
+    mTestOutput[voxelId].push_back(static_cast<float>(mDendriteLengthPerVoxel[voxelId]));
+    mTestOutput[voxelId].push_back(static_cast<float>(mAxonLengthPerVoxel[voxelId]));
+    mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityDendrite[voxelId]));
+    mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityAxon[voxelId]));
 }
