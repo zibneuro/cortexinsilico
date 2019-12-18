@@ -207,6 +207,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         }
         mFileHelper.closeFile();
         
+        /*
         mFileHelper.openFile("testOutput.csv");
         mFileHelper.write("subvolume_id,cellbodies,variability_cellbody,length_dendrite,length_axon,variability_dendrite,variability_axon,branch_dendr,branch_axon\n");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
@@ -219,6 +220,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
             mFileHelper.write(line);
         }
         mFileHelper.closeFile();
+        */
 
         mFileHelper.openFile("statistics.csv");
         mFileHelper.write(Statistics::getHeaderCsv());
@@ -674,8 +676,8 @@ void VoxelQueryHandler::determineBranchLengths(int voxelId){
     for (auto it = data.begin(); it != data.end(); it++){
         int neuronId = static_cast<int>((*it)[0]);
         double apicalLength = (*it)[1];
-        double basalLength = (*it)[2];
-        double axonLength = (*it)[3];
+        double basalLength = (*it)[3];
+        double axonLength = (*it)[5];
         if(mPreIds.find(neuronId) != mPreIds.end()){
             mAxonLengthPerVoxel[voxelId] += 0.001 * axonLength; //convert to [mm]
             if(axonLength > 0){
