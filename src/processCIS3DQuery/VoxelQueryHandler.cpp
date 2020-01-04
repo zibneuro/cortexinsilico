@@ -207,7 +207,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         }
         mFileHelper.closeFile();
         
-        
+        /*
         mFileHelper.openFile("testOutput.csv");
         mFileHelper.write("subvolume_id,cellbodies,variability_cellbody,length_dendrite,length_axon,variability_dendrite,variability_axon,branch_dendr,branch_axon\n");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
@@ -220,25 +220,25 @@ VoxelQueryHandler::createJsonResult(bool createFile)
             mFileHelper.write(line);
         }
         mFileHelper.closeFile();
-        
+        */
 
         mFileHelper.openFile("statistics.csv");
         mFileHelper.write(Statistics::getHeaderCsv());
         mFileHelper.write(Statistics::getLineSingleValue("sub-volumes meeting spatial filter condition", (int)mSelectedVoxels.size()));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with presynaptic cells [mm³]", Util::formatVolume((int)mPreInnervatedVoxels.size())));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with postsynaptic cells [mm³]", Util::formatVolume((int)mPostInnervatedVoxels.size())));
-        mFileHelper.write(preCellbodiesPerVoxel.getLineCsv("cell bodies per (50\u00B5m)³"));
-        mFileHelper.write(cellbodyVariabilityPerVoxel.getLineCsv("cell body heterogeneity per (50\u00B5m)³"));
+        mFileHelper.write(preCellbodiesPerVoxel.getLineCsv("cell bodies [1/(50\u00B5m)³]"));
+        mFileHelper.write(cellbodyVariabilityPerVoxel.getLineCsv("cell body heterogeneity [1/(50\u00B5m)³]"));
         //mFileHelper.write(postCellbodiesPerVoxel.getLineCsv("postsynaptic cell bodies per (50\u00B5m)³"));
-        mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells per (50\u00B5m)³"));
-        mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells per (50\u00B5m)³"));        
-        mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branches per (50\u00B5m)³"));
-        mFileHelper.write(postBranchesPerVoxel.getLineCsv("dendrite branches per (50\u00B5m)³"));
-        mFileHelper.write(axonVariabilityPerVoxel.getLineCsv("axon heterogeneity per (50\u00B5m)³"));
-        mFileHelper.write(dendriteVariabilityPerVoxel.getLineCsv("dendrite heterogeneity per (50\u00B5m)³"));
-        mFileHelper.write(axonLengthPerVoxel.getLineCsv("axon length per (50\u00B5m)³ [mm]"));
-        mFileHelper.write(dendriteLengthPerVoxel.getLineCsv("dendrite length per (50\u00B5m)³ [mm]"));
-        mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses per (50\u00B5m)³"));
+        mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells [1/(50\u00B5m)³]"));
+        mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells [1/(50\u00B5m)³]"));        
+        mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branchlets [1/(50\u00B5m)³]"));
+        mFileHelper.write(postBranchesPerVoxel.getLineCsv("dendrite branchlets [1/(50\u00B5m)³]"));
+        mFileHelper.write(axonVariabilityPerVoxel.getLineCsv("axon heterogeneity [1/(50\u00B5m)³]"));
+        mFileHelper.write(dendriteVariabilityPerVoxel.getLineCsv("dendrite heterogeneity [1/(50\u00B5m)³]"));
+        mFileHelper.write(axonLengthPerVoxel.getLineCsv("axon length [m/(50\u00B5m)³]"));
+        mFileHelper.write(dendriteLengthPerVoxel.getLineCsv("dendrite length [cm/(50\u00B5m)³]"));
+        mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses [1/(50\u00B5m)³]"));
         mFileHelper.closeFile();
 
         preCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_cellbodies.csv");
@@ -679,13 +679,13 @@ void VoxelQueryHandler::determineBranchLengths(int voxelId){
         double basalLength = (*it)[3];
         double axonLength = (*it)[5];
         if(mPreIds.find(neuronId) != mPreIds.end()){
-            mAxonLengthPerVoxel[voxelId] += 0.001 * axonLength; //convert to [mm]
+            mAxonLengthPerVoxel[voxelId] += 0.000001 * axonLength; //convert to [m]
             if(axonLength > 0){
                 celltypesAxon.insert(mNetwork.neurons.getCellTypeId(neuronId));
             }
         }
         if(mPostIds.find(neuronId) != mPostIds.end()){
-            mDendriteLengthPerVoxel[voxelId] += 0.001 * (apicalLength + basalLength); //convert to [mm]
+            mDendriteLengthPerVoxel[voxelId] += 0.0001 * (apicalLength + basalLength); //convert to [cm]
             if(apicalLength + basalLength > 0){
                 celltypesDendrite.insert(mNetwork.neurons.getCellTypeId(neuronId));
             }

@@ -573,7 +573,6 @@ QString Util::writeFormulaSelectionDescription(QJsonObject &formulaSelection,
 QString Util::getResultFileHeader(const QJsonObject &query) {
   int networkNumber = query["networkNumber"].toInt();
   QString queryType = query["queryType"].toString();
-  bool isVoxel = queryType == "voxel";
   bool isTriplet = queryType == "triplet";
   bool isInDegree = queryType == "inDegree";
 
@@ -592,11 +591,6 @@ QString Util::getResultFileHeader(const QJsonObject &query) {
   }
 
   // ######### CELL SELECTION #########
-
-  if (isVoxel) {
-    QJsonObject voxelSelection = query["voxelSelection"].toObject();
-    s += writeVoxelSelectionDescription(voxelSelection);
-  }
 
   QJsonObject cellSelection = query["cellSelection"].toObject();
   double sliceRef;
@@ -624,7 +618,7 @@ QString Util::writeFilterConditions(QJsonArray conditions) {
     }
     s += conditions[i].toObject()["valueAsText"].toString();
   }
-  return s;
+  return "\"" + s + "\"";
 }
 
 QString Util::writeSelectionDescription(QJsonObject &selection, bool isSlice) {
@@ -951,6 +945,7 @@ QString Util::writeVoxelSelectionDescription(QJsonObject &voxelSelection) {
   QString mode = filter["mode"].toString();
   QString s = "";
 
+  
   s += "Filter mode:,";
   if (mode == "voxel") {
     s += "All neurons in sub-volume (A)\n";
@@ -959,7 +954,7 @@ QString Util::writeVoxelSelectionDescription(QJsonObject &voxelSelection) {
   } else {
     s += "Neurons meeting filter conditions in complete volume (B & C)\n";
   }
-
+  
   s += "Sub-volume selection (A):\n";
   s += "  Sub-volume origin (x y z) in \u00B5m:,";
   s += QString("%1 %2 %3\n")
@@ -970,8 +965,7 @@ QString Util::writeVoxelSelectionDescription(QJsonObject &voxelSelection) {
   s += QString("%1 %2 %3\n")
            .arg(filter["dimX"].toDouble())
            .arg(filter["dimY"].toDouble())
-           .arg(filter["dimZ"].toDouble());
-
+           .arg(filter["dimZ"].toDouble());  
   return s;
 }
 
