@@ -133,13 +133,13 @@ InnervationStatistic::doCreateCSV(FileHelper& fileHelper) const
     fileHelper.write(Statistics::getLineSingleValue("postsynaptic neurons",numPostNeurons));    
     fileHelper.write(Statistics::getLineSingleValue("neuron pairs",innervationHisto.getNumberOfValues()));
     fileHelper.write(Statistics::getLineSingleValue("neuron pairs without overlap",innervationHisto.getNumberOfZeros()));   
-    fileHelper.write(innervation.getLineCsv("dense structural overlap"));
+    fileHelper.write(innervation.getLineCsv("dense structural composition (DSC)"));
     fileHelper.write(connProb.getLineCsv("connection probability"));
-    fileHelper.write(innervationPerPre.getLineCsv("dense structural overlap per presynaptic neuron"));
-    fileHelper.write(innervationPerPost.getLineCsv("dense structural overlap per postsynaptic neuron"));
+    fileHelper.write(innervationPerPre.getLineCsv("DSC per presynaptic neuron"));
+    fileHelper.write(innervationPerPost.getLineCsv("DSC per postsynaptic neuron"));
     fileHelper.closeFile();
 
-    innervationHisto.writeFile(fileHelper,"histogram_dense_structural_overlap.csv");
+    innervationHisto.writeFile(fileHelper,"histogram_dense_structural_composition.csv");
     connProbHisto.writeFile(fileHelper,"histogram_connection_probability.csv");
 }
 

@@ -63,6 +63,8 @@ FormulaCalculator::init()
     bool valid = true;
     mSymbolTable.add_variable("dso", mCurrentValue_i);
     mSymbolTable.add_variable("DSO", mCurrentValue_i);
+    mSymbolTable.add_variable("DSC", mCurrentValue_i);
+    mSymbolTable.add_variable("dsc", mCurrentValue_i);
     mSymbolTable.add_variable("k", mCurrentValue_k);
     mSymbolTable.add_function("fact", factorial);
     mSymbolTable.add_function("nCk", nCk);
