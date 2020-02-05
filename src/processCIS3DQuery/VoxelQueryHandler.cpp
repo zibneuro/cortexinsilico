@@ -63,7 +63,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 {
     Statistics preCellsPerVoxel;
     Histogram preCellsPerVoxelH(50);
-    createStatistics(mMapPreCellsPerVoxel, preCellsPerVoxel, preCellsPerVoxelH);    
+    createStatistics(mMapPreCellsPerVoxel, preCellsPerVoxel, preCellsPerVoxelH);
 
     Statistics preBranchesPerVoxel;
     Histogram preBranchesPerVoxelH(50);
@@ -150,36 +150,36 @@ VoxelQueryHandler::createJsonResult(bool createFile)
                   (int)mPostInnervatedVoxels.size());
     result.insert("presynapticCellsPerVoxel",
                   Util::createJsonStatistic(preCellsPerVoxel));
-    result.insert("presynapticCellsPerVoxelHisto",preCellsPerVoxelH.createJson());
-    result.insert("presynapticBranchesPerVoxel",Util::createJsonStatistic(preBranchesPerVoxel));
-    result.insert("presynapticBranchesPerVoxelHisto",preBranchesPerVoxelH.createJson());
+    result.insert("presynapticCellsPerVoxelHisto", preCellsPerVoxelH.createJson());
+    result.insert("presynapticBranchesPerVoxel", Util::createJsonStatistic(preBranchesPerVoxel));
+    result.insert("presynapticBranchesPerVoxelHisto", preBranchesPerVoxelH.createJson());
     result.insert("postsynapticCellsPerVoxel",
                   Util::createJsonStatistic(postCellsPerVoxel));
-    result.insert("postsynapticCellsPerVoxelHisto",postCellsPerVoxelH.createJson());
+    result.insert("postsynapticCellsPerVoxelHisto", postCellsPerVoxelH.createJson());
     result.insert("postsynapticBranchesPerVoxel",
                   Util::createJsonStatistic(postBranchesPerVoxel));
-    result.insert("postsynapticBranchesPerVoxelHisto",postBranchesPerVoxelH.createJson());
+    result.insert("postsynapticBranchesPerVoxelHisto", postBranchesPerVoxelH.createJson());
     result.insert("boutonsPerVoxel", Util::createJsonStatistic(boutonsPerVoxel));
-    result.insert("boutonsPerVoxelHisto",boutonsPerVoxelH.createJson());
+    result.insert("boutonsPerVoxelHisto", boutonsPerVoxelH.createJson());
     result.insert("postsynapticSitesPerVoxel",
                   Util::createJsonStatistic(postsynapticSitesPerVoxel));
-    result.insert("postsynapticSitesPerVoxelHisto",postsynapticSitesPerVoxelH.createJson());
+    result.insert("postsynapticSitesPerVoxelHisto", postsynapticSitesPerVoxelH.createJson());
     result.insert("synapsesPerVoxel",
                   Util::createJsonStatistic(synapsesPerVoxel));
-    result.insert("synapsesPerVoxelHisto",synapsesPerVoxelH.createJson());
+    result.insert("synapsesPerVoxelHisto", synapsesPerVoxelH.createJson());
     // result.insert("synapsesPerConnection",
     // Util::createJsonStatistic(mSynapsesPerConnection));
     result.insert("synapsesPerConnectionPlot", synapsesPerConnectionPlot);
     result.insert("synapsesCubicMicron", mSynapsesCubicMicron.getJson());
     result.insert("axonDendriteRatio", mAxonDendriteRatio.getJson());
-    result.insert("presynapticCellbodiesPerVoxel",Util::createJsonStatistic(preCellbodiesPerVoxel));
-    result.insert("postsynapticCellbodiesPerVoxel",Util::createJsonStatistic(postCellbodiesPerVoxel));
-    result.insert("presynapticCellbodiesPerVoxelHisto",preCellbodiesPerVoxelH.createJson());
-    result.insert("postsynapticCellbodiesPerVoxelHisto",postCellbodiesPerVoxelH.createJson());
-    result.insert("axonLengthPerVoxel",Util::createJsonStatistic(axonLengthPerVoxel));
-    result.insert("dendriteLengthPerVoxel",Util::createJsonStatistic(dendriteLengthPerVoxel));
-    result.insert("axonLengthPerVoxelHisto",axonLengthPerVoxelH.createJson());
-    result.insert("dendriteLengthPerVoxelHisto",dendriteLengthPerVoxelH.createJson());
+    result.insert("presynapticCellbodiesPerVoxel", Util::createJsonStatistic(preCellbodiesPerVoxel));
+    result.insert("postsynapticCellbodiesPerVoxel", Util::createJsonStatistic(postCellbodiesPerVoxel));
+    result.insert("presynapticCellbodiesPerVoxelHisto", preCellbodiesPerVoxelH.createJson());
+    result.insert("postsynapticCellbodiesPerVoxelHisto", postCellbodiesPerVoxelH.createJson());
+    result.insert("axonLengthPerVoxel", Util::createJsonStatistic(axonLengthPerVoxel));
+    result.insert("dendriteLengthPerVoxel", Util::createJsonStatistic(dendriteLengthPerVoxel));
+    result.insert("axonLengthPerVoxelHisto", axonLengthPerVoxelH.createJson());
+    result.insert("dendriteLengthPerVoxelHisto", dendriteLengthPerVoxelH.createJson());
     result.insert("cellbodyVariabilityPerVoxel",
                   Util::createJsonStatistic(cellbodyVariabilityPerVoxel));
     result.insert("cellbodyVariabilityPerVoxelHisto", cellbodyVariabilityPerVoxelH.createJson());
@@ -206,19 +206,18 @@ VoxelQueryHandler::createJsonResult(bool createFile)
             mFileHelper.write(*it);
         }
         mFileHelper.closeFile();
-                
+
         mFileHelper.openFile("testOutput.csv");
         mFileHelper.write("subvolume_id,cellbodies,variability_cellbody,length_dendrite,length_axon,variability_dendrite,variability_axon,branch_dendr,branch_axon\n");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
-        {          
+        {
             int nAxons = mMapPreBranchesPerVoxel[it->first];
             int nDendr = mMapPostBranchesPerVoxel[it->first];
             QString line = QString::number(it->first) + "," + QString::number(it->second[0]) + "," + QString::number(it->second[1]) +
-            "," + QString::number(it->second[2]) + "," + QString::number(it->second[3]) + "," + QString::number(it->second[4]) + "," + QString::number(it->second[5]) 
-            + "," + QString::number(nDendr) + "," + QString::number(nAxons) + "\n";
+                           "," + QString::number(it->second[2]) + "," + QString::number(it->second[3]) + "," + QString::number(it->second[4]) + "," + QString::number(it->second[5]) + "," + QString::number(nDendr) + "," + QString::number(nAxons) + "\n";
             mFileHelper.write(line);
         }
-        mFileHelper.closeFile();        
+        mFileHelper.closeFile();
 
         mFileHelper.openFile("statistics.csv");
         mFileHelper.write(Statistics::getHeaderCsv());
@@ -229,7 +228,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(cellbodyVariabilityPerVoxel.getLineCsv("cell body heterogeneity [1/(50\u00B5m)³]"));
         //mFileHelper.write(postCellbodiesPerVoxel.getLineCsv("postsynaptic cell bodies per (50\u00B5m)³"));
         mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells [1/(50\u00B5m)³]"));
-        mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells [1/(50\u00B5m)³]"));        
+        mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells [1/(50\u00B5m)³]"));
         mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branchlets [1/(50\u00B5m)³]"));
         mFileHelper.write(postBranchesPerVoxel.getLineCsv("dendrite branchlets [1/(50\u00B5m)³]"));
         mFileHelper.write(axonVariabilityPerVoxel.getLineCsv("axon heterogeneity [1/(50\u00B5m)³]"));
@@ -247,11 +246,11 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         postBranchesPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_branches.csv");
         axonLengthPerVoxelH.writeFile(mFileHelper, "histogram_axon_length.csv");
         dendriteLengthPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_length.csv");
-        synapsesPerVoxelH.writeFile(mFileHelper, "histogram_synapses.csv"); 
-        cellbodyVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_cellbody_heterogeneity.csv"); 
-        axonVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_axon_heterogeneity.csv"); 
-        dendriteVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_heterogeneity.csv"); 
-      
+        synapsesPerVoxelH.writeFile(mFileHelper, "histogram_synapses.csv");
+        cellbodyVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_cellbody_heterogeneity.csv");
+        axonVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_axon_heterogeneity.csv");
+        dendriteVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_heterogeneity.csv");
+
         mFileHelper.openFile("linechart_synapses_perconnection.csv");
         mFileHelper.write("k,min,med,max\n");
         for (int i = 0; i < synapsesPerConnectionMin.size(); i++)
@@ -263,8 +262,6 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
         mSynapsesCubicMicron.writeFile(mFileHelper, "boxplot_synapses.csv", "[1/\u00B5m³]");
         mAxonDendriteRatio.writeFile(mFileHelper, "boxplot_axon_dendrite_ratio.csv", "[1/(50\u00B5m)³]");
-
-
 
         mFileHelper.uploadFolder(result);
     }
@@ -322,10 +319,12 @@ void VoxelQueryHandler::doProcessQuery()
     IdList preIds = mSelection.SelectionA();
     IdList postIds = mSelection.SelectionB();
 
-    for(int i=0; i< preIds.size(); i++){
+    for (int i = 0; i < preIds.size(); i++)
+    {
         mPreIds.insert(preIds[i]);
     }
-    for(int i=0; i< postIds.size(); i++){
+    for (int i = 0; i < postIds.size(); i++)
+    {
         mPostIds.insert(postIds[i]);
     }
 
@@ -409,6 +408,7 @@ void VoxelQueryHandler::doProcessQuery()
                         {
                             if (permittedRegionIds.empty() || permittedRegionIds.find(regionId) != permittedRegionIds.end())
                             {
+                                mVoxelIdVoxelStr[voxelId] = QString::number(static_cast<int>(voxelX)) + "_" + QString::number(static_cast<int>(voxelY)) + "_" + QString::number(static_cast<int>(voxelZ));
                                 mSelectedVoxels.insert(voxelId);
                                 filteredVoxels.insert(voxelId);
                                 QString reportLine = QString::number(voxelId) + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[5] + "," + parts[6] + "\n";
@@ -474,7 +474,7 @@ void VoxelQueryHandler::doProcessQuery()
             int voxelIdBranch = partsBranch[0].toInt();
 
             if (filteredVoxels.find(voxelId) != filteredVoxels.end())
-            {                
+            {
                 voxelCount++;
                 // ################ PROCESS SINGLE VOXEL ################
 
@@ -567,7 +567,6 @@ void VoxelQueryHandler::doProcessQuery()
             if (filteredVoxels.find(voxelIdBranch) != filteredVoxels.end())
             {
                 mMapPreBranchesPerVoxel[voxelIdBranch] = 0;
-                mMapPostBranchesPerVoxel[voxelIdBranch] = 0;
                 for (int i = 4; i < partsBranch.size(); i += 2)
                 {
                     int neuronId = partsBranch[i].toInt();
@@ -578,12 +577,8 @@ void VoxelQueryHandler::doProcessQuery()
                         int branches = partsBranch[i + 1].toInt();
                         mMapPreBranchesPerVoxel[voxelIdBranch] += branches * preMultiplicity[neuronId];
                     }
-                    else if (prunedPostIds.find(-neuronId) != prunedPostIds.end())
-                    {
-                        int branches = partsBranch[i + 1].toInt();
-                        mMapPostBranchesPerVoxel[voxelIdBranch] += branches;
-                    }
                 }
+                determineSnippets(voxelIdBranch);
                 double axonBranches = mMapPreBranchesPerVoxel[voxelIdBranch];
                 double dendriteBranches = mMapPostBranchesPerVoxel[voxelIdBranch];
                 if (dendriteBranches != 0)
@@ -645,46 +640,55 @@ VoxelQueryHandler::getResultKey()
     return "voxelResult";
 }
 
-void VoxelQueryHandler::determineCellCounts(int voxelId){
-    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_neuronIds" + QDir::separator() + QString::number(voxelId+1));
-    std::vector<std::vector<double> > data = UtilIO::readCsv(filename, true);
+void VoxelQueryHandler::determineCellCounts(int voxelId)
+{
+    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_neuronIds" + QDir::separator() + QString::number(voxelId + 1));
+    std::vector<std::vector<double>> data = UtilIO::readCsv(filename, true);
     std::set<int> celltypes;
     mPreCellbodiesPerVoxel[voxelId] = 0;
     mPostCellbodiesPerVoxel[voxelId] = 0;
-    for (auto it = data.begin(); it != data.end(); it++){
+    for (auto it = data.begin(); it != data.end(); it++)
+    {
         int neuronId = static_cast<int>((*it)[0]);
-        if(mPreIds.find(neuronId) != mPreIds.end() || mPostIds.find(neuronId) != mPostIds.end()){
+        if (mPreIds.find(neuronId) != mPreIds.end() || mPostIds.find(neuronId) != mPostIds.end())
+        {
             mPreCellbodiesPerVoxel[voxelId] += 1;
             celltypes.insert(mNetwork.neurons.getCellTypeId(neuronId));
-        }        
+        }
     }
     mVariabilityCellbodies[voxelId] = static_cast<float>(celltypes.size()) / 10;
     mTestOutput[voxelId].push_back(static_cast<float>(mPreCellbodiesPerVoxel[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
 }
 
-void VoxelQueryHandler::determineBranchLengths(int voxelId){
-    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_stats" + QDir::separator() + QString::number(voxelId+1));
-    std::vector<std::vector<double> > data = UtilIO::readCsv(filename, true);
+void VoxelQueryHandler::determineBranchLengths(int voxelId)
+{
+    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_stats" + QDir::separator() + QString::number(voxelId + 1));
+    std::vector<std::vector<double>> data = UtilIO::readCsv(filename, true);
     mAxonLengthPerVoxel[voxelId] = 0;
     mDendriteLengthPerVoxel[voxelId] = 0;
     std::set<int> celltypesAxon;
     std::set<int> celltypesDendrite;
 
-    for (auto it = data.begin(); it != data.end(); it++){
+    for (auto it = data.begin(); it != data.end(); it++)
+    {
         int neuronId = static_cast<int>((*it)[0]);
         double apicalLength = (*it)[1];
         double basalLength = (*it)[3];
         double axonLength = (*it)[5];
-        if(mPreIds.find(neuronId) != mPreIds.end()){
+        if (mPreIds.find(neuronId) != mPreIds.end())
+        {
             mAxonLengthPerVoxel[voxelId] += 0.000001 * axonLength; //convert to [m]
-            if(axonLength > 0){
+            if (axonLength > 0)
+            {
                 celltypesAxon.insert(mNetwork.neurons.getCellTypeId(neuronId));
             }
         }
-        if(mPostIds.find(neuronId) != mPostIds.end()){
+        if (mPostIds.find(neuronId) != mPostIds.end())
+        {
             mDendriteLengthPerVoxel[voxelId] += 0.0001 * (apicalLength + basalLength); //convert to [cm]
-            if(apicalLength + basalLength > 0){
+            if (apicalLength + basalLength > 0)
+            {
                 celltypesDendrite.insert(mNetwork.neurons.getCellTypeId(neuronId));
             }
         }
@@ -696,4 +700,21 @@ void VoxelQueryHandler::determineBranchLengths(int voxelId){
     mTestOutput[voxelId].push_back(static_cast<float>(mAxonLengthPerVoxel[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityDendrite[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityAxon[voxelId]));
+}
+
+void VoxelQueryHandler::determineSnippets(int voxelId)
+{
+    mMapPostBranchesPerVoxel[voxelId] = 0;
+    QString voxelStr = mVoxelIdVoxelStr[voxelId];
+    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "features_subvolume_cube" + QDir::separator() + UtilIO::getSubvolumeFileName(voxelStr));
+    std::vector<std::vector<double>> data = UtilIO::readCsv(filename, true);
+    for (auto it = data.begin(); it != data.end(); it++)
+    {
+        int neuronId = static_cast<int>((*it)[0]);
+        int dendriteSnippets = static_cast<int>((*it)[1]);
+        if (mPostIds.find(neuronId) != mPostIds.end())
+        {
+            mMapPostBranchesPerVoxel[voxelId] += dendriteSnippets;
+        }
+    }
 }

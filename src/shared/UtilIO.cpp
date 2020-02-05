@@ -423,3 +423,7 @@ std::vector<std::vector<double>> UtilIO::readCsv(QString filename,
 }
 
 QString UtilIO::getCsvName(int id) { return QString::number(id) + ".csv"; }
+
+QString UtilIO::getSubvolumeFileName(QString subvolumeStr) {
+  return "subvolume_" + subvolumeStr + ".csv";
+}
