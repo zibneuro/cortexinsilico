@@ -9,36 +9,6 @@ import sys
 def compileCppAndRunUnitTests(src_dir, build_dir):
     print("[*] Compiling c++ programs")
 
-    computeSynapses_pro_file = os.path.join(src_dir, "computeSynapses/computeSynapses.pro")
-    computeSynapses_build_dir = os.path.join(build_dir, "computeSynapses")
-    os.makedirs(computeSynapses_build_dir, exist_ok=True)
-    check_call(["qmake", computeSynapses_pro_file], cwd=computeSynapses_build_dir)
-    check_call(["make", "all"], cwd=computeSynapses_build_dir)
-
-    compareData_pro_file = os.path.join(src_dir, "compareData/compareData.pro")
-    compareData_build_dir = os.path.join(build_dir, "compareData")
-    os.makedirs(compareData_build_dir, exist_ok=True)
-    check_call(["qmake", compareData_pro_file], cwd=compareData_build_dir)
-    check_call(["make", "all"], cwd=compareData_build_dir)
-
-    networkSimulator_pro_file = os.path.join(src_dir, "networkSimulator/networkSimulator.pro")
-    networkSimulator_build_dir = os.path.join(build_dir, "networkSimulator")
-    os.makedirs(networkSimulator_build_dir, exist_ok=True)
-    check_call(["qmake", networkSimulator_pro_file], cwd=networkSimulator_build_dir)
-    check_call(["make", "all"], cwd=networkSimulator_build_dir)
-
-    convertAxon_pro_file = os.path.join(src_dir, "convertAxonRedundancyMap/convertAxonRedundancyMap.pro")
-    convertAxon_build_dir = os.path.join(build_dir, "convertAxonRedundancyMap")
-    os.makedirs(convertAxon_build_dir, exist_ok=True)
-    check_call(["qmake", convertAxon_pro_file], cwd=convertAxon_build_dir)
-    check_call(["make", "all"], cwd=convertAxon_build_dir)
-
-    convertSparse_pro_file = os.path.join(src_dir, "convertSparseField/convertSparseField.pro")
-    convertSparse_build_dir = os.path.join(build_dir, "convertSparseField")
-    os.makedirs(convertSparse_build_dir, exist_ok=True)
-    check_call(["qmake", convertSparse_pro_file], cwd=convertSparse_build_dir)
-    check_call(["make", "all"], cwd=convertSparse_build_dir)
-
     process3DQuery_pro_file = os.path.join(src_dir, "processCIS3DQuery/processCIS3DQuery.pro")
     process3DQuery_build_dir = os.path.join(build_dir, "processCIS3DQuery")
     os.makedirs(process3DQuery_build_dir, exist_ok=True)
@@ -50,12 +20,6 @@ def compileCppAndRunUnitTests(src_dir, build_dir):
     os.makedirs(inputmapper_build_dir, exist_ok=True)
     check_call(["qmake", inputmapper_pro_file], cwd=inputmapper_build_dir)
     check_call(["make", "all", "-j", "4"], cwd=inputmapper_build_dir)
-
-    convert_pro_file = os.path.join(src_dir, "convertInnervationToCSV/convertInnervationToCSV.pro")
-    convert_build_dir = os.path.join(build_dir, "convert")
-    os.makedirs(convert_build_dir, exist_ok=True)
-    check_call(["qmake", convert_pro_file], cwd=convert_build_dir)
-    check_call(["make", "all", "-j", "4"], cwd=convert_build_dir)
 
     test_pro_file = os.path.join(src_dir, "test/runTests.pro")
     test_build_dir = os.path.join(build_dir, "test")
