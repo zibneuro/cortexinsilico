@@ -23,7 +23,7 @@ getCellTypesAsJson(const NetworkProps& network)
 {
     QJsonArray arr;
 
-    const QList<int> ids = network.cellTypes.getAllCellTypeIds(true);
+    const QList<int> ids = network.cellTypes.getAllCellTypeIds(false);
     for (int i = 0; i < ids.size(); ++i)
     {
         const int id = ids[i];
