@@ -198,34 +198,9 @@ bool Regions::isInSubtree(const int regionId, const int subtreeRoot) const {
     }
 }
 
-/**
-    Saves the region to file.
-    @param fileName The name of the file.
-    @throws runtime_error if saving the file fails.
-*/
-void Regions::saveCSV(const QString& fileName) const {
-    QFile file(fileName);
-
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        const QString msg =
-            QString("Error saving regions file. Could not open file %1").arg(fileName);
-        throw std::runtime_error(qPrintable(msg));
-    }
-
-    QTextStream out(&file);
-    const QChar sep = ',';
-
-    out << "ID" << sep << "Name" << sep << "ParentId"
-        << "\n";
-
-    for (PropsMap::ConstIterator it = mPropsMap.begin(); it != mPropsMap.end(); ++it) {
-        const RegionProperties& props = it.value();
-        out << props.id << sep << props.name << sep << props.parentId << "\n";
-    }
-}
 
 /**
-    Loads the region from file.
+    Loads the region from file.cd -
     @param fileName The name of the file.
     @throws runtime_error if loading or parsing the file fails.
 */
@@ -250,7 +225,7 @@ void Regions::loadCSV(const QString& fileName) {
     }
 
     QStringList parts = line.split(sep);
-    if (parts.size() != 3 || parts[0] != "ID" || parts[1] != "Name" || parts[2] != "ParentId") {
+    if (parts.size() != 3 || parts[0] != "id" || parts[1] != "name" || parts[2] != "parent_id") {
         const QString msg =
             QString("Error reading regions file %1. Invalid column headers.").arg(fileName);
         throw std::runtime_error(qPrintable(msg));

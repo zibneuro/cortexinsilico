@@ -14,20 +14,29 @@ CacheEntry::CacheEntry(int preId)
 }
 
 void
-CacheEntry::load(QString filePath)
+CacheEntry::load(QString filePath, CIS3D::Structure target)
 {
     QFile innervationFile(filePath);
     if (innervationFile.open(QIODevice::ReadOnly))
     {
         QTextStream in(&innervationFile);
+        in.readLine();
         while (!in.atEnd())
         {
-            QString line = in.readLine();
+            QString line = in.readLine(); 
             line = line.trimmed();
-            QStringList parts = line.split(" ");
+            QStringList parts = line.split(",");
             int postId = parts[0].toInt();
-            float innervation = parts[1].toFloat();
-            mInnervation[postId] = innervation;
+            float soma = parts[1].toFloat();
+            float apical = parts[2].toFloat();
+            float basal = parts[3].toFloat();
+            if(target ==  CIS3D::DEND){
+                mInnervation[postId] = soma + apical + basal;
+            } else if (target ==  CIS3D::APICAL) {
+                mInnervation[postId] = apical;
+            } else if (target ==  CIS3D::BASAL) {
+                mInnervation[postId] = basal;
+            }
         }
     }
     else
@@ -131,12 +140,11 @@ InnervationMatrix::getOrLoad(std::map<int, CacheEntry*>& cache, int preId, CIS3D
             pruneCache(cache);
         }
 
-        QString filename = QString("preNeuronID_%1_sum").arg(preId);
-        QString folder = Util::getInnervationFolderName(target);
-        QString filepath = QDir::cleanPath(mNetwork.dataRoot + QDir::separator() + folder + QDir::separator() + filename);
+        QString filename = QString("%1_agg_DSC.csv").arg(preId);
+        QString filepath = mNetwork.networkRootDir.absoluteFilePath(QDir::cleanPath("DSC/" + filename));
 
         CacheEntry* newEntry = new CacheEntry(preId);
-        newEntry->load(filepath);
+        newEntry->load(filepath, target);
         cache[preId] = newEntry;
         return newEntry;
     }

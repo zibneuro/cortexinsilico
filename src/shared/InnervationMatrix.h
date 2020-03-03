@@ -11,7 +11,7 @@ class CacheEntry
 {
 public:
     CacheEntry(int preId);
-    void load(QString filePath);
+    void load(QString filePath, CIS3D::Structure target);
     float getValue(int postId, unsigned long long currentHit);
     int getPreId();
     unsigned long long getHits() const;

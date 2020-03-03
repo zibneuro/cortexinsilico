@@ -51,6 +51,7 @@ protected:
   QJsonObject mQuery;
   FileHelper mFileHelper;
   QString mDataRoot;
+  QString mNetworkRoot;
   QJsonObject mLatestResult;
   int mUpdateCount;
   bool mCompleted;

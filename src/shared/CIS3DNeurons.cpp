@@ -344,51 +344,6 @@ Neurons::getNeuronProps(int neuronId) const
     return *it;
 }
 
-/**
-    Saves the neurons to file.
-    @param fileName The file name.
-    @throws runtime_error if file could not saved.
-*/
-void
-Neurons::saveCSV(const QString& fileName) const
-{
-    QFile file(fileName);
-
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-    {
-        const QString msg =
-            QString("Error saving neurons file. Could not open file %1").arg(fileName);
-        throw std::runtime_error(qPrintable(msg));
-    }
-
-    QTextStream out(&file);
-    const QChar sep = ',';
-
-    out << "ID" << sep;
-    out << "SomaX" << sep;
-    out << "SomaY" << sep;
-    out << "SomaZ" << sep;
-    out << "CellTypeID" << sep;
-    out << "NearestColumnID" << sep;
-    out << "RegionID" << sep;
-    out << "LaminarLocation" << sep;
-    out << "SynapticSide"
-        << "\n";
-
-    for (PropsMap::ConstIterator it = mPropsMap.begin(); it != mPropsMap.end(); ++it)
-    {
-        const NeuronProperties& props = it.value();
-        out << props.id << sep;
-        out << props.somaX << sep;
-        out << props.somaY << sep;
-        out << props.somaZ << sep;
-        out << props.cellTypeId << sep;
-        out << props.nearestColumnId << sep;
-        out << props.regionId << sep;
-        out << int(props.loc) << sep;
-        out << int(props.synapticSide) << "\n";
-    }
-}
 
 /**
     Loads the neurons from file.
@@ -420,9 +375,9 @@ Neurons::loadCSV(const QString& fileName)
     }
 
     QStringList parts = line.split(sep);
-    if (parts.size() != 10 || parts[0] != "ID" || parts[1] != "SomaX" || parts[2] != "SomaY" ||
-        parts[3] != "SomaZ" || parts[4] != "CellTypeID" || parts[5] != "NearestColumnID" ||
-        parts[6] != "RegionID" || parts[7] != "LaminarLocation" || parts[8] != "SynapticSide" || parts[9] != "CorticalDepth")
+    if (parts.size() != 12 || parts[0] != "id" || parts[2] != "soma_x" || parts[3] != "soma_y" ||
+        parts[4] != "soma_z" || parts[5] != "cell_type" || parts[6] != "nearest_column" ||
+        parts[7] != "region" || parts[8] != "laminar_location" || parts[9] != "cortical_depth" || parts[10] != "synaptic_side")
     {
         const QString msg =
             QString("Error reading neurons file %1. Invalid header columns.").arg(fileName);
@@ -435,7 +390,7 @@ Neurons::loadCSV(const QString& fileName)
     while (!line.isNull())
     {
         parts = line.split(sep);
-        if (parts.size() != 10)
+        if (parts.size() != 12)
         {
             const QString msg =
                 QString("Error reading neurons file %1. Invalid columns.").arg(fileName);
@@ -444,14 +399,14 @@ Neurons::loadCSV(const QString& fileName)
 
         NeuronProperties props;
         props.id = parts[0].toInt();
-        props.somaX = parts[1].toFloat();
-        props.somaY = parts[2].toFloat();
-        props.somaZ = parts[3].toFloat();
-        props.cellTypeId = parts[4].toInt();
-        props.nearestColumnId = parts[5].toInt();
-        props.regionId = parts[6].toInt();
-        props.loc = static_cast<CIS3D::LaminarLocation>(parts[7].toInt());
-        props.synapticSide = static_cast<CIS3D::SynapticSide>(parts[8].toInt());
+        props.somaX = parts[2].toFloat();
+        props.somaY = parts[3].toFloat();
+        props.somaZ = parts[4].toFloat();
+        props.cellTypeId = parts[5].toInt();
+        props.nearestColumnId = parts[6].toInt();
+        props.regionId = parts[7].toInt();
+        props.loc = static_cast<CIS3D::LaminarLocation>(parts[8].toInt());
+        props.synapticSide = static_cast<CIS3D::SynapticSide>(parts[10].toInt());
         props.corticalDepth = parts[9].toFloat();
 
         addNeuron(props);

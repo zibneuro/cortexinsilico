@@ -167,8 +167,6 @@ getPostsynapticTargetsAsJson()
 void
 DataUploadHandler::uploadNetworkData(const QJsonObject& config)
 {
-    qDebug() << "UPLOAD NW DATA";
-
     mConfig = config;
 
     const QString baseUrl = mConfig["METEOR_URL_CIS3D"].toString();
@@ -191,8 +189,8 @@ DataUploadHandler::uploadNetworkData(const QJsonObject& config)
     const QString networksUrl = baseUrl + networksEndPoint;
     const QString postsynapticTargetsUrl = baseUrl + postsynapticTargetsEndpoint;
 
-    mDataRoot = QueryHelpers::getPrimaryDatasetRoot(config);
-    mNetwork.setDataRoot(mDataRoot);
+    QDir exportDir(config["WORKER_EXPORT_DIR"].toString());    
+    mNetwork.setDataRoot(QDir::cleanPath(exportDir.absolutePath() + "/meta"));
     mNetwork.loadFilesForQuery();
 
     mAuthInfo = QueryHelpers::login(mLoginUrl,

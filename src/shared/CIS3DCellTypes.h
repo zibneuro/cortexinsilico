@@ -11,35 +11,7 @@
 class CellTypes {
 
 public:
-    /**
-        Registers a new cell type.
-        @param id The ID of the cell type.
-        @param name The name of the cell type.
-        @param isExcitatory Whether the cell type is excitatory.
-        @throws runtime_error if the ID already exists.
-    */
-    void addCellType(const int id, const QString& name, const bool isExcitatory);
-
-    /**
-        Defines dendrite color for the specfied cell type.
-        @param id The ID of the cell type.
-        @param r The red component of the color [0-1]
-        @param g The green component of the color [0-1]
-        @param b The blue component of the color [0-1]
-        @throws runtime_error if the ID does not exist.
-    */
-    void setDendriteColor(const int id, const float r, const float g, const float b);
-
-    /**
-        Defines axon color for the specfied cell type.
-        @param id The ID of the cell type.
-        @param r The red component of the color [0-1]
-        @param g The green component of the color [0-1]
-        @param b The blue component of the color [0-1]
-        @throws runtime_error if the ID does not exist.
-    */
-    void setAxonColor(const int id, const float r, const float g, const float b);
-
+    
     /**
         Checks whether the specified cell type exists.
         @param id The ID of the cell type.
@@ -92,13 +64,6 @@ public:
         @return The IDs.
     */
     QList<int> getAllCellTypeIds(bool excitatory = false) const;
-
-    /**
-        Saves cell types to file.
-        @param The name of the file.
-        @return 1 if successful, 0 otherwise.
-    */
-    int saveCSV(const QString& fileName) const;
 
     /**
         Loads cell types from file.

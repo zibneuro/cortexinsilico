@@ -320,19 +320,19 @@ CIS3D::getNormalizedBasalPSTFileFullPath(const QDir& modelDataDir,
 QString
 CIS3D::getRegionsFileName(const QDir& modelDataDir)
 {
-    return modelDataDir.absolutePath() + "/Regions.csv";
+    return modelDataDir.absolutePath() + "/regions.csv";
 }
 
 QString
 CIS3D::getColumnsFileName(const QDir& modelDataDir)
 {
-    return modelDataDir.absolutePath() + "/Columns.csv";
+    return modelDataDir.absolutePath() + "/columns.csv";
 }
 
 QString
 CIS3D::getNeuronsFileName(const QDir& modelDataDir)
 {
-    return modelDataDir.absolutePath() + "/Neurons.csv";
+    return modelDataDir.absolutePath() + "/neurons_filtered_grouped.csv";
 }
 
 QString
@@ -344,13 +344,13 @@ CIS3D::getBoundingBoxesFileName(const QDir& modelDataDir)
 QString
 CIS3D::getCellTypesFileName(const QDir& modelDataDir)
 {
-    return modelDataDir.absolutePath() + "/CellTypes.csv";
+    return modelDataDir.absolutePath() + "/cell_types_processed.csv";
 }
 
 QString
 CIS3D::getAxonRedundancyMapFileName(const QDir& modelDataDir)
 {
-    return modelDataDir.absolutePath() + "/AxonRedundancyMap.dat";
+    return modelDataDir.absolutePath() + "/axon_mapping.csv";
 }
 
 QString

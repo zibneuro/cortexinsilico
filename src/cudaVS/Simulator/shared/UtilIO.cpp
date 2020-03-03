@@ -38,6 +38,28 @@ UtilIO::parseSpecFile(const QString& fileName)
     return doc.object();
 }
 
+QJsonDocument
+UtilIO::parseNetworks(const QString& fileName)
+{
+    QFile jsonFile(fileName);
+    if (!jsonFile.open(QIODevice::ReadOnly))
+    {
+        const QString msg =
+            QString("Cannot open file for reading: %1").arg(fileName);
+        throw std::runtime_error(qPrintable(msg));
+    }
+    QByteArray data = jsonFile.readAll();
+    QJsonParseError error;
+    QJsonDocument doc(QJsonDocument::fromJson(data, &error));
+    if (error.error != QJsonParseError::NoError)
+    {
+        const QString msg =
+            QString("Error parsing JSON file: %1").arg(error.errorString());
+        throw std::runtime_error(qPrintable(msg));
+    }
+    return doc;
+}
+
 /**
     Retrieves postsynaptic neurons and their properties (e.g., bounding box)
     that meet the filter definition.

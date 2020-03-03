@@ -24,6 +24,8 @@ namespace UtilIO {
 */
 QJsonObject parseSpecFile(const QString& fileName);
 
+QJsonDocument parseNetworks(const QString& fileName);
+
 /**
     Determines IDs of presynaptic neurons meeting the filter definition.
     @param spec The spec file with the filter definition.

@@ -139,13 +139,6 @@ public:
     NeuronProperties getNeuronProps(int neuronId) const;
 
     /**
-        Saves the neurons to file.
-        @param fileName The file name.
-        @throws runtime_error if file could not saved.
-    */
-    void saveCSV(const QString& fileName) const;
-
-    /**
         Loads the neurons from file.
         @param fileName The name of the neuron file.
         @throws runtime_error if file could not be loaded or parsed.

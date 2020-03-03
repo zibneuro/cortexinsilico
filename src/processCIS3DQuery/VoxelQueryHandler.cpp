@@ -188,6 +188,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     result.insert("axonVariabilityPerVoxelHisto", axonVariabilityPerVoxelH.createJson());
     result.insert("dendriteVariabilityPerVoxel",
                   Util::createJsonStatistic(dendriteVariabilityPerVoxel));
+                  
     result.insert("dendriteVariabilityPerVoxelHisto", dendriteVariabilityPerVoxelH.createJson());
 
     // ################# CREATE CSV FILE #################

@@ -27,16 +27,6 @@ public:
     void setDataRoot(const QString& dataRoot, const bool resetCache=true);
 
     /**
-        Loads the data required for computing the innervation.
-        - CellTypes
-        - Neurons
-        - BoundingBoxes
-        - Regions
-        - AxonRedundancyMap
-    */
-    void loadFilesForSynapseComputation();
-
-    /**
         Loads the data required for computing a summary statistic about the
         network.
         - CellTypes
@@ -47,18 +37,6 @@ public:
     void loadFilesForQuery();
 
     /**
-        Loads the data required for registering another neuron into an existing
-        network.
-        - CellTypes
-        - Neurons
-        - BoundingBoxes
-        - Regions
-        - AxonRedundancyMap
-        - PSTDensity
-    */
-    void loadFilesForInputMapping();
-
-    /**
         Path to the root directory with the model data.
     */
     QString dataRoot;
@@ -67,6 +45,8 @@ public:
         The root directory with the model data.
     */
     QDir dataRootDir;
+
+    QDir networkRootDir;
 
     /**
         The AxonRedundancyMap containing neuron ID mappings for the duplication

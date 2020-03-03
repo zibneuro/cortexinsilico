@@ -51,13 +51,6 @@ class Regions {
     bool isInSubtree(const int regionId, const int subtreeRoot) const;
 
     /**
-        Saves the region to file.
-        @param fileName The name of the file.
-        @throws runtime_error if saving the file fails.
-    */
-    void saveCSV(const QString& fileName) const;
-
-    /**
         Loads the region from file.
         @param fileName The name of the file.
         @throws runtime_error if loading or parsing the file fails.

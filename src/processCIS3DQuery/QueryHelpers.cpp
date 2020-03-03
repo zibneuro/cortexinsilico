@@ -1,12 +1,18 @@
 #include "QueryHelpers.h"
 #include "CIS3DConstantsHelpers.h"
 #include <QJsonObject>
+#include <QFile>
 #include <QJsonDocument>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QJsonParseError>
 #include <QDebug>
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QEventLoop>
 #include <QProcess>
+#include <QDir>
+#include "UtilIO.h"
 
 AuthInfo
 QueryHelpers::login(const QString url,
@@ -227,14 +233,13 @@ QueryHelpers::getPrimaryDatasetRoot(const QJsonObject& config)
 QJsonArray
 QueryHelpers::getDatasetsAsJson(const QJsonObject& config)
 {
-    const QJsonValue datasetsJson = config["WORKER_DATASETS_CIS3D"];
-    if (!datasetsJson.isArray())
-    {
-        throw std::runtime_error("QueryHelpers::getPrimaryDatasetRoot: WORKER_DATASETS_CIS3D is not an array");
-    }
-
+    QDir featureDir(config["WORKER_FEATURE_DIR"].toString());
+    QString filepath = featureDir.absoluteFilePath("networks.json");
+    const QJsonValue docObject = UtilIO::parseSpecFile(filepath).value("networks");
+    
     QJsonArray result;
-    const QJsonArray datasetsArray = datasetsJson.toArray();
+    const QJsonArray datasetsArray = docObject.toArray();
+    qDebug() << "size" << datasetsArray.size();
 
     for (int i = 0; i < datasetsArray.size(); ++i)
     {
