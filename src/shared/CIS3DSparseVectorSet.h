@@ -44,8 +44,8 @@ public:
 
     /**
         Retrieves a value at the specified IDs.
-        @param vectorId The ID of the sparse vector.
-        @param entryId The ID of the entry in the sparse vector.
+        @param postId.
+        @param preId.
         @return The value if the entry ID exists, DEFAULT_VALUE otherwise.
         @throws runtime_error if the vector ID does not exist.
     */
@@ -86,6 +86,8 @@ public:
         @return 1 if successfull, 0 otherwise.
     */
     static int save(const SparseVectorSet* vs, const QString &fileName);
+
+    static int saveCSV(const SparseVectorSet* vs, const QString &fileName);
 
     /**
         Loads a SparseVectorSet from file.

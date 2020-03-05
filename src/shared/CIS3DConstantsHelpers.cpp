@@ -332,7 +332,7 @@ CIS3D::getColumnsFileName(const QDir& modelDataDir)
 QString
 CIS3D::getNeuronsFileName(const QDir& modelDataDir)
 {
-    return modelDataDir.absolutePath() + "/neurons_filtered_grouped.csv";
+    return modelDataDir.absolutePath() + "/neurons.csv";
 }
 
 QString
@@ -344,7 +344,7 @@ CIS3D::getBoundingBoxesFileName(const QDir& modelDataDir)
 QString
 CIS3D::getCellTypesFileName(const QDir& modelDataDir)
 {
-    return modelDataDir.absolutePath() + "/cell_types_processed.csv";
+    return modelDataDir.absolutePath() + "/cell_types.csv";
 }
 
 QString

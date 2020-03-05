@@ -145,8 +145,10 @@ private:
 
     double getNumericConcentration(double probability, double groupProbability);
 
+    QList<Statistics> mSingleMotifProbabilities;
+    QList<Statistics> mSingleMotifExpectedProbabilities;
     QList<Statistics> mMotifProbabilities;
-    QList<Statistics> mMotifExpectedProbabilities;
+    QList<Statistics> mMotifExpectedProbabilities;    
     std::vector<std::vector<double> > mConvergences;
     std::vector<std::vector<double> > mAverageConnectionProbabilities;
     int mSampleSize;

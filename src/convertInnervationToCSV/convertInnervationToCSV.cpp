@@ -13,7 +13,6 @@
 #include <QProcess>
 #include <QtCore>
 
-#include "CIS3DNetworkProps.h"
 #include "CIS3DSparseVectorSet.h"
 
 void printErrorAndExit(const std::runtime_error& e) {
@@ -33,7 +32,7 @@ int main(int argc, char* argv[]) {
     }
 
     const QDir dataDir(argv[1]);
-    const QDir innervationDir(dataDir.filePath("innervation/InnervationPost"));
+    const QDir innervationDir(dataDir);
     const QDir outputDir(argv[2]);
 
     const bool createTar = (argc == 4);
@@ -77,13 +76,6 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    NetworkProps network;
-    network.setDataRoot(dataDir.path());
-    network.loadFilesForQuery();
-
-    const QList<int> preNeuronIds =
-        network.neurons.getFilteredNeuronIds(QList<int>(), QList<int>(), CIS3D::PRESYNAPTIC);
-
     int numInnervationFiles = 0;
     QDirIterator countIt(innervationDir.path(), QStringList() << "*.dat", QDir::Files,
                          QDirIterator::Subdirectories);
@@ -95,15 +87,13 @@ int main(int argc, char* argv[]) {
     int counter = 1;
     QDirIterator it(innervationDir.path(), QStringList() << "*.dat", QDir::Files,
                     QDirIterator::Subdirectories);
+
     while (it.hasNext()) {
         const QTime startTime = QTime::currentTime();
         qDebug() << "[*] Processing file:   " << counter << "/" << numInnervationFiles;
 
         const QString datFileName = it.next();
-        const QString csvFileName = outputDir.filePath(
-            innervationDir.relativeFilePath(datFileName).replace(".dat", ".csv"));
-        const QString dirToCreate = QFileInfo(csvFileName).dir().path();
-        outputDir.mkpath(dirToCreate);
+        const QString csvFileName = outputDir.filePath(QString::number(counter) + ".csv");
 
         QFile csv(csvFileName);
         if (!csv.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -111,41 +101,13 @@ int main(int argc, char* argv[]) {
                 QString("Error saving CSV file. Could not open file %1").arg(csvFileName);
             throw std::runtime_error(qPrintable(msg));
         }
-
-        QTextStream out(&csv);
-        const QChar sep = ',';
-        out << "PRESYNAPTIC NEURON ID" << sep << "POSTSYNAPTIC NEURON ID" << sep << "INNERVATION"
-            << "\n";
-
-        qDebug() << "    Loading data:      " << datFileName;
-        qDebug() << "    Target file:       " << csvFileName;
+        
+        qDebug() << datFileName;
         SparseVectorSet* vectorSet = SparseVectorSet::load(datFileName);
-        const QList<int> postNeuronIds = vectorSet->getVectorIds();
-
-        double innervationSum = 0.0;
-        long numEntries = 0;
-        qDebug() << "    Processing vectors:" << vectorSet->getNumberOfVectors();
-        for (int post = 0; post < postNeuronIds.size(); ++post) {
-            const int postNeuronId = postNeuronIds[post];
-            for (int pre = 0; pre < preNeuronIds.size(); ++pre) {
-                const int preNeuronId = preNeuronIds[pre];
-                const int mappedPreNeuronId =
-                    network.axonRedundancyMap.getNeuronIdToUse(preNeuronId);
-                const float innervation = vectorSet->getValue(postNeuronId, mappedPreNeuronId);
-                if (innervation > 0.0f) {
-                    out << preNeuronId << sep << postNeuronId << sep << innervation << "\n";
-                    innervationSum += double(innervation);
-                    ++numEntries;
-                }
-            }
-        }
-
+        SparseVectorSet::saveCSV(vectorSet, csvFileName);
         delete vectorSet;
-        csv.close();
 
-        qDebug() << "    Innervation sum:   " << innervationSum;
-        qDebug() << "    Number of entries: " << numEntries;
-
+        
         if (createTar) {
             const QString tarFileName =
                 tarOutputDir.filePath(outputDir.relativeFilePath(csvFileName + ".tar.gz"));

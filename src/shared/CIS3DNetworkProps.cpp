@@ -1,7 +1,8 @@
 #include "CIS3DNetworkProps.h"
 #include "QDebug"
 
-NetworkProps::NetworkProps(bool legacyPath){
+NetworkProps::NetworkProps(bool legacyPath)
+{
     useLegacyPath = legacyPath;
 }
 
@@ -10,10 +11,12 @@ NetworkProps::NetworkProps(bool legacyPath){
     @param dataRoot The directory path.
     @param resetCache Whether to reset internal flag that data has been loaded.
 */
-void NetworkProps::setDataRoot(const QString& dataRoot, const bool resetCache) {
+void NetworkProps::setDataRoot(const QString &dataRoot, const bool resetCache)
+{
     this->dataRoot = dataRoot;
     dataRootDir = QDir(dataRoot);
-    if(resetCache){
+    if (resetCache)
+    {
         mFilesForComputationLoaded = false;
     }
 }
@@ -26,17 +29,23 @@ void NetworkProps::setDataRoot(const QString& dataRoot, const bool resetCache) {
     - Regions
     - AxonRedundancyMap
 */
-void NetworkProps::loadFilesForQuery()
-{
-    const QString cellTypesFile = CIS3D::getCellTypesFileName(dataRootDir);
-    cellTypes.loadCSV(cellTypesFile);
 
-    const QString neuronsFile = CIS3D::getNeuronsFileName(dataRootDir);
-    neurons.loadCSV(neuronsFile);
+void NetworkProps::loadFilesForQuery(QString networkName)
+{
+    
+    const QString cellTypesFile = CIS3D::getCellTypesFileName(dataRootDir);
+    qDebug() << dataRootDir << networkName << cellTypesFile;
+    cellTypes.loadCSV(cellTypesFile);
 
     const QString regionsFile = CIS3D::getRegionsFileName(dataRootDir);
     regions.loadCSV(regionsFile);
 
-    const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(dataRootDir);
-    axonRedundancyMap.loadCSV(redundancyFile);
+    if (!networkName.isEmpty())
+    {
+        const QString neuronsFile = CIS3D::getNeuronsFileName(dataRootDir.filePath(networkName));
+        neurons.loadCSV(neuronsFile);
+
+        const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(dataRootDir.filePath(networkName));
+        axonRedundancyMap.loadCSV(redundancyFile);
+    }
 }

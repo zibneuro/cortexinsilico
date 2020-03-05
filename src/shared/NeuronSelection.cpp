@@ -258,9 +258,9 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
   mQueryType = query["queryType"].toString();    
   mSliceUniquePre = Util::matchCells(networkSelection, Util::getOppositeNetworkNumber(number));
 
-  networkProps.setDataRoot(QDir::cleanPath(config["WORKER_EXPORT_DIR"].toString() + "/meta"));  
-  networkProps.networkRootDir = QDir::cleanPath(config["WORKER_FEATURE_DIR"].toString() + "/" + networkName); 
-  networkProps.loadFilesForQuery();
+  networkProps.setDataRoot(QDir::cleanPath(config["WORKER_DATA_DIR_CIS3D"].toString()));  
+  networkProps.networkRootDir = QDir::cleanPath(config["WORKER_DATA_DIR_CIS3D"].toString() + "/" + networkName); 
+  networkProps.loadFilesForQuery(networkName);
 
   processSelection(networkSelection, number, networkProps, selectionA,
                    selectionB, selectionC);

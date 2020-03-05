@@ -43,8 +43,8 @@ QueryHandler::processQuery(const QJsonObject& config,
     mNetworkSelection = mQuery["networkSelection"].toObject();
     QString datasetName = Util::getShortName(mNetworkSelection, mNetworkNumber);    
     
-    mDataRoot = QDir::cleanPath(config["WORKER_EXPORT_DIR"].toString() + "/meta");
-    mNetworkRoot = QDir::cleanPath(config["WORKER_FEATURE_DIR"].toString() + "/" + datasetName);    
+    mDataRoot = QDir::cleanPath(config["WORKER_DATA_DIR"].toString());
+    mNetworkRoot = QDir::cleanPath(config["WORKER_DATA_DIR"].toString() + "/" + datasetName);    
 
     mSampleSettings = mQuery["sampleSelection"].toObject();
     Util::getSampleSettings(mSampleSettings, mNetworkNumber, mSampleNumber, mSampleSeed, mSampleEnabled);

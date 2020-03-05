@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <QFile>
 #include <QDataStream>
+#include <QTextStream>
 #include <QIODevice>
 #include <QDebug>
 #include <QDir>
@@ -129,6 +130,36 @@ int SparseVectorSet::save(const SparseVectorSet* vs, const QString &fileName) {
     QDataStream out(&file);
     writeToStream(vs, out);
 
+    return 1;
+}
+
+int SparseVectorSet::saveCSV(const SparseVectorSet* vs, const QString &fileName) {
+    QFileInfo fi(fileName);
+    QDir dir(fileName);
+    dir.mkpath(fi.absoluteDir().absolutePath());
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly)) {
+        return 0;
+    }
+
+    QTextStream out(&file);
+    out.setRealNumberNotation(QTextStream::FixedNotation);
+    out.setRealNumberPrecision(6);
+    
+    out << "post_id,pre_id,DSC\n";
+    
+    QList<int> postIds = vs->getVectorIds();
+    for(int i=0; i<postIds.length(); i++){
+        int postId = postIds[i];
+        QList<int> preIds = vs->getEntryIds(postId);
+        for(int j=0; j<preIds.length(); j++){
+            int preId = preIds[j];
+            float value = vs->getValue(postId, preId);
+            out << postId << "," << preId << "," << value << "\n";
+        }
+    }
+    
     return 1;
 }
 

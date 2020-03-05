@@ -34,7 +34,7 @@ public:
         - Regions
         - AxonRedundancyMap
     */
-    void loadFilesForQuery();
+    void loadFilesForQuery(QString networkName = "");
 
     /**
         Path to the root directory with the model data.

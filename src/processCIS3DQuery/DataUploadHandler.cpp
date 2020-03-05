@@ -189,8 +189,7 @@ DataUploadHandler::uploadNetworkData(const QJsonObject& config)
     const QString networksUrl = baseUrl + networksEndPoint;
     const QString postsynapticTargetsUrl = baseUrl + postsynapticTargetsEndpoint;
 
-    QDir exportDir(config["WORKER_EXPORT_DIR"].toString());    
-    mNetwork.setDataRoot(QDir::cleanPath(exportDir.absolutePath() + "/meta"));
+    mNetwork.setDataRoot(config["WORKER_DATA_DIR_CIS3D"].toString());
     mNetwork.loadFilesForQuery();
 
     mAuthInfo = QueryHelpers::login(mLoginUrl,

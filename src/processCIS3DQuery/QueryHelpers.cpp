@@ -233,7 +233,7 @@ QueryHelpers::getPrimaryDatasetRoot(const QJsonObject& config)
 QJsonArray
 QueryHelpers::getDatasetsAsJson(const QJsonObject& config)
 {
-    QDir featureDir(config["WORKER_FEATURE_DIR"].toString());
+    QDir featureDir(config["WORKER_DATA_DIR_CIS3D"].toString());
     QString filepath = featureDir.absoluteFilePath("networks.json");
     const QJsonValue docObject = UtilIO::parseSpecFile(filepath).value("networks");
     

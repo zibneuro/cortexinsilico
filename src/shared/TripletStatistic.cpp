@@ -165,6 +165,12 @@ void TripletStatistic::initializeStatistics()
     std::vector<double> empty(3, 0.0);
     mConvergences.push_back(empty);
   }
+  for (int i=0; i<64; i++){
+    Statistics stat;
+    mSingleMotifProbabilities.append(stat);
+    Statistics stat2;
+    mSingleMotifExpectedProbabilities.append(stat2);
+  }
 }
 
 /**
@@ -353,6 +359,7 @@ void TripletStatistic::computeProbabilities(
   {
     CellTriplet currentTriplet = triplets[i];
 
+    int kSingle = 0;
     // Go through all 16 main motifs
     for (unsigned int j = 0; j < tripletMotifs.size(); j++)
     {
@@ -366,8 +373,11 @@ void TripletStatistic::computeProbabilities(
            ++motifListIt)
       {
         TripletMotif *currentMotif = *motifListIt;
-        motifProb += currentMotif->computeOccurrenceProbability(
+        double currentProb = currentMotif->computeOccurrenceProbability(
             currentTriplet.innervation, this);
+        motifProb += currentProb;
+        mSingleMotifProbabilities[kSingle].addSample(currentProb);
+        kSingle++;
       }
       mMotifProbabilities[j].addSample(motifProb);
     }
@@ -392,6 +402,8 @@ void TripletStatistic::computeExpectedProbabilities(
     }
   }*/
   mMotifExpectedProbabilities.clear();
+  mSingleMotifExpectedProbabilities.clear();
+
   // Go through all 16 main motifs
   for (unsigned int j = 0; j < tripletMotifs.size(); j++)
   {
@@ -405,9 +417,12 @@ void TripletStatistic::computeExpectedProbabilities(
          ++motifListIt)
     {
       TripletMotif *currentMotif = *motifListIt;
-      expectedProb +=
-          currentMotif->computeOccurrenceProbabilityGivenInputProbability(
+      double currentProb = currentMotif->computeOccurrenceProbabilityGivenInputProbability(
               mConvergences);
+      expectedProb += currentProb;
+      Statistics statSingle;
+      statSingle.addSample(currentProb);
+      mSingleMotifExpectedProbabilities.push_back(statSingle);    
     }
     Statistics stat;
     stat.addSample(expectedProb);
@@ -496,6 +511,34 @@ void TripletStatistic::doCreateCSV(FileHelper &fileHelper) const
         + "," + QString::number(getConcentrationDeviation(i)) + "\n");
   }
   fileHelper.closeFile();
+
+  fileHelper.openFile("motifs_64.csv");
+  fileHelper.write("motif,probability_observed,probability_expected\n");  
+  for (int i = 0; i < 64; i++)
+  {    
+    fileHelper.write(QString::number(i) 
+        + "," + QString::number(mSingleMotifProbabilities[i].getMean())
+        + "," + QString::number(mSingleMotifExpectedProbabilities[i].getMean())        
+        + "\n");
+  }
+  fileHelper.closeFile();
+
+  fileHelper.openFile("convergences.csv");
+  for (int i = 0; i < 3; i++)
+  {    
+    for (int j = 0; j < 3; j++)
+    {    
+      fileHelper.write(QString::number(mConvergences[i][j]));
+      if(j<2){
+        fileHelper.write(",");
+      } else {
+        fileHelper.write("\n");
+      }
+    }    
+  }
+  fileHelper.closeFile();
+
+  
 }
 
 /**
