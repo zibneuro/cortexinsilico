@@ -6,6 +6,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <iostream>
+#include <QFile>
+#include <QTextStream>
 
 /**
   Empty constructor.
@@ -291,6 +293,49 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
               CIS3D::getMappingFilePath(mappingDir, networkName, rbc);
       mMappingSliceRBC = readMapping(path);
   }
+}
+
+
+void NeuronSelection::setFixedSelection(QString filenameA, QString filenameB, QString filenameC, QString networkName, NetworkProps &networkProps, const QJsonObject &config){
+  networkProps.setDataRoot(QDir::cleanPath(config["WORKER_DATA_DIR_CIS3D"].toString()));  
+  networkProps.networkRootDir = QDir::cleanPath(config["WORKER_DATA_DIR_CIS3D"].toString() + "/" + networkName); 
+  networkProps.loadFilesForQuery(networkName);
+
+  loadFixedInto(filenameA, mSelectionA, networkProps, true);
+  loadFixedInto(filenameB, mSelectionB, networkProps, true);
+  loadFixedInto(filenameC, mSelectionC, networkProps, true);  
+  qDebug() << "fixed selection" << mSelectionA.size() << mSelectionB.size() << mSelectionC.size();
+}
+
+void NeuronSelection::loadFixedInto(QString filename, IdList& selection, NetworkProps &networkProps, bool updateAxon){
+  QFile file(filename);
+    QTextStream(stdout) << "[*] Reading selection from " << filename << "\n";
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QString msg = QString("Error reading selection file. Could not open file %1").arg(filename);
+        throw std::runtime_error(qPrintable(msg));
+    }
+
+    const QChar sep = ',';
+    QTextStream in(&file);
+    int lineCount = 1;
+    QString line = in.readLine();
+    line = in.readLine();
+    lineCount += 1;
+
+    while (!line.isNull()) {
+        QStringList parts = line.split(sep);
+        
+        int preId = parts[0].toInt();
+        int postId = parts[1].toInt();
+        
+        selection.append(postId);
+        if(updateAxon){
+          int desiredNID = networkProps.neurons.getNIDFromGraphId(preId);
+          networkProps.axonRedundancyMap.updateMapping(postId, desiredNID);
+        }
+        line = in.readLine();
+    } 
 }
 
 IdList getExplicitIds(const QJsonObject &spec, QString key) {

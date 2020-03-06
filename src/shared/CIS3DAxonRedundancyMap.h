@@ -18,6 +18,8 @@ public:
     */
     void add(const int neuronId, const int neuronIdToUse);
 
+    void updateMapping(const int neuronId, const int desiredMappedId);
+
     /**
         Retrieves the mapped id from the original id.
         @param neuronId The original neuron id.

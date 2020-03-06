@@ -7,6 +7,7 @@
 #include "CIS3DConstantsHelpers.h" 
 #include <QSharedMemory>
 #include <vector>
+#include <map>
 
 /**
     A filter to select subgroups of neurons based on cell type, region,
@@ -49,6 +50,7 @@ public:
     */
     struct NeuronProperties {
         int id;
+        int graphId;
         float somaX;
         float somaY;
         float somaZ;
@@ -145,10 +147,13 @@ public:
     */
     void loadCSV(const QString& fileName);
 
+    int getNIDFromGraphId(int graphId);
+
 private:
 
     typedef QMap<int, NeuronProperties> PropsMap;
     PropsMap mPropsMap;    
+    std::map<int, int> mGraphIdToNID;
 
 };
 

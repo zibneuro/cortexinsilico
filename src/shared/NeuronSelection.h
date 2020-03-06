@@ -54,6 +54,10 @@ public:
                              NetworkProps &networkProps,
                              const QJsonObject &config);
 
+  void setFixedSelection(QString filenameA, QString filenameB, QString filenameC, QString networkName, NetworkProps &networkProps, const QJsonObject &config);
+
+  void loadFixedInto(QString filename, IdList& selection, NetworkProps &networkProps, bool updateAxon = true);
+
   /**
       Determines neuron IDs based on a selection string;
       @param selectionString The selection string.

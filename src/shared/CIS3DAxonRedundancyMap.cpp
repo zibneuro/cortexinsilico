@@ -24,6 +24,13 @@ void AxonRedundancyMap::add(const int neuronId, const int neuronIdToUse) {
     mMap.insert(neuronId, neuronIdToUse);    
 }
 
+void AxonRedundancyMap::updateMapping(const int neuronId, const int desiredMappedId) {
+    const int currentMappedId = mMap[neuronId];
+    const int newMappedId = mMap[desiredMappedId];
+    qDebug() << "updateMapping" << currentMappedId << newMappedId;
+    mMap[neuronId] = newMappedId;
+}
+
 /**
     Retrieves the mapped id from the original id.
     @param neuronId The original neuron id.

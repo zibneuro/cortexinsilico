@@ -38,6 +38,7 @@ Neurons::addNeuron(const NeuronProperties& neuronProps)
         throw std::runtime_error("Error in addNeuron: Neuron ID exists");
     }
     mPropsMap.insert(id, neuronProps);
+    mGraphIdToNID[neuronProps.graphId] = id;
 }
 
 /**
@@ -375,7 +376,7 @@ Neurons::loadCSV(const QString& fileName)
     }
 
     QStringList parts = line.split(sep);
-    if (parts.size() != 12 || parts[0] != "id" || parts[2] != "soma_x" || parts[3] != "soma_y" ||
+    if (parts.size() != 12 || parts[0] != "id" || parts[1] != "graph_id" || parts[2] != "soma_x" || parts[3] != "soma_y" ||
         parts[4] != "soma_z" || parts[5] != "cell_type" || parts[6] != "nearest_column" ||
         parts[7] != "region" || parts[8] != "laminar_location" || parts[9] != "cortical_depth" || parts[10] != "synaptic_side")
     {
@@ -399,6 +400,7 @@ Neurons::loadCSV(const QString& fileName)
 
         NeuronProperties props;
         props.id = parts[0].toInt();
+        props.graphId = parts[1].toInt();
         props.somaX = parts[2].toFloat();
         props.somaY = parts[3].toFloat();
         props.somaZ = parts[4].toFloat();
@@ -415,4 +417,8 @@ Neurons::loadCSV(const QString& fileName)
         lineCount += 1;
     }
     QTextStream(stdout) << "[*] Completed reading " << mPropsMap.size() << " neurons.\n";
+}
+
+int Neurons::getNIDFromGraphId(int graphId){
+    return mGraphIdToNID[graphId];
 }

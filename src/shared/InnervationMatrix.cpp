@@ -70,7 +70,7 @@ CacheEntry::getHits() const
 */
 InnervationMatrix::InnervationMatrix(const NetworkProps& networkProps)
     : mNetwork(networkProps)
-    , mCacheLimit(100)
+    , mCacheLimit(1000)
     , mRandomGenerator(-1)
     , mCurrentHit(0){};
 

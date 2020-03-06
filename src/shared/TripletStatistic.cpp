@@ -30,7 +30,7 @@ TripletStatistic::TripletStatistic(const NetworkProps &networkProps,
                                    QueryHandler *handler)
     : NetworkStatistic(networkProps, calculator, handler)
 {
-  mSampleSize = 30;
+  mSampleSize = 100000;
   mSampleSeed = sampleSeed;
   mOverallSampleSize = sampleSize;
   mOverallCompletedSamples = 0;
@@ -75,7 +75,7 @@ QList<CellTriplet> TripletStatistic::drawTriplets(
 {
   QList<CellTriplet> triplets;
 
-  // qDebug() << "[*] Selecting " << mSampleSize << " random neuron triplets.";
+  qDebug() << "[*] Selecting " << mSampleSize << " random neuron triplets.";
 
   const unsigned int NMAX1 = selection.SelectionA().size();
   const unsigned int NMAX2 = selection.SelectionB().size();
@@ -513,12 +513,13 @@ void TripletStatistic::doCreateCSV(FileHelper &fileHelper) const
   fileHelper.closeFile();
 
   fileHelper.openFile("motifs_64.csv");
-  fileHelper.write("motif,probability_observed,probability_expected\n");  
+  fileHelper.write("motif,probability_observed,probability_avg,probability_deviation\n");  
   for (int i = 0; i < 64; i++)
   {    
     fileHelper.write(QString::number(i) 
         + "," + QString::number(mSingleMotifProbabilities[i].getMean())
-        + "," + QString::number(mSingleMotifExpectedProbabilities[i].getMean())        
+        + "," + QString::number(mSingleMotifExpectedProbabilities[i].getMean())
+        + "," + QString::number(getNumericDeviation(mSingleMotifProbabilities[i].getMean(),mSingleMotifExpectedProbabilities[i].getMean()))        
         + "\n");
   }
   fileHelper.closeFile();
@@ -537,8 +538,6 @@ void TripletStatistic::doCreateCSV(FileHelper &fileHelper) const
     }    
   }
   fileHelper.closeFile();
-
-  
 }
 
 /**
