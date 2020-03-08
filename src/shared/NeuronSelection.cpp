@@ -76,7 +76,7 @@ IdList NeuronSelection::getSelectedNeurons(const QString selectionString,
   SelectionFilter filter =
       Util::getSelectionFilterFromJson(arr, networkProps, synapticSide);
   Util::correctVPMSelectionFilter(filter, networkProps);
-  Util::correctInterneuronSelectionFilter(filter, networkProps);
+  //Util::correctInterneuronSelectionFilter(filter, networkProps);
   return networkProps.neurons.getFilteredNeuronIds(filter);
 }
 
@@ -417,7 +417,7 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
     SelectionFilter filterA =
         Util::getSelectionFilterFromJson(conditionsA, networkProps, sideA);
     Util::correctVPMSelectionFilter(filterA, networkProps);
-    Util::correctInterneuronSelectionFilter(filterA, networkProps);
+    //Util::correctInterneuronSelectionFilter(filterA, networkProps);
     neuronsA = networkProps.neurons.getFilteredNeuronIds(filterA);
   }
 
@@ -425,7 +425,7 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
     SelectionFilter filterB =
         Util::getSelectionFilterFromJson(conditionsB, networkProps, sideB);
     Util::correctVPMSelectionFilter(filterB, networkProps);
-    Util::correctInterneuronSelectionFilter(filterB, networkProps);
+    //Util::correctInterneuronSelectionFilter(filterB, networkProps);
     neuronsB = networkProps.neurons.getFilteredNeuronIds(filterB);
   }
 
@@ -433,7 +433,7 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
     SelectionFilter filterC =
         Util::getSelectionFilterFromJson(conditionsC, networkProps, sideC);
     Util::correctVPMSelectionFilter(filterC, networkProps);
-    Util::correctInterneuronSelectionFilter(filterC, networkProps);
+    //Util::correctInterneuronSelectionFilter(filterC, networkProps);
     neuronsC = networkProps.neurons.getFilteredNeuronIds(filterC);
   }
 
