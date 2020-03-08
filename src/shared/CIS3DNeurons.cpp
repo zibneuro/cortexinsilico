@@ -20,7 +20,7 @@ Neurons::Neurons()
     @param csvFile The neuron file to load.
     @throws runtime_error if file could not be loaded or parsed.
 */
-Neurons::Neurons(const QString& csvFile)
+Neurons::Neurons(const QString &csvFile)
 {
     loadCSV(csvFile);
 }
@@ -29,8 +29,7 @@ Neurons::Neurons(const QString& csvFile)
     Adds another neuron to the collection.
     @param neuronProps The neuron to add.
 */
-void
-Neurons::addNeuron(const NeuronProperties& neuronProps)
+void Neurons::addNeuron(const NeuronProperties &neuronProps)
 {
     const int id = neuronProps.id;
     if (mPropsMap.contains(id))
@@ -46,8 +45,7 @@ Neurons::addNeuron(const NeuronProperties& neuronProps)
     @param id The neuron ID.
     @return True if the neuron exists.
 */
-bool
-Neurons::exists(const int id) const
+bool Neurons::exists(const int id) const
 {
     return mPropsMap.contains(id);
 }
@@ -58,8 +56,7 @@ Neurons::exists(const int id) const
     @return The ID of the cell type.
     @throws runtime_error if neuron ID does not exist.
 */
-int
-Neurons::getCellTypeId(const int id) const
+int Neurons::getCellTypeId(const int id) const
 {
     if (mPropsMap.contains(id))
     {
@@ -75,8 +72,7 @@ Neurons::getCellTypeId(const int id) const
     @return The ID of the region.
     @throws runtime_error if neuron ID does not exist.
 */
-int
-Neurons::getRegionId(const int id) const
+int Neurons::getRegionId(const int id) const
 {
     const PropsMap::const_iterator it = mPropsMap.constFind(id);
     if (it == mPropsMap.constEnd())
@@ -93,12 +89,11 @@ Neurons::getRegionId(const int id) const
     @return The soma position.
     @throws runtime_error if neuron ID does not exist.
 */
-Vec3f
-Neurons::getSomaPosition(const int id) const
+Vec3f Neurons::getSomaPosition(const int id) const
 {
     if (mPropsMap.contains(id))
     {
-        const NeuronProperties& props = mPropsMap.value(id);
+        const NeuronProperties &props = mPropsMap.value(id);
         return Vec3f(props.somaX, props.somaY, props.somaZ);
     }
     QString msg = QString("Error in getCellTypeId: Neuron ID %1 does not exist.").arg(id);
@@ -151,8 +146,8 @@ Neurons::getLaminarLocation(const int id) const
     @return The neuron IDs.
 */
 QList<int>
-Neurons::getFilteredNeuronIds(const QList<int>& includedCellTypeIds,
-                              const QList<int>& includedRegionIds,
+Neurons::getFilteredNeuronIds(const QList<int> &includedCellTypeIds,
+                              const QList<int> &includedRegionIds,
                               const CIS3D::SynapticSide synapticSide) const
 {
     const bool allCellTypesIncluded = (includedCellTypeIds.size() == 0);
@@ -203,7 +198,7 @@ Neurons::getFilteredNeuronIds(const QList<int>& includedCellTypeIds,
          ++it)
     {
         const int neuronId = it.key();
-        const NeuronProperties& props = it.value();
+        const NeuronProperties &props = it.value();
         if ((allCellTypesIncluded ||
              (props.cellTypeId < selectedCTs.size() && selectedCTs.at(props.cellTypeId))) &&
             (allRegionsIncluded ||
@@ -225,7 +220,7 @@ Neurons::getFilteredNeuronIds(const QList<int>& includedCellTypeIds,
     @return The neuron IDs.
 */
 QList<int>
-Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const
+Neurons::getFilteredNeuronIds(const SelectionFilter &filter) const
 {
     const bool allCellTypesIncluded = (filter.cellTypeIds.size() == 0);
     const bool allRegionsIncluded = (filter.regionIds.size() == 0);
@@ -291,7 +286,7 @@ Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const
 
     QBitArray selectedLaminarLocations;
     if (!allLaminarLocationsIncluded)
-    {        
+    {
         selectedLaminarLocations.resize(9);
         selectedLaminarLocations.fill(false);
         for (int i = 0; i < filter.laminarLocations.size(); ++i)
@@ -305,9 +300,9 @@ Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const
     for (QMap<int, NeuronProperties>::ConstIterator it = mPropsMap.constBegin();
          it != mPropsMap.constEnd();
          ++it)
-    {        
+    {
         const int neuronId = it.key();
-        const NeuronProperties& props = it.value();
+        const NeuronProperties &props = it.value();
         if ((allCellTypesIncluded ||
              (props.cellTypeId < selectedCTs.size() && selectedCTs.at(props.cellTypeId))) &&
             (allRegionsIncluded ||
@@ -317,8 +312,8 @@ Neurons::getFilteredNeuronIds(const SelectionFilter& filter) const
             (allLaminarLocationsIncluded || selectedLaminarLocations.at(int(props.loc))) &&
             ((filter.synapticSide == CIS3D::BOTH_SIDES) ||
              (getSynapticSide(neuronId) == CIS3D::BOTH_SIDES) || (getSynapticSide(neuronId) == CIS3D::POSTSYNAPTIC_MAPPED && filter.synapticSide == CIS3D::POSTSYNAPTIC) ||
-             (filter.synapticSide == getSynapticSide(neuronId))) 
-             && (filter.corticalDepth.empty() || (props.corticalDepth >= filter.corticalDepth[0] && props.corticalDepth <= filter.corticalDepth[1])))
+             (filter.synapticSide == getSynapticSide(neuronId))) &&
+            (filter.corticalDepth.empty() || (props.corticalDepth >= filter.corticalDepth[0] && props.corticalDepth <= filter.corticalDepth[1])))
         {
             result.append(neuronId);
         }
@@ -345,14 +340,12 @@ Neurons::getNeuronProps(int neuronId) const
     return *it;
 }
 
-
 /**
     Loads the neurons from file.
     @param fileName The name of the neuron file.
     @throws runtime_error if file could not be loaded or parsed.
 */
-void
-Neurons::loadCSV(const QString& fileName)
+void Neurons::loadCSV(const QString &fileName)
 {
     QFile file(fileName);
     QTextStream(stdout) << "[*] Reading neurons from " << fileName << "\n";
@@ -376,7 +369,7 @@ Neurons::loadCSV(const QString& fileName)
     }
 
     QStringList parts = line.split(sep);
-    if (parts.size() != 12 || parts[0] != "id" || parts[1] != "graph_id" || parts[2] != "soma_x" || parts[3] != "soma_y" ||
+    if ((parts.size() != 12 && parts.size() != 15) || parts[0] != "id" || parts[1] != "graph_id" || parts[2] != "soma_x" || parts[3] != "soma_y" ||
         parts[4] != "soma_z" || parts[5] != "cell_type" || parts[6] != "nearest_column" ||
         parts[7] != "region" || parts[8] != "laminar_location" || parts[9] != "cortical_depth" || parts[10] != "synaptic_side")
     {
@@ -385,13 +378,15 @@ Neurons::loadCSV(const QString& fileName)
         throw std::runtime_error(qPrintable(msg));
     }
 
+    bool isSlice = parts.size() == 15;
+
     line = in.readLine();
     lineCount += 1;
 
     while (!line.isNull())
     {
         parts = line.split(sep);
-        if (parts.size() != 12)
+        if (parts.size() != 12 && parts.size() != 15)
         {
             const QString msg =
                 QString("Error reading neurons file %1. Invalid columns.").arg(fileName);
@@ -410,6 +405,12 @@ Neurons::loadCSV(const QString& fileName)
         props.loc = static_cast<CIS3D::LaminarLocation>(parts[8].toInt());
         props.synapticSide = static_cast<CIS3D::SynapticSide>(parts[10].toInt());
         props.corticalDepth = parts[9].toFloat();
+        if (isSlice)
+        {
+            props.tissueDepthLow = parts[11].toFloat();
+            props.tissueDepthHigh = parts[12].toFloat();
+            props.axonMatched = parts[13].toInt() == 1;
+        }
 
         addNeuron(props);
 
@@ -419,6 +420,7 @@ Neurons::loadCSV(const QString& fileName)
     QTextStream(stdout) << "[*] Completed reading " << mPropsMap.size() << " neurons.\n";
 }
 
-int Neurons::getNIDFromGraphId(int graphId){
+int Neurons::getNIDFromGraphId(int graphId)
+{
     return mGraphIdToNID[graphId];
 }

@@ -274,17 +274,21 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
     QString dataRoot2 = Util::getDatasetPath(networkName2, config);
 
     NetworkProps networkProps2;
-    networkProps2.setDataRoot(dataRoot2);
-    networkProps2.loadFilesForQuery();
+    networkProps2.setDataRoot(QDir::cleanPath(config["WORKER_DATA_DIR_CIS3D"].toString()));  
+    networkProps2.networkRootDir = QDir::cleanPath(config["WORKER_DATA_DIR_CIS3D"].toString() + "/" + networkName2); 
+    networkProps2.loadFilesForQuery(networkName2);
 
     processSelection(networkSelection, oppositeNumber, networkProps2,
                      selectionA, selectionB, selectionC, true);
 
+    /*
     QDir mappingDir = QDir(mMappingDir);
     QString remappedAxonFile = CIS3D::getRemappedAxonFilePath(mappingDir, networkName, networkName2);
-    //networkProps.axonRedundancyMap.loadFlatFile(remappedAxonFile);        
+    networkProps.axonRedundancyMap.loadFlatFile(remappedAxonFile);        
+    */
   }
 
+  /*
   double foo;
   if(Util::isSlice(networkSelection, number, foo)){
       QDir mappingDir = QDir(mMappingDir);
@@ -293,6 +297,7 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
               CIS3D::getMappingFilePath(mappingDir, networkName, rbc);
       mMappingSliceRBC = readMapping(path);
   }
+  */
 }
 
 
@@ -301,9 +306,9 @@ void NeuronSelection::setFixedSelection(QString filenameA, QString filenameB, QS
   networkProps.networkRootDir = QDir::cleanPath(config["WORKER_DATA_DIR_CIS3D"].toString() + "/" + networkName); 
   networkProps.loadFilesForQuery(networkName);
 
-  loadFixedInto(filenameA, mSelectionA, networkProps, true);
-  loadFixedInto(filenameB, mSelectionB, networkProps, true);
-  loadFixedInto(filenameC, mSelectionC, networkProps, true);  
+  loadFixedInto(filenameA, mSelectionA, networkProps, false);
+  loadFixedInto(filenameB, mSelectionB, networkProps, false);
+  loadFixedInto(filenameC, mSelectionC, networkProps, false);  
   qDebug() << "fixed selection" << mSelectionA.size() << mSelectionB.size() << mSelectionC.size();
 }
 
@@ -325,9 +330,9 @@ void NeuronSelection::loadFixedInto(QString filename, IdList& selection, Network
 
     while (!line.isNull()) {
         QStringList parts = line.split(sep);
-        
-        int preId = parts[0].toInt();
-        int postId = parts[1].toInt();
+                
+        int postId = parts[0].toInt();
+        int preId = parts[1].toInt();
         
         selection.append(postId);
         if(updateAxon){
@@ -403,7 +408,7 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
 
   QString networkName = Util::getShortName(networkSelection, number);
   if (Util::isSlice(networkName)) {
-    correctSynapticSide(sideA, sideB, sideC, enabledA, enabledB, enabledC);
+    //correctSynapticSide(sideA, sideB, sideC, enabledA, enabledB, enabledC);
   }
 
   IdList neuronsA, neuronsB, neuronsC;
@@ -677,6 +682,8 @@ void NeuronSelection::copySelection(NeuronSelection &selection) {
 }
 
 void NeuronSelection::pruneSelection(NeuronSelection &selection) {
+  return;
+
   std::map<int, int> mapping = readMapping(selection);
 
   std::set<int> allowedA = getAllowedIds(selection.SelectionA(), mapping);

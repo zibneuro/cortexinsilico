@@ -60,6 +60,9 @@ public:
         int nearestColumnId;
         CIS3D::SynapticSide synapticSide;
         float corticalDepth;
+        float tissueDepthLow;
+        float tissueDepthHigh;
+        bool axonMatched;
     };
 
     /**

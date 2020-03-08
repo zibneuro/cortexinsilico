@@ -129,10 +129,11 @@ void
 QueryHandler::setSelection()
 {
     mSelection.setSelectionFromQuery(mQuery, mNetwork, mConfig);
-    //mSelection.setFixedSelection("/local/bzfharth/TripletMotifsLayerExamples/fixedSelection.csv", "RBC", mNetwork, mConfig);
-    //QString fileA = "/local/bzfharth/TripletMotifsLayerExamples/L5INH.csv";
-    //QString fileB = "/local/bzfharth/TripletMotifsLayerExamples/L6EXC.csv";
-    //mSelection.setFixedSelection(fileA, fileA, fileB, "RBC", mNetwork, mConfig);
+    /*
+    QString fileA = "/local/TripletsFixed_v3/L1INH_selection.csv";
+    QString fileB = "/local/TripletsFixed_v3/L6EXC_selection.csv";
+    mSelection.setFixedSelection(fileA, fileA, fileB, "RBC", mNetwork, mConfig);
+    */
     QString error;
     if (!mSelection.isValid(mQuery, error))
     {
