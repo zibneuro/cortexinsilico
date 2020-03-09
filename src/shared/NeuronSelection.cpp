@@ -408,7 +408,7 @@ void NeuronSelection::processSelection(QJsonObject &networkSelection,
 
   QString networkName = Util::getShortName(networkSelection, number);
   if (Util::isSlice(networkName)) {
-    //correctSynapticSide(sideA, sideB, sideC, enabledA, enabledB, enabledC);
+    correctSynapticSide(sideA, sideB, sideC, enabledA, enabledB, enabledC);
   }
 
   IdList neuronsA, neuronsB, neuronsC;
@@ -784,6 +784,11 @@ void NeuronSelection::correctSynapticSide(CIS3D::SynapticSide &sideA,
                                           bool /*aEnabled*/, bool /*bEnabled*/,
                                           bool cEnabled) {  
   
+   sideA = CIS3D::BOTH_SIDES;
+   sideB = CIS3D::BOTH_SIDES;
+   sideC = CIS3D::BOTH_SIDES;
+
+   /*
   QString evaluationQuery = "innervation";
   if (mQueryType == "selection") {    
     if(cEnabled){
@@ -797,7 +802,7 @@ void NeuronSelection::correctSynapticSide(CIS3D::SynapticSide &sideA,
     evaluationQuery = mQueryType;
   }
 
-  CIS3D::SynapticSide remappedSide = mSliceUniquePre ? CIS3D::POSTSYNAPTIC_MAPPED : CIS3D::POSTSYNAPTIC;
+  CIS3D::SynapticSide remappedSide = CIS3D::BOTH_SIDES;
 
 
   if(evaluationQuery == "innervation" || evaluationQuery == "spatialInnervation"){
@@ -814,5 +819,5 @@ void NeuronSelection::correctSynapticSide(CIS3D::SynapticSide &sideA,
     sideB = remappedSide;
     sideC = remappedSide;
   }
-
+  */
 }
