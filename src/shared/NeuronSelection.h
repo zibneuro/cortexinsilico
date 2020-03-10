@@ -138,8 +138,6 @@ public:
    */
   std::set<int> getVoxelWhitelist();
 
-  bool useSliceUniquePre();
-
   int getRBCId(int neuronId) const;
 
 private:

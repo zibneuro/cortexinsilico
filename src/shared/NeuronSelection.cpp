@@ -271,7 +271,6 @@ void NeuronSelection::setSelectionFromQuery(const QJsonObject &query,
     mSliceUniquePre = true;
     int oppositeNumber = Util::getOppositeNetworkNumber(number);
     QString networkName2 = Util::getShortName(networkSelection, oppositeNumber);
-    QString dataRoot2 = Util::getDatasetPath(networkName2, config);
 
     NetworkProps networkProps2;
     networkProps2.setDataRoot(QDir::cleanPath(config["WORKER_DATA_DIR_CIS3D"].toString()));  
@@ -624,10 +623,6 @@ bool NeuronSelection::isValid(QJsonObject &query, QString &errorMessage) {
   };
 }
 
-bool NeuronSelection::useSliceUniquePre(){
-    return mSliceUniquePre;
-}
-
 int NeuronSelection::getRBCId(int neuronId) const{
     auto it = mMappingSliceRBC.find(neuronId);
     if(it != mMappingSliceRBC.end()){
@@ -682,9 +677,10 @@ void NeuronSelection::copySelection(NeuronSelection &selection) {
 }
 
 void NeuronSelection::pruneSelection(NeuronSelection &selection) {
-  return;
 
-  std::map<int, int> mapping = readMapping(selection);
+  // std::map<int, int> mapping = readMapping(selection);
+
+  std::map<int, int> mapping;
 
   std::set<int> allowedA = getAllowedIds(selection.SelectionA(), mapping);
   pruneIds(mSelectionA, allowedA);
@@ -701,7 +697,7 @@ std::set<int> NeuronSelection::getAllowedIds(const IdList &selection,
   std::set<int> allowed;
   for (int i = 0; i < selection.size(); i++) {
     int id = selection[i];
-    allowed.insert(mapping[id]);
+    allowed.insert(id);
   }
   return allowed;
 }
@@ -716,8 +712,6 @@ void NeuronSelection::pruneIds(IdList &selection, std::set<int> &allowed) {
   }
   selection = prunedSelection;
 }
-
-
 
 std::map<int, int> NeuronSelection::readMapping(NeuronSelection &selection) {
   QString networkName = selection.getNetworkName();
