@@ -10,14 +10,25 @@
 #include <QObject>
 #include <QString>
 #include <QtNetwork/QNetworkAccessManager>
+#include <set>
+#include <map>
+#include <vector>
 
-class SpatialInnervationQueryHandler : public QueryHandler {
+class SpatialInnervationQueryHandler : public QueryHandler
+{
 
 public:
   SpatialInnervationQueryHandler();
 
 private:
-   void doProcessQuery() override;
+  struct DSCEntry
+  {
+    int postId;
+    int subvolumeId;
+    float dsc;
+  };
+
+  void doProcessQuery() override;
 
   QString getResultKey() override;
 
@@ -25,6 +36,10 @@ private:
                                const qint64 fileSizeBytes1,
                                const QString &keyData,
                                const qint64 fileSizeBytes2, int nVoxels);
+
+  std::vector<DSCEntry> loadDSC(QString filename, std::set<int> &postIds, CIS3D::Structure postTarget);
+  void saveDSC(QString filename, std::vector<DSCEntry> &data);
+  void writeReadme(QString filename);
 
   Statistics mStatistics;
   QString mTempFolder;

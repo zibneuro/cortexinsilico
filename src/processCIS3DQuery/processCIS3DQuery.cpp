@@ -63,8 +63,7 @@ main(int argc, char* argv[])
             handler = new SelectionQueryHandler();
         }
         else if (queryType == "spatialInnervation")
-        {
-            return 0;
+        {                 
             handler = new SpatialInnervationQueryHandler();
         }
         else if (queryType == "triplet")

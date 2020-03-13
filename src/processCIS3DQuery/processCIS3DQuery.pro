@@ -59,6 +59,7 @@ SOURCES += \
     ../shared/FormulaCalculator.cpp \
     ../shared/Distribution.cpp \    
     ../shared/FileHelper.cpp \    
+    ../shared/Grid.cpp \    
     DataUploadHandler.cpp \
     QueryHelpers.cpp \
     ../shared/QueryHandler.cpp \
@@ -101,7 +102,8 @@ HEADERS += \
     ../shared/FeatureProvider.h \
     ../shared/FormulaCalculator.h \ 
     ../shared/Distribution.h \      
-    ../shared/FileHelper.h \       
+    ../shared/FileHelper.h \     
+    ../shared/Grid.h \       
     DataUploadHandler.h \        
     QueryHelpers.h \
     ../shared/QueryHandler.h \
