@@ -1044,3 +1044,11 @@ std::set<int> Util::getPermittedSubvolumeRegionIds(QJsonArray &conditions,
 }
 
 double Util::convertToCubicMicron(double value) { return value * 0.000008; }
+
+std::set<int> Util::listToSet(IdList list){
+  std::set<int> ids;
+  for(int i=0; i<list.size(); i++){
+    ids.insert(list[i]);
+  }
+  return ids;
+}

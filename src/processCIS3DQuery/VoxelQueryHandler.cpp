@@ -200,6 +200,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(mResultFileHeader);
         mFileHelper.closeFile();
 
+        /*
         mFileHelper.openFile("subvolumes.csv");
         mFileHelper.write("subvolume_id,x,y,z,cortical_depth,region_id\n");
         for (auto it = mSubvolumes.begin(); it != mSubvolumes.end(); it++)
@@ -207,6 +208,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
             mFileHelper.write(*it);
         }
         mFileHelper.closeFile();
+        */
 
         /*
         mFileHelper.openFile("testOutput.csv");
@@ -283,45 +285,13 @@ VoxelQueryHandler::VoxelQueryHandler()
 }
 
 void VoxelQueryHandler::doProcessQuery()
-{
-    QString mode = getMode(mQuery);
-
-    // ################# DETERMINE NEURON IDS #################
-
-    CIS3D::Structure postTarget = CIS3D::DEND;
-
-    if (mode == "prePost" || mode == "prePostVoxel")
-    {
-        mQuery["cellSelection"].toObject()["selectionC"].toObject().insert("enabled", false);
-        mSelection.setSelectionFromQuery(mQuery, mNetwork, mConfig);
-    }
-    else
-    {
-        mNetwork.setDataRoot(mDataRoot);
-        mNetwork.loadFilesForQuery();
-        mSelection.setFullModel(mNetwork, false);
-        int samplingFactor = -1;
-        int randomSeed = -1;
-        if (Util::isSampled(mNetworkSelection, mNetworkNumber, samplingFactor, randomSeed))
-        {
-            mSelection.sampleDownFactor(samplingFactor, randomSeed);
-        }
-    }
-
-    QString postAllFolder =
-        QDir::cleanPath(mDataRoot + QDir::separator() + "features_postAll");
-    QString metaFolder =
-        QDir::cleanPath(mDataRoot + QDir::separator() + "features_meta");
-    QString voxelPosFile =
-        QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos_new.dat");
-    QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() +
-                                        Util::getIndexFileName(postTarget));
-    QString indexFileBranch = QDir::cleanPath(metaFolder + QDir::separator() +
-                                              Util::getBranchIndexFileName(postTarget));
-
+{        
+    mQuery["cellSelection"].toObject()["selectionC"].toObject().insert("enabled", false);
+    mSelection.setSelectionFromQuery(mQuery, mNetwork, mConfig);
     IdList preIds = mSelection.SelectionA();
     IdList postIds = mSelection.SelectionB();
 
+    // NEURON IDS
     for (int i = 0; i < preIds.size(); i++)
     {
         mPreIds.insert(preIds[i]);
@@ -355,6 +325,40 @@ void VoxelQueryHandler::doProcessQuery()
         prunedPostIds.insert(postId);
     }
 
+    // SUBVOLUMES
+    GridFilter gridFilter;    
+    QJsonArray subvolumeConditions = mQuery["cellSelection"].toObject()["selectionC"].toObject()["conditions"].toArray();    
+    double min_x, max_x, min_y, max_y, min_z, max_z, min_depth, max_depth; 
+    Util::getRange(subvolumeConditions, "rangeX", -1114, 1408, min_x, max_x);
+    Util::getRange(subvolumeConditions, "rangeY", -759, 1497, min_y, max_y);
+    Util::getRange(subvolumeConditions, "rangeZ", -1461, 708, min_z, max_z);
+    Util::getRange(subvolumeConditions, "corticalDepth", -100, 2000, min_depth, max_depth);
+    gridFilter.min_x = min_x;
+    gridFilter.max_x = max_x;
+    gridFilter.min_y = min_y;
+    gridFilter.max_y = max_y;
+    gridFilter.min_z = min_z;
+    gridFilter.max_z = max_z;
+    gridFilter.min_depth = min_depth;
+    gridFilter.max_depth = max_depth;
+    gridFilter.whitelist_region = Util::getPermittedSubvolumeRegionIds(subvolumeConditions, mNetwork.regions);
+    mSubvolumes = mNetwork.grid.filter(gridFilter);
+
+    qDebug() << "SUBVOLUME" << mSubvolumes.size() << "PRE" << mPreIds.size() << "POST" << mPostIds.size();
+
+
+    /*
+    QString postAllFolder =
+        QDir::cleanPath(mDataRoot + QDir::separator() + "features_postAll");
+    QString metaFolder =
+        QDir::cleanPath(mDataRoot + QDir::separator() + "features_meta");
+    QString voxelPosFile =
+        QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos_new.dat");
+    QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() +
+                                        Util::getIndexFileName(postTarget));
+    QString indexFileBranch = QDir::cleanPath(metaFolder + QDir::separator() +
+                                              Util::getBranchIndexFileName(postTarget));
+
     // Read post all
     std::map<int, float> postAllField;
     FeatureProvider::readMapFloat(postAllField, postAllFolder, "voxel_postAllExc.dat");
@@ -364,23 +368,7 @@ void VoxelQueryHandler::doProcessQuery()
     int voxelCount = -1;
     int totalVoxelCount = 0;
 
-    double minX;
-    double minY;
-    double minZ;
-    double maxX;
-    double maxY;
-    double maxZ;
-    double minDepth;
-    double maxDepth;
-    QJsonArray subvolumeConditions = mQuery["cellSelection"].toObject()["selectionC"].toObject()["conditions"].toArray();
-    qDebug() << "conditions" << subvolumeConditions;
-    Util::getRange(subvolumeConditions, "rangeX", -1114, 1408, minX, maxX);
-    Util::getRange(subvolumeConditions, "rangeY", -759, 1497, minY, maxY);
-    Util::getRange(subvolumeConditions, "rangeZ", -1461, 708, minZ, maxZ);
-    Util::getRange(subvolumeConditions, "corticalDepth", -100, 2000, minDepth, maxDepth);
-    qDebug() << "[*] Filtering sub-volumes" << minX << maxX << minY << maxY << minZ << maxZ << minDepth << maxDepth;
 
-    std::set<int> permittedRegionIds = Util::getPermittedSubvolumeRegionIds(subvolumeConditions, mNetwork.regions);
     std::set<int> filteredVoxels;
     QFile posFile(voxelPosFile);
     if (posFile.open(QIODevice::ReadOnly))
@@ -614,6 +602,8 @@ void VoxelQueryHandler::doProcessQuery()
 
     QJsonObject result = createJsonResult(true);
     updateQuery(result, 100);
+
+    */
 }
 
 float VoxelQueryHandler::calculateSynapseProbability(float innervation, int k)
@@ -627,8 +617,6 @@ float VoxelQueryHandler::calculateSynapseProbability(float innervation, int k)
     }
     float synapseProb = innervationPow * exp(-innervation) / nfak;
 
-    // qDebug() << k << nfak << innervation << synapseProb <<
-    // r.drawPoisson(innervation);
     return synapseProb;
 }
 

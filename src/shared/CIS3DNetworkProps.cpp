@@ -39,6 +39,8 @@ void NetworkProps::loadFilesForQuery(QString networkName)
 
     const QString regionsFile = CIS3D::getRegionsFileName(dataRootDir);
     regions.loadCSV(regionsFile);
+    
+    grid.load(dataRootDir.filePath("grid_vS1.csv"));
 
     if (!networkName.isEmpty())
     {

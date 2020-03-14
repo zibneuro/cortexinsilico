@@ -7,6 +7,7 @@
 #include "CIS3DNeurons.h"
 #include "CIS3DRegions.h"
 #include "CIS3DPSTDensities.h"
+#include "Grid.h"
 #include <QDir>
 #include <QString>
 
@@ -78,6 +79,8 @@ public:
         The postsynaptic target density values based on cell type.
     */
     PSTDensities densities;
+
+    Grid grid;
 
     bool useLegacyPath;
 

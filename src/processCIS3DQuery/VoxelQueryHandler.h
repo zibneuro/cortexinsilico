@@ -75,13 +75,14 @@ private:
   std::map<int, int> mPostCellbodiesPerVoxel;
   std::map<int, float> mAxonLengthPerVoxel;
   std::map<int, float> mDendriteLengthPerVoxel;
-  std::vector<QString> mSubvolumes;
   std::set<int> mPreIds;
   std::set<int> mPostIds;
   std::map<int, float> mVariabilityCellbodies;
   std::map<int, float> mVariabilityAxon;
   std::map<int, float> mVariabilityDendrite;
   std::map<int, std::vector<float> > mTestOutput; 
+
+  std::vector<int> mSubvolumes;
 };
 
 #endif // VOXELQUERYHANDLER_H

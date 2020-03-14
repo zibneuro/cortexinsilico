@@ -182,6 +182,8 @@ namespace Util
 
     double convertToCubicMicron(double value);
 
+    std::set<int> listToSet(IdList list);
+
 
 } // namespace Util
 

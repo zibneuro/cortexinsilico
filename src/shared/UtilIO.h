@@ -105,7 +105,6 @@ std::vector<std::vector<double> > readCsv(QString filename, bool ignoreFileNotFo
 QString getCsvName(int id);
 
 QString getSubvolumeFileName(QString subvolumeStr);
-
 }  // namespace UtilIO
 
 

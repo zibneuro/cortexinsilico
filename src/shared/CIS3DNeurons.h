@@ -63,6 +63,7 @@ public:
         float tissueDepthLow;
         float tissueDepthHigh;
         bool axonMatched;
+        bool inside_vS1;
     };
 
     /**
@@ -148,7 +149,7 @@ public:
         @param fileName The name of the neuron file.
         @throws runtime_error if file could not be loaded or parsed.
     */
-    void loadCSV(const QString& fileName);
+    void loadCSV(const QString& fileName, bool inside_vS1 = true);
 
     int getNIDFromGraphId(int graphId);
 

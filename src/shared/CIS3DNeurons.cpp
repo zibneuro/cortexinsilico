@@ -345,7 +345,7 @@ Neurons::getNeuronProps(int neuronId) const
     @param fileName The name of the neuron file.
     @throws runtime_error if file could not be loaded or parsed.
 */
-void Neurons::loadCSV(const QString &fileName)
+void Neurons::loadCSV(const QString &fileName, bool inside_vS1)
 {
     QFile file(fileName);
     QTextStream(stdout) << "[*] Reading neurons from " << fileName << "\n";
@@ -371,7 +371,7 @@ void Neurons::loadCSV(const QString &fileName)
     QStringList parts = line.split(sep);
     if ((parts.size() != 12 && parts.size() != 15) || parts[0] != "id" || parts[1] != "graph_id" || parts[2] != "soma_x" || parts[3] != "soma_y" ||
         parts[4] != "soma_z" || parts[5] != "cell_type" || parts[6] != "nearest_column" ||
-        parts[7] != "region" || parts[8] != "laminar_location" || parts[9] != "cortical_depth" || parts[10] != "synaptic_side")
+        parts[7] != "region" || parts[8] != "laminar_location" || parts[9] != "cortical_depth" || parts[10] != "synaptic_side" || parts[11] != "inside_vS1")
     {
         const QString msg =
             QString("Error reading neurons file %1. Invalid header columns.").arg(fileName);
@@ -405,14 +405,17 @@ void Neurons::loadCSV(const QString &fileName)
         props.loc = static_cast<CIS3D::LaminarLocation>(parts[8].toInt());
         props.synapticSide = static_cast<CIS3D::SynapticSide>(parts[10].toInt());
         props.corticalDepth = parts[9].toFloat();
+        props.inside_vS1 = parts[11].toInt() == 1;
         if (isSlice)
         {
-            props.tissueDepthLow = parts[11].toFloat();
-            props.tissueDepthHigh = parts[12].toFloat();
-            props.axonMatched = parts[13].toInt() == 1;
+            props.tissueDepthLow = parts[12].toFloat();
+            props.tissueDepthHigh = parts[13].toFloat();
+            props.axonMatched = parts[14].toInt() == 1;
         }
 
-        addNeuron(props);
+        if(props.cellTypeId == 10 || props.inside_vS1 || !inside_vS1){
+            addNeuron(props);
+        }
 
         line = in.readLine();
         lineCount += 1;
