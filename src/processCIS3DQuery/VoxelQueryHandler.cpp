@@ -10,6 +10,7 @@
 #include "QueryHelpers.h"
 #include "Util.h"
 #include "UtilIO.h"
+#include "PstAll.h"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
@@ -188,7 +189,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     result.insert("axonVariabilityPerVoxelHisto", axonVariabilityPerVoxelH.createJson());
     result.insert("dendriteVariabilityPerVoxel",
                   Util::createJsonStatistic(dendriteVariabilityPerVoxel));
-                  
+
     result.insert("dendriteVariabilityPerVoxelHisto", dendriteVariabilityPerVoxelH.createJson());
 
     // ################# CREATE CSV FILE #################
@@ -285,13 +286,15 @@ VoxelQueryHandler::VoxelQueryHandler()
 }
 
 void VoxelQueryHandler::doProcessQuery()
-{        
+{
     mQuery["cellSelection"].toObject()["selectionC"].toObject().insert("enabled", false);
     mSelection.setSelectionFromQuery(mQuery, mNetwork, mConfig);
     IdList preIds = mSelection.SelectionA();
     IdList postIds = mSelection.SelectionB();
+    PstAll pstAll;
+    pstAll.load(mNetwork.networkRootDir.filePath("agg_pst.csv"));
 
-    // NEURON IDS
+    // ################# FILTER NEURONS #################
     for (int i = 0; i < preIds.size(); i++)
     {
         mPreIds.insert(preIds[i]);
@@ -325,10 +328,11 @@ void VoxelQueryHandler::doProcessQuery()
         prunedPostIds.insert(postId);
     }
 
-    // SUBVOLUMES
-    GridFilter gridFilter;    
-    QJsonArray subvolumeConditions = mQuery["cellSelection"].toObject()["selectionC"].toObject()["conditions"].toArray();    
-    double min_x, max_x, min_y, max_y, min_z, max_z, min_depth, max_depth; 
+    // ################# FILTER SUBVOLUMES #################
+
+    GridFilter gridFilter;
+    QJsonArray subvolumeConditions = mQuery["cellSelection"].toObject()["selectionC"].toObject()["conditions"].toArray();
+    double min_x, max_x, min_y, max_y, min_z, max_z, min_depth, max_depth;
     Util::getRange(subvolumeConditions, "rangeX", -1114, 1408, min_x, max_x);
     Util::getRange(subvolumeConditions, "rangeY", -759, 1497, min_y, max_y);
     Util::getRange(subvolumeConditions, "rangeZ", -1461, 708, min_z, max_z);
@@ -346,84 +350,7 @@ void VoxelQueryHandler::doProcessQuery()
 
     qDebug() << "SUBVOLUME" << mSubvolumes.size() << "PRE" << mPreIds.size() << "POST" << mPostIds.size();
 
-
-    /*
-    QString postAllFolder =
-        QDir::cleanPath(mDataRoot + QDir::separator() + "features_postAll");
-    QString metaFolder =
-        QDir::cleanPath(mDataRoot + QDir::separator() + "features_meta");
-    QString voxelPosFile =
-        QDir::cleanPath(metaFolder + QDir::separator() + "voxel_pos_new.dat");
-    QString indexFile = QDir::cleanPath(metaFolder + QDir::separator() +
-                                        Util::getIndexFileName(postTarget));
-    QString indexFileBranch = QDir::cleanPath(metaFolder + QDir::separator() +
-                                              Util::getBranchIndexFileName(postTarget));
-
-    // Read post all
-    std::map<int, float> postAllField;
-    FeatureProvider::readMapFloat(postAllField, postAllFolder, "voxel_postAllExc.dat");
-
-    // ################# LOOP OVER VOXELS #################
-
-    int voxelCount = -1;
-    int totalVoxelCount = 0;
-
-
-    std::set<int> filteredVoxels;
-    QFile posFile(voxelPosFile);
-    if (posFile.open(QIODevice::ReadOnly))
-    {
-        QTextStream in(&posFile);
-        while (!in.atEnd())
-        {
-            totalVoxelCount++;
-
-            QString line = in.readLine();
-            line = line.trimmed();
-            QStringList parts = line.split(" ");
-
-            int voxelId = parts[0].toInt() - 1;
-            double voxelX = parts[1].toDouble();
-            double voxelY = parts[2].toDouble();
-            double voxelZ = parts[3].toDouble();
-            double depth = parts[5].toDouble();
-            int regionId = parts[6].toInt();
-
-            if (voxelX >= minX && voxelX < maxX)
-            {
-                if (voxelY >= minY && voxelY < maxY)
-                {
-                    if (voxelZ >= minZ && voxelZ < maxZ)
-                    {
-                        if (depth >= minDepth && depth < maxDepth)
-                        {
-                            if (permittedRegionIds.empty() || permittedRegionIds.find(regionId) != permittedRegionIds.end())
-                            {
-                                mVoxelIdVoxelStr[voxelId] = QString::number(static_cast<int>(voxelX)) + "_" + QString::number(static_cast<int>(voxelY)) + "_" + QString::number(static_cast<int>(voxelZ));
-                                mSelectedVoxels.insert(voxelId);
-                                filteredVoxels.insert(voxelId);
-                                QString reportLine = QString::number(voxelId) + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[5] + "," + parts[6] + "\n";
-                                mSubvolumes.push_back(reportLine);
-                                std::vector<float> entries;
-                                mTestOutput[voxelId] = entries;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        const QString msg =
-            QString("Error reading index file. Could not open file %1")
-                .arg(voxelPosFile);
-        throw std::runtime_error(qPrintable(msg));
-    }
-
-    totalVoxelCount = filteredVoxels.size();
-
-    qDebug() << "[*] Finished filtering sub-volumes";
+    // ################# LOOP OVER SUBVOLUMES #################
 
     int synK = 10;
     for (int q = 0; q <= synK; q++)
@@ -432,178 +359,134 @@ void VoxelQueryHandler::doProcessQuery()
         mSynapsesPerConnectionOccurrences[q] = foo;
     }
 
-    // RandomGenerator generator(50000);
-
-    QFile inputFile(indexFile);
-    QFile inputFileBranch(indexFileBranch);
-
-    if (!inputFileBranch.open(QIODevice::ReadOnly))
+    for (unsigned int subvolume_idx = 0; subvolume_idx < mSubvolumes.size(); subvolume_idx++)
     {
-        const QString msg =
-            QString("Error reading index file. Could not open file %1")
-                .arg(indexFileBranch);
-        throw std::runtime_error(qPrintable(msg));
-    }
-
-    int lastUpdatedVoxelCount = -1;
-    if (inputFile.open(QIODevice::ReadOnly))
-    {
-        QTextStream in(&inputFile);
-        QTextStream inBranch(&inputFileBranch);
-
-        // int absVoxelCount  = 0;
-        while (!in.atEnd() && !mAborted)
+        if (mAborted)
         {
-            QString line = in.readLine();
-            line = line.trimmed();
-            QStringList parts = line.split(" ");
-            int voxelId = parts[0].toInt();
+            break;
+        }
 
-            QString lineBranch = inBranch.readLine();
-            lineBranch = lineBranch.trimmed();
-            QStringList partsBranch = lineBranch.split(" ");
-            int voxelIdBranch = partsBranch[0].toInt();
+        int SID = mSubvolumes[subvolume_idx];
 
-            if (filteredVoxels.find(voxelId) != filteredVoxels.end())
+        /*        
+        determineCellCounts(voxelId);
+        determineBranchLengths(voxelId);
+
+        std::map<int, float> pre;
+        std::map<int, float> post;
+        float boutonSum = 0;
+        float postSum = 0;
+
+        float postAll = postAllField[voxelId];
+
+        mMapPostCellsPerVoxel[voxelId] = 0;
+        mMapPreCellsPerVoxel[voxelId] = 0;
+        mMapBoutonsPerVoxel[voxelId] = 0;
+        mMapPostsynapticSitesPerVoxel[voxelId] = 0;
+        mSynapsesPerVoxel[voxelId] = 0;
+
+        for (int i = 4; i < parts.size(); i += 2)
+        {
+            int neuronId = parts[i].toInt();
+            if (neuronId > 0 &&
+                (mappedPreIds.find(neuronId) != mappedPreIds.end()))
             {
-                voxelCount++;
-                // ################ PROCESS SINGLE VOXEL ################
-
-                determineCellCounts(voxelId);
-                determineBranchLengths(voxelId);
-
-                std::map<int, float> pre;
-                std::map<int, float> post;
-                float boutonSum = 0;
-                float postSum = 0;
-
-                float postAll = postAllField[voxelId];
-
-                mMapPostCellsPerVoxel[voxelId] = 0;
-                mMapPreCellsPerVoxel[voxelId] = 0;
-                mMapBoutonsPerVoxel[voxelId] = 0;
-                mMapPostsynapticSitesPerVoxel[voxelId] = 0;
-                mSynapsesPerVoxel[voxelId] = 0;
-
-                for (int i = 4; i < parts.size(); i += 2)
-                {
-                    int neuronId = parts[i].toInt();
-                    if (neuronId > 0 &&
-                        (mappedPreIds.find(neuronId) != mappedPreIds.end()))
-                    {
-                        // qDebug() << "unique preId" << neuronId;
-                        mMapPreCellsPerVoxel[voxelId] += preMultiplicity[neuronId];
-                        int mult = preMultiplicity[neuronId];
-                        float boutons = parts[i + 1].toFloat();
-                        boutonSum += mult * boutons;
-                        mMapBoutonsPerVoxel[voxelId] += mult * boutons;
-                        pre[neuronId] = boutons;
-                        mPreInnervatedVoxels.insert(voxelId);
-                    }
-                    else if (prunedPostIds.find(-neuronId) != prunedPostIds.end())
-                    {
-                        mMapPostCellsPerVoxel[voxelId] += 1;
-                        float pst = parts[i + 1].toFloat();
-                        postSum += pst;
-                        post[-neuronId] = pst;
-                        mMapPostsynapticSitesPerVoxel[voxelId] += postAll * pst;
-                        mPostInnervatedVoxels.insert(voxelId);
-                    }
-                }
-
-                mSynapsesCubicMicron.addSample(voxelId, Util::convertToCubicMicron(mMapBoutonsPerVoxel[voxelId]));
-
-                std::map<int, float> synPerVoxel;
-
-                for (int k = 0; k <= synK; k++)
-                {
-                    synPerVoxel[k] = 0;
-                }
-
-                int count = -1;
-
-                for (auto preIt = pre.begin(); preIt != pre.end(); preIt++)
-                {
-                    for (auto postIt = post.begin(); postIt != post.end(); postIt++)
-                    {
-                        count++;
-                        if (preIt->first != postIt->first)
-                        {
-                            float innervation = preIt->second * postIt->second;
-                            int multipl = preMultiplicity[preIt->first];
-
-                            for (int k = 0; k <= synK; k++)
-                            {
-                                float synap =
-                                    mCalculator.calculateSynapseProbability(innervation, k);
-                                synPerVoxel[k] += multipl * synap;
-                                mSynapsesPerVoxel[voxelId] += k * multipl * synap;
-                            }
-
-                            for (int j = 1; j < multipl; j++)
-                            {
-                                mSynapsesPerConnection.addSample(innervation);
-                            }
-                        }
-                    }
-                }
-
-                for (int k = 0; k <= synK; k++)
-                {
-                    mSynapsesPerConnectionOccurrences[k].push_back(synPerVoxel[k]);
-                }
+                // qDebug() << "unique preId" << neuronId;
+                mMapPreCellsPerVoxel[voxelId] += preMultiplicity[neuronId];
+                int mult = preMultiplicity[neuronId];
+                float boutons = parts[i + 1].toFloat();
+                boutonSum += mult * boutons;
+                mMapBoutonsPerVoxel[voxelId] += mult * boutons;
+                pre[neuronId] = boutons;
+                mPreInnervatedVoxels.insert(voxelId);
             }
-
-            // Register branch
-            if (filteredVoxels.find(voxelIdBranch) != filteredVoxels.end())
+            else if (prunedPostIds.find(-neuronId) != prunedPostIds.end())
             {
-                mMapPreBranchesPerVoxel[voxelIdBranch] = 0;
-                for (int i = 4; i < partsBranch.size(); i += 2)
-                {
-                    int neuronId = partsBranch[i].toInt();
-                    if (neuronId > 0 &&
-                        (mappedPreIds.find(neuronId) != mappedPreIds.end()))
-                    {
-                        // qDebug() << "unique preId" << neuronId;
-                        int branches = partsBranch[i + 1].toInt();
-                        mMapPreBranchesPerVoxel[voxelIdBranch] += branches * preMultiplicity[neuronId];
-                    }
-                }
-                determineSnippets(voxelIdBranch);
-                double axonBranches = mMapPreBranchesPerVoxel[voxelIdBranch];
-                double dendriteBranches = mMapPostBranchesPerVoxel[voxelIdBranch];
-                if (dendriteBranches != 0)
-                {
-                    mAxonDendriteRatio.addSample(voxelIdBranch, axonBranches / dendriteBranches);
-                }
-            }
-
-            // ################ REPORT UPDATE ################
-            int updateRate = totalVoxelCount / 20;
-            if (updateRate > 0 && (voxelCount % updateRate == 0) && (voxelCount != lastUpdatedVoxelCount))
-            {
-                lastUpdatedVoxelCount = voxelCount;
-                double percent = double(voxelCount + 1) * 100 / (double)totalVoxelCount;
-                QJsonObject result = createJsonResult(false);
-                //qDebug() << "RESULT" << result;
-                updateQuery(result, percent);
+                mMapPostCellsPerVoxel[voxelId] += 1;
+                float pst = parts[i + 1].toFloat();
+                postSum += pst;
+                post[-neuronId] = pst;
+                mMapPostsynapticSitesPerVoxel[voxelId] += postAll * pst;
+                mPostInnervatedVoxels.insert(voxelId);
             }
         }
-        inputFile.close();
-        inputFileBranch.close();
-    }
-    else
-    {
-        const QString msg =
-            QString("Error reading index file. Could not open file %1")
-                .arg(indexFile);
-        throw std::runtime_error(qPrintable(msg));
+
+        mSynapsesCubicMicron.addSample(voxelId, Util::convertToCubicMicron(mMapBoutonsPerVoxel[voxelId]));
+
+        std::map<int, float> synPerVoxel;
+
+        for (int k = 0; k <= synK; k++)
+        {
+            synPerVoxel[k] = 0;
+        }
+
+        int count = -1;
+
+        for (auto preIt = pre.begin(); preIt != pre.end(); preIt++)
+        {
+            for (auto postIt = post.begin(); postIt != post.end(); postIt++)
+            {
+                count++;
+                if (preIt->first != postIt->first)
+                {
+                    float innervation = preIt->second * postIt->second;
+                    int multipl = preMultiplicity[preIt->first];
+
+                    for (int k = 0; k <= synK; k++)
+                    {
+                        float synap =
+                            mCalculator.calculateSynapseProbability(innervation, k);
+                        synPerVoxel[k] += multipl * synap;
+                        mSynapsesPerVoxel[voxelId] += k * multipl * synap;
+                    }
+
+                    for (int j = 1; j < multipl; j++)
+                    {
+                        mSynapsesPerConnection.addSample(innervation);
+                    }
+                }
+            }
+        }
+
+        for (int k = 0; k <= synK; k++)
+        {
+            mSynapsesPerConnectionOccurrences[k].push_back(synPerVoxel[k]);
+        }
+
+        mMapPreBranchesPerVoxel[voxelIdBranch] = 0;
+        for (int i = 4; i < partsBranch.size(); i += 2)
+        {
+            int neuronId = partsBranch[i].toInt();
+            if (neuronId > 0 &&
+                (mappedPreIds.find(neuronId) != mappedPreIds.end()))
+            {
+                // qDebug() << "unique preId" << neuronId;
+                int branches = partsBranch[i + 1].toInt();
+                mMapPreBranchesPerVoxel[voxelIdBranch] += branches * preMultiplicity[neuronId];
+            }
+        }
+        determineSnippets(voxelIdBranch);
+        double axonBranches = mMapPreBranchesPerVoxel[voxelIdBranch];
+        double dendriteBranches = mMapPostBranchesPerVoxel[voxelIdBranch];
+        if (dendriteBranches != 0)
+        {
+            mAxonDendriteRatio.addSample(voxelIdBranch, axonBranches / dendriteBranches);
+        }
+
+        // ################ REPORT UPDATE ################
+        int updateRate = totalVoxelCount / 20;
+        if (updateRate > 0 && (voxelCount % updateRate == 0) && (voxelCount != lastUpdatedVoxelCount))
+        {
+            lastUpdatedVoxelCount = voxelCount;
+            double percent = double(voxelCount + 1) * 100 / (double)totalVoxelCount;
+            QJsonObject result = createJsonResult(false);
+            updateQuery(result, percent);
+        }
+        */
     }
 
     QJsonObject result = createJsonResult(true);
     updateQuery(result, 100);
-
-    */
 }
 
 float VoxelQueryHandler::calculateSynapseProbability(float innervation, int k)

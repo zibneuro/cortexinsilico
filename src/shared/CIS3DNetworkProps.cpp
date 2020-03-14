@@ -44,10 +44,12 @@ void NetworkProps::loadFilesForQuery(QString networkName)
 
     if (!networkName.isEmpty())
     {
-        const QString neuronsFile = CIS3D::getNeuronsFileName(dataRootDir.filePath(networkName));
+        networkRootDir = QDir(dataRootDir.filePath(networkName));
+
+        const QString neuronsFile = networkRootDir.filePath("neurons.csv");
         neurons.loadCSV(neuronsFile);
 
-        const QString redundancyFile = CIS3D::getAxonRedundancyMapFileName(dataRootDir.filePath(networkName));
+        const QString redundancyFile = networkRootDir.filePath("axon_mapping.csv");
         axonRedundancyMap.loadCSV(redundancyFile);
     }
 }
