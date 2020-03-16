@@ -8,6 +8,7 @@
 #include "Histogram.h"
 #include "QueryHelpers.h"
 #include "RandomGenerator.h"
+#include "Subvolume.h"
 #include "Distribution.h"
 #include <QJsonObject>
 #include <QString>
@@ -39,7 +40,7 @@ private:
 
   QString getMode(QJsonObject& mQuery);
   void determineCellCounts(int voxelId);
-  void determineBranchLengths(int voxelId);
+  void determineBranchLengths(Subvolume& subvolume, std::map<int, int>& preDuplicity);
   void determineSnippets(int voxelId);
 
   Statistics mStatistics;

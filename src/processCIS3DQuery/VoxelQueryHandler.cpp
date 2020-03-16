@@ -11,6 +11,7 @@
 #include "Util.h"
 #include "UtilIO.h"
 #include "PstAll.h"
+#include "Subvolume.h"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
@@ -293,6 +294,7 @@ void VoxelQueryHandler::doProcessQuery()
     IdList postIds = mSelection.SelectionB();
     PstAll pstAll;
     pstAll.load(mNetwork.networkRootDir.filePath("agg_pst.csv"));
+    QString subvolumeDir = mNetwork.networkRootDir.filePath("subvolumes");
 
     // ################# FILTER NEURONS #################
     for (int i = 0; i < preIds.size(); i++)
@@ -367,7 +369,10 @@ void VoxelQueryHandler::doProcessQuery()
         }
 
         int SID = mSubvolumes[subvolume_idx];
+        Subvolume subvolume;
+        subvolume.load(subvolumeDir, SID, mPreIds, mappedPreIds, mPostIds);
 
+        determineBranchLengths(subvolume, preMultiplicity);
         /*        
         determineCellCounts(voxelId);
         determineBranchLengths(voxelId);
@@ -472,17 +477,13 @@ void VoxelQueryHandler::doProcessQuery()
         {
             mAxonDendriteRatio.addSample(voxelIdBranch, axonBranches / dendriteBranches);
         }
+        */
 
         // ################ REPORT UPDATE ################
-        int updateRate = totalVoxelCount / 20;
-        if (updateRate > 0 && (voxelCount % updateRate == 0) && (voxelCount != lastUpdatedVoxelCount))
-        {
-            lastUpdatedVoxelCount = voxelCount;
-            double percent = double(voxelCount + 1) * 100 / (double)totalVoxelCount;
-            QJsonObject result = createJsonResult(false);
-            updateQuery(result, percent);
-        }
-        */
+        
+        double percent = subvolume_idx / mSubvolumes.size();
+        QJsonObject result = createJsonResult(false);
+        updateQuery(result, percent);            
     }
 
     QJsonObject result = createJsonResult(true);
@@ -535,45 +536,51 @@ void VoxelQueryHandler::determineCellCounts(int voxelId)
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
 }
 
-void VoxelQueryHandler::determineBranchLengths(int voxelId)
+void VoxelQueryHandler::determineBranchLengths(Subvolume &subvolume, std::map<int, int> &preDuplicity)
 {
-    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_stats" + QDir::separator() + QString::number(voxelId + 1));
-    std::vector<std::vector<double>> data = UtilIO::readCsv(filename, true);
-    mAxonLengthPerVoxel[voxelId] = 0;
-    mDendriteLengthPerVoxel[voxelId] = 0;
+    int SID = subvolume.SID;
+
+    mAxonLengthPerVoxel[SID] = 0;
+    mDendriteLengthPerVoxel[SID] = 0;
+
     std::set<int> celltypesAxon;
     std::set<int> celltypesDendrite;
 
-    for (auto it = data.begin(); it != data.end(); it++)
+    for (auto it = subvolume.presynaptic.begin(); it != subvolume.presynaptic.end(); it++)
     {
-        int neuronId = static_cast<int>((*it)[0]);
-        double apicalLength = (*it)[1];
-        double basalLength = (*it)[3];
-        double axonLength = (*it)[5];
-        if (mPreIds.find(neuronId) != mPreIds.end())
+        float axonLength = it->second.length  * preDuplicity[it->first];
+        mAxonLengthPerVoxel[SID] += 0.000001 * axonLength; //convert to [m]
+        if (axonLength > 0)
         {
-            mAxonLengthPerVoxel[voxelId] += 0.000001 * axonLength; //convert to [m]
-            if (axonLength > 0)
-            {
-                celltypesAxon.insert(mNetwork.neurons.getCellTypeId(neuronId));
-            }
-        }
-        if (mPostIds.find(neuronId) != mPostIds.end())
-        {
-            mDendriteLengthPerVoxel[voxelId] += 0.0001 * (apicalLength + basalLength); //convert to [cm]
-            if (apicalLength + basalLength > 0)
-            {
-                celltypesDendrite.insert(mNetwork.neurons.getCellTypeId(neuronId));
+            int cellTypeId = mNetwork.neurons.getCellTypeId(it->first);
+            if(cellTypeId <= 10){
+                celltypesAxon.insert(cellTypeId);
             }
         }
     }
 
-    mVariabilityAxon[voxelId] = static_cast<float>(celltypesAxon.size()) / 11;
-    mVariabilityDendrite[voxelId] = static_cast<float>(celltypesDendrite.size()) / 10;
+    for (auto it = subvolume.postsynaptic.begin(); it != subvolume.postsynaptic.end(); it++)
+    {
+        float dendriteLength = it->second.length;
+        mDendriteLengthPerVoxel[SID] += 0.0001 * dendriteLength; //convert to [cm]
+        if (dendriteLength > 0)
+        {
+            int cellTypeId = mNetwork.neurons.getCellTypeId(it->first);
+            if(cellTypeId <= 10){
+                celltypesDendrite.insert(cellTypeId);
+            }
+        }
+    }
+
+    mVariabilityAxon[SID] = static_cast<float>(celltypesAxon.size()) / 11;
+    mVariabilityDendrite[SID] = static_cast<float>(celltypesDendrite.size()) / 10;
+
+    /*
     mTestOutput[voxelId].push_back(static_cast<float>(mDendriteLengthPerVoxel[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mAxonLengthPerVoxel[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityDendrite[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityAxon[voxelId]));
+    */
 }
 
 void VoxelQueryHandler::determineSnippets(int voxelId)

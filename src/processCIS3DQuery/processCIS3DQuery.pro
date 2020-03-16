@@ -60,7 +60,8 @@ SOURCES += \
     ../shared/Distribution.cpp \    
     ../shared/FileHelper.cpp \    
     ../shared/Grid.cpp \
-    ../shared/PstAll.cpp \    
+    ../shared/PstAll.cpp \
+    ../shared/Subvolume.cpp \    
     DataUploadHandler.cpp \
     QueryHelpers.cpp \
     ../shared/QueryHandler.cpp \
@@ -105,7 +106,8 @@ HEADERS += \
     ../shared/Distribution.h \      
     ../shared/FileHelper.h \     
     ../shared/Grid.h \
-    ../shared/PstAll.h \       
+    ../shared/PstAll.h \
+    ../shared/Subvolume.h \       
     DataUploadHandler.h \        
     QueryHelpers.h \
     ../shared/QueryHandler.h \
