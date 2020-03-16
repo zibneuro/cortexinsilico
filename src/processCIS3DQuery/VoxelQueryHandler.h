@@ -10,6 +10,7 @@
 #include "RandomGenerator.h"
 #include "Subvolume.h"
 #include "Distribution.h"
+#include "PstAll.h"
 #include <QJsonObject>
 #include <QString>
 #include <vector>
@@ -38,10 +39,9 @@ private:
   void createStatistics(std::map<int, T> &values, Statistics &stat,
                         Histogram &histogram);
 
-  QString getMode(QJsonObject& mQuery);
-  void determineCellCounts(int voxelId);
-  void determineBranchLengths(Subvolume& subvolume, std::map<int, int>& preDuplicity);
-  void determineSnippets(int voxelId);
+  void determineCellCounts(Subvolume& subvolume);
+  void determineBranches(Subvolume& subvolume, std::map<int, int>& preDuplicity);
+  void determineSynapses(Subvolume& subvolume, std::map<int, int>& preDuplicity, PstAll& pstAll);
 
   Statistics mStatistics;
   QString mTempFolder;
@@ -84,6 +84,7 @@ private:
   std::map<int, std::vector<float> > mTestOutput; 
 
   std::vector<int> mSubvolumes;
+  int mSynK;
 };
 
 #endif // VOXELQUERYHANDLER_H

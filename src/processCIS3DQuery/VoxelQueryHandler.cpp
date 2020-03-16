@@ -41,25 +41,6 @@ void VoxelQueryHandler::createStatistics(std::map<int, T> &values,
     }
 }
 
-QString VoxelQueryHandler::getMode(QJsonObject &mQuery)
-{
-    bool hasPre = !mQuery["cellSelection"].toObject()["selectionA"].toObject()["conditions"].toArray().empty();
-    bool hasPost = !mQuery["cellSelection"].toObject()["selectionB"].toObject()["conditions"].toArray().empty();
-    bool hasSubvolume = !mQuery["cellSelection"].toObject()["selectionC"].toObject()["conditions"].toArray().empty();
-    if (!hasSubvolume)
-    {
-        return "prePost";
-    }
-    else if (hasPre || hasPost)
-    {
-        return "prePostVoxel";
-    }
-    else
-    {
-        return "voxel";
-    }
-}
-
 QJsonObject
 VoxelQueryHandler::createJsonResult(bool createFile)
 {
@@ -354,8 +335,8 @@ void VoxelQueryHandler::doProcessQuery()
 
     // ################# LOOP OVER SUBVOLUMES #################
 
-    int synK = 10;
-    for (int q = 0; q <= synK; q++)
+    mSynK = 10;
+    for (int q = 0; q <= mSynK; q++)
     {
         std::vector<float> foo;
         mSynapsesPerConnectionOccurrences[q] = foo;
@@ -372,118 +353,19 @@ void VoxelQueryHandler::doProcessQuery()
         Subvolume subvolume;
         subvolume.load(subvolumeDir, SID, mPreIds, mappedPreIds, mPostIds);
 
-        determineBranchLengths(subvolume, preMultiplicity);
-        /*        
-        determineCellCounts(voxelId);
-        determineBranchLengths(voxelId);
-
-        std::map<int, float> pre;
-        std::map<int, float> post;
-        float boutonSum = 0;
-        float postSum = 0;
-
-        float postAll = postAllField[voxelId];
-
-        mMapPostCellsPerVoxel[voxelId] = 0;
-        mMapPreCellsPerVoxel[voxelId] = 0;
-        mMapBoutonsPerVoxel[voxelId] = 0;
-        mMapPostsynapticSitesPerVoxel[voxelId] = 0;
-        mSynapsesPerVoxel[voxelId] = 0;
-
-        for (int i = 4; i < parts.size(); i += 2)
-        {
-            int neuronId = parts[i].toInt();
-            if (neuronId > 0 &&
-                (mappedPreIds.find(neuronId) != mappedPreIds.end()))
-            {
-                // qDebug() << "unique preId" << neuronId;
-                mMapPreCellsPerVoxel[voxelId] += preMultiplicity[neuronId];
-                int mult = preMultiplicity[neuronId];
-                float boutons = parts[i + 1].toFloat();
-                boutonSum += mult * boutons;
-                mMapBoutonsPerVoxel[voxelId] += mult * boutons;
-                pre[neuronId] = boutons;
-                mPreInnervatedVoxels.insert(voxelId);
-            }
-            else if (prunedPostIds.find(-neuronId) != prunedPostIds.end())
-            {
-                mMapPostCellsPerVoxel[voxelId] += 1;
-                float pst = parts[i + 1].toFloat();
-                postSum += pst;
-                post[-neuronId] = pst;
-                mMapPostsynapticSitesPerVoxel[voxelId] += postAll * pst;
-                mPostInnervatedVoxels.insert(voxelId);
-            }
-        }
-
-        mSynapsesCubicMicron.addSample(voxelId, Util::convertToCubicMicron(mMapBoutonsPerVoxel[voxelId]));
-
-        std::map<int, float> synPerVoxel;
-
-        for (int k = 0; k <= synK; k++)
-        {
-            synPerVoxel[k] = 0;
-        }
-
-        int count = -1;
-
-        for (auto preIt = pre.begin(); preIt != pre.end(); preIt++)
-        {
-            for (auto postIt = post.begin(); postIt != post.end(); postIt++)
-            {
-                count++;
-                if (preIt->first != postIt->first)
-                {
-                    float innervation = preIt->second * postIt->second;
-                    int multipl = preMultiplicity[preIt->first];
-
-                    for (int k = 0; k <= synK; k++)
-                    {
-                        float synap =
-                            mCalculator.calculateSynapseProbability(innervation, k);
-                        synPerVoxel[k] += multipl * synap;
-                        mSynapsesPerVoxel[voxelId] += k * multipl * synap;
-                    }
-
-                    for (int j = 1; j < multipl; j++)
-                    {
-                        mSynapsesPerConnection.addSample(innervation);
-                    }
-                }
-            }
-        }
-
-        for (int k = 0; k <= synK; k++)
-        {
-            mSynapsesPerConnectionOccurrences[k].push_back(synPerVoxel[k]);
-        }
-
-        mMapPreBranchesPerVoxel[voxelIdBranch] = 0;
-        for (int i = 4; i < partsBranch.size(); i += 2)
-        {
-            int neuronId = partsBranch[i].toInt();
-            if (neuronId > 0 &&
-                (mappedPreIds.find(neuronId) != mappedPreIds.end()))
-            {
-                // qDebug() << "unique preId" << neuronId;
-                int branches = partsBranch[i + 1].toInt();
-                mMapPreBranchesPerVoxel[voxelIdBranch] += branches * preMultiplicity[neuronId];
-            }
-        }
-        determineSnippets(voxelIdBranch);
-        double axonBranches = mMapPreBranchesPerVoxel[voxelIdBranch];
-        double dendriteBranches = mMapPostBranchesPerVoxel[voxelIdBranch];
-        if (dendriteBranches != 0)
-        {
-            mAxonDendriteRatio.addSample(voxelIdBranch, axonBranches / dendriteBranches);
-        }
-        */
+        determineBranches(subvolume, preMultiplicity);
+        determineCellCounts(subvolume);
+        determineSynapses(subvolume, preMultiplicity, pstAll);
 
         // ################ REPORT UPDATE ################
-        
-        double percent = subvolume_idx / mSubvolumes.size();
-        QJsonObject result = createJsonResult(false);
-        updateQuery(result, percent);            
+
+        if (subvolume_idx % 10 == 0)
+        {
+            double percent = 100 * static_cast<float>(subvolume_idx + 1) / static_cast<float>(mSubvolumes.size());
+            qDebug() << "Percent" << percent;
+            QJsonObject result = createJsonResult(false);
+            updateQuery(result, percent);
+        }
     }
 
     QJsonObject result = createJsonResult(true);
@@ -515,45 +397,66 @@ VoxelQueryHandler::getResultKey()
     return "voxelResult";
 }
 
-void VoxelQueryHandler::determineCellCounts(int voxelId)
+void VoxelQueryHandler::determineCellCounts(Subvolume &subvolume)
 {
-    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "subvolume_neuronIds" + QDir::separator() + QString::number(voxelId + 1));
-    std::vector<std::vector<double>> data = UtilIO::readCsv(filename, true);
+    int SID = subvolume.SID;
+
     std::set<int> celltypes;
-    mPreCellbodiesPerVoxel[voxelId] = 0;
-    mPostCellbodiesPerVoxel[voxelId] = 0;
-    for (auto it = data.begin(); it != data.end(); it++)
-    {
-        int neuronId = static_cast<int>((*it)[0]);
-        if (mPreIds.find(neuronId) != mPreIds.end() || mPostIds.find(neuronId) != mPostIds.end())
+    mPreCellbodiesPerVoxel[SID] = 0;
+    mPostCellbodiesPerVoxel[SID] = 0;
+    for (auto it = subvolume.cellbodies.begin(); it != subvolume.cellbodies.end(); it++)
+    {        
+        int cellTypeId = mNetwork.neurons.getCellTypeId(*it);
+        if (cellTypeId < 10)
         {
-            mPreCellbodiesPerVoxel[voxelId] += 1;
-            celltypes.insert(mNetwork.neurons.getCellTypeId(neuronId));
+            mPreCellbodiesPerVoxel[SID] += 1;
+            celltypes.insert(cellTypeId);
         }
     }
-    mVariabilityCellbodies[voxelId] = static_cast<float>(celltypes.size()) / 10;
+    mVariabilityCellbodies[SID] = static_cast<float>(celltypes.size()) / 10;
+    /*
     mTestOutput[voxelId].push_back(static_cast<float>(mPreCellbodiesPerVoxel[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
+    */
 }
 
-void VoxelQueryHandler::determineBranchLengths(Subvolume &subvolume, std::map<int, int> &preDuplicity)
+void VoxelQueryHandler::determineBranches(Subvolume &subvolume, std::map<int, int> &preDuplicity)
 {
     int SID = subvolume.SID;
 
     mAxonLengthPerVoxel[SID] = 0;
     mDendriteLengthPerVoxel[SID] = 0;
+    mMapPreBranchesPerVoxel[SID] = 0;
+    mMapPostBranchesPerVoxel[SID] = 0;
+    mMapPreCellsPerVoxel[SID] = 0;
+    mMapPostCellsPerVoxel[SID] = 0;
+
+    if (!subvolume.presynaptic.empty())
+    {
+        mPreInnervatedVoxels.insert(SID);
+    }
+    if (!subvolume.postsynaptic.empty())
+    {
+        mPostInnervatedVoxels.insert(SID);
+    }
 
     std::set<int> celltypesAxon;
     std::set<int> celltypesDendrite;
 
     for (auto it = subvolume.presynaptic.begin(); it != subvolume.presynaptic.end(); it++)
     {
-        float axonLength = it->second.length  * preDuplicity[it->first];
+        int duplicity = preDuplicity[it->first];
+
+        mMapPreBranchesPerVoxel[SID] += duplicity * it->second.branchlets;
+        mMapPreCellsPerVoxel[SID] += duplicity;
+
+        float axonLength = duplicity * it->second.length;
         mAxonLengthPerVoxel[SID] += 0.000001 * axonLength; //convert to [m]
         if (axonLength > 0)
         {
             int cellTypeId = mNetwork.neurons.getCellTypeId(it->first);
-            if(cellTypeId <= 10){
+            if (cellTypeId <= 10)
+            {
                 celltypesAxon.insert(cellTypeId);
             }
         }
@@ -561,12 +464,16 @@ void VoxelQueryHandler::determineBranchLengths(Subvolume &subvolume, std::map<in
 
     for (auto it = subvolume.postsynaptic.begin(); it != subvolume.postsynaptic.end(); it++)
     {
+        mMapPostBranchesPerVoxel[SID] += it->second.branchlets;
+        mMapPostCellsPerVoxel[SID] += 1;
+
         float dendriteLength = it->second.length;
         mDendriteLengthPerVoxel[SID] += 0.0001 * dendriteLength; //convert to [cm]
         if (dendriteLength > 0)
         {
             int cellTypeId = mNetwork.neurons.getCellTypeId(it->first);
-            if(cellTypeId <= 10){
+            if (cellTypeId <= 10)
+            {
                 celltypesDendrite.insert(cellTypeId);
             }
         }
@@ -574,6 +481,13 @@ void VoxelQueryHandler::determineBranchLengths(Subvolume &subvolume, std::map<in
 
     mVariabilityAxon[SID] = static_cast<float>(celltypesAxon.size()) / 11;
     mVariabilityDendrite[SID] = static_cast<float>(celltypesDendrite.size()) / 10;
+
+    double axonBranches = mMapPreBranchesPerVoxel[SID];
+    double dendriteBranches = mMapPostBranchesPerVoxel[SID];
+    if (dendriteBranches != 0)
+    {
+        mAxonDendriteRatio.addSample(SID, axonBranches / dendriteBranches);
+    }
 
     /*
     mTestOutput[voxelId].push_back(static_cast<float>(mDendriteLengthPerVoxel[voxelId]));
@@ -583,19 +497,45 @@ void VoxelQueryHandler::determineBranchLengths(Subvolume &subvolume, std::map<in
     */
 }
 
-void VoxelQueryHandler::determineSnippets(int voxelId)
+void VoxelQueryHandler::determineSynapses(Subvolume &subvolume, std::map<int, int> &preDuplicity, PstAll& pstAll)
 {
-    mMapPostBranchesPerVoxel[voxelId] = 0;
-    QString voxelStr = mVoxelIdVoxelStr[voxelId];
-    QString filename = QDir::cleanPath(mDataRoot + QDir::separator() + "features_subvolume_cube" + QDir::separator() + UtilIO::getSubvolumeFileName(voxelStr));
-    std::vector<std::vector<double>> data = UtilIO::readCsv(filename, true);
-    for (auto it = data.begin(); it != data.end(); it++)
+    int SID = subvolume.SID;
+
+    mMapBoutonsPerVoxel[SID] = 0;
+    mSynapsesPerVoxel[SID] = 0;
+
+    std::map<int, float> synPerVoxel;
+    for (int k = 0; k <= mSynK; k++)
     {
-        int neuronId = static_cast<int>((*it)[0]);
-        int dendriteSnippets = static_cast<int>((*it)[1]);
-        if (mPostIds.find(neuronId) != mPostIds.end())
+        synPerVoxel[k] = 0;
+    }
+
+    for (auto itPre = subvolume.presynaptic.begin(); itPre != subvolume.presynaptic.end(); itPre++)
+    {
+        int duplicity = preDuplicity[itPre->first];
+        float boutons =  itPre->second.boutons;
+        int cellTypeId =  mNetwork.neurons.getCellTypeId(itPre->first);
+        bool excitatory = mNetwork.cellTypes.isExcitatory(cellTypeId);                
+        float pstAllVal =  excitatory ? pstAll.get(SID).exc : pstAll.get(SID).inh;
+        
+        for (auto itPost = subvolume.postsynaptic.begin(); itPost != subvolume.postsynaptic.end(); itPost++)
         {
-            mMapPostBranchesPerVoxel[voxelId] += dendriteSnippets;
+            float pst = excitatory ? itPost->second.pstExc : itPost->second.pstInh;            
+            float innervation = boutons * pst / pstAllVal;            
+            for (int k = 0; k <= mSynK; k++)
+            {
+                float synap =
+                    mCalculator.calculateSynapseProbability(innervation, k);
+                synPerVoxel[k] += duplicity * synap;
+                mSynapsesPerVoxel[SID] += k * duplicity * synap;
+            }                        
         }
     }
+
+    for (int k = 0; k <= mSynK; k++)
+    {
+        mSynapsesPerConnectionOccurrences[k].push_back(synPerVoxel[k]);
+    }
+
+    mSynapsesCubicMicron.addSample(SID, Util::convertToCubicMicron(mSynapsesPerVoxel[SID]));    
 }

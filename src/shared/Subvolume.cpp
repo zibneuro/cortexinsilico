@@ -27,7 +27,6 @@ void Subvolume::loadPresynaptic(QString filename, std::set<int> &whitelistPre)
     }
 
     QTextStream in(&file);
-    in.readLine();
     QString line = in.readLine();
     line = in.readLine();
     while (!line.isNull())
@@ -57,7 +56,6 @@ void Subvolume::loadPostsynaptic(QString filename, std::set<int> &whitelistPost)
     }
 
     QTextStream in(&file);
-    in.readLine();
     QString line = in.readLine();
     line = in.readLine();
     while (!line.isNull())
@@ -88,7 +86,6 @@ void Subvolume::loadCellbodies(QString filename, std::set<int> &whitelistPre, st
     }
 
     QTextStream in(&file);
-    in.readLine();
     QString line = in.readLine();
     line = in.readLine();
     while (!line.isNull())
