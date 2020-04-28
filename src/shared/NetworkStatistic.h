@@ -63,6 +63,8 @@ public:
     */
     void createCSVFile(FileHelper& fileHelper) const;
 
+    virtual void writeSubquery(FileHelper& fileHelper);
+
     /**
         Retrieves the total number of connections to be analysed.
         @return The number of connections.
@@ -80,6 +82,8 @@ public:
     void update(NetworkStatistic* stat);
 
     void complete(NetworkStatistic* stat);
+
+    virtual bool hasSubquery(QString& subquery, QString& subqueryResultKey);
 
 protected:
     /**

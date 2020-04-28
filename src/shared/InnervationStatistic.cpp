@@ -166,3 +166,15 @@ InnervationStatistic::doCreateJson(QJsonObject& obj) const
     obj.insert("innervationPerPost", Util::createJsonStatistic(innervationPerPost));
     obj.insert("convergence", Util::createJsonStatistic(convergence));
 }
+
+bool InnervationStatistic::hasSubquery(QString& subquery, QString& subqueryResultKey) {
+    subquery = "pynn";
+    subqueryResultKey = "pynnResult";
+    return true;
+}
+
+void InnervationStatistic::writeSubquery(FileHelper& fileHelper) {
+    fileHelper.openFile("test.txt");
+    fileHelper.write("test");
+    fileHelper.closeFile();
+}

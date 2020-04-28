@@ -19,6 +19,14 @@ void FileHelper::initFolder(QJsonObject config, QString queryId)
     UtilIO::makeDir(mTempFolder);
 }
 
+void FileHelper::initFolder(QJsonObject config, QString queryId, QString subquery){
+    mConfig = config;
+    mQueryId = queryId + "_" + subquery;
+    mTempFolder = QDir::cleanPath(mConfig["WORKER_TMP_DIR"].toString() +
+                                  QDir::separator() + mQueryId);
+    UtilIO::makeDir(mTempFolder);
+}
+
 void FileHelper::openFile(QString filename)
 {
     QString filepath =

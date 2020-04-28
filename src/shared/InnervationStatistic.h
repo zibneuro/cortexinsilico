@@ -23,6 +23,10 @@ public:
                          FormulaCalculator& calculator,
                          QueryHandler* handler);
 
+    bool hasSubquery(QString& subquery, QString& subqueryResultKey) override;
+    
+    void writeSubquery(FileHelper& fileHelper) override;
+
 protected:
     /**
         Performs the actual computation based on the specified neurons.

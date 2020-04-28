@@ -11,6 +11,7 @@ class FileHelper
     FileHelper();
 
     void initFolder(QJsonObject config, QString queryId);
+    void initFolder(QJsonObject config, QString queryId, QString subquery);
     void openFile(QString filename);
     void write(QString line);
     void closeFile();

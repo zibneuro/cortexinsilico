@@ -135,3 +135,13 @@ NetworkStatistic::getConnectionsDone() const
 {
     return mConnectionsDone;
 }
+
+bool NetworkStatistic::hasSubquery(QString& subquery, QString& subqueryResultKey) {
+    subquery = "";
+    subqueryResultKey = "";
+    return false;
+}
+
+void NetworkStatistic::writeSubquery(FileHelper& /*fileHelper*/) {
+
+}

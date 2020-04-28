@@ -19,6 +19,7 @@
 #include <QJsonDocument>
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkRequest>
+#include <QDebug>
 #include <stdexcept>
 #include <ctime>
 
@@ -111,13 +112,31 @@ QueryHandler::reportComplete(NetworkStatistic* stat)
     stat->createCSVFile(fileHelper);
 
     QJsonObject result = stat->createJson();
-    fileHelper.uploadFolder(result);    
+    fileHelper.uploadFolder(result);
+    
+    QJsonObject query = mQuery;
 
+    QString subquery;
+    QString subqueryResultKey;
+    if(stat->hasSubquery(subquery, subqueryResultKey)){
+        FileHelper fileHelperSub;
+        fileHelperSub.initFolder(mConfig, mQueryId, subquery);
+
+        fileHelperSub.openFile("specifications.csv");
+        fileHelperSub.write(mResultFileHeader);
+        fileHelperSub.closeFile();
+
+        stat->writeSubquery(fileHelperSub);
+
+        QJsonObject resultSub;
+        fileHelperSub.uploadFolder(resultSub);
+        query.insert(subqueryResultKey, resultSub);
+    }    
+    
+    QString resultKey = getResultKey();
     QJsonObject queryStatus;
     queryStatus.insert("statusMessage", "");
     queryStatus.insert("progress", 100);
-    QJsonObject query = mQuery;
-    QString resultKey = getResultKey();
     query.insert("status", queryStatus);
     query.insert(resultKey, result);
     writeResult(query);
@@ -239,6 +258,8 @@ QueryHandler::uploadToS3(const QString& key, const QString& filename)
     arguments.append(mConfig["AWS_SECRET_KEY_CIS3D"].toString());
     arguments.append(mConfig["AWS_S3_REGION_CIS3D"].toString());
     arguments.append(mConfig["AWS_S3_BUCKET_CIS3D"].toString());
+
+    qDebug() << "UPLOAD" << program << arguments;
 
     return QProcess::execute(program, arguments);
 }
