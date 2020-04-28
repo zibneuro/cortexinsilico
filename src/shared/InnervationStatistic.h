@@ -3,6 +3,8 @@
 
 #include "NetworkStatistic.h"
 #include "Histogram.h"
+#include <vector>
+#include <map>
 
 class SparseVectorCache;
 
@@ -48,6 +50,13 @@ protected:
     void doCreateCSV(FileHelper& fileHelper) const override;
 
 private:
+
+    struct PynnPerPre {
+        std::vector<int> preIds;
+        std::vector<int> postIds;
+        std::vector<float> probabilities;
+    };
+
     Histogram innervationHisto;
     Histogram connProbHisto;
 
@@ -67,6 +76,10 @@ private:
     int numPreNeurons;
     int numPostNeurons;
     int numPreNeuronsUnique;
+    
+    int maxPynn;
+    bool exportPynn;
+    std::map<int, PynnPerPre> pynnData;
 };
 
 #endif // INNERVATION_H

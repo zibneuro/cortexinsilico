@@ -27,6 +27,7 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
     numPreNeurons = 0;
     numPostNeurons = 0;
     numPreNeuronsUnique = 0;
+    maxPynn = 5000;
 }
 
 
@@ -46,6 +47,8 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
     this->numPreNeurons = selection.SelectionA().size();
     this->mNumConnections = (long long)(this->numPreNeurons) * (long long)(this->numPostNeurons);
 
+    exportPynn = this->numPostNeurons <= maxPynn && this->numPreNeurons <= maxPynn;
+
     for (int i = 0; i < selection.SelectionA().size(); ++i)
     {
         const int preId = selection.SelectionA()[i];
@@ -53,10 +56,18 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
         if (preIds.find(mappedPreId) == preIds.end())
         {
             preIds[mappedPreId] = 1;
+            if(exportPynn) {
+                PynnPerPre foo;
+                foo.preIds.push_back(preId);
+                pynnData[mappedPreId] = foo;
+            }
         }
         else
         {
             preIds[mappedPreId] += 1;
+            if(exportPynn) {
+                pynnData[mappedPreId].preIds.push_back(preId);
+            }
         }
     }
 
@@ -90,7 +101,7 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
 
             const float innervation = mInnervationMatrix->getValue(itPre->first, postId, postTarget);
             currentPreInnervation += innervation;
-            float connProb = mCalculator.calculateConnectionProbability(innervation);
+            float connProb = mCalculator.calculateConnectionProbability(innervation);        
 
             for (int k = 0; k < itPre->second; k++)
             {
@@ -99,6 +110,11 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
                 this->innervation.addSample(innervation);
                 this->connProb.addSample(connProb);
                 postInnervation[postId] += innervation;
+            }
+
+            if(exportPynn){
+                pynnData[itPre->first].postIds.push_back(postId);
+                pynnData[itPre->first].probabilities.push_back(connProb);
             }
         }
 
@@ -174,7 +190,60 @@ bool InnervationStatistic::hasSubquery(QString& subquery, QString& subqueryResul
 }
 
 void InnervationStatistic::writeSubquery(FileHelper& fileHelper) {
-    fileHelper.openFile("test.txt");
-    fileHelper.write("test");
+
+    if(!exportPynn){
+        fileHelper.openFile("README.txt");
+        fileHelper.write("PyNN export is restricted for pre- and postsynaptic neuron selections smaller or equal than " + QString::number(maxPynn) + " neurons.");
+        fileHelper.write(" Note than you can specify a downsampling factor in the network specification settings.");
+        fileHelper.closeFile();
+        return;
+    }
+
+    std::vector<int> preIds;
+    std::vector<int> postIds;
+    std::vector<float> weights;
+
+    for(auto it = pynnData.begin(); it != pynnData.end(); it++){
+        std::vector<int> preIdsCurrent = it->second.preIds;
+        std::vector<int> postIdsCurrent = it->second.postIds;
+        std::vector<float> weightsCurrent = it->second.probabilities;
+
+        for(auto itPre = preIdsCurrent.begin(); itPre != preIdsCurrent.end(); itPre++){
+            for(unsigned int i = 0; i < postIdsCurrent.size(); i++){
+                int postId = postIdsCurrent[i];
+                float probability = weightsCurrent[i];
+                preIds.push_back(*itPre);
+                postIds.push_back(postId);
+                weights.push_back(probability);
+            }
+        }
+    }
+    
+    fileHelper.openFile("neuron_indices.txt");
+    fileHelper.write("[\n");
+    for(unsigned int i= 0; i< preIds.size(); i++){
+        QString line = "["+QString::number(preIds[i])+","+QString::number(postIds[i])+"]";        
+        if(i < preIds.size()-1){
+            line += ",\n";
+        } else {
+            line += "\n";
+        }
+        fileHelper.write(line);
+    }
+    fileHelper.write("]\n");
     fileHelper.closeFile();
+
+    fileHelper.openFile("weights.txt");
+    fileHelper.write("[\n");
+    for(unsigned int i= 0; i< weights.size(); i++){
+        QString line = ""+QString::number(weights[i],'g',3);        
+        if(i < weights.size()-1){
+            line += ",\n";
+        } else {
+            line += "\n";
+        }
+        fileHelper.write(line);
+    }
+    fileHelper.write("]\n");
+    fileHelper.closeFile();    
 }
