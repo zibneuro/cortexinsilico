@@ -3,6 +3,7 @@
 
 #include "NetworkStatistic.h"
 #include "Histogram.h"
+#include "PyNNExport.h"
 #include <vector>
 #include <map>
 
@@ -51,12 +52,6 @@ protected:
 
 private:
 
-    struct PynnPerPre {
-        std::vector<int> preIds;
-        std::vector<int> postIds;
-        std::vector<float> probabilities;
-    };
-
     Histogram innervationHisto;
     Histogram connProbHisto;
 
@@ -79,7 +74,7 @@ private:
     
     int maxPynn;
     bool exportPynn;
-    std::map<int, PynnPerPre> pynnData;
+    std::map<int, ExportData> pynnData;
 };
 
 #endif // INNERVATION_H

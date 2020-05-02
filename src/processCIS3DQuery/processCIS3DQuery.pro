@@ -61,7 +61,8 @@ SOURCES += \
     ../shared/FileHelper.cpp \    
     ../shared/Grid.cpp \
     ../shared/PstAll.cpp \
-    ../shared/Subvolume.cpp \    
+    ../shared/Subvolume.cpp \
+    ../shared/PyNNExport.cpp \    
     DataUploadHandler.cpp \
     QueryHelpers.cpp \
     ../shared/QueryHandler.cpp \
@@ -107,7 +108,8 @@ HEADERS += \
     ../shared/FileHelper.h \     
     ../shared/Grid.h \
     ../shared/PstAll.h \
-    ../shared/Subvolume.h \       
+    ../shared/Subvolume.h \  
+    ../shared/PyNNExport.h \       
     DataUploadHandler.h \        
     QueryHelpers.h \
     ../shared/QueryHandler.h \

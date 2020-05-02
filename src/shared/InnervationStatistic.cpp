@@ -57,7 +57,7 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
         {
             preIds[mappedPreId] = 1;
             if(exportPynn) {
-                PynnPerPre foo;
+                ExportData foo;
                 foo.preIds.push_back(preId);
                 pynnData[mappedPreId] = foo;
             }
@@ -115,6 +115,7 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
             if(exportPynn){
                 pynnData[itPre->first].postIds.push_back(postId);
                 pynnData[itPre->first].probabilities.push_back(connProb);
+                pynnData[itPre->first].innervations.push_back(innervation);
             }
         }
 
@@ -199,51 +200,6 @@ void InnervationStatistic::writeSubquery(FileHelper& fileHelper) {
         return;
     }
 
-    std::vector<int> preIds;
-    std::vector<int> postIds;
-    std::vector<float> weights;
-
-    for(auto it = pynnData.begin(); it != pynnData.end(); it++){
-        std::vector<int> preIdsCurrent = it->second.preIds;
-        std::vector<int> postIdsCurrent = it->second.postIds;
-        std::vector<float> weightsCurrent = it->second.probabilities;
-
-        for(auto itPre = preIdsCurrent.begin(); itPre != preIdsCurrent.end(); itPre++){
-            for(unsigned int i = 0; i < postIdsCurrent.size(); i++){
-                int postId = postIdsCurrent[i];
-                float probability = weightsCurrent[i];
-                preIds.push_back(*itPre);
-                postIds.push_back(postId);
-                weights.push_back(probability);
-            }
-        }
-    }
-    
-    fileHelper.openFile("neuron_indices.txt");
-    fileHelper.write("[\n");
-    for(unsigned int i= 0; i< preIds.size(); i++){
-        QString line = "["+QString::number(preIds[i])+","+QString::number(postIds[i])+"]";        
-        if(i < preIds.size()-1){
-            line += ",\n";
-        } else {
-            line += "\n";
-        }
-        fileHelper.write(line);
-    }
-    fileHelper.write("]\n");
-    fileHelper.closeFile();
-
-    fileHelper.openFile("weights.txt");
-    fileHelper.write("[\n");
-    for(unsigned int i= 0; i< weights.size(); i++){
-        QString line = ""+QString::number(weights[i],'g',3);        
-        if(i < weights.size()-1){
-            line += ",\n";
-        } else {
-            line += "\n";
-        }
-        fileHelper.write(line);
-    }
-    fileHelper.write("]\n");
-    fileHelper.closeFile();    
+    PyNNExport exporter(mNetwork, mCalculator);
+    exporter.execute(fileHelper, pynnData);
 }

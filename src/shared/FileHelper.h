@@ -14,6 +14,7 @@ class FileHelper
     void initFolder(QJsonObject config, QString queryId, QString subquery);
     void openFile(QString filename);
     void write(QString line);
+    void writeJsonKeyValueNumeric(QString key, int value, bool comma = true);
     void closeFile();
     void uploadFolder(QJsonObject& result);
 

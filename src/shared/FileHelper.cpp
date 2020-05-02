@@ -47,6 +47,16 @@ void FileHelper::write(QString line)
     stream << line;
 }
 
+void FileHelper::writeJsonKeyValueNumeric(QString key, int value, bool comma){
+    QTextStream stream(mCurrentFile);
+    stream <<  "\"" << key << "\":" << QString::number(value);
+    if(comma) {
+        stream << ",\n";        
+    } else {
+        stream << "\n";        
+    }
+}
+
 void FileHelper::closeFile()
 {
     mCurrentFile->close();
