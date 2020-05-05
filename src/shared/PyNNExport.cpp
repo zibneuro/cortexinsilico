@@ -163,8 +163,8 @@ void PyNNExport::writeConnectionsBinary(FileHelper& fileHelper, std::vector<Conn
 void PyNNExport::writeMeta(FileHelper& fileHelper, Meta& metaData){
     fileHelper.openFile("meta.json");
     fileHelper.write("{\n");
-    fileHelper.writeJsonKeyValueNumeric("number_pre", metaData.numberPre);
-    fileHelper.writeJsonKeyValueNumeric("number_post", metaData.numberPost);
+    //fileHelper.writeJsonKeyValueNumeric("number_pre", metaData.numberPre);
+    //fileHelper.writeJsonKeyValueNumeric("number_post", metaData.numberPost);
     fileHelper.writeJsonKeyValueNumeric("number_combined", metaData.numberCombined, false);
     fileHelper.write("}\n");
     fileHelper.closeFile();

@@ -27,7 +27,7 @@ InnervationStatistic::InnervationStatistic(const NetworkProps& networkProps,
     numPreNeurons = 0;
     numPostNeurons = 0;
     numPreNeuronsUnique = 0;
-    maxPynn = 5000;
+    maxPynn = 1000;
 }
 
 
@@ -198,7 +198,14 @@ void InnervationStatistic::writeSubquery(FileHelper& fileHelper) {
         fileHelper.write(" Note than you can specify a downsampling factor in the network specification settings.");
         fileHelper.closeFile();
         return;
-    }
+    } else {
+        fileHelper.openFile("README.txt");
+        fileHelper.write("The file connections.txt can be loaded into PyNN using the 'FromFileConnector'\n");
+        fileHelper.write("Weights are DSC values multiplied by 0.002.\n");
+        fileHelper.write("The original neuron indices as used in the model can be retrieved in neuron_ids.txt.\n");
+        fileHelper.write("The number of neurons are written to meta.json.\n");
+        fileHelper.closeFile();
+    }    
 
     PyNNExport exporter(mNetwork, mCalculator);
     exporter.execute(fileHelper, pynnData);
