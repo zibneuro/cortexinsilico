@@ -53,6 +53,7 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
     {
         const int preId = selection.SelectionA()[i];
         const int mappedPreId = mNetwork.axonRedundancyMap.getNeuronIdToUse(preId);
+        pynnPreIds[preId] = mappedPreId;
         if (preIds.find(mappedPreId) == preIds.end())
         {
             preIds[mappedPreId] = 1;
@@ -74,6 +75,7 @@ InnervationStatistic::doCalculate(const NeuronSelection& selection)
     for (int i = 0; i < selection.SelectionB().size(); ++i)
     {
         int postId = selection.SelectionB()[i];
+        pynnPostIds.push_back(postId);
         postInnervation[postId] = 0;
     }
 
@@ -206,6 +208,18 @@ void InnervationStatistic::writeSubquery(FileHelper& fileHelper) {
         fileHelper.write("The number of neurons are written to meta.json.\n");
         fileHelper.closeFile();
     }    
+
+    fileHelper.openFile("pre_IDs.txt");
+    for(auto it=pynnPreIds.begin(); it != pynnPreIds.end(); it++){
+        fileHelper.write(QString::number(it->first) + " " + QString::number(it->second) + "\n"); 
+    }
+    fileHelper.closeFile();
+
+    fileHelper.openFile("post_IDs.txt");
+    for(auto it=pynnPostIds.begin(); it != pynnPostIds.end(); it++){
+        fileHelper.write(QString::number(*it) + "\n"); 
+    }
+    fileHelper.closeFile();
 
     PyNNExport exporter(mNetwork, mCalculator);
     exporter.execute(fileHelper, pynnData);

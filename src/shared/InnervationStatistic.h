@@ -75,6 +75,9 @@ private:
     int maxPynn;
     bool exportPynn;
     std::map<int, ExportData> pynnData;
+    std::map<int, int> pynnPreIds;
+    std::vector<int> pynnPostIds;
+    
 };
 
 #endif // INNERVATION_H
