@@ -199,7 +199,6 @@ void InnervationStatistic::writeSubquery(FileHelper& fileHelper) {
         fileHelper.write("PyNN export is restricted for pre- and postsynaptic neuron selections smaller or equal than " + QString::number(maxPynn) + " neurons.");
         fileHelper.write(" Note than you can specify a downsampling factor in the network specification settings.");
         fileHelper.closeFile();
-        return;
     } else {
         fileHelper.openFile("README.txt");
         fileHelper.write("The file connections.txt can be loaded into PyNN using the 'FromFileConnector'\n");
@@ -220,6 +219,10 @@ void InnervationStatistic::writeSubquery(FileHelper& fileHelper) {
         fileHelper.write(QString::number(*it) + "\n"); 
     }
     fileHelper.closeFile();
+
+    if(!exportPynn){
+        return;
+    }
 
     PyNNExport exporter(mNetwork, mCalculator);
     exporter.execute(fileHelper, pynnData);
