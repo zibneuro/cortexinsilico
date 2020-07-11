@@ -1,4 +1,5 @@
 #include "CIS3DNeurons.h"
+#include "Util.h"
 #include <QBitArray>
 #include <QFile>
 #include <QStringList>
@@ -7,6 +8,7 @@
 #include <QBuffer>
 #include <QDataStream>
 #include <QDebug>
+#include <set>
 
 /**
     Constructor.
@@ -226,6 +228,8 @@ Neurons::getFilteredNeuronIds(const SelectionFilter &filter) const
     const bool allRegionsIncluded = (filter.regionIds.size() == 0);
     const bool allNearestColumnsIncluded = (filter.nearestColumnIds.size() == 0);
     const bool allLaminarLocationsIncluded = (filter.laminarLocations.size() == 0);
+    const bool noExplicitIDs = (filter.neuronIds.size() == 0);
+    std::set<int> explicitIds = Util::listToSet(filter.neuronIds);
 
     QBitArray selectedCTs;
     if (!allCellTypesIncluded)
@@ -302,20 +306,22 @@ Neurons::getFilteredNeuronIds(const SelectionFilter &filter) const
          ++it)
     {
         const int neuronId = it.key();
-        const NeuronProperties &props = it.value();
-        if ((allCellTypesIncluded ||
-             (props.cellTypeId < selectedCTs.size() && selectedCTs.at(props.cellTypeId))) &&
-            (allRegionsIncluded ||
-             (props.regionId < selectedRegions.size() && selectedRegions.at(props.regionId))) &&
-            (allNearestColumnsIncluded || (props.nearestColumnId < selectedNearestColumns.size() &&
-                                           selectedNearestColumns.at(props.nearestColumnId))) &&
-            (allLaminarLocationsIncluded || selectedLaminarLocations.at(int(props.loc))) &&
-            ((filter.synapticSide == CIS3D::BOTH_SIDES) ||
-             (getSynapticSide(neuronId) == CIS3D::BOTH_SIDES) || (getSynapticSide(neuronId) == CIS3D::POSTSYNAPTIC_MAPPED && filter.synapticSide == CIS3D::POSTSYNAPTIC) ||
-             (filter.synapticSide == getSynapticSide(neuronId))) &&
-            (filter.corticalDepth.empty() || (props.corticalDepth >= filter.corticalDepth[0] && props.corticalDepth <= filter.corticalDepth[1])))
-        {
-            result.append(neuronId);
+        if(noExplicitIDs || explicitIds.find(neuronId) != explicitIds.end()) {
+            const NeuronProperties &props = it.value();
+            if ((allCellTypesIncluded ||
+                (props.cellTypeId < selectedCTs.size() && selectedCTs.at(props.cellTypeId))) &&
+                (allRegionsIncluded ||
+                (props.regionId < selectedRegions.size() && selectedRegions.at(props.regionId))) &&
+                (allNearestColumnsIncluded || (props.nearestColumnId < selectedNearestColumns.size() &&
+                                            selectedNearestColumns.at(props.nearestColumnId))) &&
+                (allLaminarLocationsIncluded || selectedLaminarLocations.at(int(props.loc))) &&
+                ((filter.synapticSide == CIS3D::BOTH_SIDES) ||
+                (getSynapticSide(neuronId) == CIS3D::BOTH_SIDES) || (getSynapticSide(neuronId) == CIS3D::POSTSYNAPTIC_MAPPED && filter.synapticSide == CIS3D::POSTSYNAPTIC) ||
+                (filter.synapticSide == getSynapticSide(neuronId))) &&
+                (filter.corticalDepth.empty() || (props.corticalDepth >= filter.corticalDepth[0] && props.corticalDepth <= filter.corticalDepth[1])))
+            {
+                result.append(neuronId);
+            }
         }
     }
 

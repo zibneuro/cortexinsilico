@@ -167,6 +167,8 @@ Util::getSelectionFilterFromJson(const QJsonArray &jsonArray,
     filter.corticalDepth.push_back(static_cast<float>(corticalDepthMax));
   }
 
+  filter.neuronIds = getNeuronIds(jsonArray, "neuronIds");
+
   QList<int> cellTypeIds;
   CIS3D::NeuronType neuronType = CIS3D::EXC_OR_INH;
 
@@ -1022,6 +1024,19 @@ void Util::getRange(const QJsonArray &conditions, QString id, double defaultMin,
     min = value[0].toString().toDouble();
     max = value[1].toString().toDouble();
   }
+}
+
+ QList<int> Util::getNeuronIds(const QJsonArray &conditions, QString id) {
+  bool exists;  
+  QList<int> NIDs;
+  QJsonObject condition = getCondition(conditions, id, exists);
+  if (exists) {
+    QJsonArray value = condition["value"].toArray();
+    for(int i=0; i<value.size(); i++){
+      NIDs.push_back(value[i].toString().toInt());
+    }        
+  }
+  return NIDs;
 }
 
 std::set<int> Util::getPermittedSubvolumeRegionIds(QJsonArray &conditions,

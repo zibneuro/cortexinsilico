@@ -24,6 +24,7 @@ struct SelectionFilter {
     QList<CIS3D::LaminarLocation> laminarLocations;
     CIS3D::SynapticSide synapticSide;    
     std::vector<float> corticalDepth;
+    QList<int> neuronIds;
 };
 
 /**

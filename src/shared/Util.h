@@ -178,6 +178,8 @@ namespace Util
 
     void getRange(const QJsonArray& conditions, QString id, double defaultMin, double defaultMax, double& min, double& max);
 
+    QList<int> getNeuronIds(const QJsonArray &conditions, QString id);
+
     std::set<int> getPermittedSubvolumeRegionIds(QJsonArray& conditions, Regions& regions);
 
     double convertToCubicMicron(double value);
