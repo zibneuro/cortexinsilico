@@ -67,6 +67,7 @@ PropsMap getPostSynapticNeurons(const QJsonObject& spec, const NetworkProps& net
 */
 QList<int> getNeuronIds(const QJsonObject& spec, const NetworkProps& networkProps);
 
+
 /**
     Determines the neuron ID from the specfied presynaptic data file name.
     @param fileName A Boutons_*.dat file name.

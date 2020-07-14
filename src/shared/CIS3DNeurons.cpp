@@ -228,7 +228,7 @@ Neurons::getFilteredNeuronIds(const SelectionFilter &filter) const
     const bool allRegionsIncluded = (filter.regionIds.size() == 0);
     const bool allNearestColumnsIncluded = (filter.nearestColumnIds.size() == 0);
     const bool allLaminarLocationsIncluded = (filter.laminarLocations.size() == 0);
-    const bool noExplicitIDs = (filter.neuronIds.size() == 0);
+    const bool noExplicitIDs = (filter.neuronIds.size() == 0);   
     std::set<int> explicitIds = Util::listToSet(filter.neuronIds);
 
     QBitArray selectedCTs;
