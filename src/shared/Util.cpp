@@ -1275,7 +1275,7 @@ void Util::getRange(const QJsonArray &conditions, QString id, double defaultMin,
   {
     QJsonArray value = condition["value"].toArray();
     min = value[0].toString().toDouble();
-  max = value[1].toString().toDouble();
+    max = value[1].toString().toDouble();
   }
 }
 
@@ -1287,29 +1287,28 @@ QList<int> Util::getNeuronIds(const QJsonArray &conditions, QString filterId)
   if (exists)
   {
     QJsonArray value = condition["value"].toArray();
-    if (value.size() == 1)
+
+    if (value.size() == 1 && value[0].toString().split("-").size() == 5)
     {
-      if (value[0].toString().split("-").size() == 5)
+
+      QString path = "/local/selections/NIDs/NIDs_" + value[0].toString() + ".txt";
+      QFile NIDsFile(path);
+      if (NIDsFile.open(QIODevice::ReadOnly))
       {
-        QString path = "/local/selections/NIDs/NIDs_" + value[0].toString() + ".txt";
-        QFile NIDsFile(path);
-        if (NIDsFile.open(QIODevice::ReadOnly))
+        QTextStream in(&NIDsFile);
+        while (!in.atEnd())
         {
-          QTextStream in(&NIDsFile);
-          while (!in.atEnd())
-          {
-            QString line = in.readLine();
-            line = line.trimmed();
-            int NID = line.toInt();
-            NIDs.push_back(NID);
-          }
+          QString line = in.readLine();
+          line = line.trimmed();
+          int NID = line.toInt();
+          NIDs.push_back(NID);
         }
-        else
-        {
-          const QString msg =
-              QString("Error reading index file. Could not open file %1").arg(path);
-          throw std::runtime_error(qPrintable(msg));
-        }
+      }
+      else
+      {
+        const QString msg =
+            QString("Error reading index file. Could not open file %1").arg(path);
+        throw std::runtime_error(qPrintable(msg));
       }
     }
     else
