@@ -41,6 +41,8 @@ private:
   void saveDSC(QString filename, std::vector<DSCEntry> &data);
   void writeReadme(QString filename);
 
+  void setFormulas() override;
+
   Statistics mStatistics;
   QString mTempFolder;
 };

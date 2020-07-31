@@ -193,7 +193,7 @@ createGeometryJSON(const QString& zipFileName,
     {
         throw std::runtime_error("Error completing zip process");
     }
-    qDebug() << "[*] Completed zipping";
+    //qDebug() << "[*] Completed zipping";
 
     return zipFullPath;
 }

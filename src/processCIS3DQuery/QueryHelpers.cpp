@@ -99,7 +99,7 @@ QueryHelpers::uploadToS3(const QString& key,
                          const QString& filename,
                          const QJsonObject& config)
 {
-    qDebug() << "[*] Uploading file to S3:" << key << filename;
+    //qDebug() << "[*] Uploading file to S3:" << key << filename;
     const QString program = config["WORKER_PYTHON_BIN"].toString();
     QStringList arguments;
     arguments.append(config["WORKER_S3UPLOAD_SCRIPT"].toString());

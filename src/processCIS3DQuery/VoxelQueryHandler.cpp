@@ -213,14 +213,14 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with presynaptic cells [mm³]", Util::formatVolume((int)mPreInnervatedVoxels.size())));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with postsynaptic cells [mm³]", Util::formatVolume((int)mPostInnervatedVoxels.size())));
         mFileHelper.write(preCellbodiesPerVoxel.getLineCsv("cell bodies [1/(50\u00B5m)³]"));
-        mFileHelper.write(cellbodyVariabilityPerVoxel.getLineCsv("cell body heterogeneity [1/(50\u00B5m)³]"));
+        mFileHelper.write(cellbodyVariabilityPerVoxel.getLineCsv("cell body diversity [1/(50\u00B5m)³]"));
         //mFileHelper.write(postCellbodiesPerVoxel.getLineCsv("postsynaptic cell bodies per (50\u00B5m)³"));
         mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells [1/(50\u00B5m)³]"));
         mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells [1/(50\u00B5m)³]"));
         mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branchlets [1/(50\u00B5m)³]"));
         mFileHelper.write(postBranchesPerVoxel.getLineCsv("dendrite branchlets [1/(50\u00B5m)³]"));
-        mFileHelper.write(axonVariabilityPerVoxel.getLineCsv("axon heterogeneity [1/(50\u00B5m)³]"));
-        mFileHelper.write(dendriteVariabilityPerVoxel.getLineCsv("dendrite heterogeneity [1/(50\u00B5m)³]"));
+        mFileHelper.write(axonVariabilityPerVoxel.getLineCsv("axon diversity [1/(50\u00B5m)³]"));
+        mFileHelper.write(dendriteVariabilityPerVoxel.getLineCsv("dendrite diversity [1/(50\u00B5m)³]"));
         mFileHelper.write(axonLengthPerVoxel.getLineCsv("axon length [m/(50\u00B5m)³]"));
         mFileHelper.write(dendriteLengthPerVoxel.getLineCsv("dendrite length [cm/(50\u00B5m)³]"));
         mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses [1/(50\u00B5m)³]"));
@@ -235,9 +235,9 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         axonLengthPerVoxelH.writeFile(mFileHelper, "histogram_axon_length.csv");
         dendriteLengthPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_length.csv");
         synapsesPerVoxelH.writeFile(mFileHelper, "histogram_synapses.csv");
-        cellbodyVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_cellbody_heterogeneity.csv");
-        axonVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_axon_heterogeneity.csv");
-        dendriteVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_heterogeneity.csv");
+        cellbodyVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_cellbody_diversity.csv");
+        axonVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_axon_diversity.csv");
+        dendriteVariabilityPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_diversity.csv");
 
         mFileHelper.openFile("linechart_synapses_perconnection.csv");
         mFileHelper.write("k,min,med,max\n");

@@ -32,7 +32,7 @@ protected:
   virtual void doProcessQuery();
   void setSelection();
   virtual bool initSelection();
-  void setFormulas();
+  virtual void setFormulas();
   void updateQuery(QJsonObject &result, double progress);
   void writeResult(QJsonObject &query);
   void abort(QString error);

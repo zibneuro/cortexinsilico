@@ -118,7 +118,7 @@ void SpatialInnervationQueryHandler::doProcessQuery()
       fileNames.append(tempFileName);
       saveDSC(tempFileName, dsc);
 
-      qDebug() << "[*] Updating zip file:" << dataFullPath;
+      //qDebug() << "[*] Updating zip file:" << dataFullPath;
       QProcess zip2;
       zip2.setWorkingDirectory(mTempFolder);
 
@@ -148,7 +148,7 @@ void SpatialInnervationQueryHandler::doProcessQuery()
       }
       fileCounter++;
 
-      qDebug() << "[*] Completed zipping";
+      //qDebug() << "[*] Completed zipping";
     }
 
     // ###################### REPORT UPDATE ######################
@@ -398,4 +398,8 @@ void SpatialInnervationQueryHandler::writeReadme(QString filename){
   outStream << "Anatomy' section.\n";
   file.close();
 
+}
+
+void SpatialInnervationQueryHandler::setFormulas() {
+  
 }
