@@ -195,7 +195,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
         
         mFileHelper.openFile("testOutput.csv");
-        mFileHelper.write("subvolume_id,cellbodies,variability_cellbody,length_dendrite,length_axon,variability_dendrite,variability_axon,branch_dendr,branch_axon\n");
+        mFileHelper.write("subvolume_id,length_dendrite,length_axon,variability_dendrite,variability_axon,cellbodies,variability_cellbody,branch_dendr,branch_axon\n");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
         {
             int nAxons = mMapPreBranchesPerVoxel[it->first];
@@ -221,15 +221,15 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(axonVariabilityPerVoxel.getLineCsv("axon diversity [types/(50\u00B5m)³]"));
         mFileHelper.write(postBranchesPerVoxel.getLineCsv("dendrite branchlets [1/(50\u00B5m)³]"));
         mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branchlets [1/(50\u00B5m)³]"));        
-        mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells [1/(50\u00B5m)³]"));
-        mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells [1/(50\u00B5m)³]"));        
+        // mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells [1/(50\u00B5m)³]"));
+        // mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells [1/(50\u00B5m)³]"));        
         mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses [1/(50\u00B5m)³]"));
         mFileHelper.closeFile();
 
         preCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_neuron_density.csv");
         //postCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_postsynaptic_cellbodies.csv");
-        preCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_presynaptic_cells.csv");
-        postCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_postsynaptic_cells.csv");
+        //preCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_presynaptic_cells.csv");
+        //postCellsPerVoxelH.writeFile(mFileHelper, "histogram_innervating_postsynaptic_cells.csv");
         preBranchesPerVoxelH.writeFile(mFileHelper, "histogram_axon_branches.csv");
         postBranchesPerVoxelH.writeFile(mFileHelper, "histogram_dendrite_branches.csv");
         axonLengthPerVoxelH.writeFile(mFileHelper, "histogram_axon_density.csv");
@@ -414,8 +414,8 @@ void VoxelQueryHandler::determineCellCounts(Subvolume &subvolume)
         }
     }
     mVariabilityCellbodies[SID] = static_cast<float>(celltypes.size());
-    mTestOutput[voxelId].push_back(static_cast<float>(mPreCellbodiesPerVoxel[voxelId]));
-    mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
+    mTestOutput[SID].push_back(static_cast<float>(mPreCellbodiesPerVoxel[SID]));
+    mTestOutput[SID].push_back(static_cast<float>(mVariabilityCellbodies[SID]));
 }
 
 void VoxelQueryHandler::determineBranches(Subvolume &subvolume, std::map<int, int> &preDuplicity)
@@ -488,10 +488,10 @@ void VoxelQueryHandler::determineBranches(Subvolume &subvolume, std::map<int, in
     }
 
     
-    mTestOutput[voxelId].push_back(static_cast<float>(mDendriteLengthPerVoxel[voxelId]));
-    mTestOutput[voxelId].push_back(static_cast<float>(mAxonLengthPerVoxel[voxelId]));
-    mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityDendrite[voxelId]));
-    mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityAxon[voxelId]));
+    mTestOutput[SID].push_back(static_cast<float>(mDendriteLengthPerVoxel[SID]));
+    mTestOutput[SID].push_back(static_cast<float>(mAxonLengthPerVoxel[SID]));
+    mTestOutput[SID].push_back(static_cast<float>(mVariabilityDendrite[SID]));
+    mTestOutput[SID].push_back(static_cast<float>(mVariabilityAxon[SID]));
 }
 
 void VoxelQueryHandler::determineSynapses(Subvolume &subvolume, std::map<int, int> &preDuplicity, PstAll& pstAll)
