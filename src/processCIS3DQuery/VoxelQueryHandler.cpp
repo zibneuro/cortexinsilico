@@ -193,7 +193,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.closeFile();
         */
 
-        /*
+        
         mFileHelper.openFile("testOutput.csv");
         mFileHelper.write("subvolume_id,cellbodies,variability_cellbody,length_dendrite,length_axon,variability_dendrite,variability_axon,branch_dendr,branch_axon\n");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
@@ -205,7 +205,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
             mFileHelper.write(line);
         }
         mFileHelper.closeFile();
-        */
+        
 
         mFileHelper.openFile("statistics.csv");
         mFileHelper.write(Statistics::getHeaderCsv());
@@ -414,10 +414,8 @@ void VoxelQueryHandler::determineCellCounts(Subvolume &subvolume)
         }
     }
     mVariabilityCellbodies[SID] = static_cast<float>(celltypes.size());
-    /*
     mTestOutput[voxelId].push_back(static_cast<float>(mPreCellbodiesPerVoxel[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityCellbodies[voxelId]));
-    */
 }
 
 void VoxelQueryHandler::determineBranches(Subvolume &subvolume, std::map<int, int> &preDuplicity)
@@ -489,12 +487,11 @@ void VoxelQueryHandler::determineBranches(Subvolume &subvolume, std::map<int, in
         mAxonDendriteRatio.addSample(SID, axonBranches / dendriteBranches);
     }
 
-    /*
+    
     mTestOutput[voxelId].push_back(static_cast<float>(mDendriteLengthPerVoxel[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mAxonLengthPerVoxel[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityDendrite[voxelId]));
     mTestOutput[voxelId].push_back(static_cast<float>(mVariabilityAxon[voxelId]));
-    */
 }
 
 void VoxelQueryHandler::determineSynapses(Subvolume &subvolume, std::map<int, int> &preDuplicity, PstAll& pstAll)
