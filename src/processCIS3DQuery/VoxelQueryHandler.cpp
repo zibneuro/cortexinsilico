@@ -53,7 +53,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     createStatistics(mMapPreBranchesPerVoxel, preBranchesPerVoxel, preBranchesPerVoxelH);
 
     Statistics boutonsPerVoxel;
-    Histogram boutonsPerVoxelH(500);
+    Histogram boutonsPerVoxelH(100);
     createStatistics(mMapBoutonsPerVoxel, boutonsPerVoxel, boutonsPerVoxelH);
 
     Statistics postCellsPerVoxel;
@@ -154,6 +154,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
     // Util::createJsonStatistic(mSynapsesPerConnection));
     result.insert("synapsesPerConnectionPlot", synapsesPerConnectionPlot);
     result.insert("synapsesCubicMicron", mSynapsesCubicMicron.getJson());
+    result.insert("boutonsCubicMicron", mBoutonsCubicMicron.getJson());
     result.insert("axonDendriteRatio", mAxonDendriteRatio.getJson());
     result.insert("presynapticCellbodiesPerVoxel", Util::createJsonStatistic(preCellbodiesPerVoxel));
     result.insert("postsynapticCellbodiesPerVoxel", Util::createJsonStatistic(postCellbodiesPerVoxel));
@@ -193,7 +194,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.closeFile();
         */
 
-        
+        /*
         mFileHelper.openFile("testOutput.csv");
         mFileHelper.write("subvolume_id,length_dendrite,length_axon,variability_dendrite,variability_axon,cellbodies,variability_cellbody,branch_dendr,branch_axon\n");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
@@ -205,11 +206,11 @@ VoxelQueryHandler::createJsonResult(bool createFile)
             mFileHelper.write(line);
         }
         mFileHelper.closeFile();
-        
+        */
 
         mFileHelper.openFile("statistics.csv");
         mFileHelper.write(Statistics::getHeaderCsv());
-        mFileHelper.write(Statistics::getLineSingleValue("sub-volumes meeting spatial filter condition", (int)mSelectedVoxels.size()));
+        //mFileHelper.write(Statistics::getLineSingleValue("sub-volumes meeting spatial filter condition", (int)mSelectedVoxels.size()));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with presynaptic cells [mm³]", Util::formatVolume((int)mPreInnervatedVoxels.size())));
         mFileHelper.write(Statistics::getLineSingleValue("sub-volume with postsynaptic cells [mm³]", Util::formatVolume((int)mPostInnervatedVoxels.size())));
         mFileHelper.write(preCellbodiesPerVoxel.getLineCsv("neuron density [somata/(50\u00B5m)³]"));
@@ -219,11 +220,12 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.write(dendriteVariabilityPerVoxel.getLineCsv("dendrite diversity [types/(50\u00B5m)³]"));
         mFileHelper.write(axonLengthPerVoxel.getLineCsv("axon density [m/(50\u00B5m)³]"));
         mFileHelper.write(axonVariabilityPerVoxel.getLineCsv("axon diversity [types/(50\u00B5m)³]"));
+        mFileHelper.write(boutonsPerVoxel.getLineCsv("boutons [1/(50\u00B5m)³]"));   
         mFileHelper.write(postBranchesPerVoxel.getLineCsv("dendrite branchlets [1/(50\u00B5m)³]"));
-        mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branchlets [1/(50\u00B5m)³]"));        
+        mFileHelper.write(preBranchesPerVoxel.getLineCsv("axon branchlets [1/(50\u00B5m)³]"));             
         // mFileHelper.write(postCellsPerVoxel.getLineCsv("innervating postsynaptic cells [1/(50\u00B5m)³]"));
         // mFileHelper.write(preCellsPerVoxel.getLineCsv("innervating presynaptic cells [1/(50\u00B5m)³]"));        
-        mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses [1/(50\u00B5m)³]"));
+        mFileHelper.write(synapsesPerVoxel.getLineCsv("synapses [1/(50\u00B5m)³]")); 
         mFileHelper.closeFile();
 
         preCellbodiesPerVoxelH.writeFile(mFileHelper, "histogram_neuron_density.csv");
@@ -250,6 +252,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
 
         mSynapsesCubicMicron.writeFile(mFileHelper, "boxplot_synapses.csv", "[1/\u00B5m³]");
         mAxonDendriteRatio.writeFile(mFileHelper, "boxplot_axon_dendrite_ratio.csv", "[1/(50\u00B5m)³]");
+        mBoutonsCubicMicron.writeFile(mFileHelper, "boxplot_boutons.csv", "[1/\u00B5m³]");
 
         mFileHelper.uploadFolder(result);
     }
@@ -514,6 +517,7 @@ void VoxelQueryHandler::determineSynapses(Subvolume &subvolume, std::map<int, in
     {
         int duplicity = preDuplicity[itPre->first];
         float boutons =  itPre->second.boutons;
+        mMapBoutonsPerVoxel[SID] += duplicity * boutons;
         int cellTypeId =  mNetwork.neurons.getCellTypeId(itPre->first);
         bool excitatory = mNetwork.cellTypes.isExcitatory(cellTypeId);                
         float pstAllVal =  excitatory ? pstAll.get(SID).exc : pstAll.get(SID).inh;
@@ -538,4 +542,5 @@ void VoxelQueryHandler::determineSynapses(Subvolume &subvolume, std::map<int, in
     }
 
     mSynapsesCubicMicron.addSample(SID, Util::convertToCubicMicron(mSynapsesPerVoxel[SID]));    
+    mBoutonsCubicMicron.addSample(SID, Util::convertToCubicMicron(mMapBoutonsPerVoxel[SID]));
 }

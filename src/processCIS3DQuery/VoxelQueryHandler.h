@@ -58,6 +58,7 @@ private:
   Histogram mPostsynapticSitesPerVoxelH;
   Distribution mSynapsesCubicMicron;
   Distribution mAxonDendriteRatio;
+  Distribution mBoutonsCubicMicron;
 
   std::map<int, QString> mVoxelIdVoxelStr;
   std::map<int, float> mMapBoutonsPerVoxel;
