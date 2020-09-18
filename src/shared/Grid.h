@@ -23,6 +23,8 @@ struct GridFilter {
   float max_z;
   float min_depth;
   float max_depth;
+  float min_zAxis;
+  float max_zAxis;
   std::set<int> whitelist_region;
 };
 

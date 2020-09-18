@@ -315,11 +315,12 @@ void VoxelQueryHandler::doProcessQuery()
 
     GridFilter gridFilter;
     QJsonArray subvolumeConditions = mQuery["cellSelection"].toObject()["selectionC"].toObject()["conditions"].toArray();
-    double min_x, max_x, min_y, max_y, min_z, max_z, min_depth, max_depth;
+    double min_x, max_x, min_y, max_y, min_z, max_z, min_depth, max_depth, min_zAxis, max_zAxis;
     Util::getRange(subvolumeConditions, "rangeX", -1114, 1408, min_x, max_x);
     Util::getRange(subvolumeConditions, "rangeY", -759, 1497, min_y, max_y);
     Util::getRange(subvolumeConditions, "rangeZ", -1461, 708, min_z, max_z);
     Util::getRange(subvolumeConditions, "corticalDepth", -100, 2000, min_depth, max_depth);
+    Util::getRange(subvolumeConditions, "rangeZAxis", -100000, 100000, min_zAxis, max_zAxis);
     gridFilter.min_x = min_x;
     gridFilter.max_x = max_x;
     gridFilter.min_y = min_y;
@@ -329,6 +330,8 @@ void VoxelQueryHandler::doProcessQuery()
     gridFilter.min_depth = min_depth;
     gridFilter.max_depth = max_depth;
     gridFilter.whitelist_region = Util::getPermittedSubvolumeRegionIds(subvolumeConditions, mNetwork.regions);
+    gridFilter.min_zAxis = min_zAxis;
+    gridFilter.max_zAxis = max_zAxis;
     mSubvolumes = mNetwork.grid.filter(gridFilter);
 
     qDebug() << "SUBVOLUME" << mSubvolumes.size() << "PRE" << mPreIds.size() << "POST" << mPostIds.size();

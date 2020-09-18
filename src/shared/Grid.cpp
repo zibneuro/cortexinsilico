@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QTextStream>
+#include <math.h>
 
 void Grid::load(QString filename) {
   qDebug() << "load" << filename;
@@ -43,9 +44,10 @@ std::vector<int> Grid::filter(GridFilter filter) {
     float y = p.center[1];
     float z = p.center[2];
     float d = p.corticalDepth;
+    float r = sqrt(x*x + y*y);
     if (x >= filter.min_x && x <= filter.max_x && y >= filter.min_y &&
         y <= filter.max_y && z >= filter.min_z && z <= filter.max_z &&
-        d >= filter.min_depth && d <= filter.max_depth) {
+        d >= filter.min_depth && d <= filter.max_depth && r>= filter.min_zAxis && r <= filter.max_zAxis) {
       if (filter.whitelist_region.empty() ||
           (filter.whitelist_region.find(p.region) !=
            filter.whitelist_region.end())) {
