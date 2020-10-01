@@ -194,19 +194,21 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.closeFile();
         */
 
-        /*
+        
         mFileHelper.openFile("testOutput.csv");
-        mFileHelper.write("subvolume_id,length_dendrite,length_axon,variability_dendrite,variability_axon,cellbodies,variability_cellbody,branch_dendr,branch_axon\n");
+        mFileHelper.write("subvolume_id,length_dendrite,length_axon,variability_dendrite,variability_axon,cellbodies,variability_cellbody,branch_dendr,branch_axon,boutons\n");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
         {
             int nAxons = mMapPreBranchesPerVoxel[it->first];
             int nDendr = mMapPostBranchesPerVoxel[it->first];
+            float boutons = mMapBoutonsPerVoxel[it->first];
             QString line = QString::number(it->first) + "," + QString::number(it->second[0]) + "," + QString::number(it->second[1]) +
-                           "," + QString::number(it->second[2]) + "," + QString::number(it->second[3]) + "," + QString::number(it->second[4]) + "," + QString::number(it->second[5]) + "," + QString::number(nDendr) + "," + QString::number(nAxons) + "\n";
+                           "," + QString::number(it->second[2]) + "," + QString::number(it->second[3]) + "," + QString::number(it->second[4]) + "," + QString::number(it->second[5])
+                            + "," + QString::number(nDendr) + "," + QString::number(nAxons) + "," + QString::number(boutons) + "\n";
             mFileHelper.write(line);
         }
         mFileHelper.closeFile();
-        */
+        
 
         mFileHelper.openFile("statistics.csv");
         mFileHelper.write(Statistics::getHeaderCsv());

@@ -307,27 +307,29 @@ Util::getSelectionFilterFromJson(const QJsonArray &jsonArray,
       {
         filter.laminarLocations.append(CIS3D::SUPRAGRANULAR);
       }
-      else if (v == "I")
+      else if (v == "L1")
       {
         filter.laminarLocations.append(CIS3D::LAYER1);
       }
-      else if (v == "II")
+      else if (v == "L23")
       {
-        filter.laminarLocations.append(CIS3D::LAYER2);
+        filter.laminarLocations.append(CIS3D::LAYER23);
       }
+      /*
       else if (v == "III")
       {
         filter.laminarLocations.append(CIS3D::LAYER3);
       }
-      else if (v == "IV")
+      */
+      else if (v == "L4")
       {
         filter.laminarLocations.append(CIS3D::LAYER4);
       }
-      else if (v == "V")
+      else if (v == "L5")
       {
         filter.laminarLocations.append(CIS3D::LAYER5);
       }
-      else if (v == "VI")
+      else if (v == "L6")
       {
         filter.laminarLocations.append(CIS3D::LAYER6);
       }

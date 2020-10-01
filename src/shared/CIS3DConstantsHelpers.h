@@ -67,7 +67,7 @@ namespace CIS3D
         GRANULAR = 2,
         SUPRAGRANULAR = 3,
         LAYER1 = 4,
-        LAYER2 = 5,
+        LAYER23 = 5,
         LAYER3 = 6,
         LAYER4 = 7,
         LAYER5 = 8,

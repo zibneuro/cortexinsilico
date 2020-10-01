@@ -115,32 +115,34 @@ getLaminarLocationsAsJson()
 
     QJsonObject l1;
     l1.insert("ID", int(CIS3D::LAYER1));
-    l1.insert("name", "I");
+    l1.insert("name", "L1");
     arr.append(l1);
 
     QJsonObject l2;
-    l2.insert("ID", int(CIS3D::LAYER2));
-    l2.insert("name", "II");
+    l2.insert("ID", int(CIS3D::LAYER23));
+    l2.insert("name", "L23");
     arr.append(l2);
 
+    /*
     QJsonObject l3;
     l3.insert("ID", int(CIS3D::LAYER3));
     l3.insert("name", "III");
     arr.append(l3);
+    */
 
     QJsonObject l4;
     l4.insert("ID", int(CIS3D::LAYER4));
-    l4.insert("name", "IV");
+    l4.insert("name", "L4");
     arr.append(l4);
 
     QJsonObject l5;
     l5.insert("ID", int(CIS3D::LAYER5));
-    l5.insert("name", "V");
+    l5.insert("name", "L5");
     arr.append(l5);
 
     QJsonObject l6;
     l6.insert("ID", int(CIS3D::LAYER6));
-    l6.insert("name", "VI");
+    l6.insert("name", "L6");
     arr.append(l6);
 
     return arr;
