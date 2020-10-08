@@ -208,6 +208,20 @@ VoxelQueryHandler::createJsonResult(bool createFile)
             mFileHelper.write(line);
         }
         mFileHelper.closeFile();
+
+        mFileHelper.openFile("boutons_celltype.csv");
+        mFileHelper.write("SID,L2PY,L3PY,L4PY,L4PY,L4ss,L4sp,L5IT,L5PT,L6ACC,L6BCC,L6CT,VPM,INH\n");
+        for (auto it = mBoutonsPerCellType.begin(); it != mBoutonsPerCellType.end(); it++)
+        {            
+            QString line = QString::number(it->first);
+            for(int k=0; k<=11; k++){
+                line += "," + QString::number(it->second[k]);
+            }
+            line += "\n";             
+            mFileHelper.write(line);
+        }
+
+        mFileHelper.closeFile();
         
 
         mFileHelper.openFile("statistics.csv");
@@ -360,6 +374,8 @@ void VoxelQueryHandler::doProcessQuery()
         int SID = mSubvolumes[subvolume_idx];
         Subvolume subvolume;
         subvolume.load(subvolumeDir, SID, mPreIds, mappedPreIds, mPostIds);
+        
+        initBoutonsPerCellType(SID);
 
         determineBranches(subvolume, preMultiplicity);
         determineCellCounts(subvolume);
@@ -521,6 +537,7 @@ void VoxelQueryHandler::determineSynapses(Subvolume &subvolume, std::map<int, in
         float boutons =  itPre->second.boutons;
         mMapBoutonsPerVoxel[SID] += duplicity * boutons;
         int cellTypeId =  mNetwork.neurons.getCellTypeId(itPre->first);
+        mBoutonsPerCellType[SID][cellTypeId] += duplicity * boutons;
         bool excitatory = mNetwork.cellTypes.isExcitatory(cellTypeId);                
         float pstAllVal =  excitatory ? pstAll.get(SID).exc : pstAll.get(SID).inh;
         
@@ -545,4 +562,13 @@ void VoxelQueryHandler::determineSynapses(Subvolume &subvolume, std::map<int, in
 
     mSynapsesCubicMicron.addSample(SID, Util::convertToCubicMicron(mSynapsesPerVoxel[SID]));    
     mBoutonsCubicMicron.addSample(SID, Util::convertToCubicMicron(mMapBoutonsPerVoxel[SID]));
+}
+
+
+void VoxelQueryHandler::initBoutonsPerCellType(int subvolumeId) {
+    std::map<int, float> foo;
+    for(int i=0; i<=11; i++){
+        foo[i] = 0;
+    }
+    mBoutonsPerCellType[subvolumeId] = foo;
 }

@@ -42,6 +42,7 @@ private:
   void determineCellCounts(Subvolume& subvolume);
   void determineBranches(Subvolume& subvolume, std::map<int, int>& preDuplicity);
   void determineSynapses(Subvolume& subvolume, std::map<int, int>& preDuplicity, PstAll& pstAll);
+  void initBoutonsPerCellType(int subvolumeId);
 
   Statistics mStatistics;
   QString mTempFolder;
@@ -83,6 +84,7 @@ private:
   std::map<int, float> mVariabilityAxon;
   std::map<int, float> mVariabilityDendrite;
   std::map<int, std::vector<float> > mTestOutput; 
+  std::map<int, std::map<int, float> > mBoutonsPerCellType;
 
   std::vector<int> mSubvolumes;
   int mSynK;
