@@ -194,7 +194,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         mFileHelper.closeFile();
         */
 
-        
+        /*
         mFileHelper.openFile("testOutput.csv");
         mFileHelper.write("subvolume_id,length_dendrite,length_axon,variability_dendrite,variability_axon,cellbodies,variability_cellbody,branch_dendr,branch_axon,boutons\n");
         for (auto it = mTestOutput.begin(); it != mTestOutput.end(); it++)
@@ -222,6 +222,7 @@ VoxelQueryHandler::createJsonResult(bool createFile)
         }
 
         mFileHelper.closeFile();
+        */
         
 
         mFileHelper.openFile("statistics.csv");
