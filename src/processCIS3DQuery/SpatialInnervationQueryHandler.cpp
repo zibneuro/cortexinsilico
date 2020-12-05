@@ -116,7 +116,7 @@ void SpatialInnervationQueryHandler::doProcessQuery()
       QString tempFileName =
           QDir(mTempFolder).filePath(QString::number(it->first) + "_DSC.csv");
       fileNames.append(tempFileName);
-      saveDSC(tempFileName, dsc);
+      saveDSC(tempFileName, dsc, postIdsSet);
 
       //qDebug() << "[*] Updating zip file:" << dataFullPath;
       QProcess zip2;
@@ -352,7 +352,7 @@ std::vector<SpatialInnervationQueryHandler::DSCEntry> SpatialInnervationQueryHan
   return data;
 }
 
-void SpatialInnervationQueryHandler::saveDSC(QString filename, std::vector<SpatialInnervationQueryHandler::DSCEntry> &data)
+void SpatialInnervationQueryHandler::saveDSC(QString filename, std::vector<SpatialInnervationQueryHandler::DSCEntry> &data, std::set<int> &postIds)
 {
   QFile dataFile(filename);
   if (!dataFile.open(QIODevice::WriteOnly))
@@ -367,6 +367,7 @@ void SpatialInnervationQueryHandler::saveDSC(QString filename, std::vector<Spati
   outStream << "post_id,subvolume_id,DSC\n";
   for (unsigned i = 0; i < data.size(); i++)
   {
+    if(postIds.find(data[i].postId) != postIds.end())
     outStream << data[i].postId << "," << data[i].subvolumeId << "," << data[i].dsc << "\n";
   }
   dataFile.close();

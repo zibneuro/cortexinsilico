@@ -38,7 +38,7 @@ private:
                                const qint64 fileSizeBytes2, int nVoxels);
 
   std::vector<DSCEntry> loadDSC(QString filename, std::set<int> &postIds, CIS3D::Structure postTarget);
-  void saveDSC(QString filename, std::vector<DSCEntry> &data);
+  void saveDSC(QString filename, std::vector<DSCEntry> &data, std::set<int> &postIds);
   void writeReadme(QString filename);
 
   void setFormulas() override;
