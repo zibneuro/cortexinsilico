@@ -210,9 +210,9 @@ void InDegreeStatistic::doCreateCSV(FileHelper& fileHelper) const {
   fileHelper.openFile("statistics.csv");
   fileHelper.write(Statistics::getHeaderCsv());
   fileHelper.write(Statistics::getLineSingleValue("sample size (from C)",mSampleSize));
-  fileHelper.write(mStatisticsAC.getLineCsv("DSC (summed A to C)"));
-  fileHelper.write(mStatisticsBC.getLineCsv("DSC (summed B to C)"));
-  fileHelper.write(Statistics::getLineSingleValue("corelation (summed DSC)",mCorrelation));
+  fileHelper.write(mStatisticsAC.getLineCsv("DSO (summed A to C)"));
+  fileHelper.write(mStatisticsBC.getLineCsv("DSO (summed B to C)"));
+  fileHelper.write(Statistics::getLineSingleValue("corelation (summed DSO)",mCorrelation));
   fileHelper.write(Statistics::getLineSingleValue("corelation (avg. connection probability)",mCorrelationProb));
   fileHelper.closeFile();
 
@@ -221,8 +221,8 @@ void InDegreeStatistic::doCreateCSV(FileHelper& fileHelper) const {
 }
 
 void InDegreeStatistic::writeDiagramOverlap(FileHelper& fileHelper) const {
-    fileHelper.openFile("scatterPlot_DSC.csv");    
-    fileHelper.write("postNeuronID,summedDSC_A->C,summedDSC_B->C\n");
+    fileHelper.openFile("scatterPlot_DSO.csv");    
+    fileHelper.write("postNeuronID,summedDSO_A->C,summedDSO_B->C\n");
     for (unsigned int i = 0; i < mPostNeuronId.size(); i++) {
         auto it = mMappingSliceRBC.find(mPostNeuronId[i]);
         fileHelper.write(QString::number(it->second)  + "," + QString::number(mValuesAC[i]) + "," + QString::number(mValuesBC[i]) + "\n");

@@ -114,7 +114,7 @@ void SpatialInnervationQueryHandler::doProcessQuery()
     if (isExcitatory)
     {
       QString tempFileName =
-          QDir(mTempFolder).filePath(QString::number(it->first) + "_DSC.csv");
+          QDir(mTempFolder).filePath(QString::number(it->first) + "_DSO.csv");
       fileNames.append(tempFileName);
       saveDSC(tempFileName, dsc, postIdsSet);
 
@@ -364,7 +364,7 @@ void SpatialInnervationQueryHandler::saveDSC(QString filename, std::vector<Spati
   QTextStream outStream(&dataFile);
   outStream.setRealNumberNotation(QTextStream::FixedNotation);
   outStream.setRealNumberPrecision(6);
-  outStream << "post_id,subvolume_id,DSC\n";
+  outStream << "post_id,subvolume_id,DSO\n";
   for (unsigned i = 0; i < data.size(); i++)
   {
     if(postIds.find(data[i].postId) != postIds.end())
@@ -382,9 +382,9 @@ void SpatialInnervationQueryHandler::writeReadme(QString filename){
     throw std::runtime_error(qPrintable(msg));
   }
   QTextStream outStream(&file);
-  outStream << "For each selected presynaptic neuron the DSC to all selected postsynaptic neurons\n";
-  outStream << "is listed in the file NID_DSC.csv, where NID is the ID of the presynaptic neuron.\n";
-  outStream << "The DSC values are calculated separately for each subvolume. The grid cells defining\n";
+  outStream << "For each selected presynaptic neuron the DSO to all selected postsynaptic neurons\n";
+  outStream << "is listed in the file NID_DSO.csv, where NID is the ID of the presynaptic neuron.\n";
+  outStream << "The DSO values are calculated separately for each subvolume. The grid cells defining\n";
   outStream << "these subvolumes are listed in the file grid.csv\n";
   outStream << "\n";
   outStream << "Axon and dendrite morphologies are duplicated to match the number of cells in the\n";
@@ -393,7 +393,7 @@ void SpatialInnervationQueryHandler::writeReadme(QString filename){
   outStream << "representation in the model, where only the duplication factors of the respective\n";
   outStream << "axon morphologies need to be recorded (presynaptic_duplication_factors.csv).\n";
   outStream << "\n";
-  outStream << "Note that due to space considerations, the NID_DSC.csv files of presynaptic inhibitory\n";
+  outStream << "Note that due to space considerations, the NID_DSO.csv files of presynaptic inhibitory\n";
   outStream << "neurons are omitted from this downloadable zip archive. However, all data including\n";
   outStream << "inhibitory neurons can be obtained in the download area of the 'Digital Barrel Cortex\n";
   outStream << "Anatomy' section.\n";
